@@ -153,7 +153,7 @@ class IdentityClientJSON(RestClient):
         """Get the list of users."""
         resp, body = self.get("users")
         body = json.loads(body)
-        return resp, body['users']
+        return resp, body
 
     def enable_disable_user(self, user_id, enabled):
         """Enables or disables a user."""
@@ -207,7 +207,7 @@ class IdentityClientJSON(RestClient):
         """List Service - Returns Services."""
         resp, body = self.get('/OS-KSADM/services/')
         body = json.loads(body)
-        return resp, body['OS-KSADM:services']
+        return resp, body
 
     def delete_service(self, service_id):
         """Delete Service."""

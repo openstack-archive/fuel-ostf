@@ -44,7 +44,7 @@ class VolumesClientJSON(RestClient):
 
         resp, body = self.get(url)
         body = json.loads(body)
-        return resp, body['volumes']
+        return resp, body
 
     def list_volumes_with_detail(self, params=None):
         """List the details of all volumes."""

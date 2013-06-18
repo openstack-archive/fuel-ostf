@@ -35,7 +35,7 @@ class FlavorsClientJSON(RestClient):
 
         resp, body = self.get(url)
         body = json.loads(body)
-        return resp, body['flavors']
+        return resp, body
 
     def list_flavors_with_detail(self, params=None):
         url = 'flavors/detail'
@@ -44,12 +44,12 @@ class FlavorsClientJSON(RestClient):
 
         resp, body = self.get(url)
         body = json.loads(body)
-        return resp, body['flavors']
+        return resp, body
 
     def get_flavor_details(self, flavor_id):
         resp, body = self.get("flavors/%s" % str(flavor_id))
         body = json.loads(body)
-        return resp, body['flavor']
+        return resp, body
 
     def create_flavor(self, name, ram, vcpus, disk, flavor_id, **kwargs):
         """Creates a new flavor or instance type."""
@@ -118,7 +118,7 @@ class FlavorsClientJSON(RestClient):
         resp, body = self.post('flavors/%s/action' % flavor_id,
                                post_body, self.headers)
         body = json.loads(body)
-        return resp, body['flavor_access']
+        return resp, body
 
     def remove_flavor_access(self, flavor_id, tenant_id):
         """Remove flavor access from the specified tenant."""
@@ -131,4 +131,4 @@ class FlavorsClientJSON(RestClient):
         resp, body = self.post('flavors/%s/action' % flavor_id,
                                post_body, self.headers)
         body = json.loads(body)
-        return resp, body['flavor_access']
+        return resp, body

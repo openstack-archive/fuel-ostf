@@ -29,7 +29,7 @@ class LimitsClientJSON(RestClient):
     def get_absolute_limits(self):
         resp, body = self.get("limits")
         body = json.loads(body)
-        return resp, body['limits']['absolute']
+        return resp, body
 
     def get_specific_absolute_limit(self, absolute_limit):
         resp, body = self.get("limits")

@@ -42,7 +42,7 @@ class SnapshotsClientJSON(RestClient):
 
         resp, body = self.get(url)
         body = json.loads(body)
-        return resp, body['snapshots']
+        return resp, body
 
     def list_snapshot_with_detail(self, params=None):
         """List the details of all snapshots."""

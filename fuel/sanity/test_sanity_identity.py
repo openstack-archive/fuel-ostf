@@ -11,10 +11,12 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
         # List and Verify Services
         resp, body = self.client.list_services()
         self.assertEqual(200, resp.status)
+        self.assertTrue(u'OS-KSADM:services' in body)
 
     @attr(type='sanity')
     def test_list_users(self):
         # List users
         resp, body = self.client.get_users()
         self.assertEqual(200, resp.status)
+        self.assertTrue(u'users' in body)
 

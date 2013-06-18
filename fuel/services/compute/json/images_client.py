@@ -57,7 +57,7 @@ class ImagesClientJSON(RestClient):
 
         resp, body = self.get(url)
         body = json.loads(body)
-        return resp, body['images']
+        return resp, body
 
     def list_images_with_detail(self, params=None):
         """Returns a detailed list of images filtered by any parameters."""
