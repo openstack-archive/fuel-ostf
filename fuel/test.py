@@ -22,9 +22,10 @@ import nose.plugins.attrib
 import testresources
 import testtools
 
-from fuel.common import log as logging
 from fuel import config
 from fuel import manager
+from fuel.common import log as logging
+
 
 LOG = logging.getLogger(__name__)
 
@@ -94,7 +95,7 @@ def call_until_true(func, duration, sleep_for):
 
 
 class TestCase(BaseTestCase):
-    """Base test case class for all Tempest tests
+    """Base test case class for all tests
 
     Contains basic setup and convenience methods
     """
@@ -127,6 +128,7 @@ class TestCase(BaseTestCase):
         self.os_resources.remove(thing)
         del self.resource_keys[key]
 
+
     def status_timeout(self, things, thing_id, expected_status):
         """
         Given a thing and an expected status, do a loop, sleeping
@@ -149,7 +151,7 @@ class TestCase(BaseTestCase):
             LOG.debug("Waiting for %s to get to %s status. "
                       "Currently in %s status",
                       thing, expected_status, new_status)
-        conf = config.TempestConfig()
+        conf = config.FuelConfig()
         if not call_until_true(check_status,
                                conf.compute.build_timeout,
                                conf.compute.build_interval):
@@ -161,7 +163,7 @@ class ComputeFuzzClientTest(TestCase):
 
     """
     Base test case class for OpenStack Compute API (Nova)
-    that uses the Tempest REST fuzz client libs for calling the API.
+    that uses the REST fuzz client libs for calling the API.
     """
 
     manager_class = manager.ComputeFuzzClientManager

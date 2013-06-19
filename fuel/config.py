@@ -38,6 +38,9 @@ IdentityGroup = [
     cfg.StrOpt('uri',
                default=None,
                help="Full URI of the OpenStack Identity API (Keystone), v2"),
+    cfg.StrOpt('url',
+               default='http://10.0.0.1/',
+               help="Dashboard Openstack url, v2"),
     cfg.StrOpt('uri_v3',
                help='Full URI of the OpenStack Identity API (Keystone), v3'),
     cfg.StrOpt('strategy',
@@ -510,11 +513,13 @@ class FuelConfig:
         register_network_opts(cfg.CONF)
         register_volume_opts(cfg.CONF)
         register_compute_admin_opts(cfg.CONF)
+        register_smoke_opts(cfg.CONF)
         self.compute = cfg.CONF.compute
         self.identity = cfg.CONF.identity
         self.network = cfg.CONF.network
         self.volume = cfg.CONF.volume
         self.compute_admin = cfg.CONF['compute-admin']
+        self.smoke = cfg.CONF.smoke
         if not self.compute_admin.username:
             self.compute_admin.username = self.identity.admin_username
             self.compute_admin.password = self.identity.admin_password
