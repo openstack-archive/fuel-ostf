@@ -20,9 +20,9 @@ import time
 from fuel import clients
 from fuel.common.utils.data_utils import rand_name
 import fuel.test
-from fuel import sanity
 from fuel.common import log as logging
 from fuel import exceptions
+from fuel.tests import sanity
 
 
 LOG = logging.getLogger(__name__)

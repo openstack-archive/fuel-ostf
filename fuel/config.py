@@ -180,6 +180,20 @@ ComputeGroup = [
                 default=True,
                 help="If false, skip config tests regardless of the "
                      "extension status"),
+    cfg.ListOpt('enabled_services',
+                default=[],
+                help="If false, skip config tests regardless of the "
+                     "extension status"),
+    cfg.StrOpt('controller_node',
+               default='127.0.0.1',
+               help="IP address of one of the controller nodes"),
+    cfg.StrOpt('controller_node_ssh_user',
+               default='ssh_user',
+               help="ssh user of one of the controller nodes"),
+     cfg.StrOpt('controller_node_ssh_password',
+               default='pass',
+               help="ssh user pass of one of the controller nodes"),
+
 ]
 
 
