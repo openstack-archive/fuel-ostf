@@ -128,7 +128,6 @@ class TestCase(BaseTestCase):
         self.os_resources.remove(thing)
         del self.resource_keys[key]
 
-
     def status_timeout(self, things, thing_id, expected_status):
         """
         Given a thing and an expected status, do a loop, sleeping

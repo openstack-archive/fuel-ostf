@@ -3,10 +3,11 @@ import time
 
 from fuel import clients
 from fuel import exceptions
+from fuel import clients
+import fuel.test
 from fuel.common import log as logging
 from fuel.common.utils.data_utils import rand_name
 from fuel.tests import smoke
-import fuel.test
 
 
 LOG = logging.getLogger(__name__)
@@ -56,9 +57,39 @@ class BaseComputeTest(fuel.test.BaseTestCase):
         if os.config.network.quantum_available:
             cls.network_client = os.config.network
 
+        # TODO: Deal with exception:
+        # {"forbidden": {"message": "Policy doesn't allow compute_extension:flavormanage to be performed.", "code": 403}}
+        # cls.test_flavor = cls.create_test_flavor()
+
+        # # TODO: Resolve issue with paths (doesn`t work so far):
+        # path = fuel.test.__file__
+        # path = path[:path.find("fuel")]
+        # etc_path = path + "etc/"
+        # cls.test_image = os.images_client.create_image_by_file(
+        #     name='test_image',
+        #     container_format='bare',
+        #     disk_format='vdi',
+        #     is_public=True,
+        #     location=etc_path+'ostf_test_image.vdi')
+
         cls.servers = []
 
         cls.servers_client_v3_auth = os.servers_client_v3_auth
+
+    @classmethod
+    def create_test_flavor(cls):
+        os = clients.AdminManager(interface=cls._interface)
+        admin_username = cls.config.compute_admin.username
+        admin_password = cls.config.compute_admin.password
+        admin_tenant = cls.config.compute_admin.tenant_name
+        token_client = os.token_client
+
+        token_client.auth(admin_username, admin_password, admin_tenant)
+        cls.flavors_client.create_flavor(name='test_flavor',
+                                         ram=256,
+                                         vcpus=4,
+                                         disk=4,
+                                         flavor_id=111111)
 
     @classmethod
     def _get_identity_admin_client(cls):

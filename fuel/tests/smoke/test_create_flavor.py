@@ -3,6 +3,7 @@ from fuel.common.utils import data_utils
 from fuel.test import attr
 from fuel.tests.smoke import base
 
+
 """ Test module contains tests for flavor creation/deletion. """
 
 class FlavorsAdminTest(base.BaseComputeAdminTest):
@@ -27,7 +28,6 @@ class FlavorsAdminTest(base.BaseComputeAdminTest):
         cls.swap = 256
         cls.rxtx = 2
 
-
     @attr(type=["fuel", "smoke"])
     def test_create_flavor(self):
         """
@@ -46,7 +46,7 @@ class FlavorsAdminTest(base.BaseComputeAdminTest):
                                                  ephemeral=self.ephemeral,
                                                  swap=self.swap,
                                                  rxtx=self.rxtx)
-        self.flavor = flavor
+
         self.assertEqual(200, resp.status)
         self.assertEqual(flavor['name'], flavor_name)
         self.assertEqual(flavor['vcpus'], self.vcpus)
@@ -57,7 +57,7 @@ class FlavorsAdminTest(base.BaseComputeAdminTest):
         self.assertEqual(flavor['rxtx_factor'], self.rxtx)
         self.assertEqual(flavor['OS-FLV-EXT-DATA:ephemeral'],
                          self.ephemeral)
-
+       
         #Verify flavor is retrieved
         resp, flavor = self.client.get_flavor_details(new_flavor_id)
         self.assertEqual(resp.status, 200)

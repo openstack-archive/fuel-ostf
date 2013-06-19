@@ -48,7 +48,7 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
         client = requests.session()
         url = self.config.identity.url
 
-         # Retrieve the CSRF token first
+        # Retrieve the CSRF token first
         client.get(url)  # sets cookie
         if len(client.cookies) == 0:
             login_data = dict(username=user['name'],

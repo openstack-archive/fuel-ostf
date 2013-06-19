@@ -5,7 +5,6 @@ from fuel.test import attr
 from fuel.tests.smoke import base
 
 
-
 """
 Test module for network creation.
 

@@ -15,6 +15,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import json
 import time
 import urllib
@@ -48,6 +49,54 @@ class ImagesClientJSON(RestClient):
         resp, body = self.post('servers/%s/action' % str(server_id),
                                post_body, self.headers)
         return resp, body
+
+    def _image_meta_to_headers(self, fields):
+        headers = {}
+        fields_copy = copy.deepcopy(fields)
+        copy_from = fields_copy.pop('copy_from', None)
+        if copy_from is not None:
+            headers['x-glance-api-copy-from'] = copy_from
+        for key, value in fields_copy.pop('properties', {}).iteritems():
+            headers['x-image-meta-property-%s' % key] = str(value)
+        for key, value in fields_copy.pop('api', {}).iteritems():
+            headers['x-glance-api-property-%s' % key] = str(value)
+        for key, value in fields_copy.iteritems():
+            headers['x-image-meta-%s' % key] = str(value)
+        return headers
+
+    def _create_with_data(self, headers, data):
+        resp, body_iter = self.http.raw_request('POST', '/v1/images',
+                                                headers=headers, body=data)
+        self._error_checker('POST', '/v1/images', headers, data, resp,
+                            body_iter)
+        body = json.loads(''.join([c for c in body_iter]))
+        return resp, body['image']
+
+    def create_image_by_file(self, name, container_format, disk_format, **kwargs):
+        """
+        Create a test image based on located file.
+        """
+        params = {
+            "name": name,
+            "container_format": container_format,
+            "disk_format": disk_format,
+        }
+
+        headers = {}
+
+        for option in ['is_public', 'location', 'properties',
+                       'copy_from', 'min_ram']:
+            if option in kwargs:
+                params[option] = kwargs.get(option)
+
+        headers.update(self._image_meta_to_headers(params))
+
+        if 'data' in kwargs:
+            return self._create_with_data(headers, kwargs.get('data'))
+
+        resp, body = self.post('v1/images', None, headers)
+        body = json.loads(body)
+        return resp, body['image']
 
     def list_images(self, params=None):
         """Returns a list of all images filtered by any parameters."""

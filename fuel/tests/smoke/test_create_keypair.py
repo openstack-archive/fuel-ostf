@@ -1,4 +1,3 @@
-
 from fuel.common.utils import data_utils
 from fuel.test import attr
 from fuel.tests.smoke import base
@@ -12,10 +11,12 @@ class KeyPairsTestJSON(base.BaseComputeTest):
         super(KeyPairsTestJSON, cls).setUpClass()
         cls.client = cls.keypairs_client
 
+
     @attr(type=['fuel', 'smoke'])
     def test_keypair_create_delete(self):
         """ Test keypair creation and deletion. """
         k_name = data_utils.rand_name('keypair-')
+
         resp, keypair = self.client.create_keypair(k_name)
         self.assertEqual(200, resp.status)
         private_key = keypair['private_key']
@@ -27,6 +28,7 @@ class KeyPairsTestJSON(base.BaseComputeTest):
                         "Field private_key is empty or not found.")
         resp, _ = self.client.delete_keypair(k_name)
         self.assertEqual(202, resp.status)
+        # self.assertEqual(202, self.image)
 
     # TODO: add teardown for this test.
 

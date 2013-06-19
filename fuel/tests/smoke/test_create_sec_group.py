@@ -23,11 +23,12 @@ class SecurityGroupsTest(base.BaseComputeTest):
         # Security Group should be created, verified and deleted
         s_name = data_utils.rand_name('securitygroup-')
         s_description = data_utils.rand_name('description-')
+
         resp, securitygroup = \
             self.client.create_security_group(s_name, s_description)
         self.assertTrue('id' in securitygroup)
         securitygroup_id = securitygroup['id']
-        self.id = securitygroup_id
+
         self.addCleanup(self._delete_security_group,
                         securitygroup_id)
         self.assertEqual(200, resp.status)
@@ -35,6 +36,5 @@ class SecurityGroupsTest(base.BaseComputeTest):
         self.assertTrue('name' in securitygroup)
         securitygroup_name = securitygroup['name']
         self.assertEqual(securitygroup_name, s_name,
-                         "The created Security Group name is "
-                         "not equal to the requested name")
+                         "The created Security Group name is not equal to the requested name")
 
