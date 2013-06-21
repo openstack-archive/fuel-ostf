@@ -73,5 +73,5 @@ def arbitrary_string(size=4, base_text=None):
     if needed.
     """
     if not base_text:
-        base_text = 'test'
+        base_text = 'ost1_test-'
     return ''.join(itertools.islice(itertools.cycle(base_text), size))
