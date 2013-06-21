@@ -15,12 +15,12 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
 
     _interface = 'json'
 
-    alt_user = data_utils.rand_name('test_user_')
+    alt_user = data_utils.rand_name('ostf1_test-')
     alt_password = data_utils.rand_name('pass_')
     alt_email = alt_user + '@testmail.tm'
-    alt_tenant = data_utils.rand_name('test_tenant_')
-    alt_description = data_utils.rand_name('desc_')
-    alt_role = data_utils.rand_name('role_')
+    alt_tenant = data_utils.rand_name('ostf1_test-tenat')
+    alt_description = data_utils.rand_name('ostf1_test-desc_')
+    alt_role = data_utils.rand_name('ostf1_test-role_')
 
     @attr(type=["fuel", "smoke"])
     def test_create_user(self):
@@ -40,20 +40,28 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
         self.assertEqual('200', resp['status'])
 
         # Authenticate with created user:
-        resp, body = self.token_client.auth(user['name'], self.alt_password, tenant['name'])
+        resp, body = self.token_client.auth(
+            user['name'], self.alt_password, tenant['name'])
         self.assertEqual('200', resp['status'])
 
          # Auth in horizon with non-admin user
         client = requests.session()
         url = self.config.identity.url
 
-        # Retrieve the CSRF token first
+         # Retrieve the CSRF token first
         client.get(url)  # sets cookie
-        csrftoken = client.cookies['csrftoken']
+        if len(client.cookies) == 0:
+            login_data = dict(username=user['name'],
+                          password=self.alt_password,
+                          next='/')
+            resp = client.post(url, data=login_data, headers=dict(Referer=url))
+            self.assertEqual(resp.status_code, 200)
 
-        login_data = dict(username=user['name'],
+        else:
+            csrftoken = client.cookies['csrftoken']
+            login_data = dict(username=user['name'],
                           password=self.alt_password,
                           csrfmiddlewaretoken=csrftoken,
                           next='/')
-        resp = client.post(url, data=login_data, headers=dict(Referer=url))
-        self.assertEqual(resp.status_code, 200)
+            resp = client.post(url, data=login_data, headers=dict(Referer=url))
+            self.assertEqual(resp.status_code, 200)
