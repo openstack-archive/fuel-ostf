@@ -8,7 +8,7 @@ class FuelTestAssertMixin(object):
     from unittest assertion methods and provide human
     readable descriptions where it is possible
     """
-    def verify_response_status(self, status, appl='Application', msg=None):
+    def verify_response_status(self, status, appl='Application', msg=''):
         """
 
         Method provides human readable message
@@ -42,21 +42,21 @@ class FuelTestAssertMixin(object):
             5: 'Status {status}. Server error. Please check {appl} logs'
         }
 
-        msg = '{appl} status - {status} is unknown'
+        unknown_msg = '{appl} status - {status} is unknown'
 
         if status in human_readable_statuses:
             status_msg = human_readable_statuses[status].format(
-                status=status, application=appl)
+                status=status, appl=appl)
         else:
-            status_msg = human_readable_status_groups.get(status / 100, msg).\
-                format(status=status, application=appl)
+            status_msg = human_readable_status_groups.get(status / 100,
+                unknown_msg).format(status=status, appl=appl)
 
         self.assertEquals(200,
                           status,
-                          ''.join(('Status - {status}'.format(status=status),
+                          ''.join(('Status - {status} '.format(status=status),
                                    status_msg, '\n', msg)))
 
-    def verify_response_body(self, body, content):
+    def verify_response_body(self, body, content='', msg=''):
         """
 
         Method provides human readable message for the verification if
@@ -64,8 +64,8 @@ class FuelTestAssertMixin(object):
 
         :param body: response body
         :param content: content that should be present in the response body
+        :param msg: message to be used instead the default one
         """
         if content in body:
             return
-
-        self.asserTrue(content in body)
+        self.assertTrue(content in body, msg)

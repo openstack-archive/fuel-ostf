@@ -18,10 +18,10 @@ import netaddr
 import time
 
 from fuel import clients
+from fuel import exceptions
+from fuel.common import log as logging
 from fuel.common.utils.data_utils import rand_name
 import fuel.test
-from fuel.common import log as logging
-from fuel import exceptions
 from fuel.tests import sanity
 
 

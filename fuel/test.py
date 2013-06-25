@@ -25,6 +25,7 @@ import testtools
 from fuel import config
 from fuel import manager
 from fuel.common import log as logging
+from fuel.common.test_mixins import FuelTestAssertMixin
 
 
 LOG = logging.getLogger(__name__)
@@ -61,7 +62,8 @@ def attr(*args, **kwargs):
 
 class BaseTestCase(testtools.TestCase,
                    testtools.testcase.WithAttributes,
-                   testresources.ResourcedTestCase):
+                   testresources.ResourcedTestCase,
+                   FuelTestAssertMixin):
 
     config = config.FuelConfig()
 
