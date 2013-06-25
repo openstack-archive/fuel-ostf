@@ -214,7 +214,6 @@ class BaseIdentityAdminTest(fuel.test.BaseTestCase):
         cls.token_client = os.token_client
         cls.service_client = os.services_client
 
-
         if not cls.client.has_admin_extensions():
             raise cls.skipException("Admin extensions disabled")
 

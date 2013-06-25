@@ -18,18 +18,18 @@ options are defined in the [network] section of etc/tempest.conf:
     block defined by tenant-network_cidr.
 """
 
+
 class NetworksTest(base.BaseComputeTest):
 
     """
-    Test class for tenant netwprk creation the Quantum API using the REST client for
-    Quantum.
+    Test class for tenant netwprk creation the Quantum API
+    using the REST client for Quantum.
     """
     _interface = 'json'
 
     @classmethod
     def setUpClass(cls):
         super(NetworksTest, cls).setUpClass()
-
 
     @attr(type=["fuel", "smoke"])
     def test_create_network(self):
@@ -45,5 +45,3 @@ class NetworksTest(base.BaseComputeTest):
 
     #TODO: finish this test (it`s incomplete for now).
     #TODO: add teardown for this test.
-
-

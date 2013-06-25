@@ -6,6 +6,7 @@ from fuel.tests.smoke import base
 
 """ Test module contains tests for flavor creation/deletion. """
 
+
 class FlavorsAdminTest(base.BaseComputeAdminTest):
 
     """
@@ -57,10 +58,8 @@ class FlavorsAdminTest(base.BaseComputeAdminTest):
         self.assertEqual(flavor['rxtx_factor'], self.rxtx)
         self.assertEqual(flavor['OS-FLV-EXT-DATA:ephemeral'],
                          self.ephemeral)
-       
         #Verify flavor is retrieved
         resp, flavor = self.client.get_flavor_details(new_flavor_id)
         self.assertEqual(resp.status, 200)
 
     # TODO: add teardown for this test.
-

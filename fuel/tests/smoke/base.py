@@ -58,7 +58,8 @@ class BaseComputeTest(fuel.test.BaseTestCase):
             cls.network_client = os.config.network
 
         # TODO: Deal with exception:
-        # {"forbidden": {"message": "Policy doesn't allow compute_extension:flavormanage to be performed.", "code": 403}}
+        # {"forbidden": {"message": "Policy doesn't allow
+        #  compute_extension:flavormanage to be performed.", "code": 403}}
         # cls.test_flavor = cls.create_test_flavor()
 
         # # TODO: Resolve issue with paths (doesn`t work so far):
@@ -263,7 +264,6 @@ class BaseIdentityAdminTest(fuel.test.BaseTestCase):
         cls.client = os.identity_client
         cls.token_client = os.token_client
         cls.service_client = os.services_client
-
 
         if not cls.client.has_admin_extensions():
             raise cls.skipException("Admin extensions disabled")

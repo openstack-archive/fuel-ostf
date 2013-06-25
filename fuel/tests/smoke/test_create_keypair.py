@@ -11,7 +11,6 @@ class KeyPairsTestJSON(base.BaseComputeTest):
         super(KeyPairsTestJSON, cls).setUpClass()
         cls.client = cls.keypairs_client
 
-
     @attr(type=['fuel', 'smoke'])
     def test_keypair_create_delete(self):
         """ Test keypair creation and deletion. """
@@ -31,4 +30,3 @@ class KeyPairsTestJSON(base.BaseComputeTest):
         # self.assertEqual(202, self.image)
 
     # TODO: add teardown for this test.
-

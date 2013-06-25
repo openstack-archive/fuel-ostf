@@ -3,6 +3,7 @@ from fuel.common.utils import data_utils
 from fuel.test import attr
 from fuel.tests.smoke import base
 
+
 class SecurityGroupsTest(base.BaseComputeTest):
     """
     Test security group creation.
@@ -36,5 +37,5 @@ class SecurityGroupsTest(base.BaseComputeTest):
         self.assertTrue('name' in securitygroup)
         securitygroup_name = securitygroup['name']
         self.assertEqual(securitygroup_name, s_name,
-                         "The created Security Group name is not equal to the requested name")
-
+                         ('The created Security Group name is not equal to '
+                          'the requested name'))

@@ -7,6 +7,7 @@ sys.path.append(path)
 
 from fuel import clients
 
+
 def cleanup():
     admin_manager = clients.AdminManager()
     instances_id = []
@@ -58,7 +59,6 @@ def cleanup():
         if role['name'].startswith('ost1_test-'):
             admin_manager.identity_client.delete_role(role['id'])
 
-
     _, images = admin_manager.images_client.list_images()
     for image in images['images']:
         if image['name'].startswith('ost1_test-'):
@@ -85,7 +85,8 @@ def cleanup():
 
     for sgroup in sec_groups:
         if sgroup['name'].startswith('ost1_test-'):
-            admin_manager.security_groups_client.delete_security_group(sgroup['id'])
+            admin_manager.security_groups_client.delete_security_group(
+                sgroup['id'])
 
     _, vtypes = admin_manager.volume_types_client.list_volume_types()
     for vtype in vtypes:
@@ -104,5 +105,5 @@ def cleanup():
         print 'Quantum is disable'
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     cleanup()
