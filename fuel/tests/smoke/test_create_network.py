@@ -34,7 +34,7 @@ class NetworksTest(base.BaseComputeTest):
     @attr(type=["fuel", "smoke"])
     def test_create_network(self):
         """ Test network creation. """
-        network_name = data_utils.rand_name('test-network-')
+        network_name = data_utils.rand_name('ost1_test-network-')
 
         resp, body = self.network_client.create_network(network_name)
         network = body['network']

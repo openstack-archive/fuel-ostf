@@ -15,12 +15,12 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
 
     _interface = 'json'
 
-    alt_user = data_utils.rand_name('ostf1_test-')
+    alt_user = data_utils.rand_name('ost1_test-')
     alt_password = data_utils.rand_name('pass_')
     alt_email = alt_user + '@testmail.tm'
-    alt_tenant = data_utils.rand_name('ostf1_test-tenat')
-    alt_description = data_utils.rand_name('ostf1_test-desc_')
-    alt_role = data_utils.rand_name('ostf1_test-role_')
+    alt_tenant = data_utils.rand_name('ost1_test-tenat')
+    alt_description = data_utils.rand_name('ost1_test-desc_')
+    alt_role = data_utils.rand_name('ost1_test-role_')
 
     @attr(type=["fuel", "smoke"])
     def test_create_user(self):

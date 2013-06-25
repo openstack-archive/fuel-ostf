@@ -20,7 +20,7 @@ class FlavorsAdminTest(base.BaseComputeAdminTest):
 
         cls.client = cls.os_adm.flavors_client
         cls.user_client = cls.os.flavors_client
-        cls.flavor_name_prefix = 'test_flavor_'
+        cls.flavor_name_prefix = 'ost1_test-flavor'
         cls.ram = 256
         cls.vcpus = 1
         cls.disk = 0

@@ -23,7 +23,7 @@ import urllib
 from fuel import exceptions
 
 
-def rand_name(name='test'):
+def rand_name(name='ost1_test-'):
     return name + str(random.randint(1, 0x7fffffff))
 
 

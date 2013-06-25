@@ -15,7 +15,7 @@ class KeyPairsTestJSON(base.BaseComputeTest):
     @attr(type=['fuel', 'smoke'])
     def test_keypair_create_delete(self):
         """ Test keypair creation and deletion. """
-        k_name = data_utils.rand_name('keypair-')
+        k_name = data_utils.rand_name('ost1_test-keypair-')
 
         resp, keypair = self.client.create_keypair(k_name)
         self.assertEqual(200, resp.status)

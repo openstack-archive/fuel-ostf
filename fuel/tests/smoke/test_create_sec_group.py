@@ -21,8 +21,8 @@ class SecurityGroupsTest(base.BaseComputeTest):
     @attr(type=['fuel', 'smoke'])
     def test_security_group_create_delete(self):
         # Security Group should be created, verified and deleted
-        s_name = data_utils.rand_name('securitygroup-')
-        s_description = data_utils.rand_name('description-')
+        s_name = data_utils.rand_name('ost1_test-securitygroup-')
+        s_description = data_utils.rand_name('ost1_test-description-')
 
         resp, securitygroup = \
             self.client.create_security_group(s_name, s_description)
