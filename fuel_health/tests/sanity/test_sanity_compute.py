@@ -105,7 +105,7 @@ class SanityComputeTest(base.BaseComputeTest):
             3. Check response contains absolute limits in "limits" section.
         """
         resp, body = self.limits_client.get_absolute_limits()
-        self.verify_response_status(resp.status, 'Compute')
+        self.verify_response_status(resp.status, 'Cinder')
         self.verify_response_body(body["limits"], u'absolute',
                                   'Limits are unavailable. '
-                                  'Looks like something broken in Compute.')
+                                  'Looks like something broken in Cinder.')

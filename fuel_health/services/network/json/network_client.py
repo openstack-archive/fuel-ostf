@@ -2,7 +2,62 @@ import json
 from fuel_health.common.rest_client import RestClient
 
 
-class NetworkClient(RestClient):
+class NovaNetworkClient(RestClient):
+
+    """
+    REST client for Compute allows manipulate network data.
+    Uses v2 of the Compute API.
+    """
+
+    def __init__(self, config, username, password, auth_url, tenant_name=None):
+        super(NovaNetworkClient, self).__init__(config, username, password,
+                                            auth_url, tenant_name)
+        self.service = self.config.compute.catalog_type
+
+    def list_networks(self):
+        resp, body = self.get("os-networks")
+        body = json.loads(body)
+        return resp, body
+
+    def create_network(self, label):
+        body = {
+            'network': {
+                'label': label,
+            }
+        }
+        body = json.dumps(body)
+        resp, body = self.post("os-networks/add", body, self.headers)
+        body = json.loads(body)
+        return resp, body
+
+    def show_network(self, uuid):
+        resp, body = self.get("/os-networks/%s" % uuid)
+        body = json.loads(body)
+        return resp, body
+
+    def delete_network(self, uuid):
+        resp, body = self.delete("/os-networks/%s" % uuid, self.headers)
+        return resp, body
+
+    def list_ports(self):
+        ports = {u'ports': []}
+        resp, body = self.get("os-networks")
+        networks = json.loads(body)[u'networks']
+        ports[u'ports'] = [{net['id']: net['vpn_public_port']}
+                           for net in networks]
+        return resp, ports
+
+    def show_port(self, port_id):
+        ports = {u'ports': []}
+        resp, body = self.get("os-networks")
+        networks = json.loads(body)[u'networks']
+        ports[u'ports'] = [{net['id']: net['vpn_public_port']}
+                           for net in networks
+                           if net['vpn_public_port'] == port_id]
+        return resp, ports
+
+
+class QuantumNetworkClient(RestClient):
 
     """
     REST client for Quantum. Uses v2 of the Quantum API, since the
@@ -18,7 +73,7 @@ class NetworkClient(RestClient):
     """
 
     def __init__(self, config, username, password, auth_url, tenant_name=None):
-        super(NetworkClient, self).__init__(config, username, password,
+        super(QuantumNetworkClient, self).__init__(config, username, password,
                                             auth_url, tenant_name)
         self.service = self.config.network.catalog_type
         self.version = '2.0'

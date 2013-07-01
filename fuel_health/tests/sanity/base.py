@@ -304,8 +304,6 @@ class BaseNetworkTest(BaseIdentityAdminTest):
     def setUpClass(cls):
         os = clients.AdminManager()
         cls.network_cfg = os.config.network
-        if not cls.network_cfg.quantum_available:
-            raise cls.skipException("Quantum support is required")
         cls.client = os.network_client
         cls.networks = []
         cls.subnets = []

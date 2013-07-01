@@ -42,10 +42,10 @@ def _raise_TimeOut(sig, stack):
     raise TimeOutError()
 
 
-class timeout(object):
+class ExecutionTimeout(object):
     """
     Timeout context that will stop code running within context
-    if timeout is reached
+    if timeout (sec) is reached
 
     >>with timeout(2):
     ...     requests.get("http://msdn.com")

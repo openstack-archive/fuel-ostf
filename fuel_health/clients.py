@@ -39,7 +39,8 @@ from fuel_health.services.compute.json.tenant_usages_client import \
     TenantUsagesClientJSON
 from fuel_health.services.identity.json.identity_client import IdentityClientJSON
 from fuel_health.services.identity.json.identity_client import TokenClientJSON
-from fuel_health.services.network.json.network_client import NetworkClient
+from fuel_health.services.network.json.network_client import NovaNetworkClient
+from fuel_health.services.network.json.network_client import QuantumNetworkClient
 
 from fuel_health.services.volume.json.admin.volume_types_client import \
     VolumeTypesClientJSON
@@ -51,7 +52,7 @@ LOG = logging.getLogger(__name__)
 
 IMAGES_CLIENTS = {
     "json": ImagesClientJSON,
-    }
+}
 
 KEYPAIRS_CLIENTS = {
     "json": KeyPairsClientJSON,
@@ -206,6 +207,10 @@ class Manager(object):
         except KeyError:
             msg = "Unsupported interface type `%s'" % interface
             raise exceptions.InvalidConfiguration(msg)
+
+        NetworkClient = QuantumNetworkClient
+        if not self.config.network.quantum_available:
+            NetworkClient = NovaNetworkClient
         self.network_client = NetworkClient(*client_args)
         self.hosts_client = HostsClientJSON(*client_args)
 

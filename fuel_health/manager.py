@@ -32,7 +32,6 @@ from fuel_health.services.network.json import network_client
 from fuel_health.services.volume.json import snapshots_client
 from fuel_health.services.volume.json import volumes_client
 
-NetworkClient = network_client.NetworkClient
 ImagesClient = images_client.ImagesClientJSON
 FlavorsClient = flavors_client.FlavorsClientJSON
 ServersClient = servers_client.ServersClientJSON
@@ -44,6 +43,9 @@ VolumesClient = volumes_client.VolumesClientJSON
 SnapshotsClient = snapshots_client.SnapshotsClientJSON
 QuotasClient = quotas_client.QuotasClientJSON
 HypervisorClient = hypervisor_client.HypervisorClientJSON
+NetworkClient = network_client.QuantumNetworkClient
+if not fuel_health.config.FuelConfig().network.quantum_available:
+    NetworkClient = network_client.NovaNetworkClient
 
 LOG = logging.getLogger(__name__)
 
