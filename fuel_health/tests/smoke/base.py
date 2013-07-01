@@ -2,9 +2,9 @@ import netaddr
 import time
 
 from fuel_health import clients
-from fuel_health import exceptions
 from fuel_health.common import log as logging
 from fuel_health.common.utils.data_utils import rand_name
+from fuel_health import exceptions
 import fuel_health.test
 from fuel_health.tests import smoke
 
@@ -57,6 +57,7 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
             cls.network_client = os.config.network
 
         cls.servers = []
+        cls.volumes = []
 
         cls.servers_client_v3_auth = os.servers_client_v3_auth
 
@@ -158,8 +159,22 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
                 pass
 
     @classmethod
+    def clear_volumes(cls):
+        for volume in cls.volumes:
+            try:
+                cls.volumes_client.delete_volume(volume['id'])
+            except Exception:
+                pass
+        for volume in cls.volumes:
+            try:
+                cls.volumes_client.wait_for_resource_deletion(volume['id'])
+            except Exception:
+                pass
+
+    @classmethod
     def create_server(cls, **kwargs):
         """Wrapper utility that returns a test server."""
+        name = rand_name('ost1_test-' + '-instance' + cls.__name__ )
         name = rand_name("ost1_test-" + cls.__name__ + "-instance")
         if 'name' in kwargs:
             name = kwargs.pop('name')
@@ -189,6 +204,7 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
     def tearDownClass(cls):
         cls.clear_servers()
         cls.clear_isolated_creds()
+        cls.clear_volumes()
 
     def wait_for(self, condition):
         """Repeatedly calls condition() until a timeout."""

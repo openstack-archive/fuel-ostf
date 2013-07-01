@@ -230,11 +230,10 @@ class NetworkScenarioTest(OfficialClientTest):
     def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
         kp_name = rand_name(namestart)
         keypair = client.keypairs.create(kp_name)
-        try:
-            self.assertEqual(keypair.id, kp_name)
-            self.set_resource(kp_name, keypair)
-        except AttributeError:
-            self.fail("Keypair object not successfully created.")
+        self.verify_response_body_content(keypair.id,
+                                          kp_name,
+                                          'Creation of keypair failed')
+        self.set_resource(kp_name, keypair)
         return keypair
 
     def _create_security_group(self, client, namestart='ost1_test-secgroup-smoke-'):
@@ -242,12 +241,13 @@ class NetworkScenarioTest(OfficialClientTest):
         sg_name = rand_name(namestart)
         sg_desc = sg_name + " description"
         secgroup = client.security_groups.create(sg_name, sg_desc)
-        try:
-            self.assertEqual(secgroup.name, sg_name)
-            self.assertEqual(secgroup.description, sg_desc)
-            self.set_resource(sg_name, secgroup)
-        except AttributeError:
-            self.fail("SecurityGroup object not successfully created.")
+        self.verify_response_body_content(secgroup.name,
+                                          sg_name,
+                                          "Security group creation failed")
+        self.verify_response_body_content(secgroup.description,
+                                          sg_desc,
+                                          "Security group creation failed")
+        self.set_resource(sg_name, secgroup)
 
         # Add rules to the security group
 
@@ -290,8 +290,9 @@ class NetworkScenarioTest(OfficialClientTest):
         result = self.network_client.create_network(body=body)
         network = net_common.DeletableNetwork(client=self.network_client,
                                               **result['network'])
-        self.assertEqual(network.name, name)
-        self.set_resource(name, network)
+        self.verify_response_body_content(network.name,
+                                          name,
+                                          "Network creation failed")
         return network
 
     def _list_networks(self):
@@ -335,7 +336,9 @@ class NetworkScenarioTest(OfficialClientTest):
         self.assertIsNotNone(result, 'Unable to allocate tenant network')
         subnet = net_common.DeletableSubnet(client=self.network_client,
                                             **result['subnet'])
-        self.assertEqual(subnet.cidr, str(subnet_cidr))
+        self.verify_response_body_content(subnet.cidr,
+                                          str(subnet_cidr),
+                                          "Sub-net creation failed")
         self.set_resource(rand_name(namestart), subnet)
         return subnet
 
@@ -364,11 +367,10 @@ class NetworkScenarioTest(OfficialClientTest):
         }
         server = client.servers.create(name, base_image_id, flavor_id,
                                        **create_kwargs)
-        try:
-            self.assertEqual(server.name, name)
-            self.set_resource(name, server)
-        except AttributeError:
-            self.fail("Server not successfully created.")
+        self.verify_response_body_content(server.name,
+                                          name,
+                                          "Instance creation failed")
+        self.set_resource(name, server)
         self.status_timeout(client.servers, server.id, 'ACTIVE')
         # The instance retrieved on creation is missing network
         # details, necessitating retrieval after it becomes active to
@@ -380,8 +382,10 @@ class NetworkScenarioTest(OfficialClientTest):
     def _create_floating_ip(self, server, external_network_id):
         result = self.network_client.list_ports(device_id=server.id)
         ports = result.get('ports', [])
-        self.assertEqual(len(ports), 1,
-                         "Unable to determine which port to target.")
+        self.verify_response_body_content(len(ports), 1,
+                                          ("Unable to determine "
+                                           "which port to target."))
+
         port_id = ports[0]['id']
         body = dict(
             floatingip=dict(

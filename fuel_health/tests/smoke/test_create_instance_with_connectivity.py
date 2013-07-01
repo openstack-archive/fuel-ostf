@@ -131,7 +131,9 @@ class TestNetwork(nmanager.NetworkScenarioTest):
         result = self.network_client.create_router(body=body)
         router = net_common.DeletableRouter(client=self.network_client,
                                             **result['router'])
-        self.assertEqual(router.name, name)
+        self.verify_response_body_content(router.name,
+                                          name,
+                                          "Router creation failed")
         self.set_resource(name, router)
         return router
 
@@ -167,21 +169,35 @@ class TestNetwork(nmanager.NetworkScenarioTest):
         seen_names = [n['name'] for n in seen_nets]
         seen_ids = [n['id'] for n in seen_nets]
         for mynet in self.networks:
-            self.assertIn(mynet.name, seen_names)
-            self.assertIn(mynet.id, seen_ids)
+            self.verify_response_body(seen_names,
+                                      mynet.name,
+                                      ('Network is not created '
+                                       'properly'))
+            self.verify_response_body(seen_ids,
+                                      mynet.id,
+                                      ('Network does is created'
+                                       ' properly '))
         seen_subnets = self._list_subnets()
         seen_net_ids = [n['network_id'] for n in seen_subnets]
         seen_subnet_ids = [n['id'] for n in seen_subnets]
         for mynet in self.networks:
-            self.assertIn(mynet.id, seen_net_ids)
+            self.verify_response_body(seen_net_ids,
+                                      mynet.id,
+                                      'Network is not created properly')
         for mysubnet in self.subnets:
-            self.assertIn(mysubnet.id, seen_subnet_ids)
+            self.verify_response_body(seen_subnet_ids,
+                                      mysubnet.id,
+                                      'Sub-net is not created properly')
         seen_routers = self._list_routers()
         seen_router_ids = [n['id'] for n in seen_routers]
         seen_router_names = [n['name'] for n in seen_routers]
         for myrouter in self.routers:
-            self.assertIn(myrouter.name, seen_router_names)
-            self.assertIn(myrouter.id, seen_router_ids)
+            self.verify_response_body(seen_router_names,
+                                      myrouter.name,
+                                      'Router is not created properly')
+            self.verify_response_body(seen_router_ids,
+                                      myrouter.id,
+                                      'Router is not created properly')
 
     @attr(type=['fuel', 'smoke'])
     def test_005_create_servers(self):
@@ -249,4 +265,3 @@ class TestNetwork(nmanager.NetworkScenarioTest):
             for floating_ip in floating_ips:
                 ip_address = floating_ip.floating_ip_address
                 self._check_vm_connectivity(ip_address, ssh_login, private_key)
-

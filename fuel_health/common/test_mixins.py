@@ -68,3 +68,18 @@ class FuelTestAssertMixin(object):
         if content in body:
             return
         self.assertTrue(content in body, msg)
+
+    def verify_response_body_content(self, exp_content, act_content, msg):
+        """
+        Method provides human readable message for the verification
+        if the content value ib body is the same as expected
+
+        :param exp_content: expected value
+        :param act_content: actual content that is present in the body
+        :param msg: message to be used instead the default one
+        """
+        self.assertEquals(exp_content,
+                          act_content,
+                          ''.join(('Actual value - {actual_content}'.format(
+                              actual_content=act_content),
+                          '\n', msg)))
