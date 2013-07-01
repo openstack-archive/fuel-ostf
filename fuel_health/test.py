@@ -17,6 +17,8 @@
 
 
 import time
+import signal
+import traceback
 
 import nose.plugins.attrib
 import testresources
@@ -29,6 +31,43 @@ from fuel_health.common.test_mixins import FuelTestAssertMixin
 
 
 LOG = logging.getLogger(__name__)
+
+
+class TimeOutError(Exception):
+    def __init__(self):
+        Exception.__init__(self)
+
+
+def _raise_TimeOut(sig, stack):
+    raise TimeOutError()
+
+
+class timeout(object):
+    """
+    Timeout context that will stop code running within context
+    if timeout is reached
+
+    >>with timeout(2):
+    ...     requests.get("http://msdn.com")
+    """
+    def __init__(self, timeout):
+        self.timeout = timeout
+
+    def __enter__(self):
+        signal.signal(signal.SIGALRM, _raise_TimeOut)
+        signal.alarm(self.timeout)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        signal.alarm(0)  # disable the alarm
+        if exc_type is not TimeOutError:
+            return False  # never swallow other exceptions
+        else:
+            call_that_caused_timeout = traceback.extract_tb(exc_tb)[0][-1]
+            msg = '''
+                {call} terminated with the timeout of {timeout} seconds.
+                Please check that this service timeout meets your expectation.
+                '''.format(call=call_that_caused_timeout, timeout=self.timeout)
+            raise AssertionError(msg)
 
 
 def attr(*args, **kwargs):

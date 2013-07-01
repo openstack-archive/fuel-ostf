@@ -1,5 +1,6 @@
 # Copyright 2013 Mirantis, Inc.
 # All Rights Reserved.
+import signal
 
 
 class FuelTestAssertMixin(object):
@@ -10,7 +11,6 @@ class FuelTestAssertMixin(object):
     """
     def verify_response_status(self, status, appl='Application', msg=''):
         """
-
         Method provides human readable message
         for the HTTP response status verification
 
@@ -18,7 +18,7 @@ class FuelTestAssertMixin(object):
         :param status: response status
         :param msg: message to be used instead the default one
         """
-        if status == 200:
+        if status/100 == 2:  # assert is successful if status is 2xx
             return
 
         human_readable_statuses = {
@@ -34,22 +34,22 @@ class FuelTestAssertMixin(object):
         }
 
         human_readable_status_groups = {
-            3: ('Status {status}. Redirection. Please check that all {appl}'
+            3: ('Redirection. Please check that all {appl}'
                 ' proxy settings are set correctly'),
-            4: ('Status {status}. Client error. Please verify that your {appl}'
+            4: ('Client error. Please verify that your {appl}'
                 ' configurations corresponds to re one defined in '
                 'Fuel configuration '),
-            5: 'Status {status}. Server error. Please check {appl} logs'
+            5: 'Server error. Please check {appl} logs'
         }
-
-        unknown_msg = '{appl} status - {status} is unknown'
 
         if status in human_readable_statuses:
             status_msg = human_readable_statuses[status].format(
-                status=status, appl=appl)
+                appl=appl)
+        elif status/100 in human_readable_status_groups:
+            status_msg = human_readable_status_groups.get(status / 100, msg).\
+                format(appl=appl)
         else:
-            status_msg = human_readable_status_groups.get(status / 100,
-                unknown_msg).format(status=status, appl=appl)
+            status_msg = 'Something went really wrong.'
 
         self.assertEquals(200,
                           status,
@@ -58,7 +58,6 @@ class FuelTestAssertMixin(object):
 
     def verify_response_body(self, body, content='', msg=''):
         """
-
         Method provides human readable message for the verification if
         HTTP response body contains desired keyword
 
