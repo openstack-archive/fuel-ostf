@@ -298,11 +298,11 @@ class DataGenerator(object):
                 self.client.delete_role(role['id'])
 
 
-class BaseNetworkTest(fuel_health.test.BaseTestCase):
+class BaseNetworkTest(BaseIdentityAdminTest):
 
     @classmethod
     def setUpClass(cls):
-        os = clients.Manager()
+        os = clients.AdminManager()
         cls.network_cfg = os.config.network
         if not cls.network_cfg.quantum_available:
             raise cls.skipException("Quantum support is required")

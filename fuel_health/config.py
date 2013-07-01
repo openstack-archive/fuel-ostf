@@ -196,6 +196,18 @@ ComputeGroup = [
     cfg.StrOpt('controller_node_ssh_password',
                default='pass',
                help="ssh user pass of one of the controller nodes"),
+    cfg.StrOpt('image_ref',
+               default="{$IMAGE_ID}",
+               help="Valid secondary image reference to be used in tests."),
+    cfg.StrOpt('image_ref_alt',
+               default="{$IMAGE_ID_ALT}",
+               help="Valid secondary image reference to be used in tests."),
+    cfg.IntOpt('flavor_ref',
+               default=1,
+               help="Valid primary flavor to use in tests."),
+    cfg.IntOpt('flavor_ref_alt',
+               default=2,
+               help='Valid secondary flavor to be used in tests.'),
 
 ]
 
