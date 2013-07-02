@@ -15,10 +15,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from fuel import clients
-from fuel.common import log as logging
-from fuel import config
-from fuel.exceptions import InvalidConfiguration
+from fuel_health import clients
+from fuel_health.common import log as logging
+from fuel_health import config
+from fuel_health.exceptions import InvalidConfiguration
 
 LOG = logging.getLogger(__name__)
 

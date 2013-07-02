@@ -1,6 +1,6 @@
 
-from fuel.test import attr
-from fuel.tests.smoke import base
+from fuel_health.test import attr
+from fuel_health.tests.smoke import base
 
 
 """ Test module contains tests for flavor creation/deletion. """

@@ -1,8 +1,8 @@
 import requests
 
-from fuel.common.utils import data_utils
-from fuel.test import attr
-from fuel.tests.smoke import base
+from fuel_health.common.utils import data_utils
+from fuel_health.test import attr
+from fuel_health.tests.smoke import base
 
 
 class TestUserTenantRole(base.BaseIdentityAdminTest):
@@ -60,17 +60,17 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
         client.get(url)  # sets cookie
         if len(client.cookies) == 0:
             login_data = dict(username=user['name'],
-                          password=self.alt_password,
-                          next='/')
+                              password=self.alt_password,
+                              next='/')
             resp = client.post(url, data=login_data, headers=dict(Referer=url))
             self.verify_response_status(
                 resp['status'], msg="Verify request was successful.")
         else:
             csrftoken = client.cookies['csrftoken']
             login_data = dict(username=user['name'],
-                          password=self.alt_password,
-                          csrfmiddlewaretoken=csrftoken,
-                          next='/')
+                              password=self.alt_password,
+                              csrfmiddlewaretoken=csrftoken,
+                              next='/')
             resp = client.post(url, data=login_data, headers=dict(Referer=url))
             self.verify_response_status(
                 resp['status'], msg="Verify request was successful.")
