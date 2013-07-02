@@ -31,26 +31,26 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
         # Create a tenant:
         resp, tenant = self.client.create_tenant(self.alt_tenant)
         self.verify_response_status(
-            resp.status, msg="Verify request was successful.")
+            int(resp['status']), msg="Verify request was successful.")
 
         # Create a user:
         resp, user = self.client.create_user(self.alt_user, self.alt_password,
                                              tenant['id'],
                                              self.alt_email)
         self.verify_response_status(
-            resp.status, msg="Verify request was successful.")
+            int(resp['status']), msg="Verify request was successful.")
         self.verify_response_body_value(user['name'], self.alt_user)
 
         # Create a user role:
         resp, role = self.client.create_role(user['name'])
         self.verify_response_status(
-            resp.status, msg="Verify request was successful.")
+            int(resp['status']), msg="Verify request was successful.")
 
         # Authenticate with created user:
         resp, body = self.token_client.auth(
             user['name'], self.alt_password, tenant['name'])
         self.verify_response_status(
-            resp.status, msg="Verify request was successful.")
+            int(resp['status']), msg="Verify request was successful.")
 
          # Auth in horizon with non-admin user
         client = requests.session()
@@ -64,7 +64,7 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
                               next='/')
             resp = client.post(url, data=login_data, headers=dict(Referer=url))
             self.verify_response_status(
-                resp.status, msg="Verify request was successful.")
+                int(resp['status']), msg="Verify request was successful.")
         else:
             csrftoken = client.cookies['csrftoken']
             login_data = dict(username=user['name'],
@@ -73,4 +73,4 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
                               next='/')
             resp = client.post(url, data=login_data, headers=dict(Referer=url))
             self.verify_response_status(
-                resp.status, msg="Verify request was successful.")
+                int(resp['status']), msg="Verify request was successful.")
