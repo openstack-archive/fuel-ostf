@@ -31,7 +31,7 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
         # Create a tenant:
         resp, tenant = self.client.create_tenant(self.alt_tenant)
         self.verify_response_status(
-            resp['status'], msg="Verify request was successful.")
+            resp.status, msg="Verify request was successful.")
 
         # Create a user:
         resp, user = self.client.create_user(self.alt_user, self.alt_password,

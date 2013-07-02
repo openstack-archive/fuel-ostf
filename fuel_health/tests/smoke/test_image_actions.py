@@ -61,6 +61,7 @@ class TestImageAction(nmanager.OfficialClientTest):
 
     def _write_timestamp(self, server):
         username = self.config.compute.image_ssh_user
+        self.assertEqual("", server.networks)
         host = server.networks[self.config.compute.network_for_ssh][0]
         ssh_client = Client(host, username, pkey=self.keypair.private_key)
         ssh_client.exec_command('date > /tmp/timestamp; sync')
