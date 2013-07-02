@@ -1,6 +1,5 @@
 # Copyright 2013 Mirantis, Inc.
 # All Rights Reserved.
-import signal
 
 
 class FuelTestAssertMixin(object):
@@ -11,6 +10,7 @@ class FuelTestAssertMixin(object):
     """
     def verify_response_status(self, status, appl='Application', msg=''):
         """
+
         Method provides human readable message
         for the HTTP response status verification
 
@@ -18,7 +18,7 @@ class FuelTestAssertMixin(object):
         :param status: response status
         :param msg: message to be used instead the default one
         """
-        if status/100 == 2:  # assert is successful if status is 2xx
+        if status in [200, 201, 202]:
             return
 
         human_readable_statuses = {
@@ -34,22 +34,22 @@ class FuelTestAssertMixin(object):
         }
 
         human_readable_status_groups = {
-            3: ('Redirection. Please check that all {appl}'
+            3: ('Status {status}. Redirection. Please check that all {appl}'
                 ' proxy settings are set correctly'),
-            4: ('Client error. Please verify that your {appl}'
+            4: ('Status {status}. Client error. Please verify that your {appl}'
                 ' configurations corresponds to re one defined in '
                 'Fuel configuration '),
-            5: 'Server error. Please check {appl} logs'
+            5: 'Status {status}. Server error. Please check {appl} logs'
         }
+
+        unknown_msg = '{appl} status - {status} is unknown'
 
         if status in human_readable_statuses:
             status_msg = human_readable_statuses[status].format(
-                appl=appl)
-        elif status/100 in human_readable_status_groups:
-            status_msg = human_readable_status_groups.get(status / 100, msg).\
-                format(appl=appl)
+                status=status, appl=appl)
         else:
-            status_msg = 'Something went really wrong.'
+            status_msg = human_readable_status_groups.get(status / 100,
+                unknown_msg).format(status=status, appl=appl)
 
         self.assertEquals(200,
                           status,
@@ -58,28 +58,33 @@ class FuelTestAssertMixin(object):
 
     def verify_response_body(self, body, content='', msg=''):
         """
+
         Method provides human readable message for the verification if
         HTTP response body contains desired keyword
 
         :param body: response body
-        :param content: content that should be present in the response body
+        :param content: content type that should be present in the response body
         :param msg: message to be used instead the default one
         """
         if content in body:
             return
         self.assertTrue(content in body, msg)
 
-    def verify_response_body_content(self, exp_content, act_content, msg):
+    def verify_response_body_value(self, body_structure, value='', msg=''):
         """
-        Method provides human readable message for the verification
-        if the content value ib body is the same as expected
+        Method provides human readable message for verification if
+        HTTP response body element contains desired keyword.
 
-        :param exp_content: expected value
-        :param act_content: actual content that is present in the body
-        :param msg: message to be used instead the default one
+        :param body_structure: body element value (e.g. body['name'], body);
+        :param value: expected value of body element (e.g. u'test-flavor');
+        :param msg: message to be used instead of the default one.
         """
-        self.assertEquals(exp_content,
-                          act_content,
-                          ''.join(('Actual value - {actual_content}'.format(
-                              actual_content=act_content),
-                          '\n', msg)))
+        if type(body_structure) is dict:
+            if value in body_structure.values():
+                return
+        else:
+            if body_structure == value:
+                return
+        self.assertEqual(body_structure, value, msg)
+
+

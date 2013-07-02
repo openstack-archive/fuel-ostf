@@ -1,8 +1,8 @@
 import requests
 
-from fuel_health.common.utils import data_utils
-from fuel_health.test import attr
-from fuel_health.tests.smoke import base
+from fuel.common.utils import data_utils
+from fuel.test import attr
+from fuel.tests.smoke import base
 
 
 class TestUserTenantRole(base.BaseIdentityAdminTest):
@@ -24,25 +24,33 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
 
     @attr(type=["fuel", "smoke"])
     def test_create_user(self):
+        """
+        Verify non-admin user, tenant and user role can be created
+        and new user can log in to Horizon.
+        """
         # Create a tenant:
         resp, tenant = self.client.create_tenant(self.alt_tenant)
-        self.assertEqual('200', resp['status'])
+        self.verify_response_status(
+            resp['status'], msg="Verify request was successful.")
 
         # Create a user:
         resp, user = self.client.create_user(self.alt_user, self.alt_password,
                                              tenant['id'],
                                              self.alt_email)
-        self.assertEqual('200', resp['status'])
-        self.assertEqual(self.alt_user, user['name'])
+        self.verify_response_status(
+            resp['status'], msg="Verify request was successful.")
+        self.verify_response_body_value(user['name'], self.alt_user)
 
         # Create a user role:
         resp, role = self.client.create_role(user['name'])
-        self.assertEqual('200', resp['status'])
+        self.verify_response_status(
+            resp['status'], msg="Verify request was successful.")
 
         # Authenticate with created user:
         resp, body = self.token_client.auth(
             user['name'], self.alt_password, tenant['name'])
-        self.assertEqual('200', resp['status'])
+        self.verify_response_status(
+            resp['status'], msg="Verify request was successful.")
 
          # Auth in horizon with non-admin user
         client = requests.session()
@@ -52,16 +60,17 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
         client.get(url)  # sets cookie
         if len(client.cookies) == 0:
             login_data = dict(username=user['name'],
-                              password=self.alt_password,
-                              next='/')
+                          password=self.alt_password,
+                          next='/')
             resp = client.post(url, data=login_data, headers=dict(Referer=url))
-            self.assertEqual(resp.status_code, 200)
-
+            self.verify_response_status(
+                resp['status'], msg="Verify request was successful.")
         else:
             csrftoken = client.cookies['csrftoken']
             login_data = dict(username=user['name'],
-                              password=self.alt_password,
-                              csrfmiddlewaretoken=csrftoken,
-                              next='/')
+                          password=self.alt_password,
+                          csrfmiddlewaretoken=csrftoken,
+                          next='/')
             resp = client.post(url, data=login_data, headers=dict(Referer=url))
-            self.assertEqual(resp.status_code, 200)
+            self.verify_response_status(
+                resp['status'], msg="Verify request was successful.")

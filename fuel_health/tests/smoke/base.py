@@ -1,18 +1,19 @@
 import netaddr
 import time
 
-from fuel_health import clients
-from fuel_health.common import log as logging
-from fuel_health.common.utils.data_utils import rand_name
-from fuel_health import exceptions
-import fuel_health.test
-from fuel_health.tests import smoke
+from fuel import clients
+from fuel import exceptions
+from fuel import clients
+import fuel.test
+from fuel.common import log as logging
+from fuel.common.utils.data_utils import rand_name, rand_int_id
+from fuel.tests import smoke
 
 
 LOG = logging.getLogger(__name__)
 
 
-class BaseComputeTest(fuel_health.test.BaseTestCase):
+class BaseComputeTest(fuel.test.BaseTestCase):
     """Base test case class for all Compute API tests."""
 
     conclusion = smoke.generic_setup_package()
@@ -20,16 +21,11 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
     @classmethod
     def setUpClass(cls):
         cls.isolated_creds = []
+        cls.keypairs = []
+        cls.networks = []
+        cls.sec_groups = []
 
-        if cls.config.compute.allow_tenant_isolation:
-            creds = cls._get_isolated_creds()
-            username, tenant_name, password = creds
-            os = clients.Manager(username=username,
-                                 password=password,
-                                 tenant_name=tenant_name,
-                                 interface=cls._interface)
-        else:
-            os = clients.Manager(interface=cls._interface)
+        os = clients.AdminManager(interface=cls._interface)
 
         cls.os = os
         cls.servers_client = os.servers_client
@@ -54,10 +50,9 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
         cls.flavor_ref = cls.config.smoke.flavor_ref
         cls.flavor_ref_alt = cls.config.smoke.flavor_ref_alt
         if os.config.network.quantum_available:
-            cls.network_client = os.config.network
+            cls.network_client = os.network_client
 
         cls.servers = []
-        cls.volumes = []
 
         cls.servers_client_v3_auth = os.servers_client_v3_auth
 
@@ -159,23 +154,9 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
                 pass
 
     @classmethod
-    def clear_volumes(cls):
-        for volume in cls.volumes:
-            try:
-                cls.volumes_client.delete_volume(volume['id'])
-            except Exception:
-                pass
-        for volume in cls.volumes:
-            try:
-                cls.volumes_client.wait_for_resource_deletion(volume['id'])
-            except Exception:
-                pass
-
-    @classmethod
     def create_server(cls, **kwargs):
         """Wrapper utility that returns a test server."""
-        name = rand_name('ost1_test-' + '-instance' + cls.__name__ )
-        name = rand_name("ost1_test-" + cls.__name__ + "-instance")
+        name = rand_name(cls.__name__ + "-instance")
         if 'name' in kwargs:
             name = kwargs.pop('name')
         flavor = kwargs.get('flavor', cls.flavor_ref)
@@ -201,10 +182,102 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
         return resp, body
 
     @classmethod
+    def clear_keypairs(cls):
+        """
+        Delete keypair verification test data.
+        """
+        for keypair in cls.keypairs:
+            try:
+                cls.keypairs_client.delete_keypair(keypair['name'])
+            except Exception:
+                pass
+
+    @classmethod
+    def create_keypair(cls, **kwargs):
+        """
+        Create test keypair.
+
+        Arguments:
+          - name: keypair name.
+        """
+        name = rand_name('ost1_test-' + '-keypair' + cls.__name__)
+        if 'name' in kwargs:
+            name = kwargs.pop('name')
+
+        resp, body = cls.keypairs_client.create_keypair(name)
+        cls.keypairs.extend([body])
+
+        return resp, body
+
+    @classmethod
+    def clear_networks(cls):
+        """
+        Delete networks verification test data.
+        """
+        for network in cls.networks:
+            try:
+                cls.network_client.delete_network(network[u'id'])
+            except Exception:
+                pass
+
+    @classmethod
+    def create_network(cls, **kwargs):
+        """
+        Create test network.
+
+        Arguments:
+          - name: network name.
+        """
+        name = rand_name('ost1_test-' + 'network' + cls.__name__)
+        if 'name' in kwargs:
+            name = kwargs.pop('name')
+        resp, body = cls.network_client.create_network(name)
+        network = body['network']
+        cls.networks.extend([network])
+
+        return resp, network
+
+    @classmethod
+    def clear_sec_group(cls):
+        """
+        Delete security groups verification test data.
+        """
+        for sec_group in cls.sec_groups:
+            # try:
+            cls.security_groups_client.delete_security_group(
+                sec_group['id'])
+            # except Exception:
+            #     pass
+
+    @classmethod
+    def create_sec_group(cls, **kwargs):
+        """
+        Create test security group.
+
+        Arguments:
+          - name: security group name (must contain 'ost1_test' mask);
+          - description: security group descr (must contain 'ost1_test' mask).
+        """
+        name = rand_name('ost1_test-' + 'sec_goup' + cls.__name__)
+        description = rand_name('ost1_test' + 'sec_group-description-'
+                                            + cls.__name__)
+        if 'name' in kwargs:
+            name = kwargs.pop('name')
+        if 'description' in kwargs:
+            description = kwargs.pop('description')
+        resp, body = cls.security_groups_client.create_security_group(
+            name, description)
+        cls.sec_groups.extend([body])
+
+        return resp, body
+
+    @classmethod
     def tearDownClass(cls):
         cls.clear_servers()
         cls.clear_isolated_creds()
-        cls.clear_volumes()
+        cls.clear_keypairs()
+        cls.clear_networks()
+        cls.clear_sec_group()
 
     def wait_for(self, condition):
         """Repeatedly calls condition() until a timeout."""
@@ -231,6 +304,7 @@ class BaseComputeAdminTest(BaseComputeTest):
         admin_username = cls.config.compute_admin.username
         admin_password = cls.config.compute_admin.password
         admin_tenant = cls.config.compute_admin.tenant_name
+        cls.flavors = []
 
         if not (admin_username and admin_password and admin_tenant):
             msg = ("Missing Compute Admin API credentials "
@@ -239,8 +313,67 @@ class BaseComputeAdminTest(BaseComputeTest):
 
         cls.os_adm = clients.ComputeAdminManager(interface=cls._interface)
 
+    @classmethod
+    def create_flavor(cls, **kwargs):
+        """
+        Create test flavor.
 
-class BaseIdentityAdminTest(fuel_health.test.BaseTestCase):
+        Arguments:
+          - name: flavor name (must contain 'ost1_test' mask);
+          - ram: flavor ram;
+          - vcpus: TBD;
+          - disk: flavor disk size;
+          - flavor_id: unique flavor id;
+          - ephemeral, swap, rxtx are optional params.
+        """
+        cls.client = cls.os_adm.flavors_client
+        cls.user_client = cls.os.flavors_client
+        new_flavor_id = rand_int_id(start=1000)
+        name = 'ost1_test-' + 'flavor' + cls.__name__
+
+        f_params = {'name': name,
+                    'ram': 256,
+                    'vcpus': 1,
+                    'disk': 0,
+                    'flav_id': new_flavor_id,
+                    'ephemeral': 0,
+                    'swap': 256,
+                    'rxtx': 2
+                    }
+
+        for key in f_params.keys():
+            if key in kwargs:
+                f_params[key] = kwargs.pop(key)
+
+        resp, body = cls.client.create_flavor(name=f_params['name'],
+                                              ram=f_params['ram'],
+                                              vcpus=f_params['vcpus'],
+                                              disk=f_params['disk'],
+                                              flavor_id=f_params['flav_id'],
+                                              ephimeral=f_params['ephemeral'],
+                                              swap=f_params['swap'],
+                                              rxtx=f_params['rxtx'])
+        cls.flavors.extend([body])
+
+        return resp, body
+
+    @classmethod
+    def clear_flavors(cls):
+        """
+        Delete flavor verification test data.
+        """
+        for flavor in cls.flavors:
+            try:
+                cls.os_adm.flavors_client.delete_flavor(flavor['id'])
+            except Exception:
+                pass
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.clear_flavors()
+
+
+class BaseIdentityAdminTest(fuel.test.BaseTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -300,8 +433,8 @@ class DataGenerator(object):
         def setup_test_user(self):
             """Set up a test user."""
             self.setup_test_tenant()
-            self.test_user = rand_name('ost1_test-user-')
-            self.test_password = rand_name('ist1_test-pass_')
+            self.test_user = rand_name('test_user_')
+            self.test_password = rand_name('pass_')
             self.test_email = self.test_user + '@testmail.tm'
             resp, self.user = self.client.create_user(self.test_user,
                                                       self.test_password,
@@ -311,7 +444,7 @@ class DataGenerator(object):
 
         def setup_test_tenant(self):
             """Set up a test tenant."""
-            self.test_tenant = rand_name('ost1_test-test-tenant_')
+            self.test_tenant = rand_name('test_tenant_')
             self.test_description = rand_name('desc_')
             resp, self.tenant = self.client.create_tenant(
                 name=self.test_tenant,
@@ -320,7 +453,7 @@ class DataGenerator(object):
 
         def setup_test_role(self):
             """Set up a test role."""
-            self.test_role = rand_name('ost1_test-role')
+            self.test_role = rand_name('role')
             resp, self.role = self.client.create_role(self.test_role)
             self.roles.append(self.role)
 
@@ -333,7 +466,7 @@ class DataGenerator(object):
                 self.client.delete_role(role['id'])
 
 
-class BaseNetworkTest(fuel_health.test.BaseTestCase):
+class BaseNetworkTest(fuel.test.BaseTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -355,7 +488,7 @@ class BaseNetworkTest(fuel_health.test.BaseTestCase):
     @classmethod
     def create_network(cls, network_name=None):
         """Wrapper utility that returns a test network."""
-        network_name = network_name or rand_name('ost1_test-test-network-')
+        network_name = network_name or rand_name('test-network-')
 
         resp, body = cls.client.create_network(network_name)
         network = body['network']
