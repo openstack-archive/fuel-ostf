@@ -1,19 +1,19 @@
 import netaddr
 import time
 
-from fuel import clients
-from fuel import exceptions
-from fuel import clients
-import fuel.test
-from fuel.common import log as logging
-from fuel.common.utils.data_utils import rand_name, rand_int_id
-from fuel.tests import smoke
+from fuel_health import clients
+from fuel_health import exceptions
+from fuel_health import clients
+import fuel_health.test
+from fuel_health.common import log as logging
+from fuel_health.common.utils.data_utils import rand_name, rand_int_id
+from fuel_health.tests import smoke
 
 
 LOG = logging.getLogger(__name__)
 
 
-class BaseComputeTest(fuel.test.BaseTestCase):
+class BaseComputeTest(fuel_health.test.BaseTestCase):
     """Base test case class for all Compute API tests."""
 
     conclusion = smoke.generic_setup_package()
@@ -373,7 +373,7 @@ class BaseComputeAdminTest(BaseComputeTest):
         cls.clear_flavors()
 
 
-class BaseIdentityAdminTest(fuel.test.BaseTestCase):
+class BaseIdentityAdminTest(fuel_health.test.BaseTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -466,7 +466,7 @@ class DataGenerator(object):
                 self.client.delete_role(role['id'])
 
 
-class BaseNetworkTest(fuel.test.BaseTestCase):
+class BaseNetworkTest(fuel_health.test.BaseTestCase):
 
     @classmethod
     def setUpClass(cls):
