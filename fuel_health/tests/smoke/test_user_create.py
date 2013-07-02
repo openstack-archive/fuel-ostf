@@ -64,7 +64,7 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
                               next='/')
             resp = client.post(url, data=login_data, headers=dict(Referer=url))
             self.verify_response_status(
-                int(resp['status']), msg="Verify request was successful.")
+                resp.status_code, msg="Verify request was successful.")
         else:
             csrftoken = client.cookies['csrftoken']
             login_data = dict(username=user['name'],
@@ -73,4 +73,4 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
                               next='/')
             resp = client.post(url, data=login_data, headers=dict(Referer=url))
             self.verify_response_status(
-                int(resp['status']), msg="Verify request was successful.")
+                resp.status_code, msg="Verify request was successful.")
