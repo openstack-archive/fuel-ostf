@@ -1,0 +1,12 @@
+nose
+testtools
+testresources
+oslo.config
+lxml
+httplib2
+paramiko
+requests
+netaddr
+python-cinderclient
+python-glanceclient
+python-novaclient
