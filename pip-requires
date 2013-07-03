@@ -2,7 +2,7 @@ nose
 testtools
 testresources
 oslo.config
-lxml
+gcc
 httplib2
 paramiko
 requests
@@ -10,3 +10,5 @@ netaddr
 python-cinderclient
 python-glanceclient
 python-novaclient
+python-keystoneclient
+python-quantumclient
