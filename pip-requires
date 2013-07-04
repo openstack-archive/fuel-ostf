@@ -2,7 +2,6 @@ nose
 testtools
 testresources
 oslo.config
-gcc
 httplib2
 paramiko
 requests
