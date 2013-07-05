@@ -85,9 +85,8 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
                 in the command output to be sure the domain name
                 was successfully resolved.
         """
-        output = ''
         expected_output = "in-addr.arpa domain name pointer " + self.hostname
-        with ExecutionTimeout(10):
+        with ExecutionTimeout(300):
             try:
                 output = SSHClient(self.host, self.usr, self.pwd, pkey=self.key).exec_command(
                     "host " + self.host)

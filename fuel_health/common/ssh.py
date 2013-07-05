@@ -17,6 +17,7 @@
 
 
 import cStringIO
+import os
 import select
 import socket
 import time
@@ -37,16 +38,21 @@ class Client(object):
         self.host = host
         self.username = username
         self.password = password
+        pkey_file = self._get_key_from_file(pkey)
         if isinstance(pkey, basestring):
             if pkey != "":
-                pkey = paramiko.RSAKey.from_private_key(
-                    cStringIO.StringIO(str(pkey)))
+                pkey = paramiko.RSAKey.from_private_key(pkey_file)
         self.pkey = pkey
         self.look_for_keys = look_for_keys
         self.key_filename = key_filename
         self.timeout = int(timeout)
         self.channel_timeout = float(channel_timeout)
         self.buf_size = 1024
+
+    def _get_key_from_file(self, path):
+        f_path = os.popen('ls %s' % path, 'r').read().strip('\n')
+        file_key = file(f_path, 'r')
+        return file_key
 
     def _get_ssh_connection(self, sleep=1.5, backoff=1.01):
         """Returns an ssh connection to the specified host."""

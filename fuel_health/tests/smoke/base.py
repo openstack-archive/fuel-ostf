@@ -45,8 +45,6 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
         cls.build_interval = cls.config.compute.build_interval
         cls.build_timeout = cls.config.compute.build_timeout
         cls.ssh_user = cls.config.compute.ssh_user
-        cls.image_ref = cls.config.smoke.image_ref
-        cls.image_ref_alt = cls.config.smoke.image_ref_alt
         cls.flavor_ref = cls.config.smoke.flavor_ref
         cls.flavor_ref_alt = cls.config.smoke.flavor_ref_alt
         if os.config.network.quantum_available:

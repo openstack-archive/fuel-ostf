@@ -551,3 +551,13 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def tearDownClass(cls):
         super(NovaNetworkScenarioTest, cls).tearDownClass()
         cls._clear_networks()
+
+
+def get_image_from_name():
+    cfg = config.FuelConfig()
+    image_name = cfg.compute.image_name
+    image_client = OfficialClientManager()._get_image_client()
+    images = image_client.images.list()
+    for im in images:
+        if im.name == image_name:
+            return im.id
