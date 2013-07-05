@@ -87,7 +87,7 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
 
         while True:
             try:
-                rand_name_root = rand_name(cls.__name__)
+                rand_name_root = rand_name('ost1_test-' + cls.__name__)
                 if cls.isolated_creds:
                 # Main user already created. Create the alt one...
                     rand_name_root += '-alt'
@@ -105,7 +105,7 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
 
         while True:
             try:
-                rand_name_root = rand_name(cls.__name__)
+                rand_name_root = rand_name('ost1_test-' + cls.__name__)
                 if cls.isolated_creds:
                 # Main user already created. Create the alt one...
                     rand_name_root += '-alt'
@@ -156,7 +156,7 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
     @classmethod
     def create_server(cls, **kwargs):
         """Wrapper utility that returns a test server."""
-        name = rand_name(cls.__name__ + "-instance")
+        name = rand_name('ost1_test-' + cls.__name__ + "-instance")
         if 'name' in kwargs:
             name = kwargs.pop('name')
         flavor = kwargs.get('flavor', cls.flavor_ref)
@@ -258,9 +258,9 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
           - name: security group name (must contain 'ost1_test' mask);
           - description: security group descr (must contain 'ost1_test' mask).
         """
-        name = rand_name('ost1_test-' + 'sec_goup' + cls.__name__)
-        description = rand_name('ost1_test' + 'sec_group-description-'
-                                            + cls.__name__)
+        name = rand_name('ost1_test-sec_goup' + cls.__name__)
+        description = rand_name(
+            'ost1_test-sec_group-description-' + cls.__name__)
         if 'name' in kwargs:
             name = kwargs.pop('name')
         if 'description' in kwargs:
@@ -329,7 +329,7 @@ class BaseComputeAdminTest(BaseComputeTest):
         cls.client = cls.os_adm.flavors_client
         cls.user_client = cls.os.flavors_client
         new_flavor_id = rand_int_id(start=1000)
-        name = 'ost1_test-' + 'flavor' + cls.__name__
+        name = 'ost1_test-flavor' + cls.__name__
 
         f_params = {'name': name,
                     'ram': 256,
@@ -433,7 +433,7 @@ class DataGenerator(object):
         def setup_test_user(self):
             """Set up a test user."""
             self.setup_test_tenant()
-            self.test_user = rand_name('test_user_')
+            self.test_user = rand_name('ost1_test-user_')
             self.test_password = rand_name('pass_')
             self.test_email = self.test_user + '@testmail.tm'
             resp, self.user = self.client.create_user(self.test_user,
@@ -444,7 +444,7 @@ class DataGenerator(object):
 
         def setup_test_tenant(self):
             """Set up a test tenant."""
-            self.test_tenant = rand_name('test_tenant_')
+            self.test_tenant = rand_name('ost1_test-test_tenant_')
             self.test_description = rand_name('desc_')
             resp, self.tenant = self.client.create_tenant(
                 name=self.test_tenant,
@@ -453,7 +453,7 @@ class DataGenerator(object):
 
         def setup_test_role(self):
             """Set up a test role."""
-            self.test_role = rand_name('role')
+            self.test_role = rand_name('ost1_test-role')
             resp, self.role = self.client.create_role(self.test_role)
             self.roles.append(self.role)
 
@@ -488,7 +488,7 @@ class BaseNetworkTest(fuel_health.test.BaseTestCase):
     @classmethod
     def create_network(cls, network_name=None):
         """Wrapper utility that returns a test network."""
-        network_name = network_name or rand_name('test-network-')
+        network_name = network_name or rand_name('ost1_test-network-')
 
         resp, body = cls.client.create_network(network_name)
         network = body['network']

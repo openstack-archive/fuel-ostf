@@ -9,29 +9,15 @@ class TestNetwork(nmanager.NetworkScenarioTest):
 
     """
     This smoke test suite assumes that Nova has been configured to
-    boot VM's with Quantum-managed networking, and attempts to
+    boot VM's with networking, and attempts to
     verify network connectivity as follows:
 
-     * For a freshly-booted VM with an IP address ("port") on a given network:
+     * For a freshly-booted VM with an IP address on a given network:
 
        - host can ping the IP address.  This implies, but
          does not guarantee (see the ssh check that follows), that the
          VM has been assigned the correct IP address and has
          connectivity to  host.
-
-       - the host can perform key-based authentication to an
-         ssh server hosted at the IP address.  This check guarantees
-         that the IP address is associated with the target VM.
-
-       #TODO(mnewby) - Need to implement the following:
-       - the host can ssh into the VM via the IP address and
-         successfully execute the following:
-
-         - ping an external IP address, implying external connectivity.
-
-         - ping an external hostname, implying that dns is correctly
-           configured.
-
 
      There are presumed to be two types of networks: tenant and
      public.  A tenant network may or may not be reachable from the

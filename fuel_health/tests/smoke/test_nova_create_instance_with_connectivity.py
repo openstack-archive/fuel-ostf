@@ -93,7 +93,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         cls.servers = []
         cls.floating_ips = {}
 
-
     @attr(type=['fuel', 'smoke'])
     def test_001_create_keypairs(self):
         """ Test verifies keypair creation """
@@ -136,7 +135,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         if not (self.keypairs or self.security_groups or self.networks):
             raise self.skipTest('Necessary resources have not been defined')
         for i, network in enumerate(self.networks):
-            #tenant_id = network.tenant_id
             name = rand_name('ost1_test-server-smoke-%d-' % i)
             keypair_name = self.keypairs[self.tenant_id].name
             security_groups = [self.security_groups[self.tenant_id].name]

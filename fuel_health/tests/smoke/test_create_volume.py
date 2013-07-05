@@ -94,4 +94,3 @@ class VolumesTest(base.BaseComputeTest):
         # delete volume
         resp, body = self.volumes_client.delete_volume(volume['id'])
         self.verify_response_status(resp.status, 'Storage Object')
-

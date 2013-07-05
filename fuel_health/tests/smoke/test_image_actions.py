@@ -8,6 +8,13 @@ LOG = logging.getLogger(__name__)
 
 
 class TestImageAction(nmanager.OfficialClientTest):
+    """
+    Test class verifies the following:
+      - verify image can be created;
+      - verify that instance can be booted from created image
+      - verify snapshot can be created from instance;
+      - verify instance can be booted from snapshot.
+    """
 
     def _wait_for_server_status(self, server, status):
         self.status_timeout(self.compute_client.servers,
@@ -51,6 +58,14 @@ class TestImageAction(nmanager.OfficialClientTest):
         return image_id
 
     def test_snapshot(self):
+        """
+        Test image actions verifies:
+        - image can be created
+        - instance can be booted from created image
+        - snapshot can be created from instance;
+        - instance can be booted from snapshot.
+
+        """
         # prepare for booting a instance
         self._add_keypair()
         #self._create_security_group_rule()
