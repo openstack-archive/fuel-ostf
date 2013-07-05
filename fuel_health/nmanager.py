@@ -427,3 +427,180 @@ class NetworkScenarioTest(OfficialClientTest):
         self.assertTrue(self._ping_ip_address(ip_address),
                         "Timed out waiting for %s to become "
                         "reachable" % ip_address)
+
+
+
+
+class NovaNetworkScenarioTest(OfficialClientTest):
+    """
+    Base class for nova network scenario tests
+    """
+
+    @classmethod
+    def check_preconditions(cls):
+        if cls.config.network.quantum_available:
+            cls.enabled = False
+            msg = "Nova Networking not available"
+            raise cls.skipException(msg)
+        else:
+            cls.enabled = True
+            # ensure the config says true
+            try:
+                cls.compute_client.networks.list()
+            except exc.EndpointNotFound:
+                cls.enabled = False
+                raise
+
+
+    @classmethod
+    def setUpClass(cls):
+        super(NovaNetworkScenarioTest, cls).setUpClass()
+        cls.tenant_id = cls.manager._get_identity_client(
+            cls.config.identity.username,
+            cls.config.identity.password,
+            cls.config.identity.tenant_name).tenant_id
+        cls.network = []
+
+    def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
+        kp_name = rand_name(namestart)
+        keypair = client.keypairs.create(kp_name)
+        self.verify_response_body_content(keypair.id,
+                                          kp_name,
+                                          'Creation of keypair failed')
+        self.set_resource(kp_name, keypair)
+        return keypair
+
+    def _create_security_group(self, client, namestart='ost1_test-secgroup-smoke-'):
+        # Create security group
+        sg_name = rand_name(namestart)
+        sg_desc = sg_name + " description"
+        secgroup = client.security_groups.create(sg_name, sg_desc)
+        self.verify_response_body_content(secgroup.name,
+                                          sg_name,
+                                          "Security group creation failed")
+        self.verify_response_body_content(secgroup.description,
+                                          sg_desc,
+                                          "Security group creation failed")
+        self.set_resource(sg_name, secgroup)
+
+        # Add rules to the security group
+
+        # These rules are intended to permit inbound ssh and icmp
+        # traffic from all sources, so no group_id is provided.
+        # Setting a group_id would only permit traffic from ports
+        # belonging to the same security group.
+        rulesets = [
+            {
+                # ssh
+                'ip_protocol': 'tcp',
+                'from_port': 22,
+                'to_port': 22,
+                'cidr': '0.0.0.0/0',
+            },
+            {
+                # ping
+                'ip_protocol': 'icmp',
+                'from_port': -1,
+                'to_port': -1,
+                'cidr': '0.0.0.0/0',
+            }
+        ]
+        for ruleset in rulesets:
+            try:
+                client.security_group_rules.create(secgroup.id, **ruleset)
+            except Exception:
+                self.fail("Failed to create rule in security group.")
+
+        return secgroup
+
+    def _create_network(self, tenant_id, label='ost1_test-network-smoke-'):
+        n_label = rand_name(label)
+        cidr=self.config.network.tenant_network_cidr
+        networks = self.compute_client.networks.create(label=n_label, cidr=cidr)
+        self.network.append(networks)
+        self.verify_response_body_content(networks.label,
+                                          n_label,
+                                          "Network creation failed")
+
+        return networks
+
+    @classmethod
+    def _clear_networks(cls):
+        for net in cls.network:
+            try:
+                cls.compute_client.networks.delete(net.id)
+            except Exception:
+                cls.fail("Can't delete network")
+
+    def _list_networks(self):
+        nets = self.compute_client.networks.list()
+        return nets
+
+    def _create_server(self, client, network, name, key_name, security_groups):
+        flavor_id = self.config.compute.flavor_ref
+        base_image_id = self.config.compute.image_ref
+        create_kwargs = {
+            'nics': [
+                {'net-id': network.id},
+            ],
+            'key_name': key_name,
+            'security_groups': security_groups,
+        }
+        server = client.servers.create(name, base_image_id, flavor_id,
+                                       **create_kwargs)
+        self.verify_response_body_content(server.name,
+                                          name,
+                                          "Instance creation failed")
+        self.set_resource(name, server)
+        self.status_timeout(client.servers, server.id, 'ACTIVE')
+        # The instance retrieved on creation is missing network
+        # details, necessitating retrieval after it becomes active to
+        # ensure correct details.
+        server = client.servers.get(server.id)
+        self.set_resource(name, server)
+        return server
+
+    def _create_floating_ip(self, server):
+        floating_ips_pool = self.compute_client.floating_ip_pools.list()
+
+        if len(floating_ips_pool) != 0:
+            floating_ip = self.compute_client.floating_ips.create(
+                pool=floating_ips_pool[0].name)
+            self.set_resource(rand_name('ost1_test-floatingip-'), floating_ip)
+            return floating_ip
+        else:
+            self.fail('Incorrect OpenStack configurations. '
+                      'There is no any floating_ips pools')
+
+    def _ping_ip_address(self, ip_address):
+        cmd = ['ping', '-c1', '-w1', ip_address]
+
+        def ping():
+            proc = subprocess.Popen(cmd,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+            proc.wait()
+            if proc.returncode == 0:
+                return True
+
+        # TODO Allow configuration of execution and sleep duration.
+        return fuel_health.test.call_until_true(ping, 40, 1)
+
+    def _is_reachable_via_ssh(self, ip_address, username, private_key,
+                              timeout=120):
+        ssh_client = ssh.Client(ip_address, username,
+                                pkey=private_key,
+                                timeout=timeout)
+        return ssh_client.test_connection_auth()
+
+    def _check_vm_connectivity(self, ip_address, username, private_key,
+                               timeout=120):
+        self.assertTrue(self._ping_ip_address(ip_address),
+                        "Timed out waiting for %s to become "
+                        "reachable. Please, check Network "
+                        "configuration" % ip_address)
+
+    @classmethod
+    def tearDownClass(cls):
+        super(NovaNetworkScenarioTest, cls).tearDownClass()
+        cls._clear_networks()
