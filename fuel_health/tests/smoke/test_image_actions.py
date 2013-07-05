@@ -71,7 +71,7 @@ class TestImageAction(nmanager.OfficialClientTest):
         #self._create_security_group_rule()
 
         # boot a instance and create a timestamp file in it
-        server = self._boot_image(self.config.compute.image_ref)
+        server = self._boot_image(self.config.compute.image_name)
 
         # snapshot the instance
         snapshot_image_id = self._create_image(server)

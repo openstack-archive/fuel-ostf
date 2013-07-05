@@ -27,6 +27,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
         cls.host = cls.config.compute.controller_node
         cls.usr = cls.config.compute.controller_node_ssh_user
         cls.pwd = cls.config.compute.controller_node_ssh_password
+        cls.key = cls.config.compute.controller_node_ssh_key_path
         cls.hostname = cls.config.compute.controller_node_name
 
     @classmethod
@@ -55,8 +56,8 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
             4. Check number of normally executed services (with :-) state
                 is equal to the number of expected services
         """
-        with ExecutionTimeout(5):
-            output = SSHClient(self.host, self.usr, self.pwd).exec_command(
+        with ExecutionTimeout(300):
+            output = SSHClient(self.host, self.usr, self.pwd, pkey=self.key).exec_command(
                 "nova-manage service list")
         self.assertFalse(u'XXX' in output)
         self.assertEqual(len(self.list_of_expected_services),
@@ -88,7 +89,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
         expected_output = "in-addr.arpa domain name pointer " + self.hostname
         with ExecutionTimeout(10):
             try:
-                output = SSHClient(self.host, self.usr, self.pwd).exec_command(
+                output = SSHClient(self.host, self.usr, self.pwd, pkey=self.key).exec_command(
                     "host " + self.host)
             except SSHExecCommandFailed:
                 output = "'host' command failed."

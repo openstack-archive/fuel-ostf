@@ -196,7 +196,10 @@ ComputeGroup = [
     cfg.StrOpt('controller_node_ssh_password',
                default='pass',
                help="ssh user pass of one of the controller nodes"),
-    cfg.StrOpt('image_ref',
+    cfg.StrOpt('controller_node_ssh_key_path',
+               default='',
+               help="path to ssh key"),
+    cfg.StrOpt('image_name',
                default="{$IMAGE_ID}",
                help="Valid secondary image reference to be used in tests."),
     cfg.StrOpt('image_ref_alt',
@@ -381,7 +384,7 @@ OrchestrationGroup = [
                default='m1.micro',
                help="Instance type for tests. Needs to be big enough for a "
                     "full OS plus the test workload"),
-    cfg.StrOpt('image_ref',
+    cfg.StrOpt('image_name',
                default=None,
                help="Name of heat-cfntools enabled image to use when "
                     "launching test instances."),

@@ -38,8 +38,9 @@ class Client(object):
         self.username = username
         self.password = password
         if isinstance(pkey, basestring):
-            pkey = paramiko.RSAKey.from_private_key(
-                cStringIO.StringIO(str(pkey)))
+            if pkey != "":
+                pkey = paramiko.RSAKey.from_private_key(
+                    cStringIO.StringIO(str(pkey)))
         self.pkey = pkey
         self.look_for_keys = look_for_keys
         self.key_filename = key_filename
