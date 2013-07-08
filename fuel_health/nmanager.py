@@ -510,7 +510,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def _create_floating_ip(self, server):
         floating_ips_pool = self.compute_client.floating_ip_pools.list()
 
-        if len(floating_ips_pool) != 0:
+        if len(floating_ips_pool):
             floating_ip = self.compute_client.floating_ips.create(
                 pool=floating_ips_pool[0].name)
             self.set_resource(rand_name('ost1_test-floatingip-'), floating_ip)

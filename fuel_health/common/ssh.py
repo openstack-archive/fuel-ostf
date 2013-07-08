@@ -40,7 +40,7 @@ class Client(object):
         self.password = password
         pkey_file = self._get_key_from_file(pkey)
         if isinstance(pkey, basestring):
-            if pkey != "":
+            if pkey:
                 pkey = paramiko.RSAKey.from_private_key(pkey_file)
         self.pkey = pkey
         self.look_for_keys = look_for_keys
