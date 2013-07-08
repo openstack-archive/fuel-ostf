@@ -503,9 +503,8 @@ def register_smoke_opts(conf):
 class FuelConfig:
     """Provides OpenStack configuration information."""
 
-    DEFAULT_CONFIG_DIR = os.path.join(
-        os.path.abspath(os.path.dirname(os.path.dirname(__file__))),
-        "etc")
+    DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(
+        os.path.dirname(__file__)), 'etc')
 
     DEFAULT_CONFIG_FILE = "test.conf"
 
