@@ -284,11 +284,11 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         n_label = rand_name(label)
         cidr=self.config.network.tenant_network_cidr
         networks = self.compute_client.networks.create(label=n_label, cidr=cidr)
+        self.set_resource(n_label, networks)
         self.network.append(networks)
         self.verify_response_body_content(networks.label,
                                           n_label,
                                           "Network creation failed")
-
         return networks
 
     @classmethod
@@ -303,13 +303,11 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         nets = self.compute_client.networks.list()
         return nets
 
-    def _create_server(self, client, network, name, key_name, security_groups):
+    def _create_server(self, client, name, key_name, security_groups):
         flavor_id = self.config.compute.flavor_ref
         base_image_id = self.config.compute.image_ref
         create_kwargs = {
-            'nics': [
-                {'net-id': network.id},
-            ],
+
             'key_name': key_name,
             'security_groups': security_groups,
         }
@@ -334,7 +332,13 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             floating_ip = self.compute_client.floating_ips.create(
                 pool=floating_ips_pool[0].name)
             self.set_resource(rand_name('ost1_test-floatingip-'), floating_ip)
-            return floating_ip
+            try:
+                added_floating_ip = self.compute_client.server.add_floating_ip(
+                    server, floating_ip)
+                self.set_resource(rand_name('ost1_test-floatingip-'), added_floating_ip)
+                return added_floating_ip
+            except Exception:
+                self.fail("Can not allocate floating ip to the instacne")
         else:
             self.fail('Incorrect OpenStack configurations. '
                       'There is no any floating_ips pools')
@@ -367,7 +371,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                         "reachable. Please, check Network "
                         "configuration" % ip_address)
 
-    @classmethod
-    def tearDownClass(cls):
-        super(NovaNetworkScenarioTest, cls).tearDownClass()
-        cls._clear_networks()
+    # @classmethod
+    # def tearDownClass(cls):
+    #     super(NovaNetworkScenarioTest, cls).tearDownClass()
+    #     cls._clear_networks()
