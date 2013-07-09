@@ -395,6 +395,7 @@ class BaseIdentityAdminTest(fuel_health.test.BaseTestCase):
             cls.flag = False
 
     def setUp(self):
+        super(BaseIdentityAdminTest, self).setUp()
         if not self.flag:
             self.fail("Can not get a Keystone")
 
@@ -407,9 +408,8 @@ class BaseIdentityAdminTest(fuel_health.test.BaseTestCase):
             cls.teardown_flag = False
 
     def tearDown(self):
-        if not self.teardown_flag:
-            self.fail('Can not get a Kyestone   ')
-
+        super(BaseIdentityAdminTest, self).tearDown()
+        
     def disable_user(self, user_name):
         user = self.get_user_by_name(user_name)
         self.client.enable_disable_user(user['id'], False)
