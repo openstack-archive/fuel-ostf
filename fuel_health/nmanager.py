@@ -227,6 +227,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             cls.config.identity.password,
             cls.config.identity.tenant_name).tenant_id
         cls.network = []
+        cls.floating_ips = []
 
     def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
         kp_name = rand_name(namestart)
@@ -280,9 +281,9 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
         return secgroup
 
-    def _create_network(self, tenant_id, label='ost1_test-network-smoke-'):
+    def _create_network(self, label='ost1_test-network-smoke-'):
         n_label = rand_name(label)
-        cidr=self.config.network.tenant_network_cidr
+        cidr = self.config.network.tenant_network_cidr
         networks = self.compute_client.networks.create(label=n_label, cidr=cidr)
         self.set_resource(n_label, networks)
         self.network.append(networks)
@@ -293,11 +294,11 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     @classmethod
     def _clear_networks(cls):
-        for net in cls.network:
-            try:
-                cls.compute_client.networks.delete(net.id)
-            except Exception:
-                cls.fail("Can't delete network")
+        try:
+            for net in cls.network:
+                cls.compute_client.networks.delete(net)
+        except Exception:
+            pass
 
     def _list_networks(self):
         nets = self.compute_client.networks.list()
@@ -325,23 +326,29 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         self.set_resource(name, server)
         return server
 
-    def _create_floating_ip(self, server):
+    def _create_floating_ip(self):
         floating_ips_pool = self.compute_client.floating_ip_pools.list()
 
-        if len(floating_ips_pool) != 0:
+        if len(floating_ips_pool):
             floating_ip = self.compute_client.floating_ips.create(
                 pool=floating_ips_pool[0].name)
-            self.set_resource(rand_name('ost1_test-floatingip-'), floating_ip)
-            try:
-                added_floating_ip = self.compute_client.server.add_floating_ip(
-                    server, floating_ip)
-                self.set_resource(rand_name('ost1_test-floatingip-'), added_floating_ip)
-                return added_floating_ip
-            except Exception:
-                self.fail("Can not allocate floating ip to the instacne")
+
+            self.floating_ips.append(floating_ip)
+            return floating_ip
         else:
             self.fail('Incorrect OpenStack configurations. '
                       'There is no any floating_ips pools')
+
+    def _assign_floating_ip_to_instance(self, client, server, floating_ip):
+        try:
+            client.servers.add_floating_ip(server, floating_ip)
+        except Exception:
+            self.fail('Can not assign floating ip to instance')
+
+    @classmethod
+    def _clean_floating_is(cls):
+        for ip in cls.floating_ips:
+            cls.compute_client.floating_ips.delete(ip)
 
     def _ping_ip_address(self, ip_address):
         cmd = ['ping', '-c1', '-w1', ip_address]
@@ -371,7 +378,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                         "reachable. Please, check Network "
                         "configuration" % ip_address)
 
-    # @classmethod
-    # def tearDownClass(cls):
-    #     super(NovaNetworkScenarioTest, cls).tearDownClass()
-    #     cls._clear_networks()
+    @classmethod
+    def tearDownClass(cls):
+        super(NovaNetworkScenarioTest, cls).tearDownClass()
+        cls._clean_floating_is()
+        cls._clear_networks()

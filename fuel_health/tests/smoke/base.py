@@ -408,7 +408,7 @@ class BaseIdentityAdminTest(fuel_health.test.BaseTestCase):
 
     def tearDown(self):
         if not self.teardown_flag:
-            self.fail('Can not get a Kyestone')
+            self.fail('Can not get a Kyestone   ')
 
     def disable_user(self, user_name):
         user = self.get_user_by_name(user_name)
