@@ -38,10 +38,12 @@ class Client(object):
         self.host = host
         self.username = username
         self.password = password
-        pkey_file = self._get_key_from_file(pkey)
         if isinstance(pkey, basestring):
             if pkey:
+                pkey_file = self._get_key_from_file(pkey)
                 pkey = paramiko.RSAKey.from_private_key(pkey_file)
+            else:
+                pkey = None
         self.pkey = pkey
         self.look_for_keys = look_for_keys
         self.key_filename = key_filename
