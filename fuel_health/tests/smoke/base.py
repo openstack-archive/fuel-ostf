@@ -377,22 +377,38 @@ class BaseIdentityAdminTest(fuel_health.test.BaseTestCase):
 
     @classmethod
     def setUpClass(cls):
-        os = clients.AdminManager(interface=cls._interface)
-        cls.client = os.identity_client
-        cls.token_client = os.token_client
-        cls.service_client = os.services_client
+        try:
+            cls.flag = True
+            os = clients.AdminManager(interface=cls._interface)
+            cls.client = os.identity_client
+            cls.token_client = os.token_client
+            cls.service_client = os.services_client
 
-        if not cls.client.has_admin_extensions():
-            raise cls.skipException("Admin extensions disabled")
+            if not cls.client.has_admin_extensions():
+                raise cls.skipException("Admin extensions disabled")
 
-        cls.data = DataGenerator(cls.client)
+            cls.data = DataGenerator(cls.client)
 
-        os = clients.Manager(interface=cls._interface)
-        cls.non_admin_client = os.identity_client
+            os = clients.Manager(interface=cls._interface)
+            cls.non_admin_client = os.identity_client
+        except Exception:
+            cls.flag = False
+
+    def setUp(self):
+        if not self.flag:
+            self.fail("Can not get a Keystone")
 
     @classmethod
     def tearDownClass(cls):
-        cls.data.teardown_all()
+        try:
+            cls.teardown_flag = True
+            cls.data.teardown_all()
+        except Exception:
+            cls.teardown_flag = False
+
+    def tearDown(self):
+        if not self.teardown_flag:
+            self.fail('Can not get a Kyestone   ')
 
     def disable_user(self, user_name):
         user = self.get_user_by_name(user_name)
