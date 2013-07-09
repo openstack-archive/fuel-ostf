@@ -94,25 +94,25 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_001_create_keypairs(self):
-        """ Test verifies keypair creation """
+        """ Test keypair can be created. """
         self.keypairs[self.tenant_id] = self._create_keypair(
             self.compute_client)
 
     @attr(type=['fuel', 'smoke'])
     def test_002_create_security_groups(self):
-        """Test verifies security group creation"""
+        """Test security group can be created."""
         self.security_groups[self.tenant_id] = self._create_security_group(
             self.compute_client)
 
     @attr(type=['fuel', 'smoke'])
     def test_003_create_networks(self):
-        """Test verifies network creation"""
+        """Test network can be created."""
         network = self._create_network(self.tenant_id)
         self.networks.append(network)
 
     @attr(type=['fuel', 'smoke'])
     def test_004_check_networks(self):
-        """Test verifies created network"""
+        """Test network was created correctly."""
         seen_nets = self._list_networks()
         seen_labels = [n.label for n in seen_nets]
         seen_ids = [n.id for n in seen_nets]
@@ -129,7 +129,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     def test_005_create_servers(self):
         """
-         Test verifies instance creation
+        Test instance can be created.
         """
         if not (self.keypairs or self.security_groups or self.networks):
             raise self.skipTest('Necessary resources have not been defined')
@@ -144,7 +144,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     def test_006_check_tenant_network_connectivity(self):
         """
-        Test verifies created network connectivity
+        Test network connectivity was created properly.
         """
         if not self.config.network.tenant_networks_reachable:
             msg = 'Tenant networks not configured to be reachable.'
@@ -164,7 +164,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     def test_007_assign_floating_ips(self):
         """
-        Test verifies assignment of floating ip to created instance
+        Test floating IP can be assigned to created instance.
         """
         if not self.servers:
             raise self.skipTest("No VM's have been created")
@@ -176,7 +176,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     def test_008_check_public_network_connectivity(self):
         """
-        Test verifies network connectivity trough floating ip
+        Test network connectivity through floating IP works correctly.
         """
         if not self.floating_ips:
             raise self.skipTest('No floating ips have been allocated.')

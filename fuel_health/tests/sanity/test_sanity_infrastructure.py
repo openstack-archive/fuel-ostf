@@ -37,24 +37,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
     @attr(type=['sanity', 'fuel'])
     def test_services_state(self):
         """
-        Test all the expected services are on.
-        Target component: OpenStack
-        Special requirements:
-            1. A controller's IP should be specified in
-                controller_node parameter of the config file.
-            2. SSH user credentials should be specified in
-                controller_node_ssh_user/password parameters
-                of the config file.
-            3. List of services are expected to be run should be specified in
-                enabled_services parameter of the config file.
-
-        Scenario:
-            1. Connect to a controller node via SSH.
-            2. Execute nova-manage service list command.
-            3. Check there is no failed services (with XXX state)
-                in the command output.
-            4. Check number of normally executed services (with :-) state
-                is equal to the number of expected services
+        Test all of the expected services are on.
         """
         with ExecutionTimeout(300):
             output = SSHClient(self.host, self.usr, self.pwd, pkey=self.key).exec_command(
@@ -67,23 +50,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
     @attr(type=['sanity', 'fuel'])
     def test_dns_state(self):
         """
-        Test all the expected services are on.
-        Target component: OpenStack
-        Special requirements:
-            1. A controller's IP should be specified in
-                controller_node parameter of the config file.
-            2. The controller's domain name should be specified in
-                controller_node_name parameter of the config file.
-            3. The controller SSH user credentials should be specified in
-                controller_node_ssh_user/password parameters
-                of the config file.
-
-        Scenario:
-            1. Connect to a controller node via SSH.
-            2. Execute host command for the controller IP.
-            3. Check expected controller's domain name is present
-                in the command output to be sure the domain name
-                was successfully resolved.
+        Test dns is available.
         """
         expected_output = "in-addr.arpa domain name pointer " + self.hostname
         with ExecutionTimeout(300):

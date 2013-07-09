@@ -59,12 +59,7 @@ class TestImageAction(nmanager.OfficialClientTest):
 
     def test_snapshot(self):
         """
-        Test image actions verifies:
-        - image can be created
-        - instance can be booted from created image
-        - snapshot can be created from instance;
-        - instance can be booted from snapshot.
-
+        Test instance can be booted and snapshoted from new image.
         """
         # prepare for booting a instance
         self._add_keypair()

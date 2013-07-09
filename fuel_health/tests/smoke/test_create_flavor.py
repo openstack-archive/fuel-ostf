@@ -17,7 +17,7 @@ class FlavorsAdminTest(base.BaseComputeAdminTest):
     @attr(type=["fuel", "smoke"])
     def test_create_flavor(self):
         """
-        Test low requirements flavor creation.
+        Test low requirements flavor can be created.
         """
         resp, flavor = self.create_flavor(ram=255,
                                           name='ost1_test-flavor-smoke-test',

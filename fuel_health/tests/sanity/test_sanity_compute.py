@@ -11,13 +11,7 @@ class SanityComputeTest(base.BaseComputeTest):
     @attr(type=['sanity', 'fuel'])
     def test_list_instances(self):
         """
-        Test checks list of instances is available.
-        Target component: Nova
-
-        Scenario:
-            1. Request list of instances.
-            2. Check response status is equal to 200.
-            3. Check response contains "servers" section.
+        Test checks that existing instances can be listed.
         """
         resp, body = self.servers_client.list_servers()
         self.verify_response_status(resp.status, u'Nova')
@@ -28,13 +22,7 @@ class SanityComputeTest(base.BaseComputeTest):
     @attr(type=['sanity', 'fuel'])
     def test_list_images(self):
         """
-        Test checks list of images is available.
-        Target component: Glance
-
-        Scenario:
-            1. Request list of images.
-            2. Check response status is equal to 200.
-            3. Check response contains "images" section.
+        Test checks that existing images can be listed.
         """
         resp, body = self.images_client.list_images()
         self.verify_response_status(resp.status, 'Glance')
@@ -45,13 +33,7 @@ class SanityComputeTest(base.BaseComputeTest):
     @attr(type=['sanity', 'fuel'])
     def test_list_volumes(self):
         """
-        Test checks list of volumes is available.
-        Target component: Swift
-
-        Scenario:
-            1. Request list of volumes.
-            2. Check response status is equal to 200.
-            3. Check response contains "volumes" section.
+        Test checks that existing volumes can be listed.
         """
         resp, body = self.volumes_client.list_volumes()
         self.verify_response_status(resp.status, 'Swift')
@@ -62,13 +44,7 @@ class SanityComputeTest(base.BaseComputeTest):
     @attr(type=['sanity', 'fuel'])
     def test_list_snapshots(self):
         """
-        Test checks list of snapshots is available.
-        Target component: Swift
-
-        Scenario:
-            1. Request list of snapshots.
-            2. Check response status is equal to 200.
-            3. Check response contains "snapshots" section.
+        Test checks that existing snapshots can be listed.
         """
         resp, body = self.snapshots_client.list_snapshots()
         self.verify_response_status(resp.status, 'Swift')
@@ -79,13 +55,7 @@ class SanityComputeTest(base.BaseComputeTest):
     @attr(type=['sanity', 'fuel'])
     def test_list_flavors(self):
         """
-        Test checks list of flavors is available.
-        Target component: Nova
-
-        Scenario:
-            1. Request list of flavors.
-            2. Check response status is equal to 200.
-            3. Check response contains "flavors" section.
+        Test checks that existing flavors can be listed.
         """
         resp, body = self.flavors_client.list_flavors()
         self.verify_response_status(resp.status, 'Nova')
@@ -96,13 +66,7 @@ class SanityComputeTest(base.BaseComputeTest):
     @attr(type=['sanity', 'fuel'])
     def test_list_rate_limits(self):
         """
-        Test checks list of absolute limits is available.
-        Target component: Cinder
-
-        Scenario:
-            1. Request list of limits.
-            2. Check response status is equal to 200.
-            3. Check response contains absolute limits in "limits" section.
+        Test checks that absolute limits can be listed.
         """
         resp, body = self.limits_client.get_absolute_limits()
         self.verify_response_status(resp.status, 'Nova')
