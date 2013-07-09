@@ -36,9 +36,9 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
         cls.keypairs = {}
         cls.security_groups = {}
-        cls.networks = []
+        cls.network = []
         cls.servers = []
-        cls.floating_ips = {}
+        cls.floating_ips = []
 
     @attr(type=['fuel', 'smoke'])
     def test_001_create_keypairs(self):
@@ -55,8 +55,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     def test_003_create_networks(self):
         """Test verifies network creation"""
-        network = self._create_network(self.tenant_id)
-        self.networks.append(network)
+        networks = self._create_network()
+        self.network.append(networks)
 
     @attr(type=['fuel', 'smoke'])
     def test_004_check_networks(self):
@@ -64,7 +64,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         seen_nets = self._list_networks()
         seen_labels = [n.label for n in seen_nets]
         seen_ids = [n.id for n in seen_nets]
-        for mynet in self.networks:
+        for mynet in self.network:
             self.verify_response_body(seen_labels,
                                       mynet.label,
                                       ('Network is not created '
@@ -173,10 +173,12 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             server = self._create_server(self.compute_client,
                                          name, keypair_name, security_groups)
             self.servers.append(server)
-        for server in self.servers:
-            floating_ip = self._create_floating_ip(server)
-            self.floating_ips.setdefault(server, [])
-            self.floating_ips[server].append(floating_ip)
+            floating_ip = self._create_floating_ip()
+
+            self._assign_floating_ip_to_instance(
+                self.compute_client, server, floating_ip)
+
+            self.floating_ips.append(floating_ip)
 
     @attr(type=['fuel', 'smoke'])
     def test_008_check_public_network_connectivity(self):
@@ -208,16 +210,15 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                     self.compute_client, name, keypair_name, security_groups)
                 self.servers.append(server)
             for server in self.servers:
-                floating_ip = self._create_floating_ip(server)
-                self.floating_ips.setdefault(server, [])
-                self.floating_ips[server].append(floating_ip)
-
+                floating_ip = self._create_floating_ip()
+                self._assign_floating_ip_to_instance(
+                    self.compute_client, server, floating_ip)
+                self.floating_ips.append(floating_ip)
 
         # The target login is assumed to have been configured for
         # key-based authentication by cloud-init.
         ssh_login = self.config.compute.image_ssh_user
         private_key = self.keypairs[self.tenant_id].private_key
-        for server, floating_ips in self.floating_ips.iteritems():
-            for floating_ip in floating_ips:
-                ip_address = floating_ip.ip
-                self._check_vm_connectivity(ip_address, ssh_login, private_key)
+        for floating_ip in self.floating_ips:
+            ip_address = floating_ip.ip
+            self._check_vm_connectivity(ip_address, ssh_login, private_key)
