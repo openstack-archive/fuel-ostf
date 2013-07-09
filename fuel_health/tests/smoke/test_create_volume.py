@@ -24,9 +24,7 @@ class VolumesTest(base.BaseComputeTest):
 
     @attr(type=["fuel", "smoke"])
     def test_volume_create(self):
-        """
-        Test volume can be created, attached to an instance, detached and deleted.
-        """
+        """Test volume can be created, attached to an instance, detached and deleted."""
         v_name = rand_name('ost1_test-test')
         metadata = {'Type': 'work'}
 

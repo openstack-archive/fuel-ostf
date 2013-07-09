@@ -11,9 +11,7 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_list_services(self):
-        """
-        Test checks that active services can be listed.
-        """
+        """Test checks that active services can be listed."""
         resp, body = self.client.list_services()
         self.verify_response_status(resp.status, u'Nova')
         self.verify_response_body(body, u'OS-KSADM:services',
@@ -22,9 +20,7 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_list_users(self):
-        """
-        Test checks that existing users can be listed.
-        """
+        """Test checks that existing users can be listed."""
         resp, body = self.client.get_users()
         self.verify_response_status(resp.status, u'Keystone')
         self.verify_response_body(body, u'users',

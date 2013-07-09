@@ -58,9 +58,7 @@ class TestImageAction(nmanager.OfficialClientTest):
         return image_id
 
     def test_snapshot(self):
-        """
-        Test instance can be booted and snapshoted from new image.
-        """
+        """Test instance can be booted and snapshoted from new image."""
         # prepare for booting a instance
         self._add_keypair()
         #self._create_security_group_rule()

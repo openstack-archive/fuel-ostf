@@ -9,9 +9,7 @@ class NetworksTest(base.BaseNetworkTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_list_networks(self):
-        """
-        Test checks that available networks can be listed.
-        """
+        """Test checks that available networks can be listed."""
         resp, body = self.client.list_networks()
         self.verify_response_status(resp.status, u'Network (Neutron or Nova)')
         self.verify_response_body(body, u'networks',
@@ -21,9 +19,7 @@ class NetworksTest(base.BaseNetworkTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_list_ports(self):
-        """
-        Test checks that existing ports can be listed.
-        """
+        """Test checks that existing ports can be listed."""
         resp, body = self.client.list_ports()
         self.verify_response_status(resp.status, u'Network (Neutron or Nova)')
         self.verify_response_body(body, u'ports',

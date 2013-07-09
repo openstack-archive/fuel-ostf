@@ -8,17 +8,13 @@ from fuel_health.tests.smoke import base
 
 class FlavorsAdminTest(base.BaseComputeAdminTest):
 
-    """
-    Tests for flavor creation that require admin privileges.
-    """
+    """Tests for flavor creation that require admin privileges."""
 
     _interface = 'json'
 
     @attr(type=["fuel", "smoke"])
     def test_create_flavor(self):
-        """
-        Test low requirements flavor can be created.
-        """
+        """Test low requirements flavor can be created."""
         resp, flavor = self.create_flavor(ram=255,
                                           name='ost1_test-flavor-smoke-test',
                                           disk=1)
