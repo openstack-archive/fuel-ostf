@@ -24,10 +24,8 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
 
     @attr(type=["fuel", "smoke"])
     def test_create_user(self):
-        """
-        Test non-admin user, tenant and user role can be created and used \
-        to login to Horizon.
-        """
+        """Test non-admin user, tenant and user role can be created and used \
+        to login to Horizon."""
         # Create a tenant:
         resp, tenant = self.client.create_tenant(self.alt_tenant)
         self.verify_response_status(

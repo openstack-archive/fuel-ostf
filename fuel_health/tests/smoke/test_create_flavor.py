@@ -8,9 +8,7 @@ from fuel_health.tests.smoke import base
 
 class FlavorsAdminTest(base.BaseComputeAdminTest):
 
-    """
-    Tests for flavor creation that require admin privileges.
-    """
+    """Tests for flavor creation that require admin privileges."""
 
     _interface = 'json'
 

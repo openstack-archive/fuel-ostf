@@ -36,9 +36,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_services_state(self):
-        """
-        Test all of the expected services are on.
-        """
+        """Test all of the expected services are on."""
         with ExecutionTimeout(300):
             output = SSHClient(self.host, self.usr, self.pwd, pkey=self.key).exec_command(
                 "nova-manage service list")
@@ -49,9 +47,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_dns_state(self):
-        """
-        Test dns is available.
-        """
+        """Test dns is available."""
         expected_output = "in-addr.arpa domain name pointer " + self.hostname
         with ExecutionTimeout(300):
             try:

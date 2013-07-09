@@ -128,9 +128,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_005_create_servers(self):
-        """
-        Test instance can be created.
-        """
+        """Test instance can be created."""
         if not (self.keypairs or self.security_groups or self.networks):
             raise self.skipTest('Necessary resources have not been defined')
         for i, network in enumerate(self.networks):
@@ -143,9 +141,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_006_check_tenant_network_connectivity(self):
-        """
-        Test network connectivity was created properly.
-        """
+        """Test network connectivity was created properly."""
         if not self.config.network.tenant_networks_reachable:
             msg = 'Tenant networks not configured to be reachable.'
             raise self.skipTest(msg)
@@ -163,9 +159,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_007_assign_floating_ips(self):
-        """
-        Test floating IP can be assigned to created instance.
-        """
+        """Test floating IP can be assigned to created instance."""
         if not self.servers:
             raise self.skipTest("No VM's have been created")
         for server in self.servers:
@@ -175,9 +169,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_008_check_public_network_connectivity(self):
-        """
-        Test network connectivity through floating IP works correctly.
-        """
+        """Test network connectivity through floating IP works correctly."""
         if not self.floating_ips:
             raise self.skipTest('No floating ips have been allocated.')
         # The target login is assumed to have been configured for
