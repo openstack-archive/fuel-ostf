@@ -158,7 +158,6 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
         if 'name' in kwargs:
             name = kwargs.pop('name')
         flavor = kwargs.get('flavor', cls.flavor_ref)
-        # image_id = kwargs.get('image_id', cls.image_ref)
         image_id = kwargs.get('image_id', nmanager.get_image_from_name())
 
         resp, body = cls.servers_client.create_server(
