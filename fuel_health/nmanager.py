@@ -164,13 +164,16 @@ class OfficialClientManager(fuel_health.manager.Manager):
 
         _client = None
 
+        if not self.config.network.quantum_available:
+            return _client
+
         try:
             import quantumclient.v2_0.client
-            _client = quantumclient.v2_0.client(username=username,
-                                                       password=password,
-                                                       tenant_name=tenant_name,
-                                                       auth_url=auth_url,
-                                                       insecure=dscv)
+            _client = quantumclient.v2_0.client.Client(username=username,
+                                                password=password,
+                                                tenant_name=tenant_name,
+                                                auth_url=auth_url,
+                                                insecure=dscv)
         except ImportError:
             pass
         return _client
