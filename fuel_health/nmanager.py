@@ -307,7 +307,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def _create_server(self, client, name, key_name, security_groups):
         flavor_id = self.config.compute.flavor_ref
-        base_image_id = self.config.compute.image_name
+        base_image_id = get_image_from_name()
         create_kwargs = {
 
             'key_name': key_name,
