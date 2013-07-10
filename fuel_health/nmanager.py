@@ -2,7 +2,6 @@ import logging
 import subprocess
 
 # Default client libs
-import cinderclient.client
 import glanceclient
 import keystoneclient.v2_0.client
 import novaclient.client
@@ -100,11 +99,17 @@ class OfficialClientManager(fuel_health.manager.Manager):
             tenant_name = self.config.identity.tenant_name
 
         auth_url = self.config.identity.uri
-        return cinderclient.client.Client(self.CINDERCLIENT_VERSION,
+        _client = None
+        try:
+            import cinderclient.client
+            _client = cinderclient.client.Client(self.CINDERCLIENT_VERSION,
                                           username,
                                           password,
                                           tenant_name,
                                           auth_url)
+        except ImportError:
+            pass
+        return _client
 
     def _get_identity_client(self, username=None, password=None,
                              tenant_name=None):
@@ -139,6 +144,11 @@ class OfficialClientManager(fuel_health.manager.Manager):
         # preferable to authenticating as a specific user because
         # working with certain resources (public routers and networks)
         # often requires admin privileges anyway.
+        """
+
+
+        :raise:
+        """
         username = self.config.identity.admin_username
         password = self.config.identity.admin_password
         tenant_name = self.config.identity.admin_tenant_name
@@ -152,15 +162,21 @@ class OfficialClientManager(fuel_health.manager.Manager):
         auth_url = self.config.identity.uri
         dscv = self.config.identity.disable_ssl_certificate_validation
 
-        return quantumclient.v2_0.client.Client(username=username,
-                                                password=password,
-                                                tenant_name=tenant_name,
-                                                auth_url=auth_url,
-                                                insecure=dscv)
+        _client = None
+
+        try:
+            import quantumclient.v2_0.client
+            _client = quantumclient.v2_0.client(username=username,
+                                                       password=password,
+                                                       tenant_name=tenant_name,
+                                                       auth_url=auth_url,
+                                                       insecure=dscv)
+        except ImportError:
+            pass
+        return _client
 
 
 class OfficialClientTest(fuel_health.test.TestCase):
-
     manager_class = OfficialClientManager
 
     @classmethod
