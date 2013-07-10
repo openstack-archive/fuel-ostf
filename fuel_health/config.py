@@ -499,8 +499,20 @@ def register_smoke_opts(conf):
         conf.register_opt(opt, group='smoke')
 
 
-@singleton
-class FuelConfig:
+class Singleton(object):
+
+    _instances = {}
+
+    def __new__(cls, *args, **kwargs):
+        pid = os.getpid()
+        if pid not in cls._instances:
+            LOG.info('PID INSIDE: %s' % pid)
+            cls._instances[pid] = super(Singleton, cls).__new__(
+                cls, *args, **kwargs)
+        return cls._instances[pid]
+
+
+class FuelConfig(Singleton):
     """Provides OpenStack configuration information."""
 
     DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(
@@ -515,16 +527,21 @@ class FuelConfig:
         failsafe_path = "/etc/fuel/" + self.DEFAULT_CONFIG_FILE
 
         # Environment variables override defaults...
-        conf_dir = os.environ.get('FUEL_CONFIG_DIR',
-                                  self.DEFAULT_CONFIG_DIR)
-        conf_file = os.environ.get('FUEL_CONFIG', self.DEFAULT_CONFIG_FILE)
+        custom_config = os.environ.get('CUSTOM_FUEL_CONFIG')
+        LOG.info('CUSTOM CONFIG PATH %s' % custom_config)
+        if custom_config:
+            path = custom_config
+        else:
+            conf_dir = os.environ.get('FUEL_CONFIG_DIR',
+                                      self.DEFAULT_CONFIG_DIR)
+            conf_file = os.environ.get('FUEL_CONFIG', self.DEFAULT_CONFIG_FILE)
 
-        path = os.path.join(conf_dir, conf_file)
+            path = os.path.join(conf_dir, conf_file)
 
-        if not (os.path.isfile(path) or
-                'FUEL_CONFIG_DIR' in os.environ or
-                'FUEL_CONFIG' in os.environ):
-            path = failsafe_path
+            if not (os.path.isfile(path) or
+                    'FUEL_CONFIG_DIR' in os.environ or
+                    'FUEL_CONFIG' in os.environ):
+                path = failsafe_path
 
         LOG.info("Using fuel config file %s" % path)
 
