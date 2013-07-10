@@ -24,51 +24,62 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
 
     @attr(type=["fuel", "smoke"])
     def test_create_user(self):
-        """Test non-admin user, tenant and user role can be created and used \
-        to login to Horizon."""
+        """ Test verifies user creation and auth in Horizon """
         # Create a tenant:
-        resp, tenant = self.client.create_tenant(self.alt_tenant)
-        self.verify_response_status(
-            int(resp['status']), msg="Verify request was successful.")
+        try:
+            resp, tenant = self.client.create_tenant(self.alt_tenant)
+            self.verify_response_status(
+                int(resp['status']), msg="Verify request was successful.")
+        except Exception:
+            self.fail('Tenant creation failure, please, '
+                      'check Keystone configuration ')
 
         # Create a user:
-        resp, user = self.client.create_user(self.alt_user, self.alt_password,
-                                             tenant['id'],
-                                             self.alt_email)
-        self.verify_response_status(
-            int(resp['status']), msg="Verify request was successful.")
-        self.verify_response_body_value(user['name'], self.alt_user)
+        try:
+            resp, user = self.client.create_user(
+                self.alt_user, self.alt_password, tenant['id'], self.alt_email)
+            self.verify_response_status(
+                int(resp['status']), msg="Verify request was successful.")
+            self.verify_response_body_value(user['name'], self.alt_user)
+        except Exception:
+            self.fail("Can't create a user. Please check Keystone")
 
         # Create a user role:
-        resp, role = self.client.create_role(user['name'])
-        self.verify_response_status(
-            int(resp['status']), msg="Verify request was successful.")
+        try:
+            resp, role = self.client.create_role(user['name'])
+            self.verify_response_status(
+                int(resp['status']), msg="Verify request was successful.")
+        except Exception:
+            self.fail("User role creation fails. Please check Keystone")
 
         # Authenticate with created user:
-        resp, body = self.token_client.auth(
-            user['name'], self.alt_password, tenant['name'])
-        self.verify_response_status(
-            int(resp['status']), msg="Verify request was successful.")
-
-         # Auth in horizon with non-admin user
-        client = requests.session()
-        url = self.config.identity.url
-
-        # Retrieve the CSRF token first
-        client.get(url)  # sets cookie
-        if len(client.cookies) == 0:
-            login_data = dict(username=user['name'],
-                              password=self.alt_password,
-                              next='/')
-            resp = client.post(url, data=login_data, headers=dict(Referer=url))
+        try:
+            resp, body = self.token_client.auth(
+                user['name'], self.alt_password, tenant['name'])
             self.verify_response_status(
-                resp.status_code, msg="Verify request was successful.")
-        else:
-            csrftoken = client.cookies['csrftoken']
-            login_data = dict(username=user['name'],
-                              password=self.alt_password,
-                              csrfmiddlewaretoken=csrftoken,
-                              next='/')
-            resp = client.post(url, data=login_data, headers=dict(Referer=url))
-            self.verify_response_status(
-                resp.status_code, msg="Verify request was successful.")
+                int(resp['status']), msg="Verify request was successful.")
+
+            # Auth in horizon with non-admin user
+            client = requests.session()
+            url = self.config.identity.url
+
+            # Retrieve the CSRF token first
+            client.get(url)  # sets cookie
+            if len(client.cookies) == 0:
+                login_data = dict(username=user['name'],
+                                  password=self.alt_password,
+                                  next='/')
+                resp = client.post(url, data=login_data, headers=dict(Referer=url))
+                self.verify_response_status(
+                    resp.status_code, msg="Verify request was successful.")
+            else:
+                csrftoken = client.cookies['csrftoken']
+                login_data = dict(username=user['name'],
+                                  password=self.alt_password,
+                                  csrfmiddlewaretoken=csrftoken,
+                                  next='/')
+                resp = client.post(url, data=login_data, headers=dict(Referer=url))
+                self.verify_response_status(
+                    resp.status_code, msg="Verify request was successful.")
+        except Exception:
+            self.fail("Can not auth in Horizon, please check Horizon is alive")
