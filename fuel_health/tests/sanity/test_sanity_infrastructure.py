@@ -37,9 +37,9 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
     @attr(type=['sanity', 'fuel'])
     def test_services_state(self):
         """Test all of the expected services are on."""
-        with ExecutionTimeout(300):
-            output = SSHClient(self.host, self.usr, self.pwd, pkey=self.key).exec_command(
-                "nova-manage service list")
+        output = SSHClient(self.host, self.usr,
+                           self.pwd, pkey=self.key).exec_command(
+            'nova-manage service list')
         self.assertFalse(u'XXX' in output)
         self.assertEqual(len(self.list_of_expected_services),
                          output.count(u':-)'),
@@ -49,11 +49,10 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
     def test_dns_state(self):
         """Test dns is available."""
         expected_output = "in-addr.arpa domain name pointer " + self.hostname
-        with ExecutionTimeout(300):
-            try:
-                output = SSHClient(self.host, self.usr, self.pwd, pkey=self.key).exec_command(
-                    "host " + self.host)
-            except SSHExecCommandFailed:
-                output = "'host' command failed."
+        try:
+            output = SSHClient(self.host, self.usr, self.pwd,
+                               pkey=self.key).exec_command("host " + self.host)
+        except SSHExecCommandFailed:
+            output = "'host' command failed."
         self.assertTrue(expected_output in output,
                         'DNS name cannot be resolved')
