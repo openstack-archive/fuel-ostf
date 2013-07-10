@@ -22,7 +22,6 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
     alt_description = data_utils.rand_name('ost1_test-desc_')
     alt_role = data_utils.rand_name('ost1_test-role_')
 
-
     @attr(type=["fuel", "smoke"])
     def test_create_user(self):
         """ Test verifies user creation and auth in Horizon """

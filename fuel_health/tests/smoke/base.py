@@ -3,11 +3,11 @@ import time
 
 from fuel_health import clients
 from fuel_health import exceptions
-from fuel_health import clients
 import fuel_health.test
 from fuel_health.common import log as logging
 from fuel_health.common.utils.data_utils import rand_name, rand_int_id
 from fuel_health.tests import smoke
+from fuel_health import nmanager
 
 
 LOG = logging.getLogger(__name__)
@@ -45,8 +45,6 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
         cls.build_interval = cls.config.compute.build_interval
         cls.build_timeout = cls.config.compute.build_timeout
         cls.ssh_user = cls.config.compute.ssh_user
-        cls.image_ref = cls.config.smoke.image_ref
-        cls.image_ref_alt = cls.config.smoke.image_ref_alt
         cls.flavor_ref = cls.config.smoke.flavor_ref
         cls.flavor_ref_alt = cls.config.smoke.flavor_ref_alt
         if os.config.network.quantum_available:
@@ -160,7 +158,7 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
         if 'name' in kwargs:
             name = kwargs.pop('name')
         flavor = kwargs.get('flavor', cls.flavor_ref)
-        image_id = kwargs.get('image_id', cls.image_ref)
+        image_id = kwargs.get('image_id', nmanager.get_image_from_name())
 
         resp, body = cls.servers_client.create_server(
             name, image_id, flavor, **kwargs)

@@ -58,20 +58,13 @@ class TestImageAction(nmanager.OfficialClientTest):
         return image_id
 
     def test_snapshot(self):
-        """
-        Test image actions verifies:
-        - image can be created
-        - instance can be booted from created image
-        - snapshot can be created from instance;
-        - instance can be booted from snapshot.
-
-        """
+        """Test instance can be booted and snapshoted from new image."""
         # prepare for booting a instance
         self._add_keypair()
         #self._create_security_group_rule()
 
         # boot a instance and create a timestamp file in it
-        server = self._boot_image(self.config.compute.image_ref)
+        server = self._boot_image(nmanager.get_image_from_name())
 
         # snapshot the instance
         snapshot_image_id = self._create_image(server)

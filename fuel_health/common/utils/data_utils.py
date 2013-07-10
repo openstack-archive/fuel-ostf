@@ -62,11 +62,6 @@ def build_url(host, port, api_version=None, path=None,
     return url
 
 
-def parse_image_id(image_ref):
-    """Return the image id from a given image ref."""
-    return image_ref.rsplit('/')[-1]
-
-
 def arbitrary_string(size=4, base_text=None):
     """
     Return size characters from base_text, repeating the base_text infinitely

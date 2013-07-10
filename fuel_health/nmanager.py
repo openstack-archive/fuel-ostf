@@ -20,6 +20,7 @@ from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import exceptions
 import fuel_health.manager
 import fuel_health.test
+from fuel_health import config
 
 
 LOG = logging.getLogger(__name__)
@@ -306,7 +307,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def _create_server(self, client, name, key_name, security_groups):
         flavor_id = self.config.compute.flavor_ref
-        base_image_id = self.config.compute.image_ref
+        base_image_id = self.config.compute.image_name
         create_kwargs = {
 
             'key_name': key_name,
@@ -383,3 +384,13 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         super(NovaNetworkScenarioTest, cls).tearDownClass()
         cls._clean_floating_is()
         cls._clear_networks()
+
+
+def get_image_from_name():
+    cfg = config.FuelConfig()
+    image_name = cfg.compute.image_name
+    image_client = OfficialClientManager()._get_image_client()
+    images = image_client.images.list()
+    for im in images:
+        if im.name == image_name:
+            return im.id
