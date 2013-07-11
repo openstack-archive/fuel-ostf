@@ -37,16 +37,20 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
     @attr(type=['sanity', 'fuel'])
     def test_services_state(self):
         """Test all of the expected services are on."""
+        output_msg = ''
         try:
             output = SSHClient(self.host, self.usr, self.pwd,
                                pkey=self.key).exec_command('nova-manage '
                                                            'service list')
         except SSHExecCommandFailed:
-            output = "'nova-manage' command failed."
-        self.assertFalse(u'XXX' in output)
-        self.assertEqual(len(self.list_of_expected_services),
+            output_msg = "Error: 'nova-manage' command execution failed."
+
+        output_msg = output_msg or ('Some service has not been started:' +
+                                    str(self.list_of_expected_services))
+        self.assertFalse(u'XXX' in output, output_msg)
+        self.assertTrue(len(self.list_of_expected_services) <=
                          output.count(u':-)'),
-                         'Not all the expected services started')
+                         output_msg)
 
     @attr(type=['sanity', 'fuel'])
     def test_dns_state(self):
