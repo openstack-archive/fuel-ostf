@@ -224,10 +224,9 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     @classmethod
     def check_preconditions(cls):
+        cls.enabled = True
         if cls.config.network.quantum_available:
             cls.enabled = False
-            msg = "Nova Networking not available"
-            raise cls.skipException(msg)
         else:
             cls.enabled = True
             # ensure the config says true
@@ -235,7 +234,10 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 cls.compute_client.networks.list()
             except exceptions.EndpointNotFound:
                 cls.enabled = False
-                raise
+
+    def setUp(self):
+        if not self.enabled:
+            self.skip(reason='Nova Networking not available')
 
 
     @classmethod
