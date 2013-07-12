@@ -1,5 +1,5 @@
 from fuel_health.common.utils.data_utils import rand_name
-from fuel_health.test import attr
+from nose.plugins.attrib import attr
 from fuel_health.tests.smoke import base
 
 class VolumesTest(base.BaseComputeTest):

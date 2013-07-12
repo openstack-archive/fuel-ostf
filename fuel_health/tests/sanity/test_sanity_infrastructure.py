@@ -1,7 +1,7 @@
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.exceptions import SSHExecCommandFailed
-from fuel_health.test import attr
-from fuel_health.test import ExecutionTimeout
+from nose.plugins.attrib import attr
+
 from fuel_health.tests.sanity import base
 
 
@@ -55,9 +55,10 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
             4. Check number of normally executed services (with :-) state
                 is equal to the number of expected services
         """
-        with ExecutionTimeout(5):
-            output = SSHClient(self.host, self.usr, self.pwd).exec_command(
-                "nova-manage service list")
+        output = ""
+        # with ExecutionTimeout(5):
+        #     output = SSHClient(self.host, self.usr, self.pwd).exec_command(
+        #         "nova-manage service list")
         self.assertFalse(u'XXX' in output)
         self.assertEqual(len(self.list_of_expected_services),
                          output.count(u':-)'),
@@ -86,11 +87,11 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
         """
         output = ''
         expected_output = "in-addr.arpa domain name pointer " + self.hostname
-        with ExecutionTimeout(10):
-            try:
-                output = SSHClient(self.host, self.usr, self.pwd).exec_command(
+
+        try:
+            output = SSHClient(self.host, self.usr, self.pwd).exec_command(
                     "host " + self.host)
-            except SSHExecCommandFailed:
+        except SSHExecCommandFailed:
                 output = "'host' command failed."
         self.assertTrue(expected_output in output,
                         'DNS name cannot be resolved')

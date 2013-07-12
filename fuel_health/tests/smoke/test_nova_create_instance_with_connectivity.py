@@ -1,6 +1,6 @@
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import nmanager
-from fuel_health.test import attr
+from nose.plugins.attrib import attr
 
 
 class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):

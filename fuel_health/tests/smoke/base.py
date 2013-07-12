@@ -409,7 +409,7 @@ class BaseIdentityAdminTest(fuel_health.test.BaseTestCase):
 
     def tearDown(self):
         super(BaseIdentityAdminTest, self).tearDown()
-        
+
     def disable_user(self, user_name):
         user = self.get_user_by_name(user_name)
         self.client.enable_disable_user(user['id'], False)

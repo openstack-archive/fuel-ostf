@@ -2,6 +2,7 @@ import logging
 
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import nmanager
+from nose.plugins.attrib import attr
 
 
 LOG = logging.getLogger(__name__)
@@ -57,6 +58,7 @@ class TestImageAction(nmanager.OfficialClientTest):
         self.verify_response_body_content(snapshot_name, snapshot_image.name)
         return image_id
 
+    @attr('smoke')
     def test_snapshot(self):
         """
         Test image actions verifies:

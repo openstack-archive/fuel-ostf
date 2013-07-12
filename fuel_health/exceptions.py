@@ -15,7 +15,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import testtools
+import unittest2
 
 
 class FuelException(Exception):
@@ -53,7 +53,7 @@ class InvalidConfiguration(FuelException):
 
 
 class RestClientException(FuelException,
-                          testtools.TestCase.failureException):
+                          unittest2.TestCase.failureException):
     pass
 
 

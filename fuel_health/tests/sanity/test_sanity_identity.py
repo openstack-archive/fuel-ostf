@@ -1,5 +1,5 @@
 from fuel_health.tests.sanity import base
-from fuel_health.test import attr
+from nose.plugins.attrib import attr
 
 
 class ServicesTestJSON(base.BaseIdentityAdminTest):

@@ -1,7 +1,7 @@
 import requests
 
 from fuel_health.common.utils import data_utils
-from fuel_health.test import attr
+from nose.plugins.attrib import attr
 from fuel_health.tests.smoke import base
 
 

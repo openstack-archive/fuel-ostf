@@ -291,6 +291,33 @@ NetworkGroup = [
     cfg.BoolOpt('quantum_available',
                 default=False,
                 help="Whether or not quantum is expected to be available"),
+    cfg.ListOpt('management_network_vlan_id_range',
+                default=[],
+                help="If false, skip config tests regardless of the "
+                     "extension status"),
+    cfg.StrOpt('management_network_cidr',
+               default='',
+               help=''),
+    cfg.ListOpt('storage_network_vlan_id_range',
+                default=[],
+                help="If false, skip config tests regardless of the "
+                     "extension status"),
+    cfg.StrOpt('storage_network_cidr',
+               default='',
+               help=''),
+    cfg.ListOpt('vm_network_vlan_id_range',
+                default=[],
+                help="If false, skip config tests regardless of the "
+                     "extension status"),
+    cfg.StrOpt('vm_network_cidr',
+               default='',
+               help=''),
+    cfg.StrOpt('number_of_networks',
+               default='1',
+               help=''),
+    cfg.StrOpt('size_of_network',
+               default='',
+               help=''),
 ]
 
 
