@@ -15,7 +15,7 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_status(resp.status, u'Nova')
         self.verify_response_body(body, u'servers',
                                   'Servers list is unavailable. '
-                                  'Looks like something`s broken in Nova.')
+                                  'Looks like something is broken in Nova.')
 
     @attr(type=['sanity', 'fuel'])
     def test_list_images(self):
@@ -24,7 +24,7 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_status(resp.status, 'Glance')
         self.verify_response_body(body, u'images',
                                   'Images list is unavailable. '
-                                  'Looks like something`s broken in Glance.')
+                                  'Looks like something is broken in Glance.')
 
     @attr(type=['sanity', 'fuel'])
     def test_list_volumes(self):
@@ -33,7 +33,7 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_status(resp.status, 'Swift')
         self.verify_response_body(body, u'volumes',
                                   'Volumes list is unavailable. '
-                                  'Looks like something`s broken in Swift.')
+                                  'Looks like something is broken in Swift.')
 
     @attr(type=['sanity', 'fuel'])
     def test_list_snapshots(self):
@@ -42,7 +42,7 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_status(resp.status, 'Swift')
         self.verify_response_body(body, u'snapshots',
                                   'Snapshots list is unavailable. '
-                                  'Looks like something`s broken in Swift.')
+                                  'Looks like something is broken in Swift.')
 
     @attr(type=['sanity', 'fuel'])
     def test_list_flavors(self):
@@ -51,7 +51,7 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_status(resp.status, 'Nova')
         self.verify_response_body(body, u'flavors',
                                   'Flavors list is unavailable. '
-                                  'Looks like something`s broken in Nova.')
+                                  'Looks like something is broken in Nova.')
 
     @attr(type=['sanity', 'fuel'])
     def test_list_rate_limits(self):
@@ -60,4 +60,4 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_status(resp.status, 'Nova')
         self.verify_response_body(body["limits"], u'absolute',
                                   'Limits are unavailable. '
-                                  'Looks like something`s broken in Nova.')
+                                  'Looks like something is broken in Nova.')

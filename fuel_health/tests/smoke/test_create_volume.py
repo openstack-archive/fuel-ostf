@@ -36,10 +36,10 @@ class VolumesTest(base.BaseComputeTest):
 
         self.verify_response_body(volume, 'id',
                                   'Volume is not created. '
-                                  'Looks like something`s broken in Storage.')
+                                  'Looks like something is broken in Storage.')
         self.verify_response_body(volume, 'display_name',
                                   'Volume is not created. '
-                                  'Looks like something`s broken in Storage.')
+                                  'Looks like something is broken in Storage.')
 
         self.verify_response_body_content(v_name,
                                           volume['display_name'],
