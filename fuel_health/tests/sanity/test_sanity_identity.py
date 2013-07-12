@@ -1,5 +1,7 @@
+from nose.plugins.attrib import attr
+from nose.tools import timed
+
 from fuel_health.tests.sanity import base
-from fuel_health.test import attr
 
 
 class ServicesTestJSON(base.BaseIdentityAdminTest):
@@ -10,6 +12,7 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
     _interface = 'json'
 
     @attr(type=['sanity', 'fuel'])
+    @timed(5.5)
     def test_list_services(self):
         """Test checks that active services can be listed."""
         resp, body = self.client.list_services()
@@ -19,6 +22,7 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
                                   u'Looks like something is broken in Nova.')
 
     @attr(type=['sanity', 'fuel'])
+    @timed(5.5)
     def test_list_users(self):
         """Test checks that existing users can be listed."""
         resp, body = self.client.get_users()

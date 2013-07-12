@@ -55,11 +55,11 @@ class OfficialClientManager(fuel_health.manager.Manager):
         # identified user, so a new client needs to be created for
         # each user that operations need to be performed for.
         if not username:
-            username = self.config.identity.username
+            username = self.config.identity.admin_username
         if not password:
-            password = self.config.identity.password
+            password = self.config.identity.admin_password
         if not tenant_name:
-            tenant_name = self.config.identity.tenant_name
+            tenant_name = self.config.identity.admin_tenant_name
 
         if None in (username, password, tenant_name):
             msg = ("Missing required credentials for compute client. "
@@ -92,11 +92,11 @@ class OfficialClientManager(fuel_health.manager.Manager):
     def _get_volume_client(self, username=None, password=None,
                            tenant_name=None):
         if not username:
-            username = self.config.identity.username
+            username = self.config.identity.admin_username
         if not password:
-            password = self.config.identity.password
+            password = self.config.identity.admin_password
         if not tenant_name:
-            tenant_name = self.config.identity.tenant_name
+            tenant_name = self.config.identity.admin_tenant_name
 
         auth_url = self.config.identity.uri
         return cinderclient.client.Client(self.CINDERCLIENT_VERSION,
@@ -223,9 +223,9 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def setUpClass(cls):
         super(NovaNetworkScenarioTest, cls).setUpClass()
         cls.tenant_id = cls.manager._get_identity_client(
-            cls.config.identity.username,
-            cls.config.identity.password,
-            cls.config.identity.tenant_name).tenant_id
+            cls.config.identity.admin_username,
+            cls.config.identity.admin_password,
+            cls.config.identity.admin_tenant_name).tenant_id
         cls.network = []
         cls.floating_ips = []
 

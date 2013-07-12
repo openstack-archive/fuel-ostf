@@ -1,4 +1,6 @@
-from fuel_health.test import attr
+from nose.plugins.attrib import attr
+from nose.tools import timed
+
 from fuel_health.tests.sanity import base
 
 
@@ -9,6 +11,7 @@ class SanityComputeTest(base.BaseComputeTest):
     _interface = 'json'
 
     @attr(type=['sanity', 'fuel'])
+    @timed(5.5)
     def test_list_instances(self):
         """Test checks that existing instances can be listed."""
         resp, body = self.servers_client.list_servers()
@@ -18,6 +21,7 @@ class SanityComputeTest(base.BaseComputeTest):
                                   'Looks like something is broken in Nova.')
 
     @attr(type=['sanity', 'fuel'])
+    @timed(5.5)
     def test_list_images(self):
         """Test checks that existing images can be listed."""
         resp, body = self.images_client.list_images()
@@ -27,6 +31,7 @@ class SanityComputeTest(base.BaseComputeTest):
                                   'Looks like something is broken in Glance.')
 
     @attr(type=['sanity', 'fuel'])
+    @timed(5.5)
     def test_list_volumes(self):
         """Test checks that existing volumes can be listed."""
         resp, body = self.volumes_client.list_volumes()
@@ -36,6 +41,7 @@ class SanityComputeTest(base.BaseComputeTest):
                                   'Looks like something is broken in Swift.')
 
     @attr(type=['sanity', 'fuel'])
+    @timed(5.5)
     def test_list_snapshots(self):
         """Test checks that existing snapshots can be listed."""
         resp, body = self.snapshots_client.list_snapshots()
@@ -45,6 +51,7 @@ class SanityComputeTest(base.BaseComputeTest):
                                   'Looks like something is broken in Swift.')
 
     @attr(type=['sanity', 'fuel'])
+    @timed(5.5)
     def test_list_flavors(self):
         """Test checks that existing flavors can be listed."""
         resp, body = self.flavors_client.list_flavors()
@@ -54,6 +61,7 @@ class SanityComputeTest(base.BaseComputeTest):
                                   'Looks like something is broken in Nova.')
 
     @attr(type=['sanity', 'fuel'])
+    @timed(5.5)
     def test_list_rate_limits(self):
         """Test checks that absolute limits can be listed."""
         resp, body = self.limits_client.get_absolute_limits()

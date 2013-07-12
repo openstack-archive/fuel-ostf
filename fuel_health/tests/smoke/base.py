@@ -154,7 +154,7 @@ class BaseComputeAdminTest(BaseComputeTest):
         cls.client = cls.os_adm.flavors_client
         cls.user_client = cls.os.flavors_client
         new_flavor_id = rand_int_id(start=1000)
-        name = 'ost1_test-flavor' + cls.__name__
+        name = rand_name('ost1_test-flavor' + cls.__name__)
 
         f_params = {'name': name,
                     'ram': 256,

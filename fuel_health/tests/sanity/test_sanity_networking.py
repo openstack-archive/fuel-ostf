@@ -1,4 +1,6 @@
-from fuel_health.test import attr
+from nose.plugins.attrib import attr
+from nose.tools import timed
+
 from fuel_health.tests.sanity import base
 
 
@@ -8,6 +10,7 @@ class NetworksTest(base.BaseNetworkTest):
     """
 
     @attr(type=['sanity', 'fuel'])
+    @timed(5.5)
     def test_list_networks(self):
         """Test checks that available networks can be listed."""
         resp, body = self.client.list_networks()
@@ -18,6 +21,7 @@ class NetworksTest(base.BaseNetworkTest):
                                   "(Neutron or Nova).")
 
     @attr(type=['sanity', 'fuel'])
+    @timed(5.5)
     def test_list_ports(self):
         """Test checks that existing ports can be listed."""
         resp, body = self.client.list_ports()
