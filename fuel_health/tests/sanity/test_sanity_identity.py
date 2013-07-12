@@ -16,7 +16,7 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
         self.verify_response_status(resp.status, u'Nova')
         self.verify_response_body(body, u'OS-KSADM:services',
                                   u'Services list is unavailable. '
-                                  u'Looks like something broken in Nova.')
+                                  u'Looks like something is broken in Nova.')
 
     @attr(type=['sanity', 'fuel'])
     def test_list_users(self):
@@ -25,4 +25,4 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
         self.verify_response_status(resp.status, u'Keystone')
         self.verify_response_body(body, u'users',
                                   u'Users list is unavailable. '
-                                  u'Looks like something broken in Keystone.')
+                                  u'Looks like something is broken in Keystone.')

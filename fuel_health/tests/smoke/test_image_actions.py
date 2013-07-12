@@ -34,7 +34,9 @@ class TestImageAction(nmanager.OfficialClientTest):
                                        flavor=flavor_id,
                                        key_name=self.keypair.name)
         self.addCleanup(self.compute_client.servers.delete, server)
-        self.verify_response_body_content(name, server.name)
+        self.verify_response_body_content(
+            name, server.name,
+            msg="Looks like Glance service doesn`t work properly.")
         self._wait_for_server_status(server, 'ACTIVE')
         server = client.servers.get(server)  # getting network information
         LOG.debug("server:%s" % server)
@@ -44,7 +46,9 @@ class TestImageAction(nmanager.OfficialClientTest):
         name = rand_name('ost1_test-keypair-')
         self.keypair = self.compute_client.keypairs.create(name=name)
         self.addCleanup(self.compute_client.keypairs.delete, self.keypair)
-        self.verify_response_body_content(name, self.keypair.name)
+        self.verify_response_body_content(
+            name, self.keypair.name,
+            msg="Looks like Nova service doesn`t work properly.")
 
     def _create_image(self, server):
         snapshot_name = rand_name('ost1_test-snapshot-')
@@ -54,7 +58,9 @@ class TestImageAction(nmanager.OfficialClientTest):
         self._wait_for_server_status(server, 'ACTIVE')
         self._wait_for_image_status(image_id, 'active')
         snapshot_image = self.image_client.images.get(image_id)
-        self.verify_response_body_content(snapshot_name, snapshot_image.name)
+        self.verify_response_body_content(
+            snapshot_name, snapshot_image.name,
+            msg="Looks like Glance service doesn`t work properly.")
         return image_id
 
     def test_snapshot(self):

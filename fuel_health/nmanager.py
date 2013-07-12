@@ -14,7 +14,6 @@ try:
 except ImportError:
     pass
 
-from fuel_health.common import network_common as net_common
 from fuel_health.common import ssh
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import exceptions
@@ -235,7 +234,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         keypair = client.keypairs.create(kp_name)
         self.verify_response_body_content(keypair.id,
                                           kp_name,
-                                          'Creation of keypair failed')
+                                          'Keypair creation failed')
         self.set_resource(kp_name, keypair)
         return keypair
 
@@ -338,7 +337,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             return floating_ip
         else:
             self.fail('Incorrect OpenStack configurations. '
-                      'There is no any floating_ips pools')
+                      'No floating_ips pools found')
 
     def _assign_floating_ip_to_instance(self, client, server, floating_ip):
         try:

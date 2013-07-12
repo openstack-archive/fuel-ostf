@@ -14,7 +14,7 @@ class NetworksTest(base.BaseNetworkTest):
         self.verify_response_status(resp.status, u'Network (Neutron or Nova)')
         self.verify_response_body(body, u'networks',
                                   "Network list is unavailable. "
-                                  "Looks like something broken in Network "
+                                  "Looks like something is broken in Network "
                                   "(Neutron or Nova).")
 
     @attr(type=['sanity', 'fuel'])
@@ -24,5 +24,5 @@ class NetworksTest(base.BaseNetworkTest):
         self.verify_response_status(resp.status, u'Network (Neutron or Nova)')
         self.verify_response_body(body, u'ports',
                                   'Ports list is unavailable. '
-                                  'Looks like something broken in Network '
+                                  'Looks like something is broken in Network '
                                   '(Neutron or Nova).')
