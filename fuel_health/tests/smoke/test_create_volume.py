@@ -36,10 +36,10 @@ class VolumesTest(base.BaseComputeTest):
 
         self.verify_response_body(volume, 'id',
                                   'Volume is not created. '
-                                  'Looks like something broken in Storage.')
+                                  'Looks like something`s broken in Storage.')
         self.verify_response_body(volume, 'display_name',
                                   'Volume is not created. '
-                                  'Looks like something broken in Storage.')
+                                  'Looks like something`s broken in Storage.')
 
         self.verify_response_body_content(v_name,
                                           volume['display_name'],
@@ -69,12 +69,12 @@ class VolumesTest(base.BaseComputeTest):
             self.verify_response_body_content('/dev/%s' % self.device,
                                               attachment['device'],
                                               ('Device is not equal, '
-                                               'attach volume fail'))
+                                               'Volume attachment failed'))
 
             self.verify_response_body_content(self.server_id,
                                               attachment['server_id'],
                                               ('Server id is not equal,'
-                                               'Volume attachment fails'))
+                                               'Volume attachment failed'))
 
             self.verify_response_body_content(volume['id'],
                                               attachment['volume_id'],

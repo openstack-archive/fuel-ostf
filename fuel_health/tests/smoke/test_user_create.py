@@ -42,7 +42,7 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
                 int(resp['status']), msg="Verify request was successful.")
             self.verify_response_body_value(user['name'], self.alt_user)
         except Exception:
-            self.fail("Can't create a user. Please check Keystone")
+            self.fail("Can't create a user. Please, check Keystone service")
 
         # Create a user role:
         try:
@@ -50,7 +50,7 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
             self.verify_response_status(
                 int(resp['status']), msg="Verify request was successful.")
         except Exception:
-            self.fail("User role creation fails. Please check Keystone")
+            self.fail("User role creation fails. Please, check Keystone service")
 
         # Authenticate with created user:
         try:
