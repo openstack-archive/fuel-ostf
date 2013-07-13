@@ -502,20 +502,18 @@ def register_smoke_opts(conf):
         conf.register_opt(opt, group='smoke')
 
 
-class Singleton(object):
-
-    _instances = {}
-
-    def __new__(cls, *args, **kwargs):
+def process_singleton(cls):
+    """Wrapper for classes... To be instantiated only one time per process"""
+    instances = {}
+    def wrapper(*args, **kwargs):
         pid = os.getpid()
-        if pid not in cls._instances:
-            LOG.info('PID INSIDE: %s' % pid)
-            cls._instances[pid] = super(Singleton, cls).__new__(
-                cls, *args, **kwargs)
-        return cls._instances[pid]
+        if pid not in instances:
+            instances[pid] = cls(*args, **kwargs)
+        return instances[pid]
+    return wrapper
 
-
-class FuelConfig(Singleton):
+@process_singleton
+class FuelConfig(object):
     """Provides OpenStack configuration information."""
 
     DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(
@@ -572,3 +570,69 @@ class FuelConfig(Singleton):
             self.compute_admin.username = self.identity.admin_username
             self.compute_admin.password = self.identity.admin_password
             self.compute_admin.tenant_name = self.identity.admin_tenant_name
+
+
+class ConfigGroup(object):
+  # USE SLOTS
+
+  def __init__(self, opts):
+    self.parse_opts(opts)
+
+  def parse_opts(self, opts):
+    for opt in opts:
+        name = opt.name
+        self.__dict__[name] = opt.default
+
+  def __setattr__(self, key, value):
+    self.__dict__[key] = value
+
+  def __getitem__(self, key):
+      return self.__dict__[key]
+
+  def __setitem(self, key, value):
+      self.__dict__[key] = value
+
+  def __repr__(self):
+    return u"{0} WITH {1}".format(
+      self.__class__.__name__,
+      self.__dict__)
+
+
+@process_singleton
+class NailgunConfig(object):
+
+  identity = ConfigGroup(IdentityGroup)
+  compute = ConfigGroup(ComputeGroup)
+  smoke = ConfigGroup(SmokeGroup)
+  orchestration = ConfigGroup(OrchestrationGroup)
+  compute_admin = ConfigGroup(ComputeAdminGroup)
+  image = ConfigGroup(ImageGroup)
+  network = ConfigGroup(NetworkGroup)
+  volume = ConfigGroup(VolumeGroup)
+  object_storage = ConfigGroup(ObjectStoreConfig)
+
+
+  def __init__(self, *args, **kwargs):
+      self.prepare_config(*args, **kwargs)
+
+  def prepare_config(self, *args, **kwargs):
+      for interface in dir(self):
+        if interface.startswith('_parse') :
+          method = getattr(self, interface)
+          if callable(method):
+            method(*args, **kwargs)
+
+  def _parse_identity(self, *args, **kwargs):
+      pass
+
+  def _parse_smoke(self, *args, **kwargs):
+      pass
+
+  def _parse_all(self, *args, **kwargs):
+      pass
+
+
+def Config():
+    if 'NAILGUN_HOST' in os.environ:
+        return NailgunConfig()
+    return FuelConfig()
