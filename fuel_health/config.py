@@ -36,7 +36,7 @@ IdentityGroup = [
                 default=False,
                 help="Set to True if using self-signed SSL certificates."),
     cfg.StrOpt('uri',
-               default=None,
+               default='http://10.0.0.2/',
                help="Full URI of the OpenStack Identity API (Keystone), v2"),
     cfg.StrOpt('url',
                default='http://10.0.0.1/',
@@ -380,7 +380,7 @@ def process_singleton(cls):
 
 
 @process_singleton
-class FuelConfig(object):
+class FileConfig(object):
     """Provides OpenStack configuration information."""
 
     DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(
@@ -429,10 +429,6 @@ class FuelConfig(object):
         self.identity = cfg.CONF.identity
         self.network = cfg.CONF.network
         self.volume = cfg.CONF.volume
-        if not self.compute_admin.username:
-            self.compute_admin.username = self.identity.admin_username
-            self.compute_admin.password = self.identity.admin_password
-            self.compute_admin.tenant_name = self.identity.admin_tenant_name
 
 
 class ConfigGroup(object):
@@ -473,6 +469,7 @@ class NailgunConfig(object):
     object_storage = ConfigGroup(ObjectStoreConfig)
 
     def __init__(self, parse=True):
+        LOG.info('INITIALIZING NAILGUN CONFIG')
         self.nailgun_host = os.environ.get('NAILGUN_HOST', None)
         self.nailgun_port = os.environ.get('NAILGUN_PORT', None)
         self.nailgun_url = 'http://{0}:{1}'.format(self.nailgun_host,
@@ -619,8 +616,8 @@ class NailgunConfig(object):
         self.network.raw_data = data
 
 
-def Config():
+def FuelConfig():
     if all(item in os.environ for item in
            ('NAILGUN_HOST', 'NAILGUN_PORT', 'CLUSTER_ID')):
         return NailgunConfig()
-    return FuelConfig()
+    return FileConfig()
