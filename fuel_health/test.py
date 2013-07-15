@@ -104,7 +104,7 @@ class BaseTestCase(testtools.TestCase,
                    testresources.ResourcedTestCase,
                    FuelTestAssertMixin):
 
-    config = config.FuelConfig()
+    config = config.Config()
 
     @classmethod
     def setUpClass(cls):
