@@ -222,6 +222,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     Base class for nova network scenario tests
     """
 
+    _enabled = True
+
     @classmethod
     def check_preconditions(cls):
         cls.enabled = True
@@ -236,6 +238,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 cls.enabled = False
 
     def setUp(self):
+        super(NovaNetworkScenarioTest, self).setUp()
         if not self.enabled:
             self.skip(reason='Nova Networking not available')
 
