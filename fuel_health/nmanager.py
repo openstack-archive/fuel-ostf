@@ -2,7 +2,8 @@ import logging
 import subprocess
 
 # Default client libs
-import glanceclient
+import cinderclient.client
+import glanceclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
 try:
@@ -98,17 +99,11 @@ class OfficialClientManager(fuel_health.manager.Manager):
             tenant_name = self.config.identity.tenant_name
 
         auth_url = self.config.identity.uri
-        _client = None
-        try:
-            import cinderclient.client
-            _client = cinderclient.client.Client(self.CINDERCLIENT_VERSION,
+        return cinderclient.client.Client(self.CINDERCLIENT_VERSION,
                                           username,
                                           password,
                                           tenant_name,
                                           auth_url)
-        except ImportError:
-            pass
-        return _client
 
     def _get_identity_client(self, username=None, password=None,
                              tenant_name=None):
@@ -161,21 +156,13 @@ class OfficialClientManager(fuel_health.manager.Manager):
         auth_url = self.config.identity.uri
         dscv = self.config.identity.disable_ssl_certificate_validation
 
-        _client = None
-
-        if not self.config.network.quantum_available:
-            return _client
-
-        try:
-            import quantumclient.v2_0.client
-            _client = quantumclient.v2_0.client.Client(username=username,
+        if self.config.network.quantum_available:
+            return quantumclient.v2_0.client.Client(username=username,
                                                 password=password,
                                                 tenant_name=tenant_name,
                                                 auth_url=auth_url,
                                                 insecure=dscv)
-        except ImportError:
-            pass
-        return _client
+        return None
 
 
 class OfficialClientTest(fuel_health.test.TestCase):
@@ -226,20 +213,20 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     @classmethod
     def check_preconditions(cls):
-        cls.enabled = True
+        cls._enabled = True
         if cls.config.network.quantum_available:
-            cls.enabled = False
+            cls._enabled = False
         else:
-            cls.enabled = True
+            cls._enabled = True
             # ensure the config says true
             try:
                 cls.compute_client.networks.list()
             except exceptions.EndpointNotFound:
-                cls.enabled = False
+                cls._enabled = False
 
     def setUp(self):
         super(NovaNetworkScenarioTest, self).setUp()
-        if not self.enabled:
+        if not self._enabled:
             self.skip(reason='Nova Networking not available')
 
 
