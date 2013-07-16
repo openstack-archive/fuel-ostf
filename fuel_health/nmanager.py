@@ -3,7 +3,7 @@ import subprocess
 
 # Default client libs
 import cinderclient.client
-import glanceclient
+import glanceclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
 try:
@@ -151,15 +151,16 @@ class OfficialClientManager(fuel_health.manager.Manager):
         auth_url = self.config.identity.uri
         dscv = self.config.identity.disable_ssl_certificate_validation
 
-        return quantumclient.v2_0.client.Client(username=username,
+        if self.config.network.quantum_available:
+            return quantumclient.v2_0.client.Client(username=username,
                                                 password=password,
                                                 tenant_name=tenant_name,
                                                 auth_url=auth_url,
                                                 insecure=dscv)
+        return
 
 
 class OfficialClientTest(fuel_health.test.TestCase):
-
     manager_class = OfficialClientManager
 
     @classmethod
@@ -203,20 +204,25 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     Base class for nova network scenario tests
     """
 
+    _enabled = True
+
     @classmethod
     def check_preconditions(cls):
+        cls._enabled = True
         if cls.config.network.quantum_available:
-            cls.enabled = False
-            msg = "Nova Networking not available"
-            raise cls.skipException(msg)
+            cls._enabled = False
         else:
-            cls.enabled = True
+            cls._enabled = True
             # ensure the config says true
             try:
                 cls.compute_client.networks.list()
-            except exc.EndpointNotFound:
-                cls.enabled = False
-                raise
+            except exceptions.EndpointNotFound:
+                cls._enabled = False
+
+    def setUp(self):
+        super(NovaNetworkScenarioTest, self).setUp()
+        if not self._enabled:
+            self.skip(reason='Nova Networking not available')
 
 
     @classmethod
