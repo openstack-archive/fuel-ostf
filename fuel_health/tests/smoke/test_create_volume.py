@@ -24,14 +24,7 @@ class VolumesTest(base.BaseComputeTest):
 
     @attr(type=["fuel", "smoke"])
     def test_volume_create(self):
-        """
-        Test verifies:
-        that user can create instance
-        that user can create volume
-        that user can attach volume to instance
-        that user can detach volume from instance
-        that user can delete volume
-        """
+        """Test volume can be created, attached to an instance, detached and deleted."""
         v_name = rand_name('ost1_test-test')
         metadata = {'Type': 'work'}
 
@@ -43,10 +36,10 @@ class VolumesTest(base.BaseComputeTest):
 
         self.verify_response_body(volume, 'id',
                                   'Volume is not created. '
-                                  'Looks like something broken in Storage.')
+                                  'Looks like something is broken in Storage.')
         self.verify_response_body(volume, 'display_name',
                                   'Volume is not created. '
-                                  'Looks like something broken in Storage.')
+                                  'Looks like something is broken in Storage.')
 
         self.verify_response_body_content(v_name,
                                           volume['display_name'],
@@ -76,12 +69,12 @@ class VolumesTest(base.BaseComputeTest):
             self.verify_response_body_content('/dev/%s' % self.device,
                                               attachment['device'],
                                               ('Device is not equal, '
-                                               'attach volume fail'))
+                                               'Volume attachment failed'))
 
             self.verify_response_body_content(self.server_id,
                                               attachment['server_id'],
                                               ('Server id is not equal,'
-                                               'Volume attachment fails'))
+                                               'Volume attachment failed'))
 
             self.verify_response_body_content(volume['id'],
                                               attachment['volume_id'],

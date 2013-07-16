@@ -35,7 +35,9 @@ class TestImageAction(nmanager.OfficialClientTest):
                                        flavor=flavor_id,
                                        key_name=self.keypair.name)
         self.addCleanup(self.compute_client.servers.delete, server)
-        self.verify_response_body_content(name, server.name)
+        self.verify_response_body_content(
+            name, server.name,
+            msg="Looks like Glance service doesn`t work properly.")
         self._wait_for_server_status(server, 'ACTIVE')
         server = client.servers.get(server)  # getting network information
         LOG.debug("server:%s" % server)
@@ -45,7 +47,9 @@ class TestImageAction(nmanager.OfficialClientTest):
         name = rand_name('ost1_test-keypair-')
         self.keypair = self.compute_client.keypairs.create(name=name)
         self.addCleanup(self.compute_client.keypairs.delete, self.keypair)
-        self.verify_response_body_content(name, self.keypair.name)
+        self.verify_response_body_content(
+            name, self.keypair.name,
+            msg="Looks like Nova service doesn`t work properly.")
 
     def _create_image(self, server):
         snapshot_name = rand_name('ost1_test-snapshot-')
@@ -55,25 +59,20 @@ class TestImageAction(nmanager.OfficialClientTest):
         self._wait_for_server_status(server, 'ACTIVE')
         self._wait_for_image_status(image_id, 'active')
         snapshot_image = self.image_client.images.get(image_id)
-        self.verify_response_body_content(snapshot_name, snapshot_image.name)
+        self.verify_response_body_content(
+            snapshot_name, snapshot_image.name,
+            msg="Looks like Glance service doesn`t work properly.")
         return image_id
 
     @attr('smoke')
     def test_snapshot(self):
-        """
-        Test image actions verifies:
-        - image can be created
-        - instance can be booted from created image
-        - snapshot can be created from instance;
-        - instance can be booted from snapshot.
-
-        """
+        """Test instance can be booted and snapshoted from new image."""
         # prepare for booting a instance
         self._add_keypair()
         #self._create_security_group_rule()
 
         # boot a instance and create a timestamp file in it
-        server = self._boot_image(self.config.compute.image_ref)
+        server = self._boot_image(nmanager.get_image_from_name())
 
         # snapshot the instance
         snapshot_image_id = self._create_image(server)

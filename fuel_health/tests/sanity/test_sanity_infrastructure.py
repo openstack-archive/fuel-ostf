@@ -27,6 +27,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
         cls.host = cls.config.compute.controller_node
         cls.usr = cls.config.compute.controller_node_ssh_user
         cls.pwd = cls.config.compute.controller_node_ssh_password
+        cls.key = cls.config.compute.controller_node_ssh_key_path
         cls.hostname = cls.config.compute.controller_node_name
 
     @classmethod
@@ -35,63 +36,30 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_services_state(self):
-        """
-        Test all the expected services are on.
-        Target component: OpenStack
-        Special requirements:
-            1. A controller's IP should be specified in
-                controller_node parameter of the config file.
-            2. SSH user credentials should be specified in
-                controller_node_ssh_user/password parameters
-                of the config file.
-            3. List of services are expected to be run should be specified in
-                enabled_services parameter of the config file.
+        """Test all of the expected services are on."""
+        output_msg = ''
+        try:
+            output = SSHClient(self.host, self.usr, self.pwd,
+                               pkey=self.key).exec_command('nova-manage '
+                                                           'service list')
+        except SSHExecCommandFailed:
+            output_msg = "Error: 'nova-manage' command execution failed."
 
-        Scenario:
-            1. Connect to a controller node via SSH.
-            2. Execute nova-manage service list command.
-            3. Check there is no failed services (with XXX state)
-                in the command output.
-            4. Check number of normally executed services (with :-) state
-                is equal to the number of expected services
-        """
-        output = ""
-        # with ExecutionTimeout(5):
-        #     output = SSHClient(self.host, self.usr, self.pwd).exec_command(
-        #         "nova-manage service list")
-        self.assertFalse(u'XXX' in output)
-        self.assertEqual(len(self.list_of_expected_services),
+        output_msg = output_msg or ('Some service has not been started:' +
+                                    str(self.list_of_expected_services))
+        self.assertFalse(u'XXX' in output, output_msg)
+        self.assertTrue(len(self.list_of_expected_services) <=
                          output.count(u':-)'),
-                         'Not all the expected services started')
+                         output_msg)
 
     @attr(type=['sanity', 'fuel'])
     def test_dns_state(self):
-        """
-        Test all the expected services are on.
-        Target component: OpenStack
-        Special requirements:
-            1. A controller's IP should be specified in
-                controller_node parameter of the config file.
-            2. The controller's domain name should be specified in
-                controller_node_name parameter of the config file.
-            3. The controller SSH user credentials should be specified in
-                controller_node_ssh_user/password parameters
-                of the config file.
-
-        Scenario:
-            1. Connect to a controller node via SSH.
-            2. Execute host command for the controller IP.
-            3. Check expected controller's domain name is present
-                in the command output to be sure the domain name
-                was successfully resolved.
-        """
-        output = ''
+        """Test dns is available."""
         expected_output = "in-addr.arpa domain name pointer " + self.hostname
-
         try:
-            output = SSHClient(self.host, self.usr, self.pwd).exec_command(
-                    "host " + self.host)
+            output = SSHClient(self.host, self.usr, self.pwd,
+                               pkey=self.key).exec_command("host " + self.host)
         except SSHExecCommandFailed:
-                output = "'host' command failed."
+            output = "'host' command failed."
         self.assertTrue(expected_output in output,
                         'DNS name cannot be resolved')
