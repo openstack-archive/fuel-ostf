@@ -66,10 +66,6 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
         admin_client = os.identity_client
         return admin_client
 
-    @classmethod
-    def tearDownClass(cls):
-        pass
-
     def wait_for(self, condition):
         """Repeatedly calls condition() until a timeout."""
         start_time = int(time.time())
