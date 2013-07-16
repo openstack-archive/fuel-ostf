@@ -138,11 +138,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
         # preferable to authenticating as a specific user because
         # working with certain resources (public routers and networks)
         # often requires admin privileges anyway.
-        """
-
-
-        :raise:
-        """
         username = self.config.identity.admin_username
         password = self.config.identity.admin_password
         tenant_name = self.config.identity.admin_tenant_name
@@ -162,7 +157,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                                 tenant_name=tenant_name,
                                                 auth_url=auth_url,
                                                 insecure=dscv)
-        return None
+        return
 
 
 class OfficialClientTest(fuel_health.test.TestCase):
