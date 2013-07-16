@@ -106,6 +106,9 @@ class BaseTestCase(testtools.TestCase,
 
     config = config.FuelConfig()
 
+    def __init__(self, *args, **kwargs):
+        super(BaseTestCase, self).__init__(*args, **kwargs)
+
     @classmethod
     def setUpClass(cls):
         if hasattr(super(BaseTestCase, cls), 'setUpClass'):
