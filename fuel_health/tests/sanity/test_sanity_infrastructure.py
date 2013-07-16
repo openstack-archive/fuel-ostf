@@ -25,11 +25,11 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
     @classmethod
     def setUpClass(cls):
         cls.list_of_expected_services = cls.config.compute.enabled_services
-        cls.host = cls.config.compute.controller_node
+        cls.host = cls.config.compute.controller_nodes
         cls.usr = cls.config.compute.controller_node_ssh_user
         cls.pwd = cls.config.compute.controller_node_ssh_password
         cls.key = cls.config.compute.controller_node_ssh_key_path
-        cls.hostname = cls.config.compute.controller_node_name
+        cls.hostname = cls.config.compute.controller_nodes_name
         cls.timeout = cls.config.compute.ssh_timeout
 
     @classmethod
