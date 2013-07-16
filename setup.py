@@ -46,6 +46,8 @@ setuptools.setup(
 
     description='cloud computing testing',
 
+    setup_requires=['setuptools_git>=0.4'],
+
     zip_safe=False,
 
     packages=setuptools.find_packages(),
