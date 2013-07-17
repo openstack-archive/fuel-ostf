@@ -50,28 +50,6 @@ IdentityGroup = [
     cfg.StrOpt('region',
                default='RegionOne',
                help="The identity region name to use."),
-    cfg.StrOpt('username',
-               default='demo',
-               help="Username to use for Nova API requests."),
-    cfg.StrOpt('tenant_name',
-               default='demo',
-               help="Tenant name to use for Nova API requests."),
-    cfg.StrOpt('password',
-               default='pass',
-               help="API key to use when authenticating.",
-               secret=True),
-    cfg.StrOpt('alt_username',
-               default=None,
-               help="Username of alternate user to use for Nova API "
-                    "requests."),
-    cfg.StrOpt('alt_tenant_name',
-               default=None,
-               help="Alternate user's Tenant name to use for Nova API "
-                    "requests."),
-    cfg.StrOpt('alt_password',
-               default=None,
-               help="API key to use when authenticating as alternate user.",
-               secret=True),
     cfg.StrOpt('admin_username',
                default='admin',
                help="Administrative Username to use for"
@@ -118,27 +96,8 @@ ComputeGroup = [
                default="root",
                help="User name used to authenticate to an instance using "
                     "the alternate image."),
-    cfg.BoolOpt('resize_available',
-                default=False,
-                help="Does the test environment support resizing?"),
-    cfg.BoolOpt('live_migration_available',
-                default=False,
-                help="Does the test environment support live migration "
-                     "available?"),
-    cfg.BoolOpt('use_block_migration_for_live_migration',
-                default=False,
-                help="Does the test environment use block devices for live "
-                     "migration"),
-    cfg.BoolOpt('block_migrate_supports_cinder_iscsi',
-                default=False,
-                help="Does the test environment block migration support "
-                     "cinder iSCSI volumes"),
-    cfg.BoolOpt('change_password_available',
-                default=False,
-                help="Does the test environment support changing the admin "
-                     "password?"),
     cfg.BoolOpt('create_image_enabled',
-                default=False,
+                default=True,
                 help="Does the test environment support snapshots?"),
     cfg.IntOpt('build_interval',
                default=10,
@@ -160,12 +119,6 @@ ComputeGroup = [
                default=60,
                help="Timeout in seconds to wait for output from ssh "
                     "channel."),
-    cfg.StrOpt('fixed_network_name',
-               default='private',
-               help="Visible fixed network name "),
-    cfg.StrOpt('network_for_ssh',
-               default='public',
-               help="Network used for SSH connections."),
     cfg.IntOpt('ip_version_for_ssh',
                default=4,
                help="IP version used for SSH connections."),
@@ -176,10 +129,6 @@ ComputeGroup = [
                default=None,
                help="Path to a private key file for SSH access to remote "
                     "hosts"),
-    cfg.BoolOpt('disk_config_enabled_override',
-                default=True,
-                help="If false, skip config tests regardless of the "
-                     "extension status"),
     cfg.ListOpt('enabled_services',
                 default=[],
                 help="If false, skip config tests regardless of the "
@@ -207,6 +156,7 @@ ComputeGroup = [
                help="Valid primary flavor to use in tests.")
 
 ]
+
 
 def register_compute_opts(conf):
     conf.register_group(compute_group)
@@ -250,47 +200,12 @@ NetworkGroup = [
                default=29,
                help="The mask bits for tenant networks"),
     cfg.BoolOpt('tenant_networks_reachable',
-                default=False,
+                default=True,
                 help="Whether tenant network connectivity should be "
                      "evaluated directly"),
-    cfg.StrOpt('public_network_id',
-               default="",
-               help="Id of the public network that provides external "
-                    "connectivity"),
-    cfg.StrOpt('public_router_id',
-               default="",
-               help="Id of the public router that provides external "
-                    "connectivity"),
     cfg.BoolOpt('quantum_available',
                 default=False,
                 help="Whether or not quantum is expected to be available"),
-    cfg.ListOpt('management_network_vlan_id_range',
-                default=[],
-                help="If false, skip config tests regardless of the "
-                     "extension status"),
-    cfg.StrOpt('management_network_cidr',
-               default='',
-               help=''),
-    cfg.ListOpt('storage_network_vlan_id_range',
-                default=[],
-                help="If false, skip config tests regardless of the "
-                     "extension status"),
-    cfg.StrOpt('storage_network_cidr',
-               default='',
-               help=''),
-    cfg.ListOpt('vm_network_vlan_id_range',
-                default=[],
-                help="If false, skip config tests regardless of the "
-                     "extension status"),
-    cfg.StrOpt('vm_network_cidr',
-               default='',
-               help=''),
-    cfg.StrOpt('number_of_networks',
-               default='1',
-               help=''),
-    cfg.StrOpt('size_of_network',
-               default='',
-               help=''),
 ]
 
 
@@ -353,42 +268,6 @@ def register_object_storage_opts(conf):
     conf.register_group(object_storage_group)
     for opt in ObjectStoreConfig:
         conf.register_opt(opt, group='object-storage')
-
-
-orchestration_group = cfg.OptGroup(name='orchestration',
-                                   title='Orchestration Service Options')
-
-OrchestrationGroup = [
-    cfg.StrOpt('catalog_type',
-               default='orchestration',
-               help="Catalog type of the Orchestration service."),
-    cfg.BoolOpt('allow_tenant_isolation',
-                default=False,
-                help="Allows test cases to create/destroy tenants and "
-                     "users. This option enables isolated test cases and "
-                     "better parallel execution, but also requires that "
-                     "OpenStack Identity API admin credentials are known."),
-    cfg.IntOpt('build_interval',
-               default=1,
-               help="Time in seconds between build status checks."),
-    cfg.IntOpt('build_timeout',
-               default=300,
-               help="Timeout in seconds to wait for a stack to build."),
-    cfg.BoolOpt('heat_available',
-                default=False,
-                help="Whether or not Heat is expected to be available"),
-    cfg.StrOpt('instance_type',
-               default='m1.micro',
-               help="Instance type for tests. Needs to be big enough for a "
-                    "full OS plus the test workload"),
-    cfg.StrOpt('image_name',
-               default=None,
-               help="Name of heat-cfntools enabled image to use when "
-                    "launching test instances."),
-    cfg.StrOpt('keypair_name',
-               default=None,
-               help="Name of existing keypair to launch servers with."),
-]
 
 
 def process_singleton(cls):
@@ -487,7 +366,6 @@ class NailgunConfig(object):
 
     identity = ConfigGroup(IdentityGroup)
     compute = ConfigGroup(ComputeGroup)
-    orchestration = ConfigGroup(OrchestrationGroup)
     image = ConfigGroup(ImageGroup)
     network = ConfigGroup(NetworkGroup)
     volume = ConfigGroup(VolumeGroup)
@@ -527,7 +405,7 @@ class NailgunConfig(object):
             "admin_password": "admin"
         }
         """
-        api_url = '/api/%s/ostf/' % self.cluster_id
+        api_url = '/api/ostf/%s' % self.cluster_id
         response = requests.get(self.nailgun_url+api_url)
         if response.status_code == 404:
             LOG.warning('URL %s is not implemented '
@@ -535,10 +413,10 @@ class NailgunConfig(object):
         elif response.status_code == 200:
             data = response.json()
             self.identity.url = data['horizon_url']
-            self.identity.uri = data['keystone_url']
+            self.identity.uri = data['keystone_url'] + 'v2.0/'
             self.identity.admin_tenant_name = data['admin_tenant_name']
-            self.identity.admin_tenant_name = data['admin_username']
-            self.identity.admin_tenant_name = data['admin_password']
+            self.identity.admin_username = data['admin_username']
+            self.identity.admin_password = data['admin_password']
             self.identity.controller_nodes = data['controller_nodes_ips']
             self.identity.controller_nodes_name = \
                 data['controller_nodes_names']

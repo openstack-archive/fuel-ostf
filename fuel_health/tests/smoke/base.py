@@ -14,7 +14,6 @@ LOG = logging.getLogger(__name__)
 class BaseComputeTest(fuel_health.test.BaseTestCase):
     """Base test case class for all Compute API tests."""
 
-    conclusion = smoke.generic_setup_package()
 
     @classmethod
     def setUpClass(cls):
@@ -222,7 +221,7 @@ class BaseIdentityAdminTest(fuel_health.test.BaseTestCase):
     def setUp(self):
         super(BaseIdentityAdminTest, self).setUp()
         if not self.flag:
-            self.fail("Can not get a Keystone")
+            self.fail('Can not get Keystone')
 
     @classmethod
     def tearDownClass(cls):
