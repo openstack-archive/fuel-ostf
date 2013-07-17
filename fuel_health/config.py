@@ -226,7 +226,7 @@ VolumeGroup = [
                help='Timeout in seconds to wait for a volume to become'
                     'available.'),
     cfg.StrOpt('catalog_type',
-               default='Volume',
+               default='volume',
                help="Catalog type of the Volume Service"),
     cfg.BoolOpt('multi_backend_enabled',
                 default=False,
