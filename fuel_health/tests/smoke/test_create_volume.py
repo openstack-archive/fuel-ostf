@@ -27,7 +27,30 @@ class VolumesTest(base.BaseComputeTest):
     @attr(type=["fuel", "smoke"])
     @timed(60.5)
     def test_volume_create(self):
-        """Test volume can be created, attached to an instance, detached and deleted."""
+        """Test volume can be created.
+        Target component: Compute
+
+        Scenario:
+            1. Create a new small-size volume.
+            2. Check response status equals 200.
+            3. Check response contains "id" section.
+            4. Check response contains "display_name" section.
+            5. Check volume has expected name.
+            6. Wait for "available" volume status.
+            7. Attach volume to instance.
+            8. Check response status equals 200.
+            9. Check volume status is "in use".
+            10. Get created volume information by its id.
+            11. Check operation response status equals 200.
+            12. Check attachments section contains correct device.
+            13. Check attachments section contains correct server id.
+            14. Check attachments section contains correct volume id.
+            15. Detach volume from instance.
+            16. Check volume has "available" status.
+            17. Delete volume.
+            18. Check response status equals 200.
+        Duration: 47.1-60.5 s.
+        """
         v_name = rand_name('ost1_test-test')
         metadata = {'Type': 'work'}
 

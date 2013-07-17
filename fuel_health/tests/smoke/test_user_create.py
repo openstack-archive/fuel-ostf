@@ -26,7 +26,22 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
     @attr(type=["fuel", "smoke"])
     @timed(30.9)
     def test_create_user(self):
-        """Test verifies user creation and auth in Horizon """
+        """ Test verifies user creation and auth in Horizon
+        Target components: Nova, Keystone
+
+        Scenario:
+            1. Create a new tenant.
+            2. Check tenant was created successfully.
+            3. Create a new user.
+            4. Check user was created successfully.
+            5. Create a new user role.
+            6. Check user role was created successfully.
+            7. Perform token authentication.
+            8. Check authentication was successful.
+            9. Send authentication request to Horizon.
+            10. Verify response status is 200.
+        Duration: 1-30.9 s.
+        """
         # Create a tenant:
         try:
             resp, tenant = self.client.create_tenant(self.alt_tenant)
