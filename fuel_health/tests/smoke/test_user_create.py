@@ -26,7 +26,7 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
     @attr(type=["fuel", "smoke"])
     @timed(30.9)
     def test_create_user(self):
-        """ Test verifies user creation and auth in Horizon """
+        """Test verifies user creation and auth in Horizon """
         # Create a tenant:
         try:
             resp, tenant = self.client.create_tenant(self.alt_tenant)

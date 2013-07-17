@@ -405,7 +405,7 @@ class NailgunConfig(object):
             "admin_password": "admin"
         }
         """
-        api_url = '/api/%s/ostf/' % self.cluster_id
+        api_url = '/api/ostf/%s' % self.cluster_id
         response = requests.get(self.nailgun_url+api_url)
         if response.status_code == 404:
             LOG.warning('URL %s is not implemented '
@@ -413,10 +413,10 @@ class NailgunConfig(object):
         elif response.status_code == 200:
             data = response.json()
             self.identity.url = data['horizon_url']
-            self.identity.uri = data['keystone_url']
+            self.identity.uri = data['keystone_url'] + 'v2.0/'
             self.identity.admin_tenant_name = data['admin_tenant_name']
-            self.identity.admin_tenant_name = data['admin_username']
-            self.identity.admin_tenant_name = data['admin_password']
+            self.identity.admin_username = data['admin_username']
+            self.identity.admin_password = data['admin_password']
             self.identity.controller_nodes = data['controller_nodes_ips']
             self.identity.controller_nodes_name = \
                 data['controller_nodes_names']

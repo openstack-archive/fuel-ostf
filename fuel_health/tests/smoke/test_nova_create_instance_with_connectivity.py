@@ -76,8 +76,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     @timed(60.7)
     def test_005_create_servers(self):
-        """
-         Test verifies instance creation
+        """Test verifies instance creation
         """
         if not self.keypairs:
             try:
@@ -105,8 +104,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     @timed(45.9)
     def test_006_check_tenant_network_connectivity(self):
-        """
-        Test verifies created network connectivity
+        """Test verifies created network connectivity
         """
         if not self.config.network.tenant_networks_reachable:
             msg = 'Tenant networks not configured to be reachable.'
@@ -148,9 +146,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     @timed(49.9)
     def test_007_assign_floating_ips(self):
-
-        """
-        Test verifies assignment of floating ip to created instance
+        """Test verifies assignment of floating ip to created instance
         """
         if not self.servers:
             if not self.keypairs:
@@ -185,8 +181,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     @timed(49.9)
     def test_008_check_public_network_connectivity(self):
-        """
-        Test verifies network connectivity trough floating ip
+        """Test verifies network connectivity trough floating ip
         """
         if not self.floating_ips:
             if not self.servers:
