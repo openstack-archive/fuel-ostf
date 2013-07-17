@@ -39,7 +39,18 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)
     def test_services_state(self):
-        """Test all of the expected services are on."""
+        """Test all of the expected services are on.
+        Target component: OpenStack
+
+        Scenario:
+            1. Connect to a controller node via SSH.
+            2. Execute nova-manage service list command.
+            3. Check there is no failed services (with XXX state)
+                in the command output.
+            4. Check number of normally executed services (with :-) state
+                is equal to the number of expected services
+        Duration: 1.5-5.6 s.
+        """
         output_msg = ''
         cmd = 'nova-manage service list'
         if len(self.hostname) and len(self.host):
@@ -67,7 +78,17 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)
     def test_dns_state(self):
-        """Test dns is available."""
+        """Test dns is available.
+        Target component: OpenStack
+
+        Scenario:
+            1. Connect to a controller node via SSH.
+            2. Execute host command for the controller IP.
+            3. Check expected controller's domain name is present
+                in the command output to be sure the domain name
+                was successfully resolved.
+        Duration: 1.2-5.6 s.
+        """
         if len(self.hostname) and len(self.host):
             expected_output = "in-addr.arpa domain name pointer"
             cmd = "host " + self.host[0]

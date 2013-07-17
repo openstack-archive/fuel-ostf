@@ -69,8 +69,20 @@ class TestImageAction(nmanager.OfficialClientTest):
     @attr(type=['sanity', 'fuel'])
     @timed(130.9)
     def test_snapshot(self):
-        """Test instance can be booted and snapshoted from new image."""
-        # prepare for booting a instance
+        """Test instance can be booted and snapshoted from new image.
+        Target component: Glance
+
+        Scenario:
+            1. Create new keypair to boot an instance.
+            2. Check response status equals 200.
+            3. Boot default image.
+            4. Check response status equals 200.
+            5. Check server attributes and status.
+            6. Make snapshot of created server.
+            7. Boot another instance from created snapshot.
+        Duration: 80-131 s.
+        """
+        # prepare for booting an instance
         self._add_keypair()
         #self._create_security_group_rule()
 

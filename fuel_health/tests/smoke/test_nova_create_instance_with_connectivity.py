@@ -45,21 +45,43 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     @timed(20.5)
     def test_001_create_keypairs(self):
-        """ Test verifies keypair creation """
+        """Test checks keypair can be created.
+        Target component: Nova.
+
+        Scenario:
+            1. Create a new keypair.
+            2. Check keypair attributes are correct.
+        Duration: 10-25 s.
+        """
         self.keypairs[self.tenant_id] = self._create_keypair(
             self.compute_client)
 
     @attr(type=['fuel', 'smoke'])
     @timed(20.5)
     def test_002_create_security_groups(self):
-        """Test verifies security group creation"""
+        """Test checks security group can be created.
+        Target component: Nova
+
+        Scenario:
+            1. Create security group.
+            2. Check security group attributes are correct.
+        Duration: 2-25 s.
+        """
         self.security_groups[self.tenant_id] = self._create_security_group(
             self.compute_client)
 
     @attr(type=['fuel', 'smoke'])
     @timed(45.5)
     def test_004_check_networks(self):
-        """Test verifies created network"""
+        """Test checks created network parameters.
+        Target component: Nova
+
+        Scenario:
+            1. Get list of networks.
+            2. Check seen network labels equal to expected ones.
+            3. Check seen network ids equal to expected ones.
+        Duration: 1-50 s.
+        """
         seen_nets = self._list_networks()
         seen_labels = [n.label for n in seen_nets]
         seen_ids = [n.id for n in seen_nets]
@@ -76,8 +98,15 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     @timed(60.7)
     def test_005_create_servers(self):
-        """
-         Test verifies instance creation
+        """Test checks instance instance can be created.
+        Target component: Nova
+
+        Scenario:
+            1. Create new keypair (if it`s nonexistent yet).
+            2. Create new sec group (if it`s nonexistent yet).
+            3. Create instance with usage of created sec group
+            and keypair.
+        Duration: 50-65.8 s.
         """
         if not self.keypairs:
             try:
@@ -105,8 +134,16 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     @timed(45.9)
     def test_006_check_tenant_network_connectivity(self):
-        """
-        Test verifies created network connectivity
+        """Test checks created network connectivity
+        Target component: Nova.
+
+        Scenario:
+            1. Create new keypair (if it`s nonexistent yet).
+            2. Create new sec group (if it`s nonexistent yet).
+            3. Create server with usage of created sec group
+            and keypair.
+            4. Use ping command on newly created server ip.
+        Duration: 40-55 s.
         """
         if not self.config.network.tenant_networks_reachable:
             msg = 'Tenant networks not configured to be reachable.'
@@ -148,9 +185,17 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     @timed(49.9)
     def test_007_assign_floating_ips(self):
+        """Test checks assignment of floating ip to created instance
+        Target component: Nova
 
-        """
-        Test verifies assignment of floating ip to created instance
+        Scenario:
+            1. Create new keypair (if it`s nonexistent yet).
+            2. Create new sec group (if it`s nonexistent yet).
+            3. Create instance with usage of created sec group
+            and keypair.
+            4. Create new floatin ip.
+            5. Assign floating ip to created instance.
+        Duration: 40-55 s.
         """
         if not self.servers:
             if not self.keypairs:
@@ -185,8 +230,17 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     @timed(49.9)
     def test_008_check_public_network_connectivity(self):
-        """
-        Test verifies network connectivity trough floating ip
+        """Test checks network connectivity trough floating ip.
+        Target component: Nova
+
+        Scenario:
+            1. Create new keypair (if it`s nonexistent yet).
+            2. Create new sec group (if it`s nonexistent yet).
+            3. Create instance with usage of created sec group
+            and keypair.
+            4. Check connectivity for all floating ips using
+            ping command.
+        Duration: 40-55 s.
         """
         if not self.floating_ips:
             if not self.servers:
