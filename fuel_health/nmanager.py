@@ -3,7 +3,7 @@ import subprocess
 
 # Default client libs
 import cinderclient.client
-import glanceclient
+import glanceclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
 try:
@@ -55,11 +55,11 @@ class OfficialClientManager(fuel_health.manager.Manager):
         # identified user, so a new client needs to be created for
         # each user that operations need to be performed for.
         if not username:
-            username = self.config.identity.username
+            username = self.config.identity.admin_username
         if not password:
-            password = self.config.identity.password
+            password = self.config.identity.admin_password
         if not tenant_name:
-            tenant_name = self.config.identity.tenant_name
+            tenant_name = self.config.identity.admin_tenant_name
 
         if None in (username, password, tenant_name):
             msg = ("Missing required credentials for compute client. "
@@ -92,11 +92,11 @@ class OfficialClientManager(fuel_health.manager.Manager):
     def _get_volume_client(self, username=None, password=None,
                            tenant_name=None):
         if not username:
-            username = self.config.identity.username
+            username = self.config.identity.admin_username
         if not password:
-            password = self.config.identity.password
+            password = self.config.identity.admin_password
         if not tenant_name:
-            tenant_name = self.config.identity.tenant_name
+            tenant_name = self.config.identity.admin_tenant_name
 
         auth_url = self.config.identity.uri
         return cinderclient.client.Client(self.CINDERCLIENT_VERSION,
@@ -151,15 +151,16 @@ class OfficialClientManager(fuel_health.manager.Manager):
         auth_url = self.config.identity.uri
         dscv = self.config.identity.disable_ssl_certificate_validation
 
-        return quantumclient.v2_0.client.Client(username=username,
+        if self.config.network.quantum_available:
+            return quantumclient.v2_0.client.Client(username=username,
                                                 password=password,
                                                 tenant_name=tenant_name,
                                                 auth_url=auth_url,
                                                 insecure=dscv)
+        return
 
 
 class OfficialClientTest(fuel_health.test.TestCase):
-
     manager_class = OfficialClientManager
 
     @classmethod
@@ -203,29 +204,34 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     Base class for nova network scenario tests
     """
 
+    _enabled = True
+
     @classmethod
     def check_preconditions(cls):
+        cls._enabled = True
         if cls.config.network.quantum_available:
-            cls.enabled = False
-            msg = "Nova Networking not available"
-            raise cls.skipException(msg)
+            cls._enabled = False
         else:
-            cls.enabled = True
+            cls._enabled = True
             # ensure the config says true
             try:
                 cls.compute_client.networks.list()
-            except exc.EndpointNotFound:
-                cls.enabled = False
-                raise
+            except exceptions.EndpointNotFound:
+                cls._enabled = False
+
+    def setUp(self):
+        super(NovaNetworkScenarioTest, self).setUp()
+        if not self._enabled:
+            self.skip(reason='Nova Networking not available')
 
 
     @classmethod
     def setUpClass(cls):
         super(NovaNetworkScenarioTest, cls).setUpClass()
         cls.tenant_id = cls.manager._get_identity_client(
-            cls.config.identity.username,
-            cls.config.identity.password,
-            cls.config.identity.tenant_name).tenant_id
+            cls.config.identity.admin_username,
+            cls.config.identity.admin_password,
+            cls.config.identity.admin_tenant_name).tenant_id
         cls.network = []
         cls.floating_ips = []
 

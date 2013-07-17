@@ -31,6 +31,7 @@ requirements = ['argparse==1.2.1',
                 'requests==1.2.3',
                 'setuptools-git==1.0',
                 'simplejson==3.3.0',
+                'unittest2',
                 'six==1.3.0',
                 'testresources==0.2.7',
                 'testtools==0.9.32',
@@ -44,6 +45,8 @@ setuptools.setup(
     version='0.1',
 
     description='cloud computing testing',
+
+    setup_requires=['setuptools_git>=0.4'],
 
     zip_safe=False,
 

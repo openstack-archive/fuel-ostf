@@ -17,13 +17,10 @@
 
 
 import time
-import signal
-import traceback
 
-import nose.plugins.attrib
 import testresources
-# import testtools
 import unittest2
+
 from fuel_health import config
 from fuel_health import manager
 from fuel_health.common import log as logging
@@ -42,69 +39,14 @@ def _raise_TimeOut(sig, stack):
     raise TimeOutError()
 
 
-# class ExecutionTimeout(object):
-#     """
-#     Timeout context that will stop code running within context
-#     if timeout (sec) is reached
-#
-#     >>with timeout(2):
-#     ...     requests.get("http://msdn.com")
-#     """
-#     def __init__(self, timeout):
-#         self.timeout = timeout
-#
-#     def __enter__(self):
-#         signal.signal(signal.SIGALRM, _raise_TimeOut)
-#         signal.alarm(self.timeout)
-#
-#     def __exit__(self, exc_type, exc_val, exc_tb):
-#         signal.alarm(0)  # disable the alarm
-#         if exc_type is not TimeOutError:
-#             return False  # never swallow other exceptions
-#         else:
-#             call_that_caused_timeout = traceback.extract_tb(exc_tb)[0][-1]
-#             msg = '''
-#                 {call} terminated with the timeout of {timeout} seconds.
-#                 Please check that this service timeout meets your expectation.
-#                 '''.format(call=call_that_caused_timeout, timeout=self.timeout)
-#             raise AssertionError(msg)
-
-
-# def attr(*args, **kwargs):
-#     """A decorator which applies the nose and testtools attr decorator
-#
-#     This decorator applies the nose attr decorator as well as the
-#     the testtools.testcase.attr if it is in the list of attributes
-#     to testtools we want to apply.
-#     """
-#
-#     def decorator(f):
-#         if 'type' in kwargs and isinstance(kwargs['type'], str):
-#             f = testtools.testcase.attr(kwargs['type'])(f)
-#             if kwargs['type'] == 'smoke':
-#                 f = testtools.testcase.attr('smoke')(f)
-#         elif 'type' in kwargs and isinstance(kwargs['type'], str):
-#             f = testtools.testcase.attr(kwargs['type'])(f)
-#             if kwargs['type'] == 'sanity':
-#                 f = testtools.testcase.attr('sanity')(f)
-#         elif 'type' in kwargs and isinstance(kwargs['type'], list):
-#             for attr in kwargs['type']:
-#                 f = testtools.testcase.attr(attr)(f)
-#                 if attr == 'sanity':
-#                     f = testtools.testcase.attr('sanity')(f)
-#                 elif attr == 'smoke':
-#                     f = testtools.testcase.attr('smoke')(f)
-#         return nose.plugins.attrib.attr(*args, **kwargs)(f)
-#
-#     return decorator
-
-
 class BaseTestCase(unittest2.TestCase,
-                   #testtools.testcase.WithAttributes,
                    testresources.ResourcedTestCase,
                    FuelTestAssertMixin):
 
     config = config.FuelConfig()
+
+    def __init__(self, *args, **kwargs):
+        super(BaseTestCase, self).__init__(*args, **kwargs)
 
     @classmethod
     def setUpClass(cls):

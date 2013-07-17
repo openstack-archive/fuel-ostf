@@ -1,6 +1,8 @@
+from nose.plugins.attrib import attr
+from nose.tools import timed
+
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import nmanager
-from nose.plugins.attrib import attr
 
 
 class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
@@ -21,7 +23,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         super(TestNovaNetwork, cls).check_preconditions()
         cfg = cls.config.network
         if not cfg.tenant_networks_reachable:
-            msg = 'Either tenant_networks_reachable must be "true.'
+            msg = 'Either tenant networks reachable must be "true.'
             cls.enabled = False
             raise cls.skipException(msg)
 
@@ -30,9 +32,9 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         super(TestNovaNetwork, cls).setUpClass()
         cls.check_preconditions()
         cls.tenant_id = cls.manager._get_identity_client(
-            cls.config.identity.username,
-            cls.config.identity.password,
-            cls.config.identity.tenant_name).tenant_id
+            cls.config.identity.admin_username,
+            cls.config.identity.admin_password,
+            cls.config.identity.admin_tenant_name).tenant_id
 
         cls.keypairs = {}
         cls.security_groups = {}
@@ -41,24 +43,21 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         cls.floating_ips = []
 
     @attr(type=['fuel', 'smoke'])
+    @timed(20.5)
     def test_001_create_keypairs(self):
         """ Test verifies keypair creation """
         self.keypairs[self.tenant_id] = self._create_keypair(
             self.compute_client)
 
     @attr(type=['fuel', 'smoke'])
+    @timed(20.5)
     def test_002_create_security_groups(self):
         """Test verifies security group creation"""
         self.security_groups[self.tenant_id] = self._create_security_group(
             self.compute_client)
 
     @attr(type=['fuel', 'smoke'])
-    def test_003_create_networks(self):
-        """Test verifies network creation"""
-        networks = self._create_network()
-        self.network.append(networks)
-
-    @attr(type=['fuel', 'smoke'])
+    @timed(45.5)
     def test_004_check_networks(self):
         """Test verifies created network"""
         seen_nets = self._list_networks()
@@ -71,10 +70,11 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                                        'properly'))
             self.verify_response_body(seen_ids,
                                       mynet.id,
-                                      ('Network does is created'
+                                      ('Network is not created'
                                        ' properly '))
 
     @attr(type=['fuel', 'smoke'])
+    @timed(60.7)
     def test_005_create_servers(self):
         """
          Test verifies instance creation
@@ -94,7 +94,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                 self.fail("Necessary resources for booting instance"
                           " has not been created")
 
-        #for i, network in enumerate(self.networks):
         name = rand_name('ost1_test-server-smoke-')
         keypair_name = self.keypairs[self.tenant_id].name
         security_groups = [self.security_groups[self.tenant_id].name]
@@ -104,6 +103,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         self.servers.append(server)
 
     @attr(type=['fuel', 'smoke'])
+    @timed(45.9)
     def test_006_check_tenant_network_connectivity(self):
         """
         Test verifies created network connectivity
@@ -146,7 +146,9 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                                                 private_key)
 
     @attr(type=['fuel', 'smoke'])
+    @timed(49.9)
     def test_007_assign_floating_ips(self):
+
         """
         Test verifies assignment of floating ip to created instance
         """
@@ -181,6 +183,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.floating_ips.append(floating_ip)
 
     @attr(type=['fuel', 'smoke'])
+    @timed(49.9)
     def test_008_check_public_network_connectivity(self):
         """
         Test verifies network connectivity trough floating ip

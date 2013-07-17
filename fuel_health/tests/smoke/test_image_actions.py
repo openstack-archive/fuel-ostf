@@ -1,8 +1,10 @@
 import logging
+from nose.plugins.attrib import attr
+from nose.tools import timed
+
 
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import nmanager
-from nose.plugins.attrib import attr
 
 
 LOG = logging.getLogger(__name__)
@@ -64,7 +66,8 @@ class TestImageAction(nmanager.OfficialClientTest):
             msg="Looks like Glance service doesn`t work properly.")
         return image_id
 
-    @attr('smoke')
+    @attr(type=['sanity', 'fuel'])
+    @timed(130.9)
     def test_snapshot(self):
         """Test instance can be booted and snapshoted from new image."""
         # prepare for booting a instance

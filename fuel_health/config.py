@@ -21,7 +21,7 @@ import sys
 from oslo.config import cfg
 
 from fuel_health.common import log as logging
-from fuel_health.common.utils.misc import singleton
+import requests
 
 LOG = logging.getLogger(__name__)
 
@@ -184,12 +184,12 @@ ComputeGroup = [
                 default=[],
                 help="If false, skip config tests regardless of the "
                      "extension status"),
-    cfg.StrOpt('controller_node',
-               default='127.0.0.1',
-               help="IP address of one of the controller nodes"),
-    cfg.StrOpt('controller_node_name',
-               default='',
-               help="DNS name of one of the controller nodes"),
+    cfg.ListOpt('controller_nodes',
+                default= [],
+                help="IP address of one of the controller nodes"),
+    cfg.ListOpt('controller_nodes_name',
+                default= [],
+                help="DNS name of one of the controller nodes"),
     cfg.StrOpt('controller_node_ssh_user',
                default='ssh_user',
                help="ssh user of one of the controller nodes"),
@@ -200,48 +200,18 @@ ComputeGroup = [
                default='',
                help="path to ssh key"),
     cfg.StrOpt('image_name',
-               default="{$IMAGE_ID}",
-               help="Valid secondary image reference to be used in tests."),
-    cfg.StrOpt('image_ref_alt',
-               default="{$IMAGE_ID_ALT}",
+               default="cirros-0.3.0-x86_64",
                help="Valid secondary image reference to be used in tests."),
     cfg.IntOpt('flavor_ref',
                default=1,
-               help="Valid primary flavor to use in tests."),
-    cfg.IntOpt('flavor_ref_alt',
-               default=2,
-               help='Valid secondary flavor to be used in tests.'),
+               help="Valid primary flavor to use in tests.")
 
 ]
-
 
 def register_compute_opts(conf):
     conf.register_group(compute_group)
     for opt in ComputeGroup:
         conf.register_opt(opt, group='compute')
-
-compute_admin_group = cfg.OptGroup(name='compute-admin',
-                                   title="Compute Admin Options")
-
-ComputeAdminGroup = [
-    cfg.StrOpt('username',
-               default='admin',
-               help="Administrative Username to use for Nova API requests."),
-    cfg.StrOpt('tenant_name',
-               default='admin',
-               help="Administrative Tenant name to use for Nova API "
-                    "requests."),
-    cfg.StrOpt('password',
-               default='pass',
-               help="API key to use when authenticating as admin.",
-               secret=True),
-]
-
-
-def register_compute_admin_opts(conf):
-    conf.register_group(compute_admin_group)
-    for opt in ComputeAdminGroup:
-        conf.register_opt(opt, group='compute-admin')
 
 image_group = cfg.OptGroup(name='image',
                            title="Image Service Options")
@@ -421,128 +391,21 @@ OrchestrationGroup = [
 ]
 
 
-smoke_group = cfg.OptGroup(name='smoke',
-                             title='Smoke Tests Options')
+def process_singleton(cls):
+    """Wrapper for classes... To be instantiated only one time per process"""
+    instances = {}
 
-SmokeGroup = [
-    cfg.BoolOpt('allow_tenant_isolation',
-                default=False,
-                help="Allows test cases to create/destroy tenants and "
-                     "users. This option enables isolated test cases and "
-                     "better parallel execution, but also requires that "
-                     "OpenStack Identity API admin credentials are known."),
-    cfg.BoolOpt('allow_tenant_reuse',
-                default=True,
-                help="If allow_tenant_isolation is True and a tenant that "
-                     "would be created for a given test already exists (such "
-                     "as from a previously-failed run), re-use that tenant "
-                     "instead of failing because of the conflict. Note that "
-                     "this would result in the tenant being deleted at the "
-                     "end of a subsequent successful run."),
-    cfg.StrOpt('image_ref',
-               default="{$IMAGE_ID}",
-               help="Valid secondary image reference to be used in tests."),
-    cfg.StrOpt('image_ref_alt',
-               default="{$IMAGE_ID_ALT}",
-               help="Valid secondary image reference to be used in tests."),
-    cfg.IntOpt('flavor_ref',
-               default=1,
-               help="Valid primary flavor to use in tests."),
-    cfg.IntOpt('flavor_ref_alt',
-               default=2,
-               help='Valid secondary flavor to be used in tests.'),
-    cfg.StrOpt('image_ssh_user',
-               default="root",
-               help="User name used to authenticate to an instance."),
-    cfg.StrOpt('image_alt_ssh_user',
-               default="root",
-               help="User name used to authenticate to an instance using "
-                    "the alternate image."),
-    cfg.BoolOpt('resize_available',
-                default=False,
-                help="Does the test environment support resizing?"),
-    cfg.BoolOpt('live_migration_available',
-                default=False,
-                help="Does the test environment support live migration "
-                     "available?"),
-    cfg.BoolOpt('use_block_migration_for_live_migration',
-                default=False,
-                help="Does the test environment use block devices for live "
-                     "migration"),
-    cfg.BoolOpt('block_migrate_supports_cinder_iscsi',
-                default=False,
-                help="Does the test environment block migration support "
-                     "cinder iSCSI volumes"),
-    cfg.BoolOpt('change_password_available',
-                default=False,
-                help="Does the test environment support changing the admin "
-                     "password?"),
-    cfg.BoolOpt('create_image_enabled',
-                default=False,
-                help="Does the test environment support snapshots?"),
-    cfg.IntOpt('build_interval',
-               default=10,
-               help="Time in seconds between build status checks."),
-    cfg.IntOpt('build_timeout',
-               default=300,
-               help="Timeout in seconds to wait for an instance to build."),
-    cfg.BoolOpt('run_ssh',
-                default=False,
-                help="Does the test environment support snapshots?"),
-    cfg.StrOpt('ssh_user',
-               default='root',
-               help="User name used to authenticate to an instance."),
-    cfg.IntOpt('ssh_timeout',
-               default=300,
-               help="Timeout in seconds to wait for authentication to "
-                    "succeed."),
-    cfg.IntOpt('ssh_channel_timeout',
-               default=60,
-               help="Timeout in seconds to wait for output from ssh "
-                    "channel."),
-    cfg.StrOpt('fixed_network_name',
-               default='private',
-               help="Visible fixed network name "),
-    cfg.StrOpt('network_for_ssh',
-               default='public',
-               help="Network used for SSH connections."),
-    cfg.IntOpt('ip_version_for_ssh',
-               default=4,
-               help="IP version used for SSH connections."),
-    cfg.StrOpt('catalog_type',
-               default='compute',
-               help="Catalog type of the Compute service."),
-    cfg.StrOpt('path_to_private_key',
-               default=None,
-               help="Path to a private key file for SSH access to remote "
-                    "hosts"),
-    cfg.BoolOpt('disk_config_enabled_override',
-                default=True,
-                help="If false, skip config tests regardless of the "
-                     "extension status"),
-]
-
-
-def register_smoke_opts(conf):
-    conf.register_group(smoke_group)
-    for opt in SmokeGroup:
-        conf.register_opt(opt, group='smoke')
-
-
-class Singleton(object):
-
-    _instances = {}
-
-    def __new__(cls, *args, **kwargs):
+    def wrapper(*args, **kwargs):
         pid = os.getpid()
-        if pid not in cls._instances:
-            LOG.info('PID INSIDE: %s' % pid)
-            cls._instances[pid] = super(Singleton, cls).__new__(
-                cls, *args, **kwargs)
-        return cls._instances[pid]
+        if pid not in instances:
+            instances[pid] = cls(*args, **kwargs)
+        return instances[pid]
+
+    return wrapper
 
 
-class FuelConfig(Singleton):
+@process_singleton
+class FileConfig(object):
     """Provides OpenStack configuration information."""
 
     DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(
@@ -587,15 +450,199 @@ class FuelConfig(Singleton):
         register_identity_opts(cfg.CONF)
         register_network_opts(cfg.CONF)
         register_volume_opts(cfg.CONF)
-        register_compute_admin_opts(cfg.CONF)
-        register_smoke_opts(cfg.CONF)
         self.compute = cfg.CONF.compute
         self.identity = cfg.CONF.identity
         self.network = cfg.CONF.network
         self.volume = cfg.CONF.volume
-        self.compute_admin = cfg.CONF['compute-admin']
-        self.smoke = cfg.CONF.smoke
-        if not self.compute_admin.username:
-            self.compute_admin.username = self.identity.admin_username
-            self.compute_admin.password = self.identity.admin_password
-            self.compute_admin.tenant_name = self.identity.admin_tenant_name
+
+
+class ConfigGroup(object):
+  # USE SLOTS
+
+    def __init__(self, opts):
+        self.parse_opts(opts)
+
+    def parse_opts(self, opts):
+        for opt in opts:
+            name = opt.name
+            self.__dict__[name] = opt.default
+
+    def __setattr__(self, key, value):
+        self.__dict__[key] = value
+
+    def __getitem__(self, key):
+        return self.__dict__[key]
+
+    def __setitem(self, key, value):
+        self.__dict__[key] = value
+
+    def __repr__(self):
+        return u"{0} WITH {1}".format(
+            self.__class__.__name__,
+            self.__dict__)
+
+
+@process_singleton
+class NailgunConfig(object):
+
+    identity = ConfigGroup(IdentityGroup)
+    compute = ConfigGroup(ComputeGroup)
+    orchestration = ConfigGroup(OrchestrationGroup)
+    image = ConfigGroup(ImageGroup)
+    network = ConfigGroup(NetworkGroup)
+    volume = ConfigGroup(VolumeGroup)
+    object_storage = ConfigGroup(ObjectStoreConfig)
+
+    def __init__(self, parse=True):
+        LOG.info('INITIALIZING NAILGUN CONFIG')
+        self.nailgun_host = os.environ.get('NAILGUN_HOST', None)
+        self.nailgun_port = os.environ.get('NAILGUN_PORT', None)
+        self.nailgun_url = 'http://{0}:{1}'.format(self.nailgun_host,
+                                                   self.nailgun_port)
+        self.cluster_id = os.environ.get('CLUSTER_ID', None)
+        if parse:
+            self.prepare_config()
+
+    def prepare_config(self, *args, **kwargs):
+        for interface in dir(self):
+            if interface.startswith('_parse'):
+                method = getattr(self, interface)
+                if callable(method):
+                    method()
+
+    def _parse_ostf(self):
+        """
+        RESPONSE FORMAT
+        {
+            "controller_nodes_ips": [
+                "10.20.0.129"
+            ],
+            "horizon_url": "http://240.0.1.2/",
+            "controller_nodes_names": [
+                "controller-1.example.com"
+            ],
+            "keystone_url": "http://240.0.1.2:5000/",
+            "admin_tenant_name": "admin",
+            "admin_username": "admin",
+            "admin_password": "admin"
+        }
+        """
+        api_url = '/api/%s/ostf/' % self.cluster_id
+        response = requests.get(self.nailgun_url+api_url)
+        if response.status_code == 404:
+            LOG.warning('URL %s is not implemented '
+                        'in nailgun api' % api_url)
+        elif response.status_code == 200:
+            data = response.json()
+            self.identity.url = data['horizon_url']
+            self.identity.uri = data['keystone_url']
+            self.identity.admin_tenant_name = data['admin_tenant_name']
+            self.identity.admin_tenant_name = data['admin_username']
+            self.identity.admin_tenant_name = data['admin_password']
+            self.identity.controller_nodes = data['controller_nodes_ips']
+            self.identity.controller_nodes_name = \
+                data['controller_nodes_names']
+
+    def _parse_networks_configuration(self):
+        """
+        {
+    "net_manager": "FlatDHCPManager",
+    "networks": [
+        {
+            "network_size": 256,
+            "name": "floating",
+            "ip_ranges": [
+                [
+                    "172.18.8.42",
+                    "172.18.8.47"
+                ]
+            ],
+            "amount": 1,
+            "id": 27,
+            "netmask": "255.255.255.0",
+            "cluster_id": 6,
+            "vlan_start": 522,
+            "cidr": "240.0.0.0/24",
+            "gateway": "240.0.0.1"
+        },
+        {
+            "network_size": 256,
+            "name": "management",
+            "ip_ranges": [
+                [
+                    "192.168.0.2",
+                    "192.168.0.254"
+                ]
+            ],
+            "amount": 1,
+            "id": 29,
+            "netmask": "255.255.255.0",
+            "cluster_id": 6,
+            "vlan_start": 101,
+            "cidr": "192.168.0.0/24",
+            "gateway": "192.168.0.1"
+        },
+        {
+            "network_size": 256,
+            "name": "storage",
+            "ip_ranges": [
+                [
+                    "172.16.0.2",
+                    "172.16.0.254"
+                ]
+            ],
+            "amount": 1,
+            "id": 30,
+            "netmask": "255.255.255.0",
+            "cluster_id": 6,
+            "vlan_start": 102,
+            "cidr": "172.16.0.0/24",
+            "gateway": "172.16.0.1"
+        },
+        {
+            "network_size": 256,
+            "name": "fixed",
+            "ip_ranges": [
+                [
+                    "10.0.0.2",
+                    "10.0.0.254"
+                ]
+            ],
+            "amount": 1,
+            "id": 31,
+            "netmask": "255.255.255.0",
+            "cluster_id": 6,
+            "vlan_start": 103,
+            "cidr": "10.0.0.0/24",
+            "gateway": "10.0.0.1"
+        },
+        {
+            "network_size": 256,
+            "name": "public",
+            "ip_ranges": [
+                [
+                    "172.18.8.50",
+                    "172.18.8.59"
+                ]
+            ],
+            "amount": 1,
+            "id": 28,
+            "netmask": "255.255.255.224",
+            "cluster_id": 6,
+            "vlan_start": 522,
+            "cidr": "240.0.1.0/24",
+            "gateway": "172.18.8.33"
+        }
+    ]
+}
+        """
+        api_url = '/api/clusters/%s/network_configuration/' % self.cluster_id
+        data = requests.get(self.nailgun_url+api_url).json()
+        self.network.raw_data = data
+
+
+def FuelConfig():
+    if all(item in os.environ for item in
+           ('NAILGUN_HOST', 'NAILGUN_PORT', 'CLUSTER_ID')):
+        return NailgunConfig()
+    return FileConfig()

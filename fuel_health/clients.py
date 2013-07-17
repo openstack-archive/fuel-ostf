@@ -242,19 +242,3 @@ class AdminManager(Manager):
                                            conf.identity.admin_password,
                                            conf.identity.admin_tenant_name,
                                            interface=interface)
-
-
-class ComputeAdminManager(Manager):
-
-    """
-    Manager object that uses the compute_admin credentials for its
-    managed client objects
-    """
-
-    def __init__(self, interface='json'):
-        conf = config.FuelConfig()
-        base = super(ComputeAdminManager, self)
-        base.__init__(conf.compute_admin.username,
-                      conf.compute_admin.password,
-                      conf.compute_admin.tenant_name,
-                      interface=interface)
