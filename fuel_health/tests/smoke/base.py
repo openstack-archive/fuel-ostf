@@ -1,8 +1,6 @@
-import netaddr
 import time
 
 from fuel_health import clients
-from fuel_health import exceptions
 import fuel_health.test
 from fuel_health.common import log as logging
 from fuel_health.common.utils.data_utils import rand_name, rand_int_id
@@ -35,18 +33,15 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
         cls.keypairs_client = os.keypairs_client
         cls.security_groups_client = os.security_groups_client
         cls.quotas_client = os.quotas_client
-        cls.limits_client = os.limits_client
         cls.volumes_client = os.volumes_client
         cls.snapshots_client = os.snapshots_client
         cls.interfaces_client = os.interfaces_client
         cls.fixed_ips_client = os.fixed_ips_client
         cls.services_client = os.services_client
-        cls.hypervisor_client = os.hypervisor_client
         cls.build_interval = cls.config.compute.build_interval
         cls.build_timeout = cls.config.compute.build_timeout
         cls.ssh_user = cls.config.compute.ssh_user
-        cls.flavor_ref = cls.config.smoke.flavor_ref
-        cls.flavor_ref_alt = cls.config.smoke.flavor_ref_alt
+        cls.flavor_ref = cls.config.compute.flavor_ref
         if os.config.network.quantum_available:
             cls.network_client = os.network_client
 
@@ -62,80 +57,6 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
         os = clients.AdminManager(interface=cls._interface)
         admin_client = os.identity_client
         return admin_client
-
-    @classmethod
-    def _get_client_args(cls):
-
-        return (
-            cls.config,
-            cls.config.identity.admin_username,
-            cls.config.identity.admin_password,
-            cls.config.identity.uri
-        )
-
-    @classmethod
-    def _get_isolated_creds(cls):
-        """
-        Creates a new set of user/tenant/password credentials for a
-        **regular** user of the Compute API so that a test case can
-        operate in an isolated tenant container.
-        """
-        admin_client = cls._get_identity_admin_client()
-        password = "pass"
-
-        while True:
-            try:
-                rand_name_root = rand_name('ost1_test-' + cls.__name__)
-                if cls.isolated_creds:
-                # Main user already created. Create the alt one...
-                    rand_name_root += '-alt'
-                tenant_name = rand_name_root + "-tenant"
-                tenant_desc = tenant_name + "-desc"
-
-                resp, tenant = admin_client.create_tenant(
-                    name=tenant_name, description=tenant_desc)
-                break
-            except exceptions.Duplicate:
-                if cls.config.compute.allow_tenant_reuse:
-                    tenant = admin_client.get_tenant_by_name(tenant_name)
-                    LOG.info('Re-using existing tenant %s', tenant)
-                    break
-
-        while True:
-            try:
-                rand_name_root = rand_name('ost1_test-' + cls.__name__)
-                if cls.isolated_creds:
-                # Main user already created. Create the alt one...
-                    rand_name_root += '-alt'
-                username = rand_name_root + "-user"
-                email = rand_name_root + "@example.com"
-                resp, user = admin_client.create_user(username,
-                                                      password,
-                                                      tenant['id'],
-                                                      email)
-                break
-            except exceptions.Duplicate:
-                if cls.config.compute.allow_tenant_reuse:
-                    user = admin_client.get_user_by_username(tenant['id'],
-                                                             username)
-                    LOG.info('Re-using existing user %s', user)
-                    break
-        # Store the complete creds (including UUID ids...) for later
-        # but return just the username, tenant_name, password tuple
-        # that the various clients will use.
-        cls.isolated_creds.append((user, tenant))
-
-        return username, tenant_name, password
-
-    @classmethod
-    def clear_isolated_creds(cls):
-        if not cls.isolated_creds:
-            return
-        admin_client = cls._get_identity_admin_client()
-
-        for user, tenant in cls.isolated_creds:
-            admin_client.delete_user(user['id'])
-            admin_client.delete_tenant(tenant['id'])
 
     @classmethod
     def clear_servers(cls):
@@ -180,102 +101,8 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
         return resp, body
 
     @classmethod
-    def clear_keypairs(cls):
-        """
-        Delete keypair verification test data.
-        """
-        for keypair in cls.keypairs:
-            try:
-                cls.keypairs_client.delete_keypair(keypair['name'])
-            except Exception:
-                pass
-
-    @classmethod
-    def create_keypair(cls, **kwargs):
-        """
-        Create test keypair.
-
-        Arguments:
-          - name: keypair name.
-        """
-        name = rand_name('ost1_test-' + '-keypair' + cls.__name__)
-        if 'name' in kwargs:
-            name = kwargs.pop('name')
-
-        resp, body = cls.keypairs_client.create_keypair(name)
-        cls.keypairs.extend([body])
-
-        return resp, body
-
-    @classmethod
-    def clear_networks(cls):
-        """
-        Delete networks verification test data.
-        """
-        for network in cls.networks:
-            try:
-                cls.network_client.delete_network(network[u'id'])
-            except Exception:
-                pass
-
-    @classmethod
-    def create_network(cls, **kwargs):
-        """
-        Create test network.
-
-        Arguments:
-          - name: network name.
-        """
-        name = rand_name('ost1_test-' + 'network' + cls.__name__)
-        if 'name' in kwargs:
-            name = kwargs.pop('name')
-        resp, body = cls.network_client.create_network(name)
-        network = body['network']
-        cls.networks.extend([network])
-
-        return resp, network
-
-    @classmethod
-    def clear_sec_group(cls):
-        """
-        Delete security groups verification test data.
-        """
-        for sec_group in cls.sec_groups:
-            # try:
-            cls.security_groups_client.delete_security_group(
-                sec_group['id'])
-            # except Exception:
-            #     pass
-
-    @classmethod
-    def create_sec_group(cls, **kwargs):
-        """
-        Create test security group.
-
-        Arguments:
-          - name: security group name (must contain 'ost1_test' mask);
-          - description: security group descr (must contain 'ost1_test' mask).
-        """
-        name = rand_name('ost1_test-sec_goup' + cls.__name__)
-        description = rand_name(
-            'ost1_test-sec_group-description-' + cls.__name__)
-        if 'name' in kwargs:
-            name = kwargs.pop('name')
-        if 'description' in kwargs:
-            description = kwargs.pop('description')
-        resp, body = cls.security_groups_client.create_security_group(
-            name, description)
-        cls.sec_groups.extend([body])
-
-        return resp, body
-
-    @classmethod
     def tearDownClass(cls):
         cls.clear_servers()
-        cls.clear_isolated_creds()
-        cls.clear_keypairs()
-        cls.clear_networks()
-        cls.clear_sec_group()
 
     def wait_for(self, condition):
         """Repeatedly calls condition() until a timeout."""
@@ -299,9 +126,9 @@ class BaseComputeAdminTest(BaseComputeTest):
     @classmethod
     def setUpClass(cls):
         super(BaseComputeAdminTest, cls).setUpClass()
-        admin_username = cls.config.compute_admin.username
-        admin_password = cls.config.compute_admin.password
-        admin_tenant = cls.config.compute_admin.tenant_name
+        admin_username = cls.config.identity.admin_username
+        admin_password = cls.config.identity.admin_password
+        admin_tenant = cls.config.identity.admin_tenant_name
         cls.flavors = []
 
         if not (admin_username and admin_password and admin_tenant):
@@ -309,7 +136,7 @@ class BaseComputeAdminTest(BaseComputeTest):
                    "in configuration.")
             raise cls.skipException(msg)
 
-        cls.os_adm = clients.ComputeAdminManager(interface=cls._interface)
+        cls.os_adm = clients.AdminManager(interface=cls._interface)
 
     @classmethod
     def create_flavor(cls, **kwargs):
@@ -327,7 +154,7 @@ class BaseComputeAdminTest(BaseComputeTest):
         cls.client = cls.os_adm.flavors_client
         cls.user_client = cls.os.flavors_client
         new_flavor_id = rand_int_id(start=1000)
-        name = 'ost1_test-flavor' + cls.__name__
+        name = rand_name('ost1_test-flavor' + cls.__name__)
 
         f_params = {'name': name,
                     'ram': 256,
@@ -407,7 +234,7 @@ class BaseIdentityAdminTest(fuel_health.test.BaseTestCase):
 
     def tearDown(self):
         super(BaseIdentityAdminTest, self).tearDown()
-        
+
     def disable_user(self, user_name):
         user = self.get_user_by_name(user_name)
         self.client.enable_disable_user(user['id'], False)
@@ -478,80 +305,3 @@ class DataGenerator(object):
                 self.client.delete_tenant(tenant['id'])
             for role in self.roles:
                 self.client.delete_role(role['id'])
-
-
-class BaseNetworkTest(fuel_health.test.BaseTestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        os = clients.Manager()
-        cls.network_cfg = os.config.network
-        if not cls.network_cfg.quantum_available:
-            raise cls.skipException("Quantum support is required")
-        cls.client = os.network_client
-        cls.networks = []
-        cls.subnets = []
-
-    @classmethod
-    def tearDownClass(cls):
-        for subnet in cls.subnets:
-            cls.client.delete_subnet(subnet['id'])
-        for network in cls.networks:
-            cls.client.delete_network(network['id'])
-
-    @classmethod
-    def create_network(cls, network_name=None):
-        """Wrapper utility that returns a test network."""
-        network_name = network_name or rand_name('ost1_test-network-')
-
-        resp, body = cls.client.create_network(network_name)
-        network = body['network']
-        cls.networks.append(network)
-        return network
-
-    @classmethod
-    def create_subnet(cls, network):
-        """Wrapper utility that returns a test subnet."""
-        cidr = netaddr.IPNetwork(cls.network_cfg.tenant_network_cidr)
-        mask_bits = cls.network_cfg.tenant_network_mask_bits
-        # Find a cidr that is not in use yet and create a subnet with it
-        for subnet_cidr in cidr.subnet(mask_bits):
-            try:
-                resp, body = cls.client.create_subnet(network['id'],
-                                                      str(subnet_cidr))
-                break
-            except exceptions.BadRequest as e:
-                is_overlapping_cidr = 'overlaps with another subnet' in str(e)
-                if not is_overlapping_cidr:
-                    raise
-        subnet = body['subnet']
-        cls.subnets.append(subnet)
-        return subnet
-
-
-class FixedIPsBase(BaseComputeAdminTest):
-    _interface = 'json'
-    ip = None
-
-    @classmethod
-    def setUpClass(cls):
-        super(FixedIPsBase, cls).setUpClass()
-        # NOTE(maurosr): The idea here is: the server creation is just an
-        # auxiliary element to the ip details or reservation, there was no way
-        # (at least none in my mind) to get an valid and existing ip except
-        # by creating a server and using its ip. So the intention is to create
-        # fewer server possible (one) and use it to both: json and xml tests.
-        # This decreased time to run both tests, in my test machine, from 53
-        # secs to 29 (agains 23 secs when running only json tests)
-        if cls.ip is None:
-            cls.client = cls.os_adm.fixed_ips_client
-            cls.non_admin_client = cls.fixed_ips_client
-            resp, server = cls.create_server(wait_until='ACTIVE')
-            resp, server = cls.servers_client.get_server(server['id'])
-            for ip_set in server['addresses']:
-                for ip in server['addresses'][ip_set]:
-                    if ip['OS-EXT-IPS:type'] == 'fixed':
-                        cls.ip = ip['addr']
-                        break
-                if cls.ip:
-                    break

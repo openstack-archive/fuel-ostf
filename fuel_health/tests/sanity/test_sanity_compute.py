@@ -1,4 +1,6 @@
-from fuel_health.test import attr
+from nose.plugins.attrib import attr
+from nose.tools import timed
+
 from fuel_health.tests.sanity import base
 
 
@@ -9,6 +11,7 @@ class SanityComputeTest(base.BaseComputeTest):
     _interface = 'json'
 
     @attr(type=['sanity', 'fuel'])
+    @timed(5.5)
     def test_list_instances(self):
         """Test checks list of instances is available.
         Target component: Nova
@@ -21,9 +24,10 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_status(resp.status, u'Nova')
         self.verify_response_body(body, u'servers',
                                   'Servers list is unavailable. '
-                                  'Looks like something`s broken in Nova.')
+                                  'Looks like something is broken in Nova.')
 
     @attr(type=['sanity', 'fuel'])
+    @timed(5.5)
     def test_list_images(self):
         """Test checks list of images is available.
         Target component: Glance
@@ -36,9 +40,10 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_status(resp.status, 'Glance')
         self.verify_response_body(body, u'images',
                                   'Images list is unavailable. '
-                                  'Looks like something`s broken in Glance.')
+                                  'Looks like something is broken in Glance.')
 
     @attr(type=['sanity', 'fuel'])
+    @timed(5.5)
     def test_list_volumes(self):
         """Test checks list of volumes is available.
         Target component: Swift
@@ -51,9 +56,10 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_status(resp.status, 'Swift')
         self.verify_response_body(body, u'volumes',
                                   'Volumes list is unavailable. '
-                                  'Looks like something`s broken in Swift.')
+                                  'Looks like something is broken in Swift.')
 
     @attr(type=['sanity', 'fuel'])
+    @timed(5.5)
     def test_list_snapshots(self):
         """Test checks list of snapshots is available.
         Target component: Swift
@@ -66,9 +72,10 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_status(resp.status, 'Swift')
         self.verify_response_body(body, u'snapshots',
                                   'Snapshots list is unavailable. '
-                                  'Looks like something`s broken in Swift.')
+                                  'Looks like something is broken in Swift.')
 
     @attr(type=['sanity', 'fuel'])
+    @timed(5.5)
     def test_list_flavors(self):
         """Test checks list of flavors is available.
         Target component: Nova
@@ -81,9 +88,10 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_status(resp.status, 'Nova')
         self.verify_response_body(body, u'flavors',
                                   'Flavors list is unavailable. '
-                                  'Looks like something`s broken in Nova.')
+                                  'Looks like something is broken in Nova.')
 
     @attr(type=['sanity', 'fuel'])
+    @timed(5.5)
     def test_list_rate_limits(self):
         """Test checks list of absolute limits is available.
         Target component: Cinder
@@ -96,4 +104,4 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_status(resp.status, 'Nova')
         self.verify_response_body(body["limits"], u'absolute',
                                   'Limits are unavailable. '
-                                  'Looks like something`s broken in Nova.')
+                                  'Looks like something is broken in Nova.')

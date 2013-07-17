@@ -1,5 +1,7 @@
+from nose.plugins.attrib import attr
+from nose.tools import timed
+
 from fuel_health.common.utils.data_utils import rand_name
-from fuel_health.test import attr
 from fuel_health.tests.smoke import base
 
 class VolumesTest(base.BaseComputeTest):
@@ -23,6 +25,7 @@ class VolumesTest(base.BaseComputeTest):
         super(VolumesTest, cls).tearDownClass()
 
     @attr(type=["fuel", "smoke"])
+    @timed(60.5)
     def test_volume_create(self):
         """Test volume can be created, attached to an instance, detached and deleted."""
         v_name = rand_name('ost1_test-test')
@@ -36,10 +39,10 @@ class VolumesTest(base.BaseComputeTest):
 
         self.verify_response_body(volume, 'id',
                                   'Volume is not created. '
-                                  'Looks like something`s broken in Storage.')
+                                  'Looks like something is broken in Storage.')
         self.verify_response_body(volume, 'display_name',
                                   'Volume is not created. '
-                                  'Looks like something`s broken in Storage.')
+                                  'Looks like something is broken in Storage.')
 
         self.verify_response_body_content(v_name,
                                           volume['display_name'],

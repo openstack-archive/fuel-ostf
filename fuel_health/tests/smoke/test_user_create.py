@@ -1,7 +1,8 @@
 import requests
+from nose.plugins.attrib import attr
+from nose.tools import timed
 
 from fuel_health.common.utils import data_utils
-from fuel_health.test import attr
 from fuel_health.tests.smoke import base
 
 
@@ -23,6 +24,7 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
     alt_role = data_utils.rand_name('ost1_test-role_')
 
     @attr(type=["fuel", "smoke"])
+    @timed(30.9)
     def test_create_user(self):
         """ Test verifies user creation and auth in Horizon """
         # Create a tenant:
