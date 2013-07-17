@@ -22,7 +22,6 @@ from fuel_health import exceptions
 from fuel_health.common import log as logging
 from fuel_health.common.utils.data_utils import rand_name
 import fuel_health.test
-from fuel_health.tests import sanity
 
 
 LOG = logging.getLogger(__name__)
@@ -30,8 +29,6 @@ LOG = logging.getLogger(__name__)
 
 class BaseComputeTest(fuel_health.test.BaseTestCase):
     """Base test case class for all Compute API tests."""
-
-    conclusion = sanity.generic_setup_package()
 
     @classmethod
     def setUpClass(cls):

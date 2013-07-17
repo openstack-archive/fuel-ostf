@@ -144,9 +144,9 @@ class Manager(object):
 
         # If no creds are provided, we fall back on the defaults
         # in the config file for the Compute API.
-        self.username = username or self.config.identity.username
-        self.password = password or self.config.identity.password
-        self.tenant_name = tenant_name or self.config.identity.tenant_name
+        self.username = username or self.config.identity.admin_username
+        self.password = password or self.config.identity.admin_password
+        self.tenant_name = tenant_name or self.config.identity.admin_tenant_name
 
         if None in (self.username, self.password, self.tenant_name):
             msg = ("Missing required credentials. "
@@ -213,20 +213,6 @@ class Manager(object):
             NetworkClient = NovaNetworkClient
         self.network_client = NetworkClient(*client_args)
         self.hosts_client = HostsClientJSON(*client_args)
-
-
-class AltManager(Manager):
-
-    """
-    Manager object that uses the alt_XXX credentials for its
-    managed client objects
-    """
-
-    def __init__(self):
-        conf = config.FuelConfig()
-        super(AltManager, self).__init__(conf.identity.alt_username,
-                                         conf.identity.alt_password,
-                                         conf.identity.alt_tenant_name)
 
 
 class AdminManager(Manager):
