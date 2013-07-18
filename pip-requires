@@ -2,7 +2,7 @@ argparse==1.2.1
 cliff==1.4
 cmd2==0.6.5.1
 d2to1==0.2.10
-distribute==0.6.24
+distribute>=0.6.24
 extras==0.0.3
 httplib2==0.8
 iso8601==0.1.4

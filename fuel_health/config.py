@@ -412,7 +412,7 @@ class NailgunConfig(object):
                         'in nailgun api' % api_url)
         elif response.status_code == 200:
             data = response.json()
-            self.identity.url = data['horizon_url']
+            self.identity.url = data['horizon_url'] + 'dashboard'
             self.identity.uri = data['keystone_url'] + 'v2.0/'
             self.identity.admin_tenant_name = data['admin_tenant_name']
             self.identity.admin_username = data['admin_username']
