@@ -82,7 +82,8 @@ class Client(object):
         if _timeout:
             raise exceptions.SSHTimeout(host=self.host,
                                         user=self.username,
-                                        password=self.password)
+                                        password=self.password,
+                                        key_filename=self.key_filename)
         return ssh
 
     def _is_timed_out(self, timeout, start_time):

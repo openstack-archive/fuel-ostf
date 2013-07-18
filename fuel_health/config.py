@@ -126,7 +126,7 @@ ComputeGroup = [
                default='compute',
                help="Catalog type of the Compute service."),
     cfg.StrOpt('path_to_private_key',
-               default=None,
+               default='/root/.ssh/id_rsa',
                help="Path to a private key file for SSH access to remote "
                     "hosts"),
     cfg.ListOpt('enabled_services',
@@ -149,7 +149,7 @@ ComputeGroup = [
                default='',
                help="path to ssh key"),
     cfg.StrOpt('image_name',
-               default="cirros-0.3.0-x86_64",
+               default="cirros",
                help="Valid secondary image reference to be used in tests."),
     cfg.IntOpt('flavor_ref',
                default=1,

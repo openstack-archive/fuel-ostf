@@ -58,7 +58,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
             try:
                 output = SSHClient(self.host[0],
                                    self.usr, self.pwd,
-                                   pkey=self.key,
+                                   key_filename=self.key,
                                    timeout=self.timeout).exec_command(cmd)
             except SSHExecCommandFailed:
                 output_msg = "Error: 'nova-manage' command execution failed."

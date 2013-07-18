@@ -396,6 +396,9 @@ def get_image_from_name():
     image_name = cfg.compute.image_name
     image_client = OfficialClientManager()._get_image_client()
     images = image_client.images.list()
-    for im in images:
-        if im.name.startswith(image_name):
-            return im.id
+    if images:
+        for im in images:
+            if im.name.startswith(image_name):
+                return im.id
+            else:
+                raise exceptions.ImageFault
