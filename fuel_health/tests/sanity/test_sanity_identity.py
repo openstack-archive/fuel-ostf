@@ -24,11 +24,15 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
             3. Check response contains "OS-KSADM:services" section.
         Duration: 0.2-5.6 s.
         """
-        resp, body = self.client.list_services()
-        self.verify_response_status(resp.status, u'Nova')
-        self.verify_response_body(body, u'OS-KSADM:services',
-                                  u'Services list is unavailable. '
-                                  u'Looks like something is broken in Nova.')
+        fail_msg = u'Services list is unavailable. ' \
+                   u'Looks like something is broken in Nova.'
+        try:
+            resp, body = self.client.list_services()
+        except BaseException as exc:
+            self.error(exc.message)
+            self.fail("Step 1 failed: " + fail_msg)
+        self.verify_response_status(resp.status, u'Nova', fail_msg, 2)
+        self.verify_response_body(body, u'OS-KSADM:services',fail_msg, 3)
 
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)
@@ -42,8 +46,12 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
             3. Check response contains "users" section.
         Duration: 0.2-5.6 s.
         """
-        resp, body = self.client.get_users()
-        self.verify_response_status(resp.status, u'Keystone')
-        self.verify_response_body(body, u'users',
-                                  u'Users list is unavailable. '
-                                  u'Looks like something is broken in Keystone.')
+        fail_msg = u'Users list is unavailable. ' \
+                   u'ooks like something is broken in Keystone.'
+        try:
+            resp, body = self.client.get_users()
+        except BaseException as exc:
+            self.error(exc.message)
+            self.fail("Step 1 failed: " + fail_msg)
+        self.verify_response_status(resp.status, u'Keystone', fail_msg, 2)
+        self.verify_response_body(body, u'users',fail_msg, 3)
