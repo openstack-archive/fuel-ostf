@@ -397,5 +397,5 @@ def get_image_from_name():
     image_client = OfficialClientManager()._get_image_client()
     images = image_client.images.list()
     for im in images:
-        if im.name == image_name:
+        if im.name.startswith(image_name):
             return im.id
