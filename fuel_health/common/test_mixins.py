@@ -17,6 +17,7 @@ class FuelTestAssertMixin(object):
         :param appl: the name of application requested
         :param status: response status
         :param msg: message to be used instead the default one
+        :failed_step: specifies step of the test scenario was not successful
         """
         if status in [200, 201, 202]:
             return
