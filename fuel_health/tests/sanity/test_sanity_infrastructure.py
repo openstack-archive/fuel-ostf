@@ -60,16 +60,21 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
                                    self.usr, self.pwd,
                                    key_filename=self.key,
                                    timeout=self.timeout).exec_command(cmd)
-            except SSHExecCommandFailed:
+            except SSHExecCommandFailed as exc:
                 output_msg = "Error: 'nova-manage' command execution failed."
+                self.error(exc._error_string)
+                self.fail("Step 2 failed: " + output_msg)
+            except BaseException as bexp:
+                self.error(exc._error_string)
+                self.fail("Step 1 failed: connection fail")
 
             output_msg = output_msg or (
                 'Some service has not been started:' + str(
                     self.list_of_expected_services))
-            self.assertFalse(u'XXX' in output, output_msg)
+            self.assertFalse(u'XXX' in output, 'Step 3 failed: ' + output_msg)
             self.assertTrue(len(self.list_of_expected_services) <=
                             output.count(u':-)'),
-                            output_msg)
+                            'Step 4 failed: ' + output_msg)
         else:
             self.fail('Wrong tests configurations, one from the next '
                       'parameters are empty controller_node_name or '
@@ -92,16 +97,23 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
         if len(self.hostname) and len(self.host):
             expected_output = "in-addr.arpa domain name pointer"
             cmd = "host " + self.host[0]
+            output = ''
             try:
                 output = SSHClient(self.host[0],
                                    self.usr,
                                    self.pwd,
                                    key_filename=self.key,
                                    timeout=self.timeout).exec_command(cmd)
-            except SSHExecCommandFailed:
+            except SSHExecCommandFailed as exc:
                 output = "'host' command failed."
+                self.error(exc._error_string)
+                self.fail("Step 2 failed: " + output)
+            except BaseException as bexp:
+                self.error(exc._error_string)
+                self.fail("Step 1 failed: connection fail")
+
             self.assertTrue(expected_output in output,
-                            'DNS name cannot be resolved')
+                            'Step 3 failed: DNS name cannot be resolved')
         else:
             self.fail('Wrong tests configurations, one from the next '
                       'parameters are empty controller_node_name or '
