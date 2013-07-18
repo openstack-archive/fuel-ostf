@@ -21,12 +21,17 @@ class NetworksTest(base.BaseNetworkTest):
             3. Check response contains "networks" section.
         Duration: 0.3-5.6 s.
         """
-        resp, body = self.client.list_networks()
-        self.verify_response_status(resp.status, u'Network (Neutron or Nova)')
-        self.verify_response_body(body, u'networks',
-                                  "Network list is unavailable. "
-                                  "Looks like something is broken in Network "
-                                  "(Neutron or Nova).")
+        fail_msg = 'Network list is unavailable. ' \
+                   'Looks like something is broken in Network ' \
+                   '(Neutron or Nova).'
+        try:
+            resp, body = self.client.list_networks()
+        except BaseException as exc:
+            self.error(exc.message)
+            self.fail("Step 1 failed: " + fail_msg)
+        self.verify_response_status(resp.status, u'Network (Neutron or Nova)',
+                                    fail_msg, 2)
+        self.verify_response_body(body, u'networks', fail_msg, 3)
 
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)
@@ -40,9 +45,13 @@ class NetworksTest(base.BaseNetworkTest):
             3. Check response contains "ports" section.
         Duration: 0.2-5.6 s.
         """
-        resp, body = self.client.list_ports()
-        self.verify_response_status(resp.status, u'Network (Neutron or Nova)')
-        self.verify_response_body(body, u'ports',
-                                  'Ports list is unavailable. '
-                                  'Looks like something is broken in Network '
-                                  '(Neutron or Nova).')
+        fail_msg = 'Ports list is unavailable. ' \
+                   'Looks like something is broken in Network ' \
+                   '(Neutron or Nova).'
+        try:
+            resp, body = self.client.list_ports()
+        except BaseException as exc:
+            self.error(exc.message)
+        self.verify_response_status(resp.status, u'Network (Neutron or Nova)',
+                                    fail_msg, 2)
+        self.verify_response_body(body, u'ports', fail_msg, 3)
