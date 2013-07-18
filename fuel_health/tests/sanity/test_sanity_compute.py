@@ -3,7 +3,6 @@ from nose.tools import timed
 
 from fuel_health.tests.sanity import base
 
-
 class SanityComputeTest(base.BaseComputeTest):
     """
     TestClass contains tests check base Compute functionality.
@@ -21,11 +20,17 @@ class SanityComputeTest(base.BaseComputeTest):
             3. Check response contains "servers" section.
         Duration: 0.6-5.6 s.
         """
-        resp, body = self.servers_client.list_servers()
-        self.verify_response_status(resp.status, u'Nova')
-        self.verify_response_body(body, u'servers',
-                                  'Servers list is unavailable. '
-                                  'Looks like something is broken in Nova.')
+        fail_msg = 'Servers list is unavailable. ' \
+                       'Looks like something is broken in Nova.'
+        try:
+            resp, body = self.servers_client.list_servers()
+        except BaseException as exc:
+            self.error(exc.message)
+            self.fail("Step 1 failed: " + fail_msg)
+
+        self.verify_response_status(resp.status, u'Nova', fail_msg,
+                                    failed_step=2)
+        self.verify_response_body(body, u'serversa', fail_msg, failed_step=3)
 
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)

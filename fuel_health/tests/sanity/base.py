@@ -31,6 +31,10 @@ class BaseComputeTest(fuel_health.test.BaseTestCase):
     """Base test case class for all Compute API tests."""
 
     @classmethod
+    def error(self, message):
+        LOG.error(message)
+
+    @classmethod
     def setUpClass(cls):
         os = clients.Manager(interface=cls._interface)
 

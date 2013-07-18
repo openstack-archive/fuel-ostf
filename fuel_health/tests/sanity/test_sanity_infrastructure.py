@@ -93,8 +93,11 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
             expected_output = "in-addr.arpa domain name pointer"
             cmd = "host " + self.host[0]
             try:
-                output = SSHClient(self.host[0], self.usr, self.pwd,
-                                   pkey=self.key, timeout=self.timeout).exec_command(cmd)
+                output = SSHClient(self.host[0],
+                                   self.usr,
+                                   self.pwd,
+                                   key_filename=self.key,
+                                   timeout=self.timeout).exec_command(cmd)
             except SSHExecCommandFailed:
                 output = "'host' command failed."
             self.assertTrue(expected_output in output,
