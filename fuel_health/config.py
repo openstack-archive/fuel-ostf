@@ -113,11 +113,11 @@ ComputeGroup = [
                default='root',
                help="User name used to authenticate to an instance."),
     cfg.IntOpt('ssh_timeout',
-               default=300,
+               default=20,
                help="Timeout in seconds to wait for authentication to "
                     "succeed."),
     cfg.IntOpt('ssh_channel_timeout',
-               default=60,
+               default=20,
                help="Timeout in seconds to wait for output from ssh "
                     "channel."),
     cfg.IntOpt('ip_version_for_ssh',
@@ -141,16 +141,16 @@ ComputeGroup = [
                 default=[],
                 help="DNS name of one of the controller nodes"),
     cfg.StrOpt('controller_node_ssh_user',
-               default='ssh_user',
+               default='root',
                help="ssh user of one of the controller nodes"),
     cfg.StrOpt('controller_node_ssh_password',
-               default='pass',
+               default='root',
                help="ssh user pass of one of the controller nodes"),
     cfg.StrOpt('controller_node_ssh_key_path',
                default='/root/.ssh/id_rsa',
                help="path to ssh key"),
     cfg.StrOpt('image_name',
-               default="cirros",
+               default="TestVM",
                help="Valid secondary image reference to be used in tests."),
     cfg.IntOpt('flavor_ref',
                default=1,
@@ -276,6 +276,7 @@ def process_singleton(cls):
     instances = {}
 
     def wrapper(*args, **kwargs):
+        LOG.info('INSTANCE %s' % instances)
         pid = os.getpid()
         if pid not in instances:
             instances[pid] = cls(*args, **kwargs)
@@ -387,24 +388,51 @@ class NailgunConfig(object):
             if interface.startswith('_parse'):
                 method = getattr(self, interface)
                 if callable(method):
-                    method()
+                    try:
+                        method()
+                    except Exception, e:
+                        LOG.exception('METHOD %s failed' % interface)
 
-    def _parse_ostf(self):
+    def _parse_cluster_attributes(self):
+        api_url = '/api/clusters/%s/attributes' % self.cluster_id
+        response = requests.get(self.nailgun_url+api_url)
+        LOG.info('RESPONSE %s STATUS %s' % (api_url, response.status_code))
+        data = response.json()
+        LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
+        access_data = data['editable']['access']
+        self.identity.admin_tenant_name = access_data['tenant']['value']
+        self.identity.admin_username = access_data['user']['value']
+        self.identity.admin_password = access_data['password']['value']
+
+    def _parse_nodes_cluster_id(self):
+        api_url = '/api/nodes?clusters_id=%s' % self.cluster_id
+        response = requests.get(self.nailgun_url+api_url)
+        LOG.info('RESPONSE %s STATUS %s' % (api_url, response.status_code))
+        data = response.json()
+        controller_nodes = filter(lambda node: node['role'] == 'controller',
+                                  data)
+        controller_ips = []
+        conntroller_names = []
+        public_ips = []
+        for node in controller_nodes:
+            public_network = next(network for network in node['network_data']
+                                  if network['name'] == 'public')
+            ip = public_network['ip'].split('/')[0]
+            public_ips.append(ip)
+            controller_ips.append(node['ip'])
+            conntroller_names.append(node['fqdn'])
+        LOG.info("NAMES %s IPS %s" % (controller_ips, conntroller_names))
+        self.compute.controller_nodes = controller_ips
+        self.compute.controller_nodes_name = conntroller_names
+
+    def _parse_networks_configuration(self):
+        api_url = '/api/clusters/%s/network_configuration/' % self.cluster_id
+        data = requests.get(self.nailgun_url+api_url).json()
+        self.network.raw_data = data
+
+    def _parse_ostf_api(self):
         """
-        RESPONSE FORMAT
-        {
-            "controller_nodes_ips": [
-                "10.20.0.129"
-            ],
-            "horizon_url": "http://240.0.1.2/",
-            "controller_nodes_names": [
-                "controller-1.example.com"
-            ],
-            "keystone_url": "http://240.0.1.2:5000/",
-            "admin_tenant_name": "admin",
-            "admin_username": "admin",
-            "admin_password": "admin"
-        }
+        SHOULD BE REMOVED AS SOON AS KEYSTONE URL WILL BE ADDED TO NAILGUN API
         """
         api_url = '/api/ostf/%s' % self.cluster_id
         response = requests.get(self.nailgun_url+api_url)
@@ -415,113 +443,9 @@ class NailgunConfig(object):
             data = response.json()
             self.identity.url = data['horizon_url'] + 'dashboard'
             self.identity.uri = data['keystone_url'] + 'v2.0/'
-            self.identity.admin_tenant_name = data['admin_tenant_name']
-            self.identity.admin_username = data['admin_username']
-            self.identity.admin_password = data['admin_password']
-            self.identity.controller_nodes = data['controller_nodes_ips']
-            self.identity.controller_nodes_name = \
-                data['controller_nodes_names']
-
-    def _parse_networks_configuration(self):
-        """
-        {
-    "net_manager": "FlatDHCPManager",
-    "networks": [
-        {
-            "network_size": 256,
-            "name": "floating",
-            "ip_ranges": [
-                [
-                    "172.18.8.42",
-                    "172.18.8.47"
-                ]
-            ],
-            "amount": 1,
-            "id": 27,
-            "netmask": "255.255.255.0",
-            "cluster_id": 6,
-            "vlan_start": 522,
-            "cidr": "240.0.0.0/24",
-            "gateway": "240.0.0.1"
-        },
-        {
-            "network_size": 256,
-            "name": "management",
-            "ip_ranges": [
-                [
-                    "192.168.0.2",
-                    "192.168.0.254"
-                ]
-            ],
-            "amount": 1,
-            "id": 29,
-            "netmask": "255.255.255.0",
-            "cluster_id": 6,
-            "vlan_start": 101,
-            "cidr": "192.168.0.0/24",
-            "gateway": "192.168.0.1"
-        },
-        {
-            "network_size": 256,
-            "name": "storage",
-            "ip_ranges": [
-                [
-                    "172.16.0.2",
-                    "172.16.0.254"
-                ]
-            ],
-            "amount": 1,
-            "id": 30,
-            "netmask": "255.255.255.0",
-            "cluster_id": 6,
-            "vlan_start": 102,
-            "cidr": "172.16.0.0/24",
-            "gateway": "172.16.0.1"
-        },
-        {
-            "network_size": 256,
-            "name": "fixed",
-            "ip_ranges": [
-                [
-                    "10.0.0.2",
-                    "10.0.0.254"
-                ]
-            ],
-            "amount": 1,
-            "id": 31,
-            "netmask": "255.255.255.0",
-            "cluster_id": 6,
-            "vlan_start": 103,
-            "cidr": "10.0.0.0/24",
-            "gateway": "10.0.0.1"
-        },
-        {
-            "network_size": 256,
-            "name": "public",
-            "ip_ranges": [
-                [
-                    "172.18.8.50",
-                    "172.18.8.59"
-                ]
-            ],
-            "amount": 1,
-            "id": 28,
-            "netmask": "255.255.255.224",
-            "cluster_id": 6,
-            "vlan_start": 522,
-            "cidr": "240.0.1.0/24",
-            "gateway": "172.18.8.33"
-        }
-    ]
-}
-        """
-        api_url = '/api/clusters/%s/network_configuration/' % self.cluster_id
-        data = requests.get(self.nailgun_url+api_url).json()
-        self.network.raw_data = data
 
 
 def FuelConfig():
-    if all(item in os.environ for item in
-           ('NAILGUN_HOST', 'NAILGUN_PORT', 'CLUSTER_ID')):
+    if sys.argv[0] != 'nosetests':
         return NailgunConfig()
     return FileConfig()
