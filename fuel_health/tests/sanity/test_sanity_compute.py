@@ -10,7 +10,7 @@ class SanityComputeTest(base.BaseComputeTest):
     _interface = 'json'
 
     @attr(type=['sanity', 'fuel'])
-    @timed(5.5)
+    @timed(6)
     def test_list_instances(self):
         """Instances list availability
         Test checks list of instances is available.
@@ -19,10 +19,10 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of instances.
             2. Check response status is equal to 200.
             3. Check response contains "servers" section.
-        Duration: 0.6-5.6 s.
+        Duration: 1-6 s.
         """
-        fail_msg = 'Servers list is unavailable. ' \
-                       'Looks like something is broken in Nova.'
+        fail_msg = ("Servers list is unavailable. Looks like something is "
+                    "broken in Nova.")
         try:
             resp, body = self.servers_client.list_servers()
         except Exception as exc:
@@ -33,7 +33,7 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_body(body, u'servers', fail_msg, 3)
 
     @attr(type=['sanity', 'fuel'])
-    @timed(7.5)
+    @timed(8)
     def test_list_images(self):
         """Images list availability
         Test checks list of images is available.
@@ -42,10 +42,10 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of images.
             2. Check response status is equal to 200.
             3. Check response contains "images" section.
-        Duration: 0.8-5.6 s.
+        Duration: 1-8 s.
         """
-        fail_msg = 'Images list is unavailable. ' \
-                   'Looks like something is broken in Glance.'
+        fail_msg = ("Images list is unavailable. Looks like something is "
+                    "broken in Glance.")
         try:
             resp, body = self.images_client.list_images()
         except Exception as exc:
@@ -55,7 +55,7 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_body(body, u'images', fail_msg, 3)
 
     @attr(type=['sanity', 'fuel'])
-    @timed(5.5)
+    @timed(6)
     def test_list_volumes(self):
         """Volumes list availability
         Test checks list of volumes is available.
@@ -65,10 +65,10 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of volumes.
             2. Check response status is equal to 200.
             3. Check response contains "volumes" section.
-        Duration: 0.6-5.6 s.
+        Duration: 1-6 s.
         """
-        fail_msg = 'Volumes list is unavailable. ' \
-                   'Looks like something is broken in Swift.'
+        fail_msg = ("Volumes list is unavailable. Looks like something is "
+                    "broken in Swift.")
         try:
             resp, body = self.volumes_client.list_volumes()
         except Exception as exc:
@@ -78,7 +78,7 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_body(body, u'volumes', fail_msg, 3)
 
     @attr(type=['sanity', 'fuel'])
-    @timed(5.5)
+    @timed(6)
     def test_list_snapshots(self):
         """Snapshots list availability
         Test checks list of snapshots is available.
@@ -88,10 +88,10 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of snapshots.
             2. Check response status is equal to 200.
             3. Check response contains "snapshots" section.
-        Duration: 0.9-5.6 s.
+        Duration: 1-6 s.
         """
-        fail_msg = 'Snapshots list is unavailable. ' \
-                   'Looks like something is broken in Swift.'
+        fail_msg = ("Snapshots list is unavailable. Looks like something is "
+                    "broken in Swift.")
         try:
             resp, body = self.snapshots_client.list_snapshots()
         except Exception as exc:
@@ -101,7 +101,7 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_body(body, u'snapshots', fail_msg, 3)
 
     @attr(type=['sanity', 'fuel'])
-    @timed(5.5)
+    @timed(6)
     def test_list_flavors(self):
         """Flavors list availability
         Test checks list of flavors is available.
@@ -111,10 +111,10 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of flavors.
             2. Check response status is equal to 200.
             3. Check response contains "flavors" section.
-        Duration: 1.2-5.6 s.
+        Duration: 1-6 s.
         """
-        fail_msg = 'Flavors list is unavailable. ' \
-                   'Looks like something is broken in Nova.'
+        fail_msg = ("Flavors list is unavailable. Looks like something is "
+                    "broken in Nova.")
         try:
             resp, body = self.flavors_client.list_flavors()
         except Exception as exc:
@@ -124,7 +124,7 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_body(body, u'flavors', fail_msg, 3)
 
     @attr(type=['sanity', 'fuel'])
-    @timed(5.5)
+    @timed(6)
     def test_list_rate_limits(self):
         """Limits list availability
         Test checks list of absolute limits is available.
@@ -134,10 +134,10 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of limits.
             2. Check response status is equal to 200.
             3. Check response contains absolute limits in "limits" section.
-        Duration: 1.5-5.6 s.
+        Duration: 2-6 s.
         """
-        fail_msg = 'Limits are unavailable. ' \
-                   'Looks like something is broken in Nova.'
+        fail_msg = ("Limits are unavailable. Looks like something is broken in"
+                    " Nova.")
         try:
             resp, body = self.limits_client.get_absolute_limits()
         except Exception as exc:

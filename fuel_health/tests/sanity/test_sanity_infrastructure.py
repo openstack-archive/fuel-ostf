@@ -37,7 +37,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
         pass
 
     @attr(type=['sanity', 'fuel'])
-    @timed(7.5)
+    @timed(8)
     def test_services_state(self):
         """Services execution monitoring
         Test all of the expected services are on.
@@ -50,7 +50,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
                 in the command output.
             4. Check number of normally executed services (with :-) state
                 is equal to the number of expected services
-        Duration: 1.5-7.6 s.
+        Duration: 2-8 s.
         """
         output_msg = ''
         cmd = 'nova-manage service list'
@@ -82,7 +82,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
                       'controller_node_ip ')
 
     @attr(type=['sanity', 'fuel'])
-    @timed(5.5)
+    @timed(6)
     def test_dns_state(self):
         """DNS availability
         Test dns is available.
@@ -94,7 +94,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
             3. Check expected controller's domain name is present
                 in the command output to be sure the domain name
                 was successfully resolved.
-        Duration: 1.2-5.6 s.
+        Duration: 1-6 s.
         """
         if len(self.hostname) and len(self.host):
             expected_output = "in-addr.arpa domain name pointer"

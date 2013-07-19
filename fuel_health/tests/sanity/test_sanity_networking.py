@@ -10,7 +10,7 @@ class NetworksTest(base.BaseNetworkTest):
     """
 
     @attr(type=['sanity', 'fuel'])
-    @timed(5.5)
+    @timed(6)
     def test_list_networks(self):
         """Networks availability
         Test checks that available networks can be listed.
@@ -20,11 +20,10 @@ class NetworksTest(base.BaseNetworkTest):
             1. Request list of networks.
             2. Check response status is equal to 200.
             3. Check response contains "networks" section.
-        Duration: 0.3-5.6 s.
+        Duration: 0-6 s.
         """
-        fail_msg = 'Network list is unavailable. ' \
-                   'Looks like something is broken in Network ' \
-                   '(Neutron or Nova).'
+        fail_msg = ("Network list is unavailable. Looks like something is "
+                    "broken in Network (Neutron or Nova).")
         try:
             resp, body = self.client.list_networks()
         except Exception as exc:
@@ -35,7 +34,7 @@ class NetworksTest(base.BaseNetworkTest):
         self.verify_response_body(body, u'networks', fail_msg, 3)
 
     @attr(type=['sanity', 'fuel'])
-    @timed(5.5)
+    @timed(6)
     def test_list_ports(self):
         """Ports availability
         Test checks that existing ports can be listed.
@@ -45,11 +44,10 @@ class NetworksTest(base.BaseNetworkTest):
             1. Request list of ports.
             2. Check response status is equal to 200.
             3. Check response contains "ports" section.
-        Duration: 0.2-5.6 s.
+        Duration: 0-6 s.
         """
-        fail_msg = 'Ports list is unavailable. ' \
-                   'Looks like something is broken in Network ' \
-                   '(Neutron or Nova).'
+        fail_msg = ("Ports list is unavailable. Looks like something is broken"
+                    " in Network (Neutron or Nova).")
         try:
             resp, body = self.client.list_ports()
         except Exception as exc:
