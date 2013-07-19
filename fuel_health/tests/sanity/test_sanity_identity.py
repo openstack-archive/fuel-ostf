@@ -13,7 +13,7 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
     _interface = 'json'
 
     @attr(type=['sanity', 'fuel'])
-    @timed(5.5)
+    @timed(6)
     def test_list_services(self):
         """Services list availability
         Test checks that active services can be listed.
@@ -23,10 +23,10 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
             1. Request list of services.
             2. Check response status is equal to 200.
             3. Check response contains "OS-KSADM:services" section.
-        Duration: 2-6 s.
+        Duration: 1-6 s.
         """
-        fail_msg = u'Services list is unavailable. ' \
-                   u'Looks like something is broken in Nova.'
+        fail_msg = ("Services list is unavailable. Looks like something is "
+                    "broken in Nova.")
         try:
             resp, body = self.client.list_services()
         except Exception as exc:
@@ -36,7 +36,7 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
         self.verify_response_body(body, u'OS-KSADM:services',fail_msg, 3)
 
     @attr(type=['sanity', 'fuel'])
-    @timed(5.5)
+    @timed(6)
     def test_list_users(self):
         """User list availability
         Test checks that existing users can be listed.
@@ -46,10 +46,10 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
             1. Request list of users.
             2. Check response status is equal to 200.
             3. Check response contains "users" section.
-        Duration: 2-6 s.
+        Duration: 1-6 s.
         """
-        fail_msg = u'Users list is unavailable. ' \
-                   u'ooks like something is broken in Keystone.'
+        fail_msg = ("Users list is unavailable. Looks like something is broken"
+                    " in Keystone.")
         try:
             resp, body = self.client.get_users()
         except Exception as exc:
