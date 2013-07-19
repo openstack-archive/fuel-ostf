@@ -25,7 +25,7 @@ class SanityComputeTest(base.BaseComputeTest):
         try:
             resp, body = self.servers_client.list_servers()
         except Exception as exc:
-            self.error(exc)
+            base.error(exc)
             self.fail("Step 1 failed: " + fail_msg)
 
         self.verify_response_status(resp.status, u'Nova', fail_msg, 2)
@@ -47,7 +47,7 @@ class SanityComputeTest(base.BaseComputeTest):
         try:
             resp, body = self.images_client.list_images()
         except Exception as exc:
-            self.error(exc)
+            base.error(exc)
             self.fail("Step 1 failed: " + fail_msg)
         self.verify_response_status(resp.status, 'Glance')
         self.verify_response_body(body, u'images', fail_msg, 3)
@@ -69,7 +69,7 @@ class SanityComputeTest(base.BaseComputeTest):
         try:
             resp, body = self.volumes_client.list_volumes()
         except Exception as exc:
-            self.error(exc)
+            base.error(exc)
             self.fail("Step 1 failed: " + fail_msg)
         self.verify_response_status(resp.status, 'Swift', fail_msg, 2)
         self.verify_response_body(body, u'volumes', fail_msg, 3)
@@ -91,7 +91,7 @@ class SanityComputeTest(base.BaseComputeTest):
         try:
             resp, body = self.snapshots_client.list_snapshots()
         except Exception as exc:
-            self.error(exc)
+            base.error(exc)
             self.fail("Step 1 failed: " + fail_msg)
         self.verify_response_status(resp.status, 'Swift', fail_msg, 2)
         self.verify_response_body(body, u'snapshots', fail_msg, 3)
@@ -113,7 +113,7 @@ class SanityComputeTest(base.BaseComputeTest):
         try:
             resp, body = self.flavors_client.list_flavors()
         except Exception as exc:
-            self.error(exc)
+            base.error(exc)
             self.fail("Step 1 failed: " + fail_msg)
         self.verify_response_status(resp.status, 'Nova', fail_msg, 2)
         self.verify_response_body(body, u'flavors', fail_msg, 3)
@@ -135,7 +135,7 @@ class SanityComputeTest(base.BaseComputeTest):
         try:
             resp, body = self.limits_client.get_absolute_limits()
         except Exception as exc:
-            self.error(exc)
+            base.error(exc)
             self.fail("Step 1 failed: " + fail_msg)
         self.verify_response_status(resp.status, 'Nova', fail_msg, 2)
         self.verify_response_body(body["limits"], u'absolute', fail_msg, 3)

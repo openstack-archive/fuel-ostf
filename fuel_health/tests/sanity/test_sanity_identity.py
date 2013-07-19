@@ -29,7 +29,7 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
         try:
             resp, body = self.client.list_services()
         except Exception as exc:
-            self.error(exc)
+            base.error(exc)
             self.fail("Step 1 failed: " + fail_msg)
         self.verify_response_status(resp.status, u'Nova', fail_msg, 2)
         self.verify_response_body(body, u'OS-KSADM:services',fail_msg, 3)
@@ -51,7 +51,7 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
         try:
             resp, body = self.client.get_users()
         except Exception as exc:
-            self.error(exc)
+            base.error(exc)
             self.fail("Step 1 failed: " + fail_msg)
         self.verify_response_status(resp.status, u'Keystone', fail_msg, 2)
         self.verify_response_body(body, u'users',fail_msg, 3)

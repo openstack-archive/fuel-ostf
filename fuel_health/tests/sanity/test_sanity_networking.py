@@ -27,7 +27,7 @@ class NetworksTest(base.BaseNetworkTest):
         try:
             resp, body = self.client.list_networks()
         except Exception as exc:
-            self.error(exc)
+            base.error(exc)
             self.fail("Step 1 failed: " + fail_msg)
         self.verify_response_status(resp.status, u'Network (Neutron or Nova)',
                                     fail_msg, 2)
@@ -51,7 +51,7 @@ class NetworksTest(base.BaseNetworkTest):
         try:
             resp, body = self.client.list_ports()
         except Exception as exc:
-            self.error(exc)
+            base.error(exc)
         self.verify_response_status(resp.status, u'Network (Neutron or Nova)',
                                     fail_msg, 2)
         self.verify_response_body(body, u'ports', fail_msg, 3)
