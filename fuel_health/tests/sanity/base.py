@@ -26,6 +26,8 @@ import fuel_health.test
 
 LOG = logging.getLogger(__name__)
 
+def error(message):
+        LOG.error(message)
 
 class BaseComputeTest(fuel_health.test.BaseTestCase):
     """Base test case class for all Compute API tests."""
