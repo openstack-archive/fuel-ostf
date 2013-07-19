@@ -16,7 +16,6 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
     @timed(5.5)
     def test_list_services(self):
         """Services list availability
-
         Test checks that active services can be listed.
         Target component: Nova
 
@@ -40,7 +39,6 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
     @timed(5.5)
     def test_list_users(self):
         """User list availability
-
         Test checks that existing users can be listed.
         Target component: Keystone
 

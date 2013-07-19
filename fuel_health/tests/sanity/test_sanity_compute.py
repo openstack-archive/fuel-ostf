@@ -13,7 +13,6 @@ class SanityComputeTest(base.BaseComputeTest):
     @timed(5.5)
     def test_list_instances(self):
         """Instances list availability
-
         Test checks list of instances is available.
         Target component: Nova
         Scenario:
@@ -34,10 +33,9 @@ class SanityComputeTest(base.BaseComputeTest):
         self.verify_response_body(body, u'servers', fail_msg, 3)
 
     @attr(type=['sanity', 'fuel'])
-    @timed(5.5)
+    @timed(7.5)
     def test_list_images(self):
         """Images list availability
-
         Test checks list of images is available.
         Target component: Glance
         Scenario:
@@ -60,7 +58,6 @@ class SanityComputeTest(base.BaseComputeTest):
     @timed(5.5)
     def test_list_volumes(self):
         """Volumes list availability
-
         Test checks list of volumes is available.
         Target component: Swift
 
@@ -84,7 +81,6 @@ class SanityComputeTest(base.BaseComputeTest):
     @timed(5.5)
     def test_list_snapshots(self):
         """Snapshots list availability
-
         Test checks list of snapshots is available.
         Target component: Swift
 
@@ -108,7 +104,6 @@ class SanityComputeTest(base.BaseComputeTest):
     @timed(5.5)
     def test_list_flavors(self):
         """Flavors list availability
-
         Test checks list of flavors is available.
         Target component: Nova
 
@@ -132,7 +127,6 @@ class SanityComputeTest(base.BaseComputeTest):
     @timed(5.5)
     def test_list_rate_limits(self):
         """Limits list availability
-
         Test checks list of absolute limits is available.
         Target component: Cinder
 

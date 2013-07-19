@@ -40,7 +40,6 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
     @timed(7.5)
     def test_services_state(self):
         """Services execution monitoring
-
         Test all of the expected services are on.
         Target component: OpenStack
 
@@ -86,7 +85,6 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
     @timed(5.5)
     def test_dns_state(self):
         """DNS availability
-
         Test dns is available.
         Target component: OpenStack
 

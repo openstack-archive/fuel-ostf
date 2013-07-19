@@ -13,7 +13,6 @@ class NetworksTest(base.BaseNetworkTest):
     @timed(5.5)
     def test_list_networks(self):
         """Networks availability
-
         Test checks that available networks can be listed.
         Target component: Nova Networking.
 
@@ -39,7 +38,6 @@ class NetworksTest(base.BaseNetworkTest):
     @timed(5.5)
     def test_list_ports(self):
         """Ports availability
-
         Test checks that existing ports can be listed.
         Target component: Nova Networking.
 
