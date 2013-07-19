@@ -37,7 +37,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
         pass
 
     @attr(type=['sanity', 'fuel'])
-    @timed(5.5)
+    @timed(7.5)
     def test_services_state(self):
         """Services execution monitoring
 
@@ -51,7 +51,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
                 in the command output.
             4. Check number of normally executed services (with :-) state
                 is equal to the number of expected services
-        Duration: 1.5-5.6 s.
+        Duration: 1.5-7.6 s.
         """
         output_msg = ''
         cmd = 'nova-manage service list'
