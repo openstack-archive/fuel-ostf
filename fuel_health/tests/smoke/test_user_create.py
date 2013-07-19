@@ -26,7 +26,7 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
     @attr(type=["fuel", "smoke"])
     @timed(30.9)
     def test_create_user(self):
-        """ Test verifies user creation and auth in Horizon
+        """User creation and authentication.
         Target components: Nova, Keystone
 
         Scenario:
@@ -37,44 +37,54 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
             5. Create a new user role.
             6. Check user role was created successfully.
             7. Perform token authentication.
-            8. Check authentication was successful.
-            9. Send authentication request to Horizon.
-            10. Verify response status is 200.
-        Duration: 1-30.9 s.
+            8. Check token authentication was successful.
+            9. Check auth request to Horizon was successful.
+            10. Check authentication to Horizon succeeded.
+        Duration: 1-35 s.
         """
         # Create a tenant:
         try:
             resp, tenant = self.client.create_tenant(self.alt_tenant)
-            self.verify_response_status(
-                int(resp['status']), msg="Verify request was successful.")
-        except Exception:
-            self.fail('Tenant creation failure, please, '
+        except Exception as e:
+            base.LOG.error("Tenant creation failed: %s" % e)
+            self.fail('Step 1 failed: Create new tenant. Please, '
                       'check Keystone configuration ')
+        self.verify_response_status(
+                int(resp['status']), msg="Verify request was successful.",
+                failed_step=2)
 
         # Create a user:
         try:
             resp, user = self.client.create_user(
                 self.alt_user, self.alt_password, tenant['id'], self.alt_email)
-            self.verify_response_status(
-                int(resp['status']), msg="Verify request was successful.")
-            self.verify_response_body_value(user['name'], self.alt_user)
-        except Exception:
-            self.fail("Can't create a user. Please, check Keystone service")
+        except Exception as e:
+            base.LOG.error("User creation failed: %s" % e)
+            self.fail("Step 3 failed: Create a new user. "
+                      "Please, check Keystone service")
+        self.verify_response_status(
+            int(resp['status']), msg="Check user was created successfully.",
+            failed_step=4)
+        self.verify_response_body_value(user['name'], self.alt_user,
+                                        failed_step=5)
 
         # Create a user role:
         try:
             resp, role = self.client.create_role(user['name'])
-            self.verify_response_status(
-                int(resp['status']), msg="Verify request was successful.")
-        except Exception:
-            self.fail("User role creation fails. Please, check Keystone service")
+        except Exception as e:
+            base.LOG.error("User role creation failed: %s" % e)
+            self.fail("Step 6 failed: Create a new user role.")
+        self.verify_response_status(
+                int(resp['status']), msg="Check user role was created"
+                                         " successfully.",
+                                        failed_step=7)
 
         # Authenticate with created user:
         try:
             resp, body = self.token_client.auth(
                 user['name'], self.alt_password, tenant['name'])
             self.verify_response_status(
-                int(resp['status']), msg="Verify request was successful.")
+                int(resp['status']), msg="Verify request was successful.",
+                failed_step=8)
 
             # Auth in horizon with non-admin user
             client = requests.session()
@@ -88,7 +98,8 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
                                   next='/')
                 resp = client.post(url, data=login_data, headers=dict(Referer=url))
                 self.verify_response_status(
-                    resp.status_code, msg="Verify request was successful.")
+                    resp.status_code, msg="Verify request was successful.",
+                    failed_step=9)
             else:
                 csrftoken = client.cookies['csrftoken']
                 login_data = dict(username=user['name'],
@@ -97,6 +108,9 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
                                   next='/')
                 resp = client.post(url, data=login_data, headers=dict(Referer=url))
                 self.verify_response_status(
-                    resp.status_code, msg="Verify request was successful.")
-        except Exception:
-            self.fail("Can not auth in Horizon, please check Horizon is alive")
+                    resp.status_code, msg="Verify request was successful.",
+                    failed_step=9)
+        except Exception as e:
+            self.LOG.error("Authentication to Horizon failed: %s" % e)
+            self.fail("Step 10: Authenticate to Horizon failed, "
+                      "please check Horizon is alive")

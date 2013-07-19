@@ -23,7 +23,7 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
             1. Request list of services.
             2. Check response status is equal to 200.
             3. Check response contains "OS-KSADM:services" section.
-        Duration: 0.2-5.6 s.
+        Duration: 2-6 s.
         """
         fail_msg = u'Services list is unavailable. ' \
                    u'Looks like something is broken in Nova.'
@@ -46,7 +46,7 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
             1. Request list of users.
             2. Check response status is equal to 200.
             3. Check response contains "users" section.
-        Duration: 0.2-5.6 s.
+        Duration: 2-6 s.
         """
         fail_msg = u'Users list is unavailable. ' \
                    u'ooks like something is broken in Keystone.'

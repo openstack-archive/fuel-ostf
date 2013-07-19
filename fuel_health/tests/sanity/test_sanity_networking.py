@@ -20,7 +20,7 @@ class NetworksTest(base.BaseNetworkTest):
             1. Request list of networks.
             2. Check response status is equal to 200.
             3. Check response contains "networks" section.
-        Duration: 0.3-5.6 s.
+        Duration: 1-5 s.
         """
         fail_msg = 'Network list is unavailable. ' \
                    'Looks like something is broken in Network ' \
@@ -45,7 +45,7 @@ class NetworksTest(base.BaseNetworkTest):
             1. Request list of ports.
             2. Check response status is equal to 200.
             3. Check response contains "ports" section.
-        Duration: 0.2-5.6 s.
+        Duration: 1-5 s.
         """
         fail_msg = 'Ports list is unavailable. ' \
                    'Looks like something is broken in Network ' \

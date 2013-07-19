@@ -27,7 +27,7 @@ class VolumesTest(base.BaseComputeTest):
     @attr(type=["fuel", "smoke"])
     @timed(60.5)
     def test_volume_create(self):
-        """Test volume can be created.
+        """Volume creation
         Target component: Compute
 
         Scenario:
@@ -49,67 +49,109 @@ class VolumesTest(base.BaseComputeTest):
             16. Check volume has "available" status.
             17. Delete volume.
             18. Check response status equals 200.
-        Duration: 47.1-60.5 s.
+        Duration: 45-60 s.
         """
         v_name = rand_name('ost1_test-test')
         metadata = {'Type': 'work'}
 
         #Create volume
-        resp, volume = self.volumes_client.create_volume(size=1,
-                                                         display_name=v_name,
-                                                         metadata=metadata)
-        self.verify_response_status(resp.status, 'Compute')
+        try:
+            resp, volume = self.volumes_client.create_volume(size=1,
+                                                             display_name=v_name,
+                                                             metadata=metadata)
+        except Exception as e:
+            base.LOG.error("New volume creation failed: %s" % e)
+            self.fail("Step 1 failed:  Create a new small-size volume.")
+
+        self.verify_response_status(resp.status, 'Compute', failed_step=2)
 
         self.verify_response_body(volume, 'id',
                                   'Volume is not created. '
-                                  'Looks like something is broken in Storage.')
+                                  'Looks like something is broken in Storage.',
+                                  failed_step=3)
         self.verify_response_body(volume, 'display_name',
                                   'Volume is not created. '
-                                  'Looks like something is broken in Storage.')
+                                  'Looks like something is broken in Storage.',
+                                    failed_step=4)
 
         self.verify_response_body_content(v_name,
                                           volume['display_name'],
                                           ("The created volume"
                                            " name is not equal "
                                            "to the requested"
-                                           " name"))
+                                           " name"),
+                                          failed_step=5)
 
-        #Wait for Volume status to become AVAILABLE
-        self.volumes_client.wait_for_volume_status(volume['id'], 'available')
+        try:
+            #Wait for Volume status to become AVAILABLE
+            self.volumes_client.wait_for_volume_status(volume['id'], 'available')
+        except Exception as e:
+            base.LOG.error("Volume never reached AVAILABLE status: %s" % e)
+            self.fail("Step 6 failed:  Wait for volume AVAILABLE status.")
 
         # Attach the volume to the server
         device = '/dev/%s' % self.device
-        resp, body = self.servers_client.attach_volume(self.server_id,
-                                                       volume['id'],
-                                                       device=device)
-        self.verify_response_status(resp.status, 'Nova Compute')
+        try:
+            resp, body = self.servers_client.attach_volume(self.server_id,
+                                                           volume['id'],
+                                                           device=device)
+        except Exception as e:
+            base.LOG.error("Volume attachment failed: %s" % e)
+            self.fail("Step 7 failed: Attach volume.")
 
-        self.volumes_client.wait_for_volume_status(volume['id'], 'in-use')
+        self.verify_response_status(resp.status, 'Nova Compute', failed_step=8)
+
+        try:
+            self.volumes_client.wait_for_volume_status(volume['id'], 'in-use')
+        except Exception as e:
+            base.LOG.error("Volume never reached IN-USE status: %s" % e)
+            self.fail("Step 9 failed: Wait for volume IN-USE status.")
 
         self.attached = True
 
-        resp, body = self.volumes_client.get_volume(volume['id'])
-        self.verify_response_status(resp.status, 'Storage Objects')
+        try:
+            resp, body = self.volumes_client.get_volume(volume['id'])
+        except Exception as e:
+            base.LOG.error("Volume couldn`t be found by ID: %s" % e)
+            self.fail("Step 10 failed: Get volume by ID.")
+        self.verify_response_status(resp.status, 'Storage Objects',
+                                    failed_step=11)
 
         for attachment in body['attachments']:
             self.verify_response_body_content('/dev/%s' % self.device,
                                               attachment['device'],
                                               ('Device is not equal, '
-                                               'Volume attachment failed'))
+                                               'Volume attachment failed'),
+                                              failed_step=12)
 
             self.verify_response_body_content(self.server_id,
                                               attachment['server_id'],
                                               ('Server id is not equal,'
-                                               'Volume attachment failed'))
+                                               'Volume attachment failed'),
+                                              failed_step=13)
 
             self.verify_response_body_content(volume['id'],
                                               attachment['volume_id'],
-                                              'Wrong volume is attached')
+                                              'Wrong volume is attached',
+                                              failed_step=14)
+        try:
+            # detach volume
+            self.servers_client.detach_volume(self.server_id, volume['id'])
+        except Exception as e:
+            base.LOG("Volume detachment failed: %s" % e)
+            self.fail("Step 15 failed: Detach volume.")
+        try:
+            self.volumes_client.wait_for_volume_status(volume['id'], 'available')
+        except Exception as e:
+            base.LOG("Volume never reached AVAILABLE status: %s" % e)
+            self.fail("Step 16 failed: Wait for volume AVAILABLE.")
 
-        # detach volume
-        self.servers_client.detach_volume(self.server_id, volume['id'])
-        self.volumes_client.wait_for_volume_status(volume['id'], 'available')
-
-        # delete volume
-        resp, body = self.volumes_client.delete_volume(volume['id'])
-        self.verify_response_status(resp.status, 'Storage Object')
+        try:
+            # delete volume
+            resp, body = self.volumes_client.delete_volume(volume['id'])
+        except Exception as e:
+            base.LOG("Volume deletion failed: %s" % e)
+            self.fail("Step 17 failed: Delete volume.")
+        self.verify_response_status(resp.status, 'Storage Object',
+                                    failed_step=18
+                                    )

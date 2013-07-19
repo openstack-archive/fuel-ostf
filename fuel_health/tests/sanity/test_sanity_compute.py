@@ -19,7 +19,7 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of instances.
             2. Check response status is equal to 200.
             3. Check response contains "servers" section.
-        Duration: 0.6-5.6 s.
+        Duration: 1-6 s.
         """
         fail_msg = 'Servers list is unavailable. ' \
                        'Looks like something is broken in Nova.'
@@ -42,7 +42,7 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of images.
             2. Check response status is equal to 200.
             3. Check response contains "images" section.
-        Duration: 0.8-5.6 s.
+        Duration: 1-6 s.
         """
         fail_msg = 'Images list is unavailable. ' \
                    'Looks like something is broken in Glance.'
@@ -65,7 +65,7 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of volumes.
             2. Check response status is equal to 200.
             3. Check response contains "volumes" section.
-        Duration: 0.6-5.6 s.
+        Duration: 1-6 s.
         """
         fail_msg = 'Volumes list is unavailable. ' \
                    'Looks like something is broken in Swift.'
@@ -88,7 +88,7 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of snapshots.
             2. Check response status is equal to 200.
             3. Check response contains "snapshots" section.
-        Duration: 0.9-5.6 s.
+        Duration: 1-6 s.
         """
         fail_msg = 'Snapshots list is unavailable. ' \
                    'Looks like something is broken in Swift.'
@@ -111,7 +111,7 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of flavors.
             2. Check response status is equal to 200.
             3. Check response contains "flavors" section.
-        Duration: 1.2-5.6 s.
+        Duration: 2-6 s.
         """
         fail_msg = 'Flavors list is unavailable. ' \
                    'Looks like something is broken in Nova.'
@@ -134,7 +134,7 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of limits.
             2. Check response status is equal to 200.
             3. Check response contains absolute limits in "limits" section.
-        Duration: 1.5-5.6 s.
+        Duration: 2-6 s.
         """
         fail_msg = 'Limits are unavailable. ' \
                    'Looks like something is broken in Nova.'
