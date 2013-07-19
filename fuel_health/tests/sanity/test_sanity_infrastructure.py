@@ -11,9 +11,9 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
     TestClass contains tests check the whole OpenStack availability.
     Special requirements:
             1. A controller's IP should be specified in
-                controller_node parameter of the config file.
+                controller_nodes parameter of the config file.
             2. The controller's domain name should be specified in
-                controller_node_name parameter of the config file.
+                controller_nodes_name parameter of the config file.
             3. SSH user credentials should be specified in
                 controller_node_ssh_user/password parameters
                 of the config file.
@@ -39,7 +39,9 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)
     def test_services_state(self):
-        """Test all of the expected services are on.
+        """Services execution monitoring
+
+        Test all of the expected services are on.
         Target component: OpenStack
 
         Scenario:
@@ -83,7 +85,9 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)
     def test_dns_state(self):
-        """Test dns is available.
+        """DNS availability
+
+        Test dns is available.
         Target component: OpenStack
 
         Scenario:

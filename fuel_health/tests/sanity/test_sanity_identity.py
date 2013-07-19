@@ -15,7 +15,9 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)
     def test_list_services(self):
-        """ Test checks that active services can be listed.
+        """Services list availability
+
+        Test checks that active services can be listed.
         Target component: Nova
 
         Scenario:
@@ -37,7 +39,9 @@ class ServicesTestJSON(base.BaseIdentityAdminTest):
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)
     def test_list_users(self):
-        """Test checks that existing users can be listed.
+        """User list availability
+
+        Test checks that existing users can be listed.
         Target component: Keystone
 
         Scenario:

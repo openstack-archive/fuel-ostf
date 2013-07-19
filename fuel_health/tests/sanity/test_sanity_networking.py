@@ -12,7 +12,9 @@ class NetworksTest(base.BaseNetworkTest):
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)
     def test_list_networks(self):
-        """Test checks that available networks can be listed.
+        """Networks availability
+
+        Test checks that available networks can be listed.
         Target component: Nova Networking.
 
         Scenario:
@@ -36,7 +38,9 @@ class NetworksTest(base.BaseNetworkTest):
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)
     def test_list_ports(self):
-        """Test checks that existing ports can be listed.
+        """Ports availability
+
+        Test checks that existing ports can be listed.
         Target component: Nova Networking.
 
         Scenario:

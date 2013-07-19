@@ -12,7 +12,9 @@ class SanityComputeTest(base.BaseComputeTest):
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)
     def test_list_instances(self):
-        """Test checks list of instances is available.
+        """Instances list availability
+
+        Test checks list of instances is available.
         Target component: Nova
         Scenario:
             1. Request list of instances.
@@ -34,7 +36,9 @@ class SanityComputeTest(base.BaseComputeTest):
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)
     def test_list_images(self):
-        """Test checks list of images is available.
+        """Images list availability
+
+        Test checks list of images is available.
         Target component: Glance
         Scenario:
             1. Request list of images.
@@ -55,7 +59,9 @@ class SanityComputeTest(base.BaseComputeTest):
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)
     def test_list_volumes(self):
-        """Test checks list of volumes is available.
+        """Volumes list availability
+
+        Test checks list of volumes is available.
         Target component: Swift
 
         Scenario:
@@ -77,7 +83,9 @@ class SanityComputeTest(base.BaseComputeTest):
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)
     def test_list_snapshots(self):
-        """Test checks list of snapshots is available.
+        """Snapshots list availability
+
+        Test checks list of snapshots is available.
         Target component: Swift
 
         Scenario:
@@ -99,7 +107,9 @@ class SanityComputeTest(base.BaseComputeTest):
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)
     def test_list_flavors(self):
-        """Test checks list of flavors is available.
+        """Flavors list availability
+
+        Test checks list of flavors is available.
         Target component: Nova
 
         Scenario:
@@ -121,7 +131,9 @@ class SanityComputeTest(base.BaseComputeTest):
     @attr(type=['sanity', 'fuel'])
     @timed(5.5)
     def test_list_rate_limits(self):
-        """Test checks list of absolute limits is available.
+        """Limits list availability
+
+        Test checks list of absolute limits is available.
         Target component: Cinder
 
         Scenario:
