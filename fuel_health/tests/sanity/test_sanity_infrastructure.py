@@ -49,7 +49,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
                 in the command output.
             4. Check number of normally executed services (with :-) state
                 is equal to the number of expected services
-        Duration: 1.5-5.6 s.
+        Duration: 2-6 s.
         """
         output_msg = ''
         cmd = 'nova-manage service list'
@@ -87,7 +87,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
             3. Check expected controller's domain name is present
                 in the command output to be sure the domain name
                 was successfully resolved.
-        Duration: 1.2-5.6 s.
+        Duration: 2-6 s.
         """
         if len(self.hostname) and len(self.host):
             expected_output = "in-addr.arpa domain name pointer"

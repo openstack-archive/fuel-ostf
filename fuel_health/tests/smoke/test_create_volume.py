@@ -49,7 +49,7 @@ class VolumesTest(base.BaseComputeTest):
             16. Check volume has "available" status.
             17. Delete volume.
             18. Check response status equals 200.
-        Duration: 47.1-60.5 s.
+        Duration: 45-60 s.
         """
         v_name = rand_name('ost1_test-test')
         metadata = {'Type': 'work'}
@@ -61,7 +61,7 @@ class VolumesTest(base.BaseComputeTest):
                                                              metadata=metadata)
         except Exception as e:
             base.LOG.error("New volume creation failed: %s" % e)
-            self.fail("Step 1:  Create a new small-size volume failed.")
+            self.fail("Step 1 failed:  Create a new small-size volume.")
 
         self.verify_response_status(resp.status, 'Compute', failed_step=2)
 
@@ -87,7 +87,7 @@ class VolumesTest(base.BaseComputeTest):
             self.volumes_client.wait_for_volume_status(volume['id'], 'available')
         except Exception as e:
             base.LOG.error("Volume never reached AVAILABLE status: %s" % e)
-            self.fail("Step 6:  Wait for volume AVAILABLE status failed.")
+            self.fail("Step 6 failed:  Wait for volume AVAILABLE status.")
 
         # Attach the volume to the server
         device = '/dev/%s' % self.device
@@ -97,7 +97,7 @@ class VolumesTest(base.BaseComputeTest):
                                                            device=device)
         except Exception as e:
             base.LOG.error("Volume attachment failed: %s" % e)
-            self.fail("Step 7: Attach volume failed.")
+            self.fail("Step 7 failed: Attach volume.")
 
         self.verify_response_status(resp.status, 'Nova Compute', failed_step=8)
 
@@ -105,7 +105,7 @@ class VolumesTest(base.BaseComputeTest):
             self.volumes_client.wait_for_volume_status(volume['id'], 'in-use')
         except Exception as e:
             base.LOG.error("Volume never reached IN-USE status: %s" % e)
-            self.fail("Step 9: Wait for volume IN-USE status failed.")
+            self.fail("Step 9 failed: Wait for volume IN-USE status.")
 
         self.attached = True
 
@@ -113,7 +113,7 @@ class VolumesTest(base.BaseComputeTest):
             resp, body = self.volumes_client.get_volume(volume['id'])
         except Exception as e:
             base.LOG.error("Volume couldn`t be found by ID: %s" % e)
-            self.fail("Step 10: Get volume by ID.")
+            self.fail("Step 10 failed: Get volume by ID.")
         self.verify_response_status(resp.status, 'Storage Objects',
                                     failed_step=11)
 
@@ -139,19 +139,19 @@ class VolumesTest(base.BaseComputeTest):
             self.servers_client.detach_volume(self.server_id, volume['id'])
         except Exception as e:
             base.LOG("Volume detachment failed: %s" % e)
-            self.fail("Step 15: Detach volume failed.")
+            self.fail("Step 15 failed: Detach volume.")
         try:
             self.volumes_client.wait_for_volume_status(volume['id'], 'available')
         except Exception as e:
             base.LOG("Volume never reached AVAILABLE status: %s" % e)
-            self.fail("Step 16: Wait for volume AVAILABLE status.")
+            self.fail("Step 16 failed: Wait for volume AVAILABLE.")
 
         try:
             # delete volume
             resp, body = self.volumes_client.delete_volume(volume['id'])
         except Exception as e:
             base.LOG("Volume deletion failed: %s" % e)
-            self.fail("Step 17: Delete volume failed.")
+            self.fail("Step 17 failed: Delete volume.")
         self.verify_response_status(resp.status, 'Storage Object',
                                     failed_step=18
                                     )

@@ -19,7 +19,7 @@ class NetworksTest(base.BaseNetworkTest):
             1. Request list of networks.
             2. Check response status is equal to 200.
             3. Check response contains "networks" section.
-        Duration: 0.3-5.6 s.
+        Duration: 1-5 s.
         """
         resp, body = self.client.list_networks()
         self.verify_response_status(resp.status, u'Network (Neutron or Nova)')
@@ -38,7 +38,7 @@ class NetworksTest(base.BaseNetworkTest):
             1. Request list of ports.
             2. Check response status is equal to 200.
             3. Check response contains "ports" section.
-        Duration: 0.2-5.6 s.
+        Duration: 1-5 s.
         """
         resp, body = self.client.list_ports()
         self.verify_response_status(resp.status, u'Network (Neutron or Nova)')

@@ -77,28 +77,28 @@ class TestImageAction(nmanager.OfficialClientTest):
             2. Boot default image.
             3. Make snapshot of created server.
             4. Boot another instance from created snapshot.
-        Duration: 80-131 s.
+        Duration: 80-310 s.
         """
         try:
             # prepare for booting an instance
             self._add_keypair()
         except Exception as e:
             LOG.error("Keypair creation failed: %s" % e)
-            self.fail("Step 1: Create keypair failed.")
+            self.fail("Step 1 failed: Create keypair.")
 
         try:
             # boot a instance and create a timestamp file in it
             server = self._boot_image(nmanager.get_image_from_name())
         except Exception as e:
             LOG.error("Image booting failed: %s" % e)
-            self.fail("Step 2: Boot default image failed.")
+            self.fail("Step 2 failed: Boot default image.")
 
         try:
             # snapshot the instance
             snapshot_image_id = self._create_image(server)
         except Exception as e:
             LOG.error("Making snapshot of an instance failed: %s" % e)
-            self.fail("Step 3: Make snapshot of an instance failed.")
+            self.fail("Step 3 failed: Make snapshot of an instance.")
 
         try:
             # boot a second instance from the snapshot
@@ -106,5 +106,4 @@ class TestImageAction(nmanager.OfficialClientTest):
         except Exception as e:
             LOG.error("Booting second instance from the snapshot failed: "
                 "%s" %e)
-            self.fail("Step 4: Boot second instance from the snapshot "
-                      "failed.")
+            self.fail("Step 4 failed: Boot second instance from the snapshot.")

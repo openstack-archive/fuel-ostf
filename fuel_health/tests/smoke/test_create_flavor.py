@@ -24,24 +24,27 @@ class FlavorsAdminTest(base.BaseComputeAdminTest):
             3. Check created flavor has expected name.
             4. Check flavor disk has expected size.
             5. Check flavor contains 'id' section.
-        Duration: 0.5-10.9 s.
+        Duration: 1-10 s.
         """
         try:
             resp, flavor = self.create_flavor(ram=255,
                                               disk=1)
         except Exception as e:
             base.LOG.error("Low requirements flavor creation failed: %s" % e)
-            self.fail("Step 1: Create new volume failed.")
+            self.fail("Step 1 failed: Create small-size flavor.")
 
         self.verify_response_status(
-            resp.status, appl="Nova")
+            resp.status, appl="Nova", failed_step=2)
         self.verify_response_body(
             flavor['name'], u'ost1_test-flavor',
-            msg="Flavor name is not the same as requested.")
+            msg="Flavor name is not the same as requested.",
+            failed_step=3)
         self.verify_response_body_value(
             flavor['disk'], 1,
-            msg="Disk size is not the same as requested.")
+            msg="Disk size is not the same as requested.",
+            failed_step=4)
         self.verify_response_body(
             flavor, 'id',
             msg="Flavor was not created properly."
-                "Please, check Nova.")
+                "Please, check Nova.",
+            failed_step=5)

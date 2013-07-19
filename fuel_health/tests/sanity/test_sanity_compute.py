@@ -19,7 +19,7 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of instances.
             2. Check response status is equal to 200.
             3. Check response contains "servers" section.
-        Duration: 0.6-5.6 s.
+        Duration: 1-6 s.
         """
         resp, body = self.servers_client.list_servers()
         self.verify_response_status(resp.status, u'Nova')
@@ -36,7 +36,7 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of images.
             2. Check response status is equal to 200.
             3. Check response contains "images" section.
-        Duration: 0.8-5.6 s.
+        Duration: 1-6 s.
         """
         resp, body = self.images_client.list_images()
         self.verify_response_status(resp.status, 'Glance')
@@ -54,7 +54,7 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of volumes.
             2. Check response status is equal to 200.
             3. Check response contains "volumes" section.
-        Duration: 0.6-5.6 s.
+        Duration: 1-6 s.
         """
         resp, body = self.volumes_client.list_volumes()
         self.verify_response_status(resp.status, 'Swift')
@@ -72,7 +72,7 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of snapshots.
             2. Check response status is equal to 200.
             3. Check response contains "snapshots" section.
-        Duration: 0.9-5.6 s.
+        Duration: 1-6 s.
         """
         resp, body = self.snapshots_client.list_snapshots()
         self.verify_response_status(resp.status, 'Swift')
@@ -90,7 +90,7 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of flavors.
             2. Check response status is equal to 200.
             3. Check response contains "flavors" section.
-        Duration: 1.2-5.6 s.
+        Duration: 2-6 s.
         """
         resp, body = self.flavors_client.list_flavors()
         self.verify_response_status(resp.status, 'Nova')
@@ -108,7 +108,7 @@ class SanityComputeTest(base.BaseComputeTest):
             1. Request list of limits.
             2. Check response status is equal to 200.
             3. Check response contains absolute limits in "limits" section.
-        Duration: 1.5-5.6 s.
+        Duration: 2-6 s.
         """
         resp, body = self.limits_client.get_absolute_limits()
         self.verify_response_status(resp.status, 'Nova')
