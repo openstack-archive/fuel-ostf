@@ -62,10 +62,10 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
                                    timeout=self.timeout).exec_command(cmd)
             except SSHExecCommandFailed as exc:
                 output_msg = "Error: 'nova-manage' command execution failed."
-                self.error(exc._error_string)
+                self.error(exc)
                 self.fail("Step 2 failed: " + output_msg)
             except Exception as bexp:
-                self.error(exc._error_string)
+                self.error(exc)
                 self.fail("Step 1 failed: connection fail")
 
             output_msg = output_msg or (
@@ -106,10 +106,10 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
                                    timeout=self.timeout).exec_command(cmd)
             except SSHExecCommandFailed as exc:
                 output = "'host' command failed."
-                self.error(exc._error_string)
+                self.error(exc)
                 self.fail("Step 2 failed: " + output)
             except Exception as bexp:
-                self.error(exc._error_string)
+                self.error(exc)
                 self.fail("Step 1 failed: connection fail")
 
             self.assertTrue(expected_output in output,
