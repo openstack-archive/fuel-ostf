@@ -15,7 +15,7 @@ class FlavorsAdminTest(base.BaseComputeAdminTest):
     @attr(type=["fuel", "smoke"])
     @timed(10.9)
     def test_create_flavor(self):
-        """Test low requirements flavor can be created.
+        """Flavor creation
         Target component: Nova
 
         Scenario:

@@ -48,7 +48,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     @timed(20.5)
     def test_001_create_keypairs(self):
-        """Test checks keypair can be created.
+        """Keypair creation
         Target component: Nova.
 
         Scenario:
@@ -66,7 +66,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     @timed(20.5)
     def test_002_create_security_groups(self):
-        """Test checks security group can be created.
+        """Security group creation
         Target component: Nova
 
         Scenario:
@@ -84,7 +84,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     @timed(45.5)
     def test_004_check_networks(self):
-        """Test checks created network parameters.
+        """Network parameters check
         Target component: Nova
 
         Scenario:
@@ -115,7 +115,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     @timed(60.7)
     def test_005_create_servers(self):
-        """Test checks instance instance can be created.
+        """Instance creation
         Target component: Nova
 
         Scenario:
@@ -158,7 +158,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     @timed(45.9)
     def test_006_check_tenant_network_connectivity(self):
-        """Test checks created network connectivity
+        """Network connectivity check
         Target component: Nova.
 
         Scenario:
@@ -219,7 +219,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     @timed(49.9)
     def test_007_assign_floating_ips(self):
-        """Test checks assignment of floating ip to created instance
+        """Floating IP assignment
         Target component: Nova
 
         Scenario:
@@ -277,7 +277,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     @timed(49.9)
     def test_008_check_public_network_connectivity(self):
-        """Test checks network connectivity trough floating ip.
+        """Network connectivity check through floating ip.
         Target component: Nova
 
         Scenario:

@@ -26,7 +26,7 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
     @attr(type=["fuel", "smoke"])
     @timed(30.9)
     def test_create_user(self):
-        """ Test verifies user creation and auth in Horizon
+        """User creation and authentication.
         Target components: Nova, Keystone
 
         Scenario:

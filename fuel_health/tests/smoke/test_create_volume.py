@@ -27,7 +27,7 @@ class VolumesTest(base.BaseComputeTest):
     @attr(type=["fuel", "smoke"])
     @timed(60.5)
     def test_volume_create(self):
-        """Test volume can be created.
+        """Volume creation
         Target component: Compute
 
         Scenario:
