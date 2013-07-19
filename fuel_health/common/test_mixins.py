@@ -91,3 +91,9 @@ class FuelTestAssertMixin(object):
         self.assertEqual(exp_content, act_content,msg.join(
             ('Actual value - {actual_content}'.format(
                 actual_content=act_content), '\n', msg)))
+
+    def verify_response_true(self, resp, msg):
+        if resp:
+            return
+        self.fail(msg)
+
