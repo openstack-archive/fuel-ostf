@@ -24,7 +24,7 @@ class SanityComputeTest(base.BaseComputeTest):
                        'Looks like something is broken in Nova.'
         try:
             resp, body = self.servers_client.list_servers()
-        except BaseException as exc:
+        except Exception as exc:
             self.error(exc._error_string)
             self.fail("Step 1 failed: " + fail_msg)
 
@@ -46,7 +46,7 @@ class SanityComputeTest(base.BaseComputeTest):
                    'Looks like something is broken in Glance.'
         try:
             resp, body = self.images_client.list_images()
-        except BaseException as exc:
+        except Exception as exc:
             self.error(exc._error_string)
             self.fail("Step 1 failed: " + fail_msg)
         self.verify_response_status(resp.status, 'Glance')
@@ -68,7 +68,7 @@ class SanityComputeTest(base.BaseComputeTest):
                    'Looks like something is broken in Swift.'
         try:
             resp, body = self.volumes_client.list_volumes()
-        except BaseException as exc:
+        except Exception as exc:
             self.error(exc._error_string)
             self.fail("Step 1 failed: " + fail_msg)
         self.verify_response_status(resp.status, 'Swift', fail_msg, 2)
@@ -90,7 +90,7 @@ class SanityComputeTest(base.BaseComputeTest):
                    'Looks like something is broken in Swift.'
         try:
             resp, body = self.snapshots_client.list_snapshots()
-        except BaseException as exc:
+        except Exception as exc:
             self.error(exc._error_string)
             self.fail("Step 1 failed: " + fail_msg)
         self.verify_response_status(resp.status, 'Swift', fail_msg, 2)
@@ -112,7 +112,7 @@ class SanityComputeTest(base.BaseComputeTest):
                    'Looks like something is broken in Nova.'
         try:
             resp, body = self.flavors_client.list_flavors()
-        except BaseException as exc:
+        except Exception as exc:
             self.error(exc._error_string)
             self.fail("Step 1 failed: " + fail_msg)
         self.verify_response_status(resp.status, 'Nova', fail_msg, 2)
@@ -134,7 +134,7 @@ class SanityComputeTest(base.BaseComputeTest):
                    'Looks like something is broken in Nova.'
         try:
             resp, body = self.limits_client.get_absolute_limits()
-        except BaseException as exc:
+        except Exception as exc:
             self.error(exc._error_string)
             self.fail("Step 1 failed: " + fail_msg)
         self.verify_response_status(resp.status, 'Nova', fail_msg, 2)

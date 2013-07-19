@@ -64,7 +64,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
                 output_msg = "Error: 'nova-manage' command execution failed."
                 self.error(exc._error_string)
                 self.fail("Step 2 failed: " + output_msg)
-            except BaseException as bexp:
+            except Exception as bexp:
                 self.error(exc._error_string)
                 self.fail("Step 1 failed: connection fail")
 
@@ -108,7 +108,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
                 output = "'host' command failed."
                 self.error(exc._error_string)
                 self.fail("Step 2 failed: " + output)
-            except BaseException as bexp:
+            except Exception as bexp:
                 self.error(exc._error_string)
                 self.fail("Step 1 failed: connection fail")
 
