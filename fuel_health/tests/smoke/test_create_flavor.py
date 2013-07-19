@@ -26,8 +26,12 @@ class FlavorsAdminTest(base.BaseComputeAdminTest):
             5. Check flavor contains 'id' section.
         Duration: 0.5-10.9 s.
         """
-        resp, flavor = self.create_flavor(ram=255,
-                                          disk=1)
+        try:
+            resp, flavor = self.create_flavor(ram=255,
+                                              disk=1)
+        except Exception as e:
+            base.LOG.error("Low requirements flavor creation failed: %s" % e)
+            self.fail("Step 1: Create new volume failed.")
 
         self.verify_response_status(
             resp.status, appl="Nova")

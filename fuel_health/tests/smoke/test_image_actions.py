@@ -74,23 +74,37 @@ class TestImageAction(nmanager.OfficialClientTest):
 
         Scenario:
             1. Create new keypair to boot an instance.
-            2. Check response status equals 200.
-            3. Boot default image.
-            4. Check response status equals 200.
-            5. Check server attributes and status.
-            6. Make snapshot of created server.
-            7. Boot another instance from created snapshot.
+            2. Boot default image.
+            3. Make snapshot of created server.
+            4. Boot another instance from created snapshot.
         Duration: 80-131 s.
         """
-        # prepare for booting an instance
-        self._add_keypair()
-        #self._create_security_group_rule()
+        try:
+            # prepare for booting an instance
+            self._add_keypair()
+        except Exception as e:
+            LOG.error("Keypair creation failed: %s" % e)
+            self.fail("Step 1: Create keypair failed.")
 
-        # boot a instance and create a timestamp file in it
-        server = self._boot_image(nmanager.get_image_from_name())
+        try:
+            # boot a instance and create a timestamp file in it
+            server = self._boot_image(nmanager.get_image_from_name())
+        except Exception as e:
+            LOG.error("Image booting failed: %s" % e)
+            self.fail("Step 2: Boot default image failed.")
 
-        # snapshot the instance
-        snapshot_image_id = self._create_image(server)
+        try:
+            # snapshot the instance
+            snapshot_image_id = self._create_image(server)
+        except Exception as e:
+            LOG.error("Making snapshot of an instance failed: %s" % e)
+            self.fail("Step 3: Make snapshot of an instance failed.")
 
-        # boot a second instance from the snapshot
-        self._boot_image(snapshot_image_id)
+        try:
+            # boot a second instance from the snapshot
+            self._boot_image(snapshot_image_id)
+        except Exception as e:
+            LOG.error("Booting second instance from the snapshot failed: "
+                "%s" %e)
+            self.fail("Step 4: Boot second instance from the snapshot "
+                      "failed.")
