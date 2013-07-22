@@ -102,7 +102,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
 
         # detach volume
         try:
-            self._detach_volume(self.compute_client, volume.id, instance.id)
+            self._detach_volume(self.volume_client, volume)
         except Exception as exc:
             LOG.debug(exc)
             self.fail('Step 8 failed:' + 'Can not detach volume,'

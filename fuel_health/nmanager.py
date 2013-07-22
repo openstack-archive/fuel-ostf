@@ -681,8 +681,8 @@ class SmokeChecksTest(OfficialClientTest):
         attached_volume = client.attach(instance, volume, mountpoint=device)
         return attached_volume
 
-    def _detach_volume(self, client, volume, server):
-        volume = client.volumes.delete_server_volume(volume, server)
+    def _detach_volume(self, client, volume):
+        volume = client.volumes.detach(volume)
         return volume
 
     def is_resource_deleted(self, volume):
