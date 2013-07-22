@@ -21,9 +21,9 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
     _interface = 'json'
 
     @attr(type=["fuel", "smoke"])
-    @timed(35)
+    @timed(31)
     def test_create_user(self):
-        """User creation and authentication.
+        """User creation and authentication in Horizon.
         Target components: Nova, Keystone
 
         Scenario:
@@ -34,10 +34,10 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
             5. Create a new user role.
             6. Check user role was created successfully.
             7. Perform token authentication.
-            8. Check token authentication was successful.
-            9. Check auth request to Horizon was successful.
-            10. Check authentication to Horizon succeeded.
-        Duration: 1-35 s.
+            8. Check authentication was successful.
+            9. Send authentication request to Horizon.
+            10. Verify response status is 200.
+        Duration: 1-31 s.
         """
         # Create a tenant:
         msg_s1 = ('Tenant creation failure, please, '
