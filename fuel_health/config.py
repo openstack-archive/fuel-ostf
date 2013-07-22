@@ -419,9 +419,11 @@ class NailgunConfig(object):
             self.identity.admin_tenant_name = data['admin_tenant_name']
             self.identity.admin_username = data['admin_username']
             self.identity.admin_password = data['admin_password']
-            self.identity.controller_nodes = data['controller_nodes_ips']
-            self.identity.controller_nodes_name = \
+            self.compute.controller_nodes = data['controller_nodes_ips']
+            self.compute.controller_nodes_name = \
                 data['controller_nodes_names']
+            os.environ['http_proxy'] = 'http://{0}:{1}'.format(
+                self.compute.controller_nodes[0], 8888)
 
     def _parse_networks_configuration(self):
         """
