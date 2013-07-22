@@ -6,6 +6,8 @@ import cinderclient.client
 import glanceclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
+import time
+
 try:
 
     from quantumclient.common import exceptions as exc
@@ -523,10 +525,14 @@ class SmokeChecksTest(OfficialClientTest):
             cls.config.identity.admin_username,
             cls.config.identity.admin_password,
             cls.config.identity.admin_tenant_name).tenant_id
+        cls.build_interval = cls.config.volume.build_interval
+        cls.build_timeout = cls.config.volume.build_timeout
+
         cls.flavors = []
         cls.tenants = []
         cls.users = []
         cls.roles = []
+        cls.volumes = []
 
     def _list_instances(self, client):
         instances = client.servers.list()
@@ -637,6 +643,90 @@ class SmokeChecksTest(OfficialClientTest):
             for role in cls.roles:
                 cls.identity_client.roles.delete(role)
 
+    def _create_volume(self, client):
+        display_name = rand_name('ost1_test-volume')
+        volume = client.volumes.create(size=1, display_name=display_name)
+        self.volumes.append(volume)
+        self.set_resource(display_name, volume)
+        return volume
+
+    @classmethod
+    def _clean_volumes(cls):
+        if cls.volumes:
+            for v in cls.volumes:
+                if v.status == 'available' or v.status == 'error':
+                    cls.volume_client.volumes.delete(v)
+                else:
+                    pass
+
+    def _create_server(self, client):
+        name = rand_name('ost1_test-volume-instance')
+        flavor_id = self.config.compute.flavor_ref
+        base_image_id = get_image_from_name()
+        server = client.servers.create(name, base_image_id, flavor_id)
+        self.verify_response_body_content(server.name,
+                                          name,
+                                          "Instance creation failed")
+        self.set_resource(name, server)
+        self.status_timeout(client.servers, server.id, 'ACTIVE')
+        # The instance retrieved on creation is missing network
+        # details, necessitating retrieval after it becomes active to
+        # ensure correct details.
+        server = client.servers.get(server.id)
+        self.set_resource(name, server)
+        return server
+
+    # def wait_for_volume_status(self, client, volume, status):
+    #     """Waits for a Volume to reach a given status."""
+    #     client.volumes.get(volume.id)
+    #     volume_status = volume.status
+    #     start = int(time.time())
+    #
+    #     while volume_status != status:
+    #         time.sleep(self.build_interval)
+    #         client.volumes.get(volume)
+    #         volume_status = volume.status
+    #         if volume_status == 'error':
+    #             raise exceptions.VolumeBuildErrorException(volume_id=volume)
+    #
+    #         if int(time.time()) - start >= self.build_timeout:
+    #             message = ('Volume %s failed to reach %s status within '
+    #                        'the required time (%s s).' %
+    #                        (volume.name, status, self.build_timeout))
+    #             raise exceptions.TimeoutException(message)
+    #
+    # def wait_for(self, condition):
+    #     """Repeatedly calls condition() until a timeout."""
+    #     start_time = int(time.time())
+    #     while True:
+    #         try:
+    #             condition()
+    #         except Exception:
+    #             pass
+    #         else:
+    #             return
+    #         if int(time.time()) - start_time >= self.build_timeout:
+    #             condition()
+    #             return
+    #         time.sleep(self.build_interval)
+
+    def _attach_volume_to_instance(self, client, volume, instance):
+        device = '/dev/vdb'
+        attached_volume = client.attach(instance, volume, mountpoint=device)
+        return attached_volume
+
+    def _detach_volume(self, client, volume, server):
+        volume = client.volumes.delete_server_volume(volume, server)
+        return volume
+
+    def is_resource_deleted(self, volume):
+        try:
+            self.client.volumes.get(volume)
+        except exceptions.NotFound:
+            return True
+        return False
+
+
     @classmethod
     def tearDownClass(cls):
         super(SmokeChecksTest, cls).tearDownClass()
@@ -644,3 +734,4 @@ class SmokeChecksTest(OfficialClientTest):
         cls._clean_tenants()
         cls._clean_users()
         cls._clean_roles()
+        cls._clean_volumes()
