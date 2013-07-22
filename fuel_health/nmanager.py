@@ -401,7 +401,7 @@ def get_image_from_name():
     images = image_client.images.list()
     if images:
         for im in images:
-            if im.name.strip().lower() == image_name.stip().lower():
+            if im.name.strip().lower() == image_name.strip().lower():
                 return im.id
             else:
                 raise exceptions.ImageFault
