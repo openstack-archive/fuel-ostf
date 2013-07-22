@@ -1,10 +1,12 @@
 from nose.plugins.attrib import attr
 from nose.tools import timed
 
-from fuel_health.tests.sanity import base
+from fuel_health import nmanager
+
+LOG = logging.getLogger(__name__)
 
 
-class NetworksTest(base.BaseNetworkTest):
+class NetworksTest(nmanager.SanityChecksTest):
     """
     TestClass contains tests check base networking functionality
     """
@@ -18,20 +20,19 @@ class NetworksTest(base.BaseNetworkTest):
 
         Scenario:
             1. Request list of networks.
-            2. Check response status is equal to 200.
-            3. Check response contains "networks" section.
+            2. Check response.
         Duration: 1-6 s.
         """
-        fail_msg = ("Network list is unavailable. Looks like something is "
-                    "broken in Network (Neutron or Nova).")
+        fail_msg = ("Network list is unavailable. "
+                    "Looks like something is broken in Network Networking")
         try:
-            resp, body = self.client.list_networks()
+            networks = self._list_networks(self.compute_client)
         except Exception as exc:
-            base.error(exc)
-            self.fail("Step 1 failed: " + fail_msg)
-        self.verify_response_status(resp.status, u'Network (Neutron or Nova)',
-                                    fail_msg, 2)
-        self.verify_response_body(body, u'networks', fail_msg, 3)
+            LOG.debug(exc)
+            self.fail(fail_msg)
+
+        self.verify_response_true(len(networks) >= 0,
+                                  'Step 2 failed:' + fail_msg)
 
     @attr(type=['sanity', 'fuel'])
     @timed(6)
@@ -42,16 +43,15 @@ class NetworksTest(base.BaseNetworkTest):
 
         Scenario:
             1. Request list of ports.
-            2. Check response status is equal to 200.
-            3. Check response contains "ports" section.
+            2. Check response.
         Duration: 1-6 s.
         """
-        fail_msg = ("Ports list is unavailable. Looks like something is broken"
-                    " in Network (Neutron or Nova).")
+        fail_msg = ('Ports list is unavailable. '
+                    'Looks like something is broken in Network '
+                    '(Neutron or Nova).')
         try:
-            resp, body = self.client.list_ports()
+            ports = self._list_ports(self.compute_client)
         except Exception as exc:
-            base.error(exc)
-        self.verify_response_status(resp.status, u'Network (Neutron or Nova)',
-                                    fail_msg, 2)
-        self.verify_response_body(body, u'ports', fail_msg, 3)
+            LOG.debug(exc)
+            self.fail('Step 1 failed: ' + fail_msg)
+        self.verify_response_true(len(ports) >= 0, 'Step 2 failed:' + fail_msg)

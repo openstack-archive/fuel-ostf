@@ -1,50 +1,47 @@
+import logging
+
 from nose.plugins.attrib import attr
 from nose.tools import timed
 
-from fuel_health.tests.smoke import base
+from fuel_health import nmanager
 
+
+LOG = logging.getLogger(__name__)
 
 """ Test module contains tests for flavor creation/deletion. """
 
 
-class FlavorsAdminTest(base.BaseComputeAdminTest):
+class FlavorsAdminTest(nmanager.SmokeChecksTest):
     """Tests for flavor creation that require admin privileges."""
 
     _interface = 'json'
 
     @attr(type=["fuel", "smoke"])
-    @timed(10.9)
+    @timed(11)
     def test_create_flavor(self):
         """Flavor creation
+        Test check that low requirements flavor can be created.
         Target component: Nova
 
         Scenario:
             1. Create small-size flavor.
-            2. Check response status equals 200.
-            3. Check created flavor has expected name.
-            4. Check flavor disk has expected size.
-            5. Check flavor contains 'id' section.
-        Duration: 1-10 s.
+            2. Check created flavor has expected name.
+            3. Check flavor disk has expected size.
+        Duration: 1-11 s.
         """
+        fail_msg = ("Flavor was not created properly."
+                    "Please, check Nova.")
         try:
-            resp, flavor = self.create_flavor(ram=255,
-                                              disk=1)
-        except Exception as e:
-            base.LOG.error("Low requirements flavor creation failed: %s" % e)
-            self.fail("Step 1 failed: Create small-size flavor.")
+           flavor = self._create_flavors(self.compute_client, 225, 1)
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail('Step 1 failed: ' + fail_msg)
+        msg_s2 = "Flavor name is not the same as requested."
+        self.verify_response_true(
+            flavor.name.startswith('ost1_test-flavor'),
+            'Step 2 failed: ' + msg_s2)
 
-        self.verify_response_status(
-            resp.status, appl="Nova", failed_step=2)
-        self.verify_response_body(
-            flavor['name'], u'ost1_test-flavor',
-            msg="Flavor name is not the same as requested.",
-            failed_step=3)
+        msg_s3 = "Disk size is not the same as requested."
         self.verify_response_body_value(
-            flavor['disk'], 1,
-            msg="Disk size is not the same as requested.",
-            failed_step=4)
-        self.verify_response_body(
-            flavor, 'id',
-            msg="Flavor was not created properly."
-                "Please, check Nova.",
-            failed_step=5)
+            flavor.disk, 1,
+            "Step 3 failed: " + msg_s3)

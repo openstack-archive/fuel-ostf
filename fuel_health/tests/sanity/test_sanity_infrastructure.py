@@ -3,10 +3,10 @@ from nose.tools import timed
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.exceptions import SSHExecCommandFailed
-from fuel_health.tests.sanity import base
+from fuel_health import nmanager
 
 
-class SanityInfrastructureTest(base.BaseComputeAdminTest):
+class SanityInfrastructureTest(nmanager.SanityChecksTest):
     """
     TestClass contains tests check the whole OpenStack availability.
     Special requirements:
