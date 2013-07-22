@@ -401,7 +401,7 @@ def get_image_from_name():
     images = image_client.images.list()
     if images:
         for im in images:
-            if im.name.startswith(image_name):
+            if im.name.strip().lower() == image_name.stip().lower():
                 return im.id
             else:
                 raise exceptions.ImageFault
@@ -675,40 +675,6 @@ class SmokeChecksTest(OfficialClientTest):
         server = client.servers.get(server.id)
         self.set_resource(name, server)
         return server
-
-    # def wait_for_volume_status(self, client, volume, status):
-    #     """Waits for a Volume to reach a given status."""
-    #     client.volumes.get(volume.id)
-    #     volume_status = volume.status
-    #     start = int(time.time())
-    #
-    #     while volume_status != status:
-    #         time.sleep(self.build_interval)
-    #         client.volumes.get(volume)
-    #         volume_status = volume.status
-    #         if volume_status == 'error':
-    #             raise exceptions.VolumeBuildErrorException(volume_id=volume)
-    #
-    #         if int(time.time()) - start >= self.build_timeout:
-    #             message = ('Volume %s failed to reach %s status within '
-    #                        'the required time (%s s).' %
-    #                        (volume.name, status, self.build_timeout))
-    #             raise exceptions.TimeoutException(message)
-    #
-    # def wait_for(self, condition):
-    #     """Repeatedly calls condition() until a timeout."""
-    #     start_time = int(time.time())
-    #     while True:
-    #         try:
-    #             condition()
-    #         except Exception:
-    #             pass
-    #         else:
-    #             return
-    #         if int(time.time()) - start_time >= self.build_timeout:
-    #             condition()
-    #             return
-    #         time.sleep(self.build_interval)
 
     def _attach_volume_to_instance(self, client, volume, instance):
         device = '/dev/vdb'
