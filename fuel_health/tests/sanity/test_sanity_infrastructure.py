@@ -49,8 +49,6 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             2. Execute nova-manage service list command.
             3. Check there is no failed services (with XXX state)
                 in the command output.
-            4. Check number of normally executed services (with :-) state
-                is equal to the number of expected services
         Duration: 2-8 s.
         """
         output_msg = ''
