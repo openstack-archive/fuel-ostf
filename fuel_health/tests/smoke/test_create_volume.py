@@ -108,7 +108,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
             self.fail('Step 8 failed:' + 'Can not detach volume,'
                                          'Looks like something  is broken in Cinder')
         try:
-            self._wait_for_volume_status(attached_volume.id, 'available')
+            self._wait_for_volume_status(volume.id, 'available')
         except Exception as exc:
             LOG.debug(exc)
             self.fail('Step 9 failed:' + 'Volume does not get available status,'
@@ -117,5 +117,5 @@ class VolumesTest(nmanager.SmokeChecksTest):
             self.volume_client.volumes.delete(volume)
         except Exception as exc:
             LOG.debug(exc)
-            self.fail('Step 9 failed: ' + 'Can not delete volume,'
+            self.fail('Step 10 failed: ' + 'Can not delete volume,'
                                           'Looks like something is broken in Cinder')
