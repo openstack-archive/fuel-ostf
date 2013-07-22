@@ -1,115 +1,121 @@
+import logging
 from nose.plugins.attrib import attr
 from nose.tools import timed
 
-from fuel_health.common.utils.data_utils import rand_name
-from fuel_health.tests.smoke import base
+from fuel_health import nmanager
 
-class VolumesTest(base.BaseComputeTest):
 
-    _interface = 'json'
+LOG = logging.getLogger(__name__)
+
+
+class VolumesTest(nmanager.SmokeChecksTest):
 
     @classmethod
     def setUpClass(cls):
         super(VolumesTest, cls).setUpClass()
-        cls.client = cls.servers_client
-        resp, server = cls.create_server(name='ost1_test-instance',
-                                         wait_until='ACTIVE',
-                                         adminPass='password')
-        resp, server['addresses'] = cls.client.list_addresses(server['id'])
-        cls.server_id = server['id']
-        cls.server_address = server['addresses']
-        cls.device = 'vdb'
 
     @classmethod
     def tearDownClass(cls):
         super(VolumesTest, cls).tearDownClass()
 
+    def _wait_for_volume_status(self, volume_id, status):
+        self.status_timeout(self.volume_client.volumes, volume_id, status)
+
     @attr(type=["fuel", "smoke"])
-    @timed(60.5)
+    @timed(61)
     def test_volume_create(self):
-        """Test volume can be created.
+        """Volume creation
         Target component: Compute
 
         Scenario:
             1. Create a new small-size volume.
-            2. Check response status equals 200.
-            3. Check response contains "id" section.
-            4. Check response contains "display_name" section.
-            5. Check volume has expected name.
-            6. Wait for "available" volume status.
-            7. Attach volume to instance.
-            8. Check response status equals 200.
-            9. Check volume status is "in use".
-            10. Get created volume information by its id.
-            11. Check operation response status equals 200.
-            12. Check attachments section contains correct device.
-            13. Check attachments section contains correct server id.
-            14. Check attachments section contains correct volume id.
-            15. Detach volume from instance.
-            16. Check volume has "available" status.
-            17. Delete volume.
-            18. Check response status equals 200.
+            2. Wait for "available" volume status.
+            3. Check response contains "display_name" section.
+            4. Create instance and wait for "Active" status
+            5. Attach volume to instance.
+            6. Check volume status is "in use".
+            7. Get created volume information by its id.
+            8. Detach volume from instance.
+            9. Check volume has "available" status.
+            10. Delete volume.
         Duration: 47.1-60.5 s.
         """
-        v_name = rand_name('ost1_test-test')
-        metadata = {'Type': 'work'}
+
+        msg_s1 = ('Volume is not created. Looks like '
+                  'something is broken in Storage.')
 
         #Create volume
-        resp, volume = self.volumes_client.create_volume(size=1,
-                                                         display_name=v_name,
-                                                         metadata=metadata)
-        self.verify_response_status(resp.status, 'Compute')
+        try:
+            volume = self._create_volume(self.volume_client)
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail("Step 1 failed: " + msg_s1)
 
-        self.verify_response_body(volume, 'id',
-                                  'Volume is not created. '
-                                  'Looks like something is broken in Storage.')
-        self.verify_response_body(volume, 'display_name',
-                                  'Volume is not created. '
-                                  'Looks like something is broken in Storage.')
+        try:
+            self._wait_for_volume_status(volume.id, 'available')
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail('Step 2 failed: ' + msg_s1)
 
-        self.verify_response_body_content(v_name,
-                                          volume['display_name'],
-                                          ("The created volume"
-                                           " name is not equal "
-                                           "to the requested"
-                                           " name"))
+        self.verify_response_true(
+            volume.display_name.startswith('ost1_test-volume'),
+            'Step 3 failed: ' + msg_s1)
 
-        #Wait for Volume status to become AVAILABLE
-        self.volumes_client.wait_for_volume_status(volume['id'], 'available')
+        try:
+            # create instance
+            instance = self._create_server(self.compute_client)
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail("Step 4 failed:" + "Instance creation failed."
+                                         "Looks like something is "
+                                         "broken in Compute")
 
-        # Attach the volume to the server
-        device = '/dev/%s' % self.device
-        resp, body = self.servers_client.attach_volume(self.server_id,
-                                                       volume['id'],
-                                                       device=device)
-        self.verify_response_status(resp.status, 'Nova Compute')
+        # Attach volume
+        try:
+            attached_volume = self._attach_volume_to_instance(
+                self.volume_client.volumes, instance.id, volume)
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail('Step 5 failed: ' + "Volume attachment failed,"
+                                          "Looks like something is "
+                                          "broken in Cinder or Nova")
 
-        self.volumes_client.wait_for_volume_status(volume['id'], 'in-use')
+        try:
+            self._wait_for_volume_status(volume.id, 'in-use')
+            LOG.info(volume.status)
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail('Step 6 failed: ' + 'Attached volume can not '
+                                          'get expected state')
 
         self.attached = True
 
-        resp, body = self.volumes_client.get_volume(volume['id'])
-        self.verify_response_status(resp.status, 'Storage Objects')
+        # get volume details
+        try:
+            volume_details = self.volume_client.volumes.get(volume.id)
+            LOG.info(volume_details)
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail('Step 7 failed:' + "Can not retrieve volume details,"
+                                         "Looks like something is broken in Cinder")
 
-        for attachment in body['attachments']:
-            self.verify_response_body_content('/dev/%s' % self.device,
-                                              attachment['device'],
-                                              ('Device is not equal, '
-                                               'Volume attachment failed'))
-
-            self.verify_response_body_content(self.server_id,
-                                              attachment['server_id'],
-                                              ('Server id is not equal,'
-                                               'Volume attachment failed'))
-
-            self.verify_response_body_content(volume['id'],
-                                              attachment['volume_id'],
-                                              'Wrong volume is attached')
 
         # detach volume
-        self.servers_client.detach_volume(self.server_id, volume['id'])
-        self.volumes_client.wait_for_volume_status(volume['id'], 'available')
-
-        # delete volume
-        resp, body = self.volumes_client.delete_volume(volume['id'])
-        self.verify_response_status(resp.status, 'Storage Object')
+        try:
+            self._detach_volume(self.volume_client, volume)
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail('Step 8 failed:' + 'Can not detach volume,'
+                                         'Looks like something  is broken in Cinder')
+        try:
+            self._wait_for_volume_status(volume.id, 'available')
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail('Step 9 failed:' + 'Volume does not get available status,'
+                                         'Looks like something is broken in Cinder')
+        try:
+            self.volume_client.volumes.delete(volume)
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail('Step 10 failed: ' + 'Can not delete volume,'
+                                          'Looks like something is broken in Cinder')

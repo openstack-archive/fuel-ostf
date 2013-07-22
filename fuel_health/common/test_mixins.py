@@ -8,7 +8,7 @@ class FuelTestAssertMixin(object):
     from unittest assertion methods and provide human
     readable descriptions where it is possible
     """
-    def verify_response_status(self, status, appl='Application', msg=''):
+    def verify_response_status(self, status, appl='Application', msg='', failed_step=''):
         """
 
         Method provides human readable message
@@ -17,6 +17,7 @@ class FuelTestAssertMixin(object):
         :param appl: the name of application requested
         :param status: response status
         :param msg: message to be used instead the default one
+        :failed_step: specifies step of the test scenario was not successful
         """
         if status in [200, 201, 202]:
             return
@@ -51,14 +52,16 @@ class FuelTestAssertMixin(object):
             status_msg = human_readable_status_groups.get(status / 100,
                 unknown_msg).format(status=status, appl=appl)
 
-        self.assertEquals(200,
-                          status,
-                          ''.join(('Status - {status} '.format(status=status),
-                                   status_msg, '\n', msg)))
+        failed_step_msg = ''
+        if failed_step:
+            failed_step_msg = ('Step %s failed: ' % str(failed_step))
 
-    def verify_response_body(self, body, content='', msg=''):
+        self.fail(''.join((failed_step_msg +
+                           'Status - {status} '.format(status=status),
+                            status_msg, '\n', msg)))
+
+    def verify_response_body(self, body, content='', msg='', failed_step=''):
         """
-
         Method provides human readable message for the verification if
         HTTP response body contains desired keyword
 
@@ -68,9 +71,11 @@ class FuelTestAssertMixin(object):
         """
         if content in body:
             return
-        self.assertTrue(content in body, msg)
+        if failed_step:
+            msg = ('Step %s failed: ' % str(failed_step)) + msg
+        self.fail(msg)
 
-    def verify_response_body_value(self, body_structure, value='', msg=''):
+    def verify_response_body_value(self, body_structure, value='', msg='', failed_step=''):
         """
         Method provides human readable message for verification if
         HTTP response body element contains desired keyword.
@@ -85,9 +90,22 @@ class FuelTestAssertMixin(object):
         else:
             if body_structure == value:
                 return
-        self.assertEqual(body_structure, value, msg)
+        failed_step_msg = ''
+        if failed_step:
+            failed_step_msg = ('Step %s failed: ' % str(failed_step))
+        self.fail(failed_step_msg + body_structure + '!=' + value + ' ' + msg)
 
-    def verify_response_body_content(self, exp_content, act_content, msg=''):
-        self.assertEqual(exp_content, act_content,msg.join(
-            ('Actual value - {actual_content}'.format(
-                actual_content=act_content), '\n', msg)))
+    def verify_response_body_content(self, exp_content, act_content, msg='', failed_step=''):
+        if exp_content == act_content:
+            return
+        if failed_step:
+            failed_step_msg = ('Step %s failed. ' % str(failed_step))
+        self.fail(''.join(failed_step_msg +
+                          'Actual value - {actual_content}'.format(
+                              actual_content=act_content), '\n', msg))
+
+    def verify_response_true(self, resp, msg):
+        if resp:
+            return
+        self.fail(msg)
+

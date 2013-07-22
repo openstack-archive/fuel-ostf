@@ -1,12 +1,16 @@
+import logging
+
 import requests
 from nose.plugins.attrib import attr
 from nose.tools import timed
 
 from fuel_health.common.utils import data_utils
-from fuel_health.tests.smoke import base
+from fuel_health import nmanager
+
+LOG = logging.getLogger(__name__)
 
 
-class TestUserTenantRole(base.BaseIdentityAdminTest):
+class TestUserTenantRole(nmanager.SmokeChecksTest):
     """
     Test class verifies the following:
       - verify tenant can be created;
@@ -16,17 +20,10 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
 
     _interface = 'json'
 
-    alt_user = data_utils.rand_name('ost1_test-')
-    alt_password = data_utils.rand_name('pass_')
-    alt_email = alt_user + '@testmail.tm'
-    alt_tenant = data_utils.rand_name('ost1_test-tenat')
-    alt_description = data_utils.rand_name('ost1_test-desc_')
-    alt_role = data_utils.rand_name('ost1_test-role_')
-
     @attr(type=["fuel", "smoke"])
-    @timed(30.9)
+    @timed(31)
     def test_create_user(self):
-        """ Test verifies user creation and auth in Horizon
+        """User creation and authentication in Horizon.
         Target components: Nova, Keystone
 
         Scenario:
@@ -40,63 +37,84 @@ class TestUserTenantRole(base.BaseIdentityAdminTest):
             8. Check authentication was successful.
             9. Send authentication request to Horizon.
             10. Verify response status is 200.
-        Duration: 1-30.9 s.
+        Duration: 1-31 s.
         """
         # Create a tenant:
+        msg_s1 = ('Tenant creation failure, please, '
+                  'check Keystone configuration ')
         try:
-            resp, tenant = self.client.create_tenant(self.alt_tenant)
-            self.verify_response_status(
-                int(resp['status']), msg="Verify request was successful.")
-        except Exception:
-            self.fail('Tenant creation failure, please, '
-                      'check Keystone configuration ')
+            tenant = self._create_tenant(self.identity_client)
+
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail("Step 1 failed: " + msg_s1)
+
+        self.verify_response_true(
+            tenant.name.startswith('ost1_test'),
+            "Step 2 failed: " + msg_s1)
+
 
         # Create a user:
+        msg_s3 = "Can't create a user. Please, check Keystone service"
         try:
-            resp, user = self.client.create_user(
-                self.alt_user, self.alt_password, tenant['id'], self.alt_email)
-            self.verify_response_status(
-                int(resp['status']), msg="Verify request was successful.")
-            self.verify_response_body_value(user['name'], self.alt_user)
-        except Exception:
-            self.fail("Can't create a user. Please, check Keystone service")
+            user = self._create_user(self.identity_client, tenant.id)
 
-        # Create a user role:
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail("Step 3 failed: " + msg_s3)
+
+        self.verify_response_true(
+            user.name.startswith('ost1_test'),
+            'Step 4 failed: ' + msg_s3)
+
+        msg_s5 = "User role creation fails. Please, check Keystone service"
+
         try:
-            resp, role = self.client.create_role(user['name'])
-            self.verify_response_status(
-                int(resp['status']), msg="Verify request was successful.")
-        except Exception:
-            self.fail("User role creation fails. Please, check Keystone service")
+            role = self._create_role(self.identity_client)
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail("Step 5 failed: " + msg_s5)
 
-        # Authenticate with created user:
+        self.verify_response_true(
+            role.name.startswith('ost1_test'),
+            "Step 6 failed: " + msg_s5)
+
+
+        # # Authenticate with created user:
+        password = '123456'
+        msg_s7 = "Can not get auth token, check Keystone service"
         try:
-            resp, body = self.token_client.auth(
-                user['name'], self.alt_password, tenant['name'])
-            self.verify_response_status(
-                int(resp['status']), msg="Verify request was successful.")
+            auth = self.identity_client.tokens.authenticate(
+                username=user.name, password=password, tenant_id=tenant.id,
+                tenant_name=tenant.name)
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail("Step 7 failed: " + msg_s7)
 
-            # Auth in horizon with non-admin user
+        self.verify_response_true(auth, 'Step 8 failed: ' + msg_s7)
+
+        try:
+            #Auth in horizon with non-admin user
             client = requests.session()
             url = self.config.identity.url
 
             # Retrieve the CSRF token first
             client.get(url)  # sets cookie
-            if len(client.cookies) == 0:
-                login_data = dict(username=user['name'],
-                                  password=self.alt_password,
+            if not len(client.cookies):
+                login_data = dict(username=user.name,
+                                  password=password,
                                   next='/')
                 resp = client.post(url, data=login_data, headers=dict(Referer=url))
                 self.verify_response_status(
-                    resp.status_code, msg="Verify request was successful.")
+                    resp.status_code, msg="Verify request was successful.", failed_step=9)
             else:
                 csrftoken = client.cookies['csrftoken']
-                login_data = dict(username=user['name'],
-                                  password=self.alt_password,
+                login_data = dict(username=user.name,
+                                  password=password,
                                   csrfmiddlewaretoken=csrftoken,
                                   next='/')
                 resp = client.post(url, data=login_data, headers=dict(Referer=url))
                 self.verify_response_status(
-                    resp.status_code, msg="Verify request was successful.")
+                    resp.status_code, msg="Verify request was successful.", failed_step=9)
         except Exception:
-            self.fail("Can not auth in Horizon, please check Horizon is alive")
+            self.fail("Step 10 failed: Can not auth in Horizon, please check Horizon is alive")

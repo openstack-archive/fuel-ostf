@@ -6,6 +6,8 @@ import cinderclient.client
 import glanceclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
+import time
+
 try:
 
     from quantumclient.common import exceptions as exc
@@ -16,6 +18,7 @@ except ImportError:
 
 from fuel_health.common import ssh
 from fuel_health.common.utils.data_utils import rand_name
+from fuel_health.common.utils.data_utils import rand_int_id
 from fuel_health import exceptions
 import fuel_health.manager
 import fuel_health.test
@@ -398,7 +401,303 @@ def get_image_from_name():
     images = image_client.images.list()
     if images:
         for im in images:
-            if im.name.startswith(image_name):
+            if im.name.strip().lower() == image_name.strip().lower():
                 return im.id
             else:
                 raise exceptions.ImageFault
+
+
+class SanityChecksTest(OfficialClientTest):
+    """
+    Base class for openstack sanity tests
+    """
+
+    _enabled = True
+
+    @classmethod
+    def check_preconditions(cls):
+        cls._enabled = True
+        if cls.config.network.quantum_available:
+            cls._enabled = False
+        else:
+            cls._enabled = True
+            # ensure the config says true
+            try:
+                cls.compute_client.networks.list()
+            except exceptions.EndpointNotFound:
+                cls._enabled = False
+
+    def setUp(self):
+        super(SanityChecksTest, self).setUp()
+        if not self._enabled:
+            self.skip(reason='Nova Networking not available')
+
+    @classmethod
+    def setUpClass(cls):
+        super(SanityChecksTest, cls).setUpClass()
+        cls.tenant_id = cls.manager._get_identity_client(
+            cls.config.identity.admin_username,
+            cls.config.identity.admin_password,
+            cls.config.identity.admin_tenant_name).tenant_id
+        cls.network = []
+        cls.floating_ips = []
+
+    def _list_instances(self, client):
+        instances = client.servers.list()
+        return instances
+
+    def _list_images(self, client):
+        images = client.images.list()
+        return images
+
+    def _list_volumes(self, client):
+        volumes = client.volumes.list(detailed=False)
+        return volumes
+
+    def _list_snapshots(self, client):
+        snapshots = client.volume_snapshots.list(detailed=False)
+        return snapshots
+
+    def _list_flavors(self, client):
+        flavors = client.flavors.list()
+        return flavors
+
+    def _list_limits(self, client):
+        limits = client.limits.get()
+        return limits
+
+    def _list_services(self, client):
+        services = client.services.list()
+        return services
+
+    def _list_users(self, client):
+        users = client.users.list()
+        return users
+
+    def _list_networks(self, client):
+        networks = client.networks.list()
+        return networks
+
+    def _list_ports(self, client):
+        ports  = []
+        networks = client.networks.list()
+
+        if networks:
+            for net in networks:
+                ports.append(net.vpn_public_port)
+        return ports
+
+
+    @classmethod
+    def tearDownClass(cls):
+        super(SanityChecksTest, cls).tearDownClass()
+
+
+class SmokeChecksTest(OfficialClientTest):
+    """
+    Base class for openstack smoke tests
+    """
+
+    _enabled = True
+
+    @classmethod
+    def check_preconditions(cls):
+        cls._enabled = True
+        if cls.config.network.quantum_available:
+            cls._enabled = False
+        else:
+            cls._enabled = True
+            # ensure the config says true
+            try:
+                cls.compute_client.networks.list()
+            except exceptions.EndpointNotFound:
+                cls._enabled = False
+
+    def setUp(self):
+        super(SmokeChecksTest, self).setUp()
+        if not self._enabled:
+            self.skip(reason='Nova Networking not available')
+
+    @classmethod
+    def setUpClass(cls):
+        super(SmokeChecksTest, cls).setUpClass()
+        cls.tenant_id = cls.manager._get_identity_client(
+            cls.config.identity.admin_username,
+            cls.config.identity.admin_password,
+            cls.config.identity.admin_tenant_name).tenant_id
+        cls.build_interval = cls.config.volume.build_interval
+        cls.build_timeout = cls.config.volume.build_timeout
+
+        cls.flavors = []
+        cls.tenants = []
+        cls.users = []
+        cls.roles = []
+        cls.volumes = []
+
+    def _list_instances(self, client):
+        instances = client.servers.list()
+        return instances
+
+    def _list_images(self, client):
+        images = client.images.list()
+        return images
+
+    def _list_volumes(self, client):
+        volumes = client.volumes.list(detailed=False)
+        return volumes
+
+    def _list_snapshots(self, client):
+        snapshots = client.volume_snapshots.list(detailed=False)
+        return snapshots
+
+    def _list_flavors(self, client):
+        flavors = client.flavors.list()
+        return flavors
+
+    def _list_limits(self, client):
+        limits = client.limits.get()
+        return limits
+
+    def _list_services(self, client):
+        services = client.services.list()
+        return services
+
+    def _list_users(self, client):
+        users = client.users.list()
+        return users
+
+    def _list_networks(self, client):
+        networks = client.networks.list()
+        return networks
+
+    def _list_ports(self, client):
+        ports  = []
+        networks = client.networks.list()
+
+        if networks:
+            for net in networks:
+                ports.append(net.vpn_public_port)
+        return ports
+
+    def _create_flavors(self, client, ram, disk, vcpus=1):
+        name = rand_name('ost1_test-flavor-')
+        flavorid = rand_int_id()
+        flavor = client.flavors.create(name, ram, disk, vcpus, flavorid)
+        self.flavors.append(flavor)
+        return flavor
+
+    @classmethod
+    def _clean_flavors(cls):
+        if cls.flavors:
+            for flav in cls.flavors:
+                cls.compute_client.flavors.delete(flav)
+
+    def _create_flavors(self, client, ram, disk, vcpus=1):
+        name = rand_name('ost1_test-flavor-')
+        flavorid = rand_int_id()
+        flavor = client.flavors.create(name, ram, disk, vcpus, flavorid)
+        self.flavors.append(flavor)
+        return flavor
+
+    @classmethod
+    def _clean_flavors(cls):
+        if cls.flavors:
+            for flav in cls.flavors:
+                cls.compute_client.flavors.delete(flav)
+
+    def _create_tenant(self, client):
+        name = rand_name('ost1_test-tenant-')
+        tenant = client.tenants.create(name)
+        self.tenants.append(tenant)
+        return tenant
+
+    @classmethod
+    def _clean_tenants(cls):
+        if cls.tenants:
+            for ten in cls.tenants:
+                cls.identity_client.tenants.delete(ten)
+
+    def _create_user(self, client, tenant_id):
+        password = "123456"
+        email = "test@test.com"
+        name = rand_name('ost1_test-user-')
+        user = client.users.create(name, password, email, tenant_id)
+        self.users.append(user)
+        return user
+
+    @classmethod
+    def _clean_users(cls):
+        if cls.users:
+            for user in cls.users:
+                cls.identity_client.users.delete(user)
+
+    def _create_role(self, client):
+        name = rand_name('ost1_test-role-')
+        role = client.roles.create(name)
+        self.roles.append(role)
+        return role
+
+    @classmethod
+    def _clean_roles(cls):
+        if cls.roles:
+            for role in cls.roles:
+                cls.identity_client.roles.delete(role)
+
+    def _create_volume(self, client):
+        display_name = rand_name('ost1_test-volume')
+        volume = client.volumes.create(size=1, display_name=display_name)
+        self.volumes.append(volume)
+        self.set_resource(display_name, volume)
+        return volume
+
+    @classmethod
+    def _clean_volumes(cls):
+        if cls.volumes:
+            for v in cls.volumes:
+                if v.status == 'available' or v.status == 'error':
+                    cls.volume_client.volumes.delete(v)
+                else:
+                    pass
+
+    def _create_server(self, client):
+        name = rand_name('ost1_test-volume-instance')
+        flavor_id = self.config.compute.flavor_ref
+        base_image_id = get_image_from_name()
+        server = client.servers.create(name, base_image_id, flavor_id)
+        self.verify_response_body_content(server.name,
+                                          name,
+                                          "Instance creation failed")
+        self.set_resource(name, server)
+        self.status_timeout(client.servers, server.id, 'ACTIVE')
+        # The instance retrieved on creation is missing network
+        # details, necessitating retrieval after it becomes active to
+        # ensure correct details.
+        server = client.servers.get(server.id)
+        self.set_resource(name, server)
+        return server
+
+    def _attach_volume_to_instance(self, client, volume, instance):
+        device = '/dev/vdb'
+        attached_volume = client.attach(instance, volume, mountpoint=device)
+        return attached_volume
+
+    def _detach_volume(self, client, volume):
+        volume = client.volumes.detach(volume)
+        return volume
+
+    def is_resource_deleted(self, volume):
+        try:
+            self.client.volumes.get(volume)
+        except exceptions.NotFound:
+            return True
+        return False
+
+
+    @classmethod
+    def tearDownClass(cls):
+        super(SmokeChecksTest, cls).tearDownClass()
+        cls._clean_flavors()
+        cls._clean_tenants()
+        cls._clean_users()
+        cls._clean_roles()
+        cls._clean_volumes()

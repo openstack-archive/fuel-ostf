@@ -104,7 +104,7 @@ ComputeGroup = [
                default=10,
                help="Time in seconds between build status checks."),
     cfg.IntOpt('build_timeout',
-               default=300,
+               default=160,
                help="Timeout in seconds to wait for an instance to build."),
     cfg.BoolOpt('run_ssh',
                 default=False,
@@ -113,7 +113,7 @@ ComputeGroup = [
                default='root',
                help="User name used to authenticate to an instance."),
     cfg.IntOpt('ssh_timeout',
-               default=20,
+               default=50,
                help="Timeout in seconds to wait for authentication to "
                     "succeed."),
     cfg.IntOpt('ssh_channel_timeout',
@@ -144,7 +144,7 @@ ComputeGroup = [
                default='root',
                help="ssh user of one of the controller nodes"),
     cfg.StrOpt('controller_node_ssh_password',
-               default='root',
+               default='r00tme',
                help="ssh user pass of one of the controller nodes"),
     cfg.StrOpt('controller_node_ssh_key_path',
                default='/root/.ssh/id_rsa',
@@ -154,8 +154,7 @@ ComputeGroup = [
                help="Valid secondary image reference to be used in tests."),
     cfg.IntOpt('flavor_ref',
                default=1,
-               help="Valid primary flavor to use in tests.")
-
+               help="Valid primary flavor to use in tests."),
 ]
 
 
@@ -223,7 +222,7 @@ VolumeGroup = [
                default=10,
                help='Time in seconds between volume availability checks.'),
     cfg.IntOpt('build_timeout',
-               default=300,
+               default=180,
                help='Timeout in seconds to wait for a volume to become'
                     'available.'),
     cfg.StrOpt('catalog_type',
@@ -335,6 +334,8 @@ class FileConfig(object):
         self.identity = cfg.CONF.identity
         self.network = cfg.CONF.network
         self.volume = cfg.CONF.volume
+        os.environ['http_proxy'] = 'http://{0}:{1}'.format(
+            self.compute.controller_nodes[0], 8888)
 
 
 class ConfigGroup(object):
@@ -443,6 +444,14 @@ class NailgunConfig(object):
             data = response.json()
             self.identity.url = data['horizon_url'] + 'dashboard'
             self.identity.uri = data['keystone_url'] + 'v2.0/'
+            self.identity.admin_tenant_name = data['admin_tenant_name']
+            self.identity.admin_username = data['admin_username']
+            self.identity.admin_password = data['admin_password']
+            self.compute.controller_nodes = data['controller_nodes_ips']
+            self.compute.controller_nodes_name = \
+                data['controller_nodes_names']
+            os.environ['http_proxy'] = 'http://{0}:{1}'.format(
+                self.compute.controller_nodes[0], 8888)
 
 
 def FuelConfig():
