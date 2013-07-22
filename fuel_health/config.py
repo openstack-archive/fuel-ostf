@@ -334,6 +334,8 @@ class FileConfig(object):
         self.identity = cfg.CONF.identity
         self.network = cfg.CONF.network
         self.volume = cfg.CONF.volume
+        os.environ['http_proxy'] = 'http://{0}:{1}'.format(
+            self.compute.controller_nodes[0], 8888)
 
 
 class ConfigGroup(object):
