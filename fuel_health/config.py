@@ -144,7 +144,7 @@ ComputeGroup = [
                default='ssh_user',
                help="ssh user of one of the controller nodes"),
     cfg.StrOpt('controller_node_ssh_password',
-               default='pass',
+               default='r00tme',
                help="ssh user pass of one of the controller nodes"),
     cfg.StrOpt('controller_node_ssh_key_path',
                default='/root/.ssh/id_rsa',

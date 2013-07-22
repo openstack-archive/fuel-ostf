@@ -74,9 +74,6 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                 'Some service has not been started:' + str(
                     self.list_of_expected_services))
             self.assertFalse(u'XXX' in output, 'Step 3 failed: ' + output_msg)
-            self.assertTrue(len(self.list_of_expected_services) <=
-                            output.count(u':-)'),
-                            'Step 4 failed: ' + output_msg)
         else:
             self.fail('Wrong tests configurations, one from the next '
                       'parameters are empty controller_node_name or '
