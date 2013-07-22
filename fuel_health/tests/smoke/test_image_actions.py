@@ -67,7 +67,7 @@ class TestImageAction(nmanager.OfficialClientTest):
         return image_id
 
     @attr(type=['sanity', 'fuel'])
-    @timed(300.0)
+    @timed(310.0)
     def test_snapshot(self):
         """Instance booting and snapshotting
         Target component: Glance

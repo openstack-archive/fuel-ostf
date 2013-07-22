@@ -1,3 +1,4 @@
+import logging
 from nose.plugins.attrib import attr
 from nose.tools import timed
 
@@ -5,10 +6,10 @@ from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.exceptions import SSHExecCommandFailed
 from fuel_health import nmanager
 
+LOG = logging.getLogger(__name__)
 
 class SanityInfrastructureTest(nmanager.SanityChecksTest):
-    """
-    TestClass contains tests check the whole OpenStack availability.
+    """TestClass contains tests check the whole OpenStack availability.
     Special requirements:
             1. A controller's IP should be specified in
                 controller_nodes parameter of the config file.
@@ -63,10 +64,10 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                    timeout=self.timeout).exec_command(cmd)
             except SSHExecCommandFailed as exc:
                 output_msg = "Error: 'nova-manage' command execution failed."
-                base.error(exc)
+                LOG.debug(exc)
                 self.fail("Step 2 failed: " + output_msg)
             except Exception as exc:
-                base.error(exc)
+                LOG.debug(exc)
                 self.fail("Step 1 failed: connection fail")
 
             output_msg = output_msg or (
@@ -108,10 +109,10 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                    timeout=self.timeout).exec_command(cmd)
             except SSHExecCommandFailed as exc:
                 output = "'host' command failed."
-                base.error(exc)
+                LOG.debug(exc)
                 self.fail("Step 2 failed: " + output)
             except Exception as exc:
-                base.error(exc)
+                LOG.debug(exc)
                 self.fail("Step 1 failed: connection fail")
 
             self.assertTrue(expected_output in output,

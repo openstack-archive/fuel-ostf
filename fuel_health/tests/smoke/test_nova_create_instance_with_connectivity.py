@@ -46,7 +46,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         cls.floating_ips = []
 
     @attr(type=['fuel', 'smoke'])
-    @timed(20.5)
+    @timed(25)
     def test_001_create_keypairs(self):
         """Keypair creation
         Target component: Nova.
@@ -64,7 +64,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.fail("Step 1 failed: Create keypair.")
 
     @attr(type=['fuel', 'smoke'])
-    @timed(20.5)
+    @timed(25)
     def test_002_create_security_groups(self):
         """Security group creation
         Target component: Nova
@@ -82,7 +82,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.fail("Step 1 failed: Create security group.")
 
     @attr(type=['fuel', 'smoke'])
-    @timed(45.5)
+    @timed(50)
     def test_004_check_networks(self):
         """Network parameters check
         Target component: Nova
@@ -113,7 +113,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                                       failed_step=3)
 
     @attr(type=['fuel', 'smoke'])
-    @timed(60.7)
+    @timed(65)
     def test_005_create_servers(self):
         """Instance creation
         Target component: Nova
@@ -158,7 +158,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         self.servers.append(server)
 
     @attr(type=['fuel', 'smoke'])
-    @timed(45.9)
+    @timed(55)
     def test_006_check_tenant_network_connectivity(self):
         """Network connectivity check
         Target component: Nova.
@@ -221,7 +221,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.fail("Step 4 failed: Check of VM connectivity.")
 
     @attr(type=['fuel', 'smoke'])
-    @timed(49.9)
+    @timed(55)
     def test_007_assign_floating_ips(self):
         """Floating IP assignment
         Target component: Nova
@@ -282,7 +282,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.floating_ips.append(floating_ip)
 
     @attr(type=['fuel', 'smoke'])
-    @timed(49.9)
+    @timed(55)
     def test_008_check_public_network_connectivity(self):
         """Network connectivity check through floating ip.
         Target component: Nova

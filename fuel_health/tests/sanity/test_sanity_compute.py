@@ -16,7 +16,8 @@ class SanityComputeTest(nmanager.SanityChecksTest):
     @attr(type=['sanity', 'fuel'])
     @timed(6)
     def test_list_instances(self):
-        """Test checks that list of instances is available.
+        """Instances list availability
+        Test checks that list of instances is available.
         Target component: Nova
         Scenario:
             1. Request list of instances.
@@ -38,7 +39,8 @@ class SanityComputeTest(nmanager.SanityChecksTest):
     @attr(type=['sanity', 'fuel'])
     @timed(8)
     def test_list_images(self):
-        """Test checks that list of images is available.
+        """Images list availability
+        Test checks that list of images is available.
         Target component: Glance
         Scenario:
             1. Request list of images.
@@ -61,7 +63,8 @@ class SanityComputeTest(nmanager.SanityChecksTest):
     @attr(type=['sanity', 'fuel'])
     @timed(6)
     def test_list_volumes(self):
-        """Test checks that list of volumes is available.
+        """Volumes list availability
+        Test checks that list of volumes is available.
         Target component: Swift
 
         Scenario:
@@ -84,7 +87,8 @@ class SanityComputeTest(nmanager.SanityChecksTest):
     @attr(type=['sanity', 'fuel'])
     @timed(6)
     def test_list_snapshots(self):
-        """Test checks that list of snapshots is available.
+        """Snapshots list availability
+        Test checks that list of snapshots is available.
         Target component: Glance
 
         Scenario:
@@ -115,7 +119,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         Scenario:
             1. Request list of flavors.
             2. Check response.
-        Duration: 1.2-5.6 s.
+        Duration: 1-6 s.
         """
         fail_msg = ('Flavors list is unavailable. '
                     'Looks like something is broken in Nova.')

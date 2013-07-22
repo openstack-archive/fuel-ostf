@@ -25,7 +25,7 @@ class VolumesTest(base.BaseComputeTest):
         super(VolumesTest, cls).tearDownClass()
 
     @attr(type=["fuel", "smoke"])
-    @timed(60.5)
+    @timed(61)
     def test_volume_create(self):
         """Volume creation
         Target component: Compute
@@ -49,7 +49,7 @@ class VolumesTest(base.BaseComputeTest):
             16. Check volume has "available" status.
             17. Delete volume.
             18. Check response status equals 200.
-        Duration: 45-60 s.
+        Duration: 45-61 s.
         """
         v_name = rand_name('ost1_test-test')
         metadata = {'Type': 'work'}

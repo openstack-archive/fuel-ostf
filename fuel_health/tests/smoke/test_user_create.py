@@ -106,7 +106,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                                   next='/')
                 resp = client.post(url, data=login_data, headers=dict(Referer=url))
                 self.verify_response_status(
-                    resp.status_code, msg="Verify request was successful.")
+                    resp.status_code, msg="Verify request was successful.", failed_step=9)
             else:
                 csrftoken = client.cookies['csrftoken']
                 login_data = dict(username=user.name,
@@ -115,6 +115,6 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                                   next='/')
                 resp = client.post(url, data=login_data, headers=dict(Referer=url))
                 self.verify_response_status(
-                    resp.status_code, msg="Verify request was successful.")
+                    resp.status_code, msg="Verify request was successful.", failed_step=9)
         except Exception:
-            self.fail("Can not auth in Horizon, please check Horizon is alive")
+            self.fail("Step 10 failed: Can not auth in Horizon, please check Horizon is alive")

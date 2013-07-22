@@ -1,3 +1,4 @@
+import logging
 from nose.plugins.attrib import attr
 from nose.tools import timed
 
