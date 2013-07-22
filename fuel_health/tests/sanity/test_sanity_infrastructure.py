@@ -37,7 +37,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
         pass
 
     @attr(type=['sanity', 'fuel'])
-    @timed(5.5)
+    @timed(30.0)
     def test_services_state(self):
         """Test all of the expected services are on.
         Target component: OpenStack
@@ -76,7 +76,7 @@ class SanityInfrastructureTest(base.BaseComputeAdminTest):
                       'controller_node_ip ')
 
     @attr(type=['sanity', 'fuel'])
-    @timed(5.5)
+    @timed(30.0)
     def test_dns_state(self):
         """Test dns is available.
         Target component: OpenStack
