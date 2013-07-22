@@ -167,7 +167,27 @@ class OfficialClientTest(fuel_health.test.TestCase):
     manager_class = OfficialClientManager
 
     @classmethod
+    def _create_nano_flavor(cls):
+        name = rand_name('ost1_test-flavor-nano')
+        flavorid = 42
+        flavor_list = cls.compute_client.flavors.list()
+        if flavor_list:
+            for flavor in flavor_list:
+                LOG.debug(flavor.id)
+                if '42' in flavor.id:
+                    LOG.info('42 flavor id already exists')
+                    return flavor.id
+
+            flavor = cls.compute_client.flavors.create(name, 64, 1, 1, flavorid)
+            return flavor.id
+
+
+    @classmethod
     def tearDownClass(cls):
+        try:
+            cls.compute_client.flavors.delete('42')
+        except Exception:
+            pass
         while cls.os_resources:
             thing = cls.os_resources.pop()
             LOG.debug("Deleting %r from shared resources of %s" %
@@ -211,6 +231,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     @classmethod
     def check_preconditions(cls):
+        cls._create_nano_flavor()
         cls._enabled = True
         if cls.config.network.quantum_available:
             cls._enabled = False
@@ -314,14 +335,13 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         return nets
 
     def _create_server(self, client, name, key_name, security_groups):
-        flavor_id = self.config.compute.flavor_ref
         base_image_id = get_image_from_name()
         create_kwargs = {
 
             'key_name': key_name,
             'security_groups': security_groups,
         }
-        server = client.servers.create(name, base_image_id, flavor_id,
+        server = client.servers.create(name, base_image_id, 42,
                                        **create_kwargs)
         self.verify_response_body_content(server.name,
                                           name,
@@ -500,19 +520,6 @@ class SmokeChecksTest(OfficialClientTest):
 
     _enabled = True
 
-    @classmethod
-    def check_preconditions(cls):
-        cls._enabled = True
-        if cls.config.network.quantum_available:
-            cls._enabled = False
-        else:
-            cls._enabled = True
-            # ensure the config says true
-            try:
-                cls.compute_client.networks.list()
-            except exceptions.EndpointNotFound:
-                cls._enabled = False
-
     def setUp(self):
         super(SmokeChecksTest, self).setUp()
         if not self._enabled:
@@ -521,6 +528,7 @@ class SmokeChecksTest(OfficialClientTest):
     @classmethod
     def setUpClass(cls):
         super(SmokeChecksTest, cls).setUpClass()
+        cls._create_nano_flavor()
         cls.tenant_id = cls.manager._get_identity_client(
             cls.config.identity.admin_username,
             cls.config.identity.admin_password,
@@ -661,9 +669,8 @@ class SmokeChecksTest(OfficialClientTest):
 
     def _create_server(self, client):
         name = rand_name('ost1_test-volume-instance')
-        flavor_id = self.config.compute.flavor_ref
         base_image_id = get_image_from_name()
-        server = client.servers.create(name, base_image_id, flavor_id)
+        server = client.servers.create(name, base_image_id, 42)
         self.verify_response_body_content(server.name,
                                           name,
                                           "Instance creation failed")
