@@ -109,8 +109,8 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             except Exception as exc:
                 LOG.debug(exc)
                 self.fail("Step 1 failed: connection fail")
-
-            self.assertTrue(expected_output in output,
+            LOG.debug(output)
+            self.verify_response_true(expected_output not in output,
                             'Step 3 failed: DNS name cannot be resolved')
         else:
             self.fail('Wrong tests configurations, one from the next '
