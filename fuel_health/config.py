@@ -37,10 +37,10 @@ IdentityGroup = [
                 default=False,
                 help="Set to True if using self-signed SSL certificates."),
     cfg.StrOpt('uri',
-               default=None,
+               default='',
                help="Full URI of the OpenStack Identity API (Keystone), v2"),
     cfg.StrOpt('url',
-               default='http://10.0.0.1/',
+               default='',
                help="Dashboard Openstack url, v2"),
     cfg.StrOpt('uri_v3',
                help='Full URI of the OpenStack Identity API (Keystone), v3'),
@@ -387,14 +387,11 @@ class NailgunConfig(object):
             self.prepare_config()
 
     def prepare_config(self, *args, **kwargs):
-        for interface in dir(self):
-            if interface.startswith('_parse'):
-                method = getattr(self, interface)
-                if callable(method):
-                    try:
-                        method()
-                    except Exception, e:
-                        LOG.exception('METHOD %s failed' % interface)
+        self._parse_cluster_attributes()
+        self._parse_nodes_cluster_id()
+        self._parse_networks_configuration()
+        self.set_endpoints()
+        self.set_proxy()
 
     def _parse_cluster_attributes(self):
         api_url = '/api/clusters/%s/attributes' % self.cluster_id
@@ -435,28 +432,31 @@ class NailgunConfig(object):
 
     def _parse_ostf_api(self):
         """
-        SHOULD BE REMOVED AS SOON AS KEYSTONE URL WILL BE ADDED TO NAILGUN API
         """
         api_url = '/api/ostf/%s' % self.cluster_id
         response = self.req_session.get(self.nailgun_url+api_url)
-        if response.status_code == 404:
-            LOG.warning('URL %s is not implemented '
-                        'in nailgun api' % api_url)
-        elif response.status_code == 200:
-            data = response.json()
-            self.identity.url = data['horizon_url'] + 'dashboard'
-            self.identity.uri = data['keystone_url'] + 'v2.0/'
-            self.identity.admin_tenant_name = data['admin_tenant_name']
-            self.identity.admin_username = data['admin_username']
-            self.identity.admin_password = data['admin_password']
-            self.compute.controller_nodes = data['controller_nodes_ips']
-            self.compute.controller_nodes_name = \
-                data['controller_nodes_names']
-            os.environ['http_proxy'] = 'http://{0}:{1}'.format(
-                self.compute.controller_nodes[0], 8888)
+        data = response.json()
+        self.identity.url = data['horizon_url'] + 'dashboard'
+        self.identity.uri = data['keystone_url'] + 'v2.0/'
+
+    def set_proxy(self):
+        """Sets environment property for http_proxy:
+            To behave properly - method must be called after all nailgun params
+            is processed
+        """
+        os.environ['http_proxy'] = 'http://{0}:{1}'.format(
+            self.compute.controller_nodes[0], 8888)
+
+    def set_endpoints(self):
+        endpoint = self.network.raw_data.get('public_vip', None) \
+            or self.compute.controller_nodes[0]
+        self.identity.url = 'http://{0}/{1}/'.format(endpoint, 'dashboard')
+        self.identity.uri = 'http://{0}:{1}/{2}/'.format(
+            endpoint, 8000,'v2.0')
 
 
 def FuelConfig():
-    if all(item in os.environ for item in ('NAILGUN_HOST', 'NAILGUN_PORT', 'CLUSTER_ID')):
+    if all(item in os.environ for item in (
+        'NAILGUN_HOST', 'NAILGUN_PORT', 'CLUSTER_ID')):
         return NailgunConfig()
     return FileConfig()
