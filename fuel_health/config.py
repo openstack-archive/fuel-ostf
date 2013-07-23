@@ -455,6 +455,6 @@ class NailgunConfig(object):
 
 
 def FuelConfig():
-    if sys.argv[0] != 'nosetests':
-        return NailgunConfig()
+    # if sys.argv[0] != 'nosetests':
+    #     return NailgunConfig()
     return FileConfig()
