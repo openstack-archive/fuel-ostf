@@ -388,6 +388,7 @@ class NailgunConfig(object):
 
     def prepare_config(self, *args, **kwargs):
         try:
+            self._parse_meta()
             self._parse_cluster_attributes()
             self._parse_nodes_cluster_id()
             self._parse_networks_configuration()
@@ -430,12 +431,20 @@ class NailgunConfig(object):
         self.compute.controller_nodes = controller_ips
         self.compute.controller_nodes_name = conntroller_names
 
+    def _parse_meta(self):
+        api_url = '/api/clusters/%s' % self.cluster_id
+        data = self.req_session.get(self.nailgun_url+api_url).json()
+        self.mode = data['mode']
+
     def _parse_networks_configuration(self):
         api_url = '/api/clusters/%s/network_configuration/' % self.cluster_id
         data = self.req_session.get(self.nailgun_url+api_url).json()
         self.network.raw_data = data
 
     def _parse_ostf_api(self):
+        """
+            will leave this
+        """
         api_url = '/api/ostf/%s' % self.cluster_id
         response = self.req_session.get(self.nailgun_url+api_url)
         data = response.json()
@@ -451,15 +460,18 @@ class NailgunConfig(object):
             self.compute.controller_nodes[0], 8888)
 
     def set_endpoints(self):
-        endpoint = self.network.raw_data.get('public_vip', None) \
-            or self.compute.public_ips[0]
-        self.identity.url = 'http://{0}/{1}/'.format(endpoint, 'dashboard')
-        self.identity.uri = 'http://{0}:{1}/{2}/'.format(
-            endpoint, 8000, 'v2.0')
+        public_vip = self.network.raw_data.get('public_vip', None)
+        # workaround for api without public_vip for ha mode
+        if not public_vip and self.mode == 'ha':
+            self._parse_ostf_api()
+        else:
+            endpoint = public_vip or self.compute.public_ips[0]
+            self.identity.url = 'http://{0}/{1}/'.format(endpoint, 'dashboard')
+            self.identity.uri = 'http://{0}:{1}/{2}/'.format(
+                endpoint, 8000, 'v2.0')
 
 
 def FuelConfig():
-    if all(item in os.environ for item in (
-        'NAILGUN_HOST', 'NAILGUN_PORT', 'CLUSTER_ID')):
-        return NailgunConfig()
-    return FileConfig()
+    # if all(item in os.environ for item in (
+    #     'NAILGUN_HOST', 'NAILGUN_PORT', 'CLUSTER_ID')):
+    return NailgunConfig()
