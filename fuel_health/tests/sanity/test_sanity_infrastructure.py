@@ -38,7 +38,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         pass
 
     @attr(type=['sanity', 'fuel'])
-    @timed(8)
+    @timed(50)
     def test_services_state(self):
         """Services execution monitoring
         Test all of the expected services are on.
@@ -79,7 +79,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                       'controller_node_ip ')
 
     @attr(type=['sanity', 'fuel'])
-    @timed(6)
+    @timed(50)
     def test_dns_state(self):
         """DNS availability
         Test dns is available.
