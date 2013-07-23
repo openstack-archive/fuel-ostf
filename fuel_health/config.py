@@ -1,6 +1,7 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 # Copyright 2012 OpenStack, LLC
+# Copyright 2013 Mirantis, Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -192,7 +193,7 @@ network_group = cfg.OptGroup(name='network',
 NetworkGroup = [
     cfg.StrOpt('catalog_type',
                default='network',
-               help='Catalog type of the Quantum service.'),
+               help='Catalog type of the Network service.'),
     cfg.StrOpt('tenant_network_cidr',
                default="10.100.0.0/16",
                help="The cidr block to allocate tenant networks from"),
@@ -203,9 +204,9 @@ NetworkGroup = [
                 default=True,
                 help="Whether tenant network connectivity should be "
                      "evaluated directly"),
-    cfg.BoolOpt('quantum_available',
+    cfg.BoolOpt('neutron_available',
                 default=False,
-                help="Whether or not quantum is expected to be available"),
+                help="Whether or not neutron is expected to be available"),
 ]
 
 

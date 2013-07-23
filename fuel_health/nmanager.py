@@ -1,3 +1,21 @@
+# vim: tabstop=4 shiftwidth=4 softtabstop=4
+
+# Copyright 2012 OpenStack, LLC
+# Copyright 2013 Mirantis, Inc.
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
 import logging
 import subprocess
 
@@ -6,15 +24,6 @@ import cinderclient.client
 import glanceclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
-import time
-
-try:
-
-    from quantumclient.common import exceptions as exc
-    import quantumclient.v2_0.client
-
-except ImportError:
-    pass
 
 from fuel_health.common import ssh
 from fuel_health.common.utils.data_utils import rand_name
@@ -54,9 +63,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
 
     def _get_compute_client(self, username=None, password=None,
                             tenant_name=None):
-        # Novaclient will not execute operations for anyone but the
-        # identified user, so a new client needs to be created for
-        # each user that operations need to be performed for.
         if not username:
             username = self.config.identity.admin_username
         if not password:
@@ -110,8 +116,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
 
     def _get_identity_client(self, username=None, password=None,
                              tenant_name=None):
-        # This identity client is not intended to check the security
-        # of the identity service, so use admin credentials by default.
         if not username:
             username = self.config.identity.admin_username
         if not password:
@@ -135,12 +139,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                                  insecure=dscv)
 
     def _get_network_client(self):
-        # The intended configuration is for the network client to have
-        # admin privileges and indicate for whom resources are being
-        # created via a 'tenant_id' parameter.  This will often be
-        # preferable to authenticating as a specific user because
-        # working with certain resources (public routers and networks)
-        # often requires admin privileges anyway.
         username = self.config.identity.admin_username
         password = self.config.identity.admin_password
         tenant_name = self.config.identity.admin_tenant_name
@@ -154,12 +152,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
         auth_url = self.config.identity.uri
         dscv = self.config.identity.disable_ssl_certificate_validation
 
-        if self.config.network.quantum_available:
-            return quantumclient.v2_0.client.Client(username=username,
-                                                password=password,
-                                                tenant_name=tenant_name,
-                                                auth_url=auth_url,
-                                                insecure=dscv)
         return
 
 
@@ -233,7 +225,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def check_preconditions(cls):
         cls._create_nano_flavor()
         cls._enabled = True
-        if cls.config.network.quantum_available:
+        if cls.config.network.neutron_available:
             cls._enabled = False
         else:
             cls._enabled = True
@@ -437,7 +429,7 @@ class SanityChecksTest(OfficialClientTest):
     @classmethod
     def check_preconditions(cls):
         cls._enabled = True
-        if cls.config.network.quantum_available:
+        if cls.config.network.neutron_available:
             cls._enabled = False
         else:
             cls._enabled = True

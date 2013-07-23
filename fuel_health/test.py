@@ -1,6 +1,7 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 # Copyright 2012 OpenStack, LLC
+# Copyright 2013 Mirantis, Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -22,21 +23,11 @@ import testresources
 import unittest2
 
 from fuel_health import config
-from fuel_health import manager
 from fuel_health.common import log as logging
 from fuel_health.common.test_mixins import FuelTestAssertMixin
 
 
 LOG = logging.getLogger(__name__)
-
-
-class TimeOutError(Exception):
-    def __init__(self):
-        Exception.__init__(self)
-
-
-def _raise_TimeOut(sig, stack):
-    raise TimeOutError()
 
 
 class BaseTestCase(unittest2.TestCase,
@@ -139,13 +130,3 @@ class TestCase(BaseTestCase):
                                conf.compute.build_interval):
             self.fail("Timed out waiting for thing %s to become %s"
                       % (thing_id, expected_status))
-
-
-class ComputeFuzzClientTest(TestCase):
-
-    """
-    Base test case class for OpenStack Compute API (Nova)
-    that uses the REST fuzz client libs for calling the API.
-    """
-
-    manager_class = manager.ComputeFuzzClientManager
