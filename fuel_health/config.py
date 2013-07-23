@@ -381,6 +381,8 @@ class NailgunConfig(object):
         self.nailgun_url = 'http://{0}:{1}'.format(self.nailgun_host,
                                                    self.nailgun_port)
         self.cluster_id = os.environ.get('CLUSTER_ID', None)
+        self.req_session = requests.Session()
+        self.req_session.trust_env = False
         if parse:
             self.prepare_config()
 
@@ -396,7 +398,7 @@ class NailgunConfig(object):
 
     def _parse_cluster_attributes(self):
         api_url = '/api/clusters/%s/attributes' % self.cluster_id
-        response = requests.get(self.nailgun_url+api_url)
+        response = self.req_session.get(self.nailgun_url+api_url)
         LOG.info('RESPONSE %s STATUS %s' % (api_url, response.status_code))
         data = response.json()
         LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
@@ -407,7 +409,7 @@ class NailgunConfig(object):
 
     def _parse_nodes_cluster_id(self):
         api_url = '/api/nodes?clusters_id=%s' % self.cluster_id
-        response = requests.get(self.nailgun_url+api_url)
+        response = self.req_session.get(self.nailgun_url+api_url)
         LOG.info('RESPONSE %s STATUS %s' % (api_url, response.status_code))
         data = response.json()
         controller_nodes = filter(lambda node: node['role'] == 'controller',
@@ -428,7 +430,7 @@ class NailgunConfig(object):
 
     def _parse_networks_configuration(self):
         api_url = '/api/clusters/%s/network_configuration/' % self.cluster_id
-        data = requests.get(self.nailgun_url+api_url).json()
+        data = self.req_session.get(self.nailgun_url+api_url).json()
         self.network.raw_data = data
 
     def _parse_ostf_api(self):
@@ -436,7 +438,7 @@ class NailgunConfig(object):
         SHOULD BE REMOVED AS SOON AS KEYSTONE URL WILL BE ADDED TO NAILGUN API
         """
         api_url = '/api/ostf/%s' % self.cluster_id
-        response = requests.get(self.nailgun_url+api_url)
+        response = self.req_session.get(self.nailgun_url+api_url)
         if response.status_code == 404:
             LOG.warning('URL %s is not implemented '
                         'in nailgun api' % api_url)
@@ -455,6 +457,6 @@ class NailgunConfig(object):
 
 
 def FuelConfig():
-    if sys.argv[0] != 'nosetests':
+    if all(item in os.environ for item in ('NAILGUN_HOST', 'NAILGUN_PORT', 'CLUSTER_ID')):
         return NailgunConfig()
     return FileConfig()
