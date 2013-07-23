@@ -422,6 +422,7 @@ class NailgunConfig(object):
             controller_ips.append(node['ip'])
             conntroller_names.append(node['fqdn'])
         LOG.info("NAMES %s IPS %s" % (controller_ips, conntroller_names))
+        self.compute.public_ips = public_ips
         self.compute.controller_nodes = controller_ips
         self.compute.controller_nodes_name = conntroller_names
 
@@ -449,7 +450,7 @@ class NailgunConfig(object):
 
     def set_endpoints(self):
         endpoint = self.network.raw_data.get('public_vip', None) \
-            or self.compute.controller_nodes[0]
+            or self.compute.public_ips[0]
         self.identity.url = 'http://{0}/{1}/'.format(endpoint, 'dashboard')
         self.identity.uri = 'http://{0}:{1}/{2}/'.format(
             endpoint, 8000,'v2.0')
