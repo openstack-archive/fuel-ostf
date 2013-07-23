@@ -647,7 +647,6 @@ class SmokeChecksTest(OfficialClientTest):
         display_name = rand_name('ost1_test-volume')
         volume = client.volumes.create(size=1, display_name=display_name)
         self.volumes.append(volume)
-        self.set_resource(display_name, volume)
         return volume
 
     @classmethod
@@ -655,7 +654,11 @@ class SmokeChecksTest(OfficialClientTest):
         if cls.volumes:
             for v in cls.volumes:
                 if v.status == 'available' or v.status == 'error':
-                    cls.volume_client.volumes.delete(v)
+                    try:
+                        cls.volume_client.volumes.delete(v)
+                    except Exception as exc:
+                        LOG.debug(exc)
+                        pass
                 else:
                     pass
 
