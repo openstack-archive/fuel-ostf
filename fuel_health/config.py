@@ -387,11 +387,15 @@ class NailgunConfig(object):
             self.prepare_config()
 
     def prepare_config(self, *args, **kwargs):
-        self._parse_cluster_attributes()
-        self._parse_nodes_cluster_id()
-        self._parse_networks_configuration()
-        self.set_endpoints()
-        self.set_proxy()
+        try:
+            self._parse_cluster_attributes()
+            self._parse_nodes_cluster_id()
+            self._parse_networks_configuration()
+            self.set_endpoints()
+            self.set_proxy()
+        except Exception, e:
+            LOG.warning('Nailgun config creation failed. '
+                        'Something wrong with endpoints')
 
     def _parse_cluster_attributes(self):
         api_url = '/api/clusters/%s/attributes' % self.cluster_id
@@ -432,8 +436,6 @@ class NailgunConfig(object):
         self.network.raw_data = data
 
     def _parse_ostf_api(self):
-        """
-        """
         api_url = '/api/ostf/%s' % self.cluster_id
         response = self.req_session.get(self.nailgun_url+api_url)
         data = response.json()
@@ -453,7 +455,7 @@ class NailgunConfig(object):
             or self.compute.public_ips[0]
         self.identity.url = 'http://{0}/{1}/'.format(endpoint, 'dashboard')
         self.identity.uri = 'http://{0}:{1}/{2}/'.format(
-            endpoint, 8000,'v2.0')
+            endpoint, 8000, 'v2.0')
 
 
 def FuelConfig():
