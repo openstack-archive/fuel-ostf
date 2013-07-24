@@ -592,19 +592,6 @@ class SmokeChecksTest(OfficialClientTest):
             for flav in cls.flavors:
                 cls.compute_client.flavors.delete(flav)
 
-    def _create_flavors(self, client, ram, disk, vcpus=1):
-        name = rand_name('ost1_test-flavor-')
-        flavorid = rand_int_id()
-        flavor = client.flavors.create(name, ram, disk, vcpus, flavorid)
-        self.flavors.append(flavor)
-        return flavor
-
-    @classmethod
-    def _clean_flavors(cls):
-        if cls.flavors:
-            for flav in cls.flavors:
-                cls.compute_client.flavors.delete(flav)
-
     def _create_tenant(self, client):
         name = rand_name('ost1_test-tenant-')
         tenant = client.tenants.create(name)
@@ -664,13 +651,13 @@ class SmokeChecksTest(OfficialClientTest):
 
     def _create_server(self, client):
         name = rand_name('ost1_test-volume-instance')
+        flavor_id = self._create_nano_flavor()
         base_image_id = get_image_from_name()
-        server = client.servers.create(name, base_image_id, 42)
+        server = client.servers.create(name, base_image_id, flavor_id)
         self.verify_response_body_content(server.name,
                                           name,
                                           "Instance creation failed")
         self.set_resource(name, server)
-        self.status_timeout(client.servers, server.id, 'ACTIVE')
         # The instance retrieved on creation is missing network
         # details, necessitating retrieval after it becomes active to
         # ensure correct details.

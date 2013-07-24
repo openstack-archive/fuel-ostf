@@ -37,6 +37,9 @@ class VolumesTest(nmanager.SmokeChecksTest):
     def _wait_for_volume_status(self, volume_id, status):
         self.status_timeout(self.volume_client.volumes, volume_id, status)
 
+    def _wait_for_instance_status(self, server, status):
+        self.status_timeout(self.compute_client.servers, server.id, status)
+
     @attr(type=["fuel", "smoke"])
     @timed(61)
     def test_volume_create(self):
@@ -80,6 +83,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
         try:
             # create instance
             instance = self._create_server(self.compute_client)
+            self._wait_for_instance_status(instance.id, 'ACTIVE')
         except Exception as exc:
             LOG.debug(exc)
             self.fail("Step 4 failed:" + "Instance creation failed."
