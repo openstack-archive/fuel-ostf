@@ -65,7 +65,6 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             1. Connect to a controller node via SSH.
             2. Execute nova-manage service list command.
             3. Check there is no failed services (with XXX state)
-                in the command output.
         Duration: 2-8 s.
         """
         output_msg = ''
@@ -105,9 +104,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Scenario:
             1. Connect to a controller node via SSH.
             2. Execute host command for the controller IP.
-            3. Check expected controller's domain name is present
-                in the command output to be sure the domain name
-                was successfully resolved.
+            3. Check DNS name is resolved.
         Duration: 1-6 s.
         """
         if len(self.hostname) and len(self.host):
