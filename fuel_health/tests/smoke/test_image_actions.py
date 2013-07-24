@@ -46,7 +46,7 @@ class TestImageAction(nmanager.OfficialClientTest):
     def _boot_image(self, image_id):
         name = rand_name('ost1_test-image')
         client = self.compute_client
-        flavor_id = self.config.compute.flavor_ref
+        flavor_id = self._create_nano_flavor()
         LOG.debug("name:%s, image:%s" % (name, image_id))
         server = client.servers.create(name=name,
                                        image=image_id,
