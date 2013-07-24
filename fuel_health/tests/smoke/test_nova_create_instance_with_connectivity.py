@@ -68,8 +68,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Target component: Nova.
 
         Scenario:
-            1. Create a new keypair, check if it was created
-            successfully.
+            1. Create a new keypair, check if it was created successfully.
         Duration: 10-25 s.
         """
         try:
@@ -86,8 +85,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Target component: Nova
 
         Scenario:
-            1. Create security group, check if it was created
-            correctly.
+            1. Create security group, check if it was created correctly.
         Duration: 2-25 s.
         """
         try:
@@ -137,8 +135,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Scenario:
             1. Create new keypair (if it`s nonexistent yet).
             2. Create new sec group (if it`s nonexistent yet).
-            3. Create instance with usage of created sec group
-            and keypair.
+            3. Create instance with usage of created sec group and keypair.
         Duration: 50-65 s.
         """
         if not self.keypairs:
@@ -182,8 +179,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Scenario:
             1. Create new keypair (if it`s nonexistent yet).
             2. Create new sec group (if it`s nonexistent yet).
-            3. Create instance with usage of created sec group
-            and keypair.
+            3. Create instance with usage of created sec group and keypair.
             4. Create new floating ip.
             5. Assign floating ip to created instance.
         Duration: 40-55 s.
@@ -243,10 +239,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Scenario:
             1. Create new keypair (if it`s nonexistent yet).
             2. Create new sec group (if it`s nonexistent yet).
-            3. Create instance with usage of created sec group
-            and keypair.
-            4. Check connectivity for all floating ips using
-            ping command.
+            3. Create instance with usage of created sec group and keypair.
+            4. Check connectivity for all floating ips using ping command.
         Duration: 40-55 s.
         """
         if not self.floating_ips:
