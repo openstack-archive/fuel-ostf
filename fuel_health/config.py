@@ -151,7 +151,7 @@ ComputeGroup = [
                default='/root/.ssh/id_rsa',
                help="path to ssh key"),
     cfg.StrOpt('image_name',
-               default="cirros-0.3.1-x86_64-uec",
+               default="TestVM",
                help="Valid secondary image reference to be used in tests."),
     cfg.IntOpt('flavor_ref',
                default=84,
