@@ -534,51 +534,6 @@ class SmokeChecksTest(OfficialClientTest):
         cls.roles = []
         cls.volumes = []
 
-    # def _list_instances(self, client):
-    #     instances = client.servers.list()
-    #     return instances
-    #
-    # def _list_images(self, client):
-    #     images = client.images.list()
-    #     return images
-    #
-    # def _list_volumes(self, client):
-    #     volumes = client.volumes.list(detailed=False)
-    #     return volumes
-    #
-    # def _list_snapshots(self, client):
-    #     snapshots = client.volume_snapshots.list(detailed=False)
-    #     return snapshots
-    #
-    # def _list_flavors(self, client):
-    #     flavors = client.flavors.list()
-    #     return flavors
-    #
-    # def _list_limits(self, client):
-    #     limits = client.limits.get()
-    #     return limits
-    #
-    # def _list_services(self, client):
-    #     services = client.services.list()
-    #     return services
-    #
-    # def _list_users(self, client):
-    #     users = client.users.list()
-    #     return users
-    #
-    # def _list_networks(self, client):
-    #     networks = client.networks.list()
-    #     return networks
-    #
-    # def _list_ports(self, client):
-    #     ports = []
-    #     networks = client.networks.list()
-    #
-    #     if networks:
-    #         for net in networks:
-    #             ports.append(net.vpn_public_port)
-    #     return ports
-
     def _create_flavors(self, client, ram, disk, vcpus=1):
         name = rand_name('ost1_test-flavor-')
         flavorid = rand_int_id()
