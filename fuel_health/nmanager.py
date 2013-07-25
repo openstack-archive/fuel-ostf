@@ -170,9 +170,9 @@ class OfficialClientTest(fuel_health.test.TestCase):
                     LOG.info('42 flavor id already exists')
                     return flavor.id
 
-            flavor = cls.compute_client.flavors.create(name, 64, 1, 1, flavorid)
+            flavor = cls.compute_client.flavors.create(
+                name, 64, 1, 1, flavorid)
             return flavor.id
-
 
     @classmethod
     def tearDownClass(cls):
@@ -240,7 +240,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         if not self._enabled:
             self.skip(reason='Nova Networking not available')
 
-
     @classmethod
     def setUpClass(cls):
         super(NovaNetworkScenarioTest, cls).setUpClass()
@@ -260,7 +259,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         self.set_resource(kp_name, keypair)
         return keypair
 
-    def _create_security_group(self, client, namestart='ost1_test-secgroup-smoke-'):
+    def _create_security_group(
+            self, client, namestart='ost1_test-secgroup-smoke-'):
         # Create security group
         sg_name = rand_name(namestart)
         sg_desc = sg_name + " description"
@@ -306,7 +306,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def _create_network(self, label='ost1_test-network-smoke-'):
         n_label = rand_name(label)
         cidr = self.config.network.tenant_network_cidr
-        networks = self.compute_client.networks.create(label=n_label, cidr=cidr)
+        networks = self.compute_client.networks.create(
+            label=n_label, cidr=cidr)
         self.set_resource(n_label, networks)
         self.network.append(networks)
         self.verify_response_body_content(networks.label,
@@ -491,14 +492,13 @@ class SanityChecksTest(OfficialClientTest):
         return networks
 
     def _list_ports(self, client):
-        ports  = []
+        ports = []
         networks = client.networks.list()
 
         if networks:
             for net in networks:
                 ports.append(net.vpn_public_port)
         return ports
-
 
     @classmethod
     def tearDownClass(cls):
@@ -534,50 +534,50 @@ class SmokeChecksTest(OfficialClientTest):
         cls.roles = []
         cls.volumes = []
 
-    def _list_instances(self, client):
-        instances = client.servers.list()
-        return instances
-
-    def _list_images(self, client):
-        images = client.images.list()
-        return images
-
-    def _list_volumes(self, client):
-        volumes = client.volumes.list(detailed=False)
-        return volumes
-
-    def _list_snapshots(self, client):
-        snapshots = client.volume_snapshots.list(detailed=False)
-        return snapshots
-
-    def _list_flavors(self, client):
-        flavors = client.flavors.list()
-        return flavors
-
-    def _list_limits(self, client):
-        limits = client.limits.get()
-        return limits
-
-    def _list_services(self, client):
-        services = client.services.list()
-        return services
-
-    def _list_users(self, client):
-        users = client.users.list()
-        return users
-
-    def _list_networks(self, client):
-        networks = client.networks.list()
-        return networks
-
-    def _list_ports(self, client):
-        ports  = []
-        networks = client.networks.list()
-
-        if networks:
-            for net in networks:
-                ports.append(net.vpn_public_port)
-        return ports
+    # def _list_instances(self, client):
+    #     instances = client.servers.list()
+    #     return instances
+    #
+    # def _list_images(self, client):
+    #     images = client.images.list()
+    #     return images
+    #
+    # def _list_volumes(self, client):
+    #     volumes = client.volumes.list(detailed=False)
+    #     return volumes
+    #
+    # def _list_snapshots(self, client):
+    #     snapshots = client.volume_snapshots.list(detailed=False)
+    #     return snapshots
+    #
+    # def _list_flavors(self, client):
+    #     flavors = client.flavors.list()
+    #     return flavors
+    #
+    # def _list_limits(self, client):
+    #     limits = client.limits.get()
+    #     return limits
+    #
+    # def _list_services(self, client):
+    #     services = client.services.list()
+    #     return services
+    #
+    # def _list_users(self, client):
+    #     users = client.users.list()
+    #     return users
+    #
+    # def _list_networks(self, client):
+    #     networks = client.networks.list()
+    #     return networks
+    #
+    # def _list_ports(self, client):
+    #     ports = []
+    #     networks = client.networks.list()
+    #
+    #     if networks:
+    #         for net in networks:
+    #             ports.append(net.vpn_public_port)
+    #     return ports
 
     def _create_flavors(self, client, ram, disk, vcpus=1):
         name = rand_name('ost1_test-flavor-')
@@ -679,7 +679,6 @@ class SmokeChecksTest(OfficialClientTest):
         except exceptions.NotFound:
             return True
         return False
-
 
     @classmethod
     def tearDownClass(cls):

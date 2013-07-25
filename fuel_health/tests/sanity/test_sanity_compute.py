@@ -27,7 +27,6 @@ class SanityComputeTest(nmanager.SanityChecksTest):
     """
     TestClass contains tests check base Compute functionality.
     """
-    _interface = 'json'
 
     @attr(type=['sanity', 'fuel'])
     @timed(6)
@@ -74,7 +73,6 @@ class SanityComputeTest(nmanager.SanityChecksTest):
 
         self.verify_response_true(
             len(list_images_resp) >= 0, "Step 2 failed: " + fail_msg)
-
 
     @attr(type=['sanity', 'fuel'])
     @timed(6)
@@ -123,7 +121,6 @@ class SanityComputeTest(nmanager.SanityChecksTest):
 
         self.verify_response_true(
             len(list_snapshots_resp) >= 0, "Step 2 failed: " + fail_msg)
-
 
     @attr(type=['sanity', 'fuel'])
     @timed(6)

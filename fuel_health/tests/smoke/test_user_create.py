@@ -68,7 +68,6 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
             tenant.name.startswith('ost1_test'),
             "Step 2 failed: " + msg_s1)
 
-
         # Create a user:
         msg_s3 = "Can't create a user. Please, check Keystone service"
         try:
@@ -94,8 +93,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
             role.name.startswith('ost1_test'),
             "Step 6 failed: " + msg_s5)
 
-
-        # # Authenticate with created user:
+        # Authenticate with created user:
         password = '123456'
         msg_s7 = "Can not get auth token, check Keystone service"
         try:
@@ -119,17 +117,23 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                 login_data = dict(username=user.name,
                                   password=password,
                                   next='/')
-                resp = client.post(url, data=login_data, headers=dict(Referer=url))
+                resp = client.post(url, data=login_data,
+                                   headers=dict(Referer=url))
                 self.verify_response_status(
-                    resp.status_code, msg="Verify request was successful.", failed_step=9)
+                    resp.status_code,
+                    msg="Verify request was successful.", failed_step=9)
             else:
                 csrftoken = client.cookies['csrftoken']
                 login_data = dict(username=user.name,
                                   password=password,
                                   csrfmiddlewaretoken=csrftoken,
                                   next='/')
-                resp = client.post(url, data=login_data, headers=dict(Referer=url))
+                resp = client.post(url, data=login_data,
+                                   headers=dict(Referer=url))
                 self.verify_response_status(
-                    resp.status_code, msg="Verify request was successful.", failed_step=9)
+                    resp.status_code,
+                    msg="Verify request was successful.",
+                    failed_step=9)
         except Exception:
-            self.fail("Step 10 failed: Can not auth in Horizon, please check Horizon is alive")
+            self.fail("Step 10 failed: Can not auth in Horizon, "
+                      "please check Horizon is alive")

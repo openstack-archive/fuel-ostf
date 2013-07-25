@@ -120,6 +120,5 @@ class TestImageAction(nmanager.OfficialClientTest):
             # boot a second instance from the snapshot
             self._boot_image(snapshot_image_id)
         except Exception as e:
-            LOG.error("Booting second instance from the snapshot failed: "
-                "%s" %e)
+            LOG.error("Booting instance from the snapshot failed: %s" % e)
             self.fail("Step 4 failed: Boot second instance from the snapshot.")

@@ -35,5 +35,3 @@ class Manager(object):
     def __init__(self):
         self.config = fuel_health.config.FuelConfig()
         self.client_attr_names = []
-
-
