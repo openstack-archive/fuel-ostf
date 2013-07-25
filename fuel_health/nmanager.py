@@ -662,7 +662,6 @@ class SmokeChecksTest(OfficialClientTest):
         # details, necessitating retrieval after it becomes active to
         # ensure correct details.
         server = client.servers.get(server.id)
-        self.set_resource(name, server)
         return server
 
     def _attach_volume_to_instance(self, client, volume, instance):

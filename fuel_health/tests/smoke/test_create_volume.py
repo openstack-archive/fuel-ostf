@@ -83,7 +83,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
         try:
             # create instance
             instance = self._create_server(self.compute_client)
-            self._wait_for_instance_status(instance.id, 'ACTIVE')
+            self._wait_for_instance_status(instance, 'ACTIVE')
         except Exception as exc:
             LOG.debug(exc)
             self.fail("Step 4 failed:" + "Instance creation failed."
@@ -92,7 +92,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
 
         # Attach volume
         try:
-            attached_volume = self._attach_volume_to_instance(
+            self._attach_volume_to_instance(
                 self.volume_client.volumes, instance.id, volume)
         except Exception as exc:
             LOG.debug(exc)
