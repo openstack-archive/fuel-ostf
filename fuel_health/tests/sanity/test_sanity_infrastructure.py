@@ -45,8 +45,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         cls.host = cls.config.compute.controller_nodes
         cls.usr = cls.config.compute.controller_node_ssh_user
         cls.pwd = cls.config.compute.controller_node_ssh_password
-        cls.key = cls.config.compute.controller_node_ssh_key_path
-        cls.hostname = cls.config.compute.controller_nodes_name
+        cls.key = cls.config.compute.path_to_private_key
         cls.timeout = cls.config.compute.ssh_timeout
 
     @classmethod
@@ -68,7 +67,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         """
         output_msg = ''
         cmd = 'nova-manage service list'
-        if len(self.hostname) and len(self.host):
+        if len(self.host):
 
             try:
                 output = SSHClient(self.host[0],
@@ -89,9 +88,8 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             self.verify_response_true(
                 u'XXX' not in output, 'Step 3 failed: ' + output_msg)
         else:
-            self.fail('Wrong tests configurations, one from the next '
-                      'parameters are empty controller_node_name or '
-                      'controller_node_ip ')
+            self.fail('Wrong tests configurations, controller '
+                      'node ip is not specified')
 
     @attr(type=['sanity', 'fuel'])
     @timed(50)
@@ -102,13 +100,13 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
         Scenario:
             1. Connect to a controller node via SSH.
-            2. Execute host command for the controller IP.
-            3. Check DNS name is resolved.
+            2. Execute ping 8.8.8.8 from the controller.
+            3. Check all the packages were received.
         Duration: 1-6 s.
         """
-        if len(self.hostname) and len(self.host):
-            expected_output = "in-addr.arpa domain name pointer"
-            cmd = "host " + self.host[0]
+        if len(self.host):
+            expected_output = "0% packet loss"
+            cmd = "ping 8.8.8.8 -c 1"
             output = ''
             try:
                 output = SSHClient(self.host[0],
@@ -117,7 +115,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                    key_filename=self.key,
                                    timeout=self.timeout).exec_command(cmd)
             except SSHExecCommandFailed as exc:
-                output = "'host' command failed."
+                output = "ping command failed."
                 LOG.debug(exc)
                 self.fail("Step 2 failed: " + output)
             except Exception as exc:
@@ -125,8 +123,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                 self.fail("Step 1 failed: connection fail")
             LOG.debug(output)
             self.verify_response_true(expected_output in output,
-                            'Step 3 failed: DNS name cannot be resolved')
+                            'Step 3 failed: packets were lost')
         else:
-            self.fail('Wrong tests configurations, one from the next '
-                      'parameters are empty controller_node_name or '
-                      'controller_node_ip ')
+            self.fail('Wrong tests configurations, controller '
+                      'node ip is not specified')
