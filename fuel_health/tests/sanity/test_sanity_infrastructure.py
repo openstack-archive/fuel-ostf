@@ -42,7 +42,8 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
     @classmethod
     def setUpClass(cls):
-        cls.host = cls.config.compute.controller_nodes
+        cls.controllers = cls.config.compute.controller_nodes
+        cls.computes = cls.config.compute.compute_nodes
         cls.usr = cls.config.compute.controller_node_ssh_user
         cls.pwd = cls.config.compute.controller_node_ssh_password
         cls.key = cls.config.compute.path_to_private_key
@@ -67,10 +68,10 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         """
         output_msg = ''
         cmd = 'nova-manage service list'
-        if len(self.host):
+        if len(self.controllers):
 
             try:
-                output = SSHClient(self.host[0],
+                output = SSHClient(self.controllers[0],
                                    self.usr, self.pwd,
                                    key_filename=self.key,
                                    timeout=self.timeout).exec_command(cmd)
@@ -99,17 +100,19 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Target component: OpenStack
 
         Scenario:
-            1. Connect to a controller node via SSH.
-            2. Execute ping 8.8.8.8 from the controller.
+            1. Connect to a compute node via SSH.
+            2. Execute ping 8.8.8.8 from the compute.
             3. Check all the packages were received.
+            4. Execute host 8.8.8.8 from the controller.
+            5. Check 8.8.8.8 host is resolved.
         Duration: 1-6 s.
         """
-        if len(self.host):
+        if len(self.computes):
             expected_output = "0% packet loss"
             cmd = "ping 8.8.8.8 -c 1"
             output = ''
             try:
-                output = SSHClient(self.host[0],
+                output = SSHClient(self.computes[0],
                                    self.usr,
                                    self.pwd,
                                    key_filename=self.key,
@@ -123,7 +126,29 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                 self.fail("Step 1 failed: connection fail")
             LOG.debug(output)
             self.verify_response_true(expected_output in output,
-                            'Step 3 failed: packets were lost')
+                            'Step 3 failed: packets to 8.8.8.8 were lost, '
+                            'there is no Internet connection on the compute')
+
+            expected_output = ("8.8.8.8.in-addr.arpa domain name pointer "
+                               "google-public-dns-a.google.com.")
+            cmd = "host 8.8.8.8"
+            output = ''
+            try:
+                output = SSHClient(self.computes[0],
+                                   self.usr,
+                                   self.pwd,
+                                   key_filename=self.key,
+                                   timeout=self.timeout).exec_command(cmd)
+            except SSHExecCommandFailed as exc:
+                output = "'host' command failed."
+                LOG.debug(exc)
+                self.fail("Step 4 failed: " + output)
+            except Exception as exc:
+                LOG.debug(exc)
+                self.fail("Step 4 failed: connection to the compute fail")
+            LOG.debug(output)
+            self.verify_response_true(expected_output in output,
+                            'Step 5 failed: DNS name cannot be resolved')
         else:
-            self.fail('Wrong tests configurations, controller '
+            self.fail('Wrong tests configurations, compute '
                       'node ip is not specified')
