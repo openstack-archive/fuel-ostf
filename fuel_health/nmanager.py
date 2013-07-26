@@ -25,13 +25,17 @@ import glanceclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
 
-from fuel_health.common import ssh
+#from fuel_health.common import ssh
+import time
+from fuel_health.common.ssh import Client as SSHClient
+from fuel_health.exceptions import SSHExecCommandFailed
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health.common.utils.data_utils import rand_int_id
 from fuel_health import exceptions
 import fuel_health.manager
 import fuel_health.test
 from fuel_health import config
+
 
 
 LOG = logging.getLogger(__name__)
@@ -243,12 +247,18 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     @classmethod
     def setUpClass(cls):
         super(NovaNetworkScenarioTest, cls).setUpClass()
+        cls.host = cls.config.compute.controller_nodes
+        cls.usr = cls.config.compute.controller_node_ssh_user
+        cls.pwd = cls.config.compute.controller_node_ssh_password
+        cls.key = cls.config.compute.controller_node_ssh_key_path
+        cls.timeout = cls.config.compute.ssh_timeout
         cls.tenant_id = cls.manager._get_identity_client(
             cls.config.identity.admin_username,
             cls.config.identity.admin_password,
             cls.config.identity.admin_tenant_name).tenant_id
         cls.network = []
         cls.floating_ips = []
+        cls.sec_group = []
 
     def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
         kp_name = rand_name(namestart)
@@ -265,13 +275,14 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         sg_name = rand_name(namestart)
         sg_desc = sg_name + " description"
         secgroup = client.security_groups.create(sg_name, sg_desc)
+        self.set_resource(sg_name, secgroup)
         self.verify_response_body_content(secgroup.name,
                                           sg_name,
                                           "Security group creation failed")
         self.verify_response_body_content(secgroup.description,
                                           sg_desc,
                                           "Security group creation failed")
-        self.set_resource(sg_name, secgroup)
+
 
         # Add rules to the security group
 
@@ -346,7 +357,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         # details, necessitating retrieval after it becomes active to
         # ensure correct details.
         server = client.servers.get(server.id)
-        self.set_resource(name, server)
         return server
 
     def _create_floating_ip(self):
@@ -374,28 +384,54 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             cls.compute_client.floating_ips.delete(ip)
 
     def _ping_ip_address(self, ip_address):
-        cmd = ['ping', '-c1', '-w1', ip_address]
-
         def ping():
-            proc = subprocess.Popen(cmd,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
-            proc.wait()
-            if proc.returncode == 0:
-                return True
+            cmd = 'ping -c1 -w1 ' + ip_address
+            time.sleep(40)
+
+            if len(self.host):
+
+                try:
+                    output = SSHClient(self.host[0],
+                                   self.usr, self.pwd,
+                                   key_filename=self.key,
+                                   timeout=self.timeout).exec_command(cmd)
+                    LOG.debug('Otput is' + output)
+
+                except SSHExecCommandFailed as exc:
+                    output_msg = "Error: instance is not reachable by floating ip."
+                    LOG.debug(exc)
+                    self.fail(output_msg)
+                except Exception as exc:
+                    LOG.debug(exc)
+                    self.fail("Connection fail")
+
+                self.verify_response_true(
+                    '0% packet loss' in output,
+                    'Instance is not rechable by floating ip')
+            else:
+                self.fail('Wrong tests configurations, one from the next '
+                          'parameters are empty controller_node_name or '
+                          'controller_node_ip ')
 
         # TODO Allow configuration of execution and sleep duration.
-        return fuel_health.test.call_until_true(ping, 40, 1)
+        return fuel_health.test.call_until_true(ping, 140, 3)
 
-    def _is_reachable_via_ssh(self, ip_address, username, private_key,
-                              timeout=120):
-        ssh_client = ssh.Client(ip_address, username,
-                                pkey=private_key,
-                                timeout=timeout)
-        return ssh_client.test_connection_auth()
+     # def ping():
+        #     proc = subprocess.Popen(cmd,
+        #                             stdout=subprocess.PIPE,
+        #                             stderr=subprocess.PIPE)
+        #     proc.wait()
+        #     if proc.returncode == 0:
+        #         return True
+        #
 
-    def _check_vm_connectivity(self, ip_address, username, private_key,
-                               timeout=120):
+    # def _is_reachable_via_ssh(self, ip_address, username, private_key,
+    #                           timeout=120):
+    #     ssh_client = SSHClient(ip_address, username,
+    #                             pkey=private_key,
+    #                             timeout=timeout)
+    #     return ssh_client.test_connection_auth()
+    def _check_vm_connectivity(self, ip_address):
         self.assertTrue(self._ping_ip_address(ip_address),
                         "Timed out waiting for %s to become "
                         "reachable. Please, check Network "

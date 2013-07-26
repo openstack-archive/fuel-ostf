@@ -34,7 +34,7 @@ with warnings.catch_warnings():
 class Client(object):
 
     def __init__(self, host, username, password=None, timeout=300, pkey=None,
-                 channel_timeout=10, look_for_keys=False, key_filename=None):
+                 channel_timeout=70, look_for_keys=False, key_filename=None):
         self.host = host
         self.username = username
         self.password = password

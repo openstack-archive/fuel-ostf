@@ -294,12 +294,13 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
         # The target login is assumed to have been configured for
         # key-based authentication by cloud-init.
-        ssh_login = self.config.compute.image_ssh_user
-        private_key = self.keypairs[self.tenant_id].private_key
+        # ssh_login = self.config.compute.image_ssh_user
+        # private_key = self.keypairs[self.tenant_id].private_key
         try:
             for floating_ip in self.floating_ips:
                 ip_address = floating_ip.ip
-                self._check_vm_connectivity(ip_address, ssh_login, private_key)
+                LOG.debug(ip_address)
+                self._check_vm_connectivity(ip_address)
         except Exception as e:
             LOG.debug("VM connectivity check failed: %s" % e)
             self.fail("Step 6 failed: Check VM connectivity.")

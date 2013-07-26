@@ -229,6 +229,9 @@ VolumeGroup = [
     cfg.StrOpt('catalog_type',
                default='volume',
                help="Catalog type of the Volume Service"),
+    cfg.BoolOpt('cinder_node_exist',
+                default=True,
+                help="Allow to run tests if cinder exist"),
     cfg.BoolOpt('multi_backend_enabled',
                 default=False,
                 help="Runs Cinder multi-backend test (requires 2 backends)"),
@@ -417,6 +420,8 @@ class NailgunConfig(object):
         data = response.json()
         controller_nodes = filter(lambda node: node['role'] == 'controller',
                                   data)
+        cinder_nodes = filter(lambda node: node['role'] == 'cinder',
+                                  data)
         controller_ips = []
         conntroller_names = []
         public_ips = []
@@ -431,6 +436,8 @@ class NailgunConfig(object):
         self.compute.public_ips = public_ips
         self.compute.controller_nodes = controller_ips
         self.compute.controller_nodes_name = conntroller_names
+        if cinder_nodes:
+            self.volume.cinder_node_exist = True
 
     def _parse_meta(self):
         api_url = '/api/clusters/%s' % self.cluster_id
