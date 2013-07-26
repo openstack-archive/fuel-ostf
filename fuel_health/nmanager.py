@@ -411,14 +411,16 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 def get_image_from_name():
     cfg = config.FuelConfig()
     image_name = cfg.compute.image_name
-    image_client = OfficialClientManager()._get_image_client()
+    image_client = OfficialClientManager()._get_compute_client()
     images = image_client.images.list()
+    LOG.debug(images)
     if images:
         for im in images:
+            LOG.debug(im.name)
             if im.name.strip().lower() == image_name.strip().lower():
                 return im.id
-            else:
-                raise exceptions.ImageFault
+    else:
+        raise exceptions.ImageFault
 
 
 class SanityChecksTest(OfficialClientTest):
