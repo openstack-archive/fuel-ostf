@@ -34,6 +34,10 @@ class VolumesTest(nmanager.SmokeChecksTest):
     def tearDownClass(cls):
         super(VolumesTest, cls).tearDownClass()
 
+    def setUp(self):
+        if not self.config.volume.cinder_node_exist:
+            self.skipTest('There are not any cinders node')
+
     def _wait_for_volume_status(self, volume_id, status):
         self.status_timeout(self.volume_client.volumes, volume_id, status)
 
