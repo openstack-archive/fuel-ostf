@@ -334,6 +334,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             'key_name': key_name,
             'security_groups': security_groups,
         }
+        self._create_nano_flavor()
         server = client.servers.create(name, base_image_id, 42,
                                        **create_kwargs)
         self.verify_response_body_content(server.name,
@@ -500,10 +501,6 @@ class SanityChecksTest(OfficialClientTest):
                 ports.append(net.vpn_public_port)
         return ports
 
-    @classmethod
-    def tearDownClass(cls):
-        super(SanityChecksTest, cls).tearDownClass()
-
 
 class SmokeChecksTest(OfficialClientTest):
     """
@@ -606,8 +603,8 @@ class SmokeChecksTest(OfficialClientTest):
 
     def _create_server(self, client):
         name = rand_name('ost1_test-volume-instance')
-        flavor_id = self._create_nano_flavor()
         base_image_id = get_image_from_name()
+        flavor_id = self._create_nano_flavor()
         server = client.servers.create(name, base_image_id, flavor_id)
         self.verify_response_body_content(server.name,
                                           name,

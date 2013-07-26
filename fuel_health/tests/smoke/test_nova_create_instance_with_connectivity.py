@@ -128,7 +128,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                                       failed_step=3)
 
     @attr(type=['fuel', 'smoke'])
-    @timed(65)
+    @timed(150)
     def test_005_create_servers(self):
         """Instance creation
         Target component: Nova
@@ -137,7 +137,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             1. Create new keypair (if it`s nonexistent yet).
             2. Create new sec group (if it`s nonexistent yet).
             3. Create instance with usage of created sec group and keypair.
-        Duration: 50-65 s.
+        Duration: 50-150 s.
         """
         if not self.keypairs:
             try:

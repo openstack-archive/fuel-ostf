@@ -154,7 +154,7 @@ ComputeGroup = [
                default="TestVM",
                help="Valid secondary image reference to be used in tests."),
     cfg.IntOpt('flavor_ref',
-               default=84,
+               default=42,
                help="Valid primary flavor to use in tests."),
 ]
 
@@ -473,6 +473,4 @@ class NailgunConfig(object):
 
 
 def FuelConfig():
-    # if all(item in os.environ for item in (
-    #     'NAILGUN_HOST', 'NAILGUN_PORT', 'CLUSTER_ID')):
     return NailgunConfig()
