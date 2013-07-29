@@ -494,15 +494,6 @@ class SanityChecksTest(OfficialClientTest):
         networks = client.networks.list()
         return networks
 
-    def _list_ports(self, client):
-        ports = []
-        networks = client.networks.list()
-
-        if networks:
-            for net in networks:
-                ports.append(net.vpn_public_port)
-        return ports
-
 
 class SmokeChecksTest(OfficialClientTest):
     """
