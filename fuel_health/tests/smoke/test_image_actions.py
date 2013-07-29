@@ -52,6 +52,7 @@ class TestImageAction(nmanager.OfficialClientTest):
                                        image=image_id,
                                        flavor=flavor_id,
                                        key_name=self.keypair.name)
+        self.set_resource(name, server)
         self.addCleanup(self.compute_client.servers.delete, server)
         self.verify_response_body_content(
             name, server.name,
@@ -64,6 +65,7 @@ class TestImageAction(nmanager.OfficialClientTest):
     def _add_keypair(self):
         name = rand_name('ost1_test-keypair-')
         self.keypair = self.compute_client.keypairs.create(name=name)
+        self.set_resource(name, self.keypair)
         self.addCleanup(self.compute_client.keypairs.delete, self.keypair)
         self.verify_response_body_content(
             name, self.keypair.name,

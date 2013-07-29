@@ -139,10 +139,10 @@ class VolumesTest(nmanager.SmokeChecksTest):
             self.fail('Step 9 failed:' + 'Volume does not get available'
                                          ' status. Looks like something is '
                                          'broken in Cinder')
-        try:
-            self.volume_client.volumes.delete(volume)
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail('Step 10 failed: ' + 'Can not delete volume. '
-                                           'Looks like something is broken '
-                                           'in Cinder')
+        # try:
+        #     self.volume_client.volumes.delete(volume)
+        # except Exception as exc:
+        #     LOG.debug(exc)
+        #     self.fail('Step 10 failed: ' + 'Can not delete volume. '
+        #                                    'Looks like something is broken '
+        #                                    'in Cinder')

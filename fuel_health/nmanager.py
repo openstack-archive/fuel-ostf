@@ -263,14 +263,14 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
         kp_name = rand_name(namestart)
         keypair = client.keypairs.create(kp_name)
+        self.set_resource(kp_name, keypair)
         self.verify_response_body_content(keypair.id,
                                           kp_name,
                                           'Keypair creation failed')
-        self.set_resource(kp_name, keypair)
         return keypair
 
     def _create_security_group(
-            self, client, namestart='ost1_test-secgroup-smoke-'):
+            self, client, namestart='ost1_test-secgroup-smoke-netw'):
         # Create security group
         sg_name = rand_name(namestart)
         sg_desc = sg_name + " description"
@@ -308,7 +308,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         ]
         for ruleset in rulesets:
             try:
-                client.security_group_rules.create(secgroup.id, **ruleset)
+               client.security_group_rules.create(secgroup.id, **ruleset)
             except Exception:
                 self.fail("Failed to create rule in security group.")
 
@@ -357,6 +357,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         # details, necessitating retrieval after it becomes active to
         # ensure correct details.
         server = client.servers.get(server.id)
+        self.set_resource(name, server)
         return server
 
     def _create_floating_ip(self):
@@ -391,11 +392,11 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             if len(self.host):
 
                 try:
-                    output = SSHClient(self.host[0],
-                                   self.usr, self.pwd,
-                                   key_filename=self.key,
-                                   timeout=self.timeout).exec_command(cmd)
-                    LOG.debug('Otput is' + output)
+                    SSHClient(self.host[0],
+                              self.usr, self.pwd,
+                              key_filename=self.key,
+                              timeout=self.timeout).exec_command(cmd)
+                    return True
 
                 except SSHExecCommandFailed as exc:
                     output_msg = "Error: instance is not reachable by floating ip."
@@ -405,16 +406,13 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                     LOG.debug(exc)
                     self.fail("Connection fail")
 
-                self.verify_response_true(
-                    '0% packet loss' in output,
-                    'Instance is not rechable by floating ip')
             else:
                 self.fail('Wrong tests configurations, one from the next '
                           'parameters are empty controller_node_name or '
                           'controller_node_ip ')
 
         # TODO Allow configuration of execution and sleep duration.
-        return fuel_health.test.call_until_true(ping, 140, 3)
+        return fuel_health.test.call_until_true(ping, 40, 1)
 
      # def ping():
         #     proc = subprocess.Popen(cmd,
@@ -530,15 +528,6 @@ class SanityChecksTest(OfficialClientTest):
         networks = client.networks.list()
         return networks
 
-    def _list_ports(self, client):
-        ports = []
-        networks = client.networks.list()
-
-        if networks:
-            for net in networks:
-                ports.append(net.vpn_public_port)
-        return ports
-
 
 class SmokeChecksTest(OfficialClientTest):
     """
@@ -623,6 +612,7 @@ class SmokeChecksTest(OfficialClientTest):
     def _create_volume(self, client):
         display_name = rand_name('ost1_test-volume')
         volume = client.volumes.create(size=1, display_name=display_name)
+        self.set_resource(display_name, volume)
         self.volumes.append(volume)
         return volume
 
@@ -644,14 +634,15 @@ class SmokeChecksTest(OfficialClientTest):
         base_image_id = get_image_from_name()
         flavor_id = self._create_nano_flavor()
         server = client.servers.create(name, base_image_id, flavor_id)
+        self.set_resource(name, server)
         self.verify_response_body_content(server.name,
                                           name,
                                           "Instance creation failed")
-        self.set_resource(name, server)
         # The instance retrieved on creation is missing network
         # details, necessitating retrieval after it becomes active to
         # ensure correct details.
         server = client.servers.get(server.id)
+        #self.set_resource(name, server)
         return server
 
     def _attach_volume_to_instance(self, client, volume, instance):

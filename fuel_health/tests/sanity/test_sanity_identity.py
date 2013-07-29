@@ -32,7 +32,7 @@ class ServicesTestJSON(nmanager.SanityChecksTest):
     _interface = 'json'
 
     @attr(type=['sanity', 'fuel'])
-    @timed(6)
+    @timed(26)
     def test_list_services(self):
         """Services list availability
         Test checks that active services can be listed.
@@ -54,7 +54,7 @@ class ServicesTestJSON(nmanager.SanityChecksTest):
             len(services) >= 0, "Step 2 failed: " + fail_msg)
 
     @attr(type=['sanity', 'fuel'])
-    @timed(6)
+    @timed(26)
     def test_list_users(self):
         """User list availability
         Test checks that existing users can be listed.

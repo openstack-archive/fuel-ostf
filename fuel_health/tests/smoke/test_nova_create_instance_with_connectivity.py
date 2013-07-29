@@ -62,6 +62,10 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         cls.servers = []
         cls.floating_ips = []
 
+    @classmethod
+    def tearDownClass(cls):
+        super(TestNovaNetwork, cls).tearDownClass()
+
     @attr(type=['fuel', 'smoke'])
     @timed(25)
     def test_001_create_keypairs(self):
@@ -232,7 +236,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.floating_ips.append(floating_ip)
 
     @attr(type=['fuel', 'smoke'])
-    @timed(55)
+    @timed(155)
     def test_008_check_public_network_connectivity(self):
         """Network connectivity check through floating ip.
         Target component: Nova
