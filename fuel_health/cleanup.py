@@ -35,7 +35,6 @@ import fuel_health.manager
 import fuel_health.test
 
 
-
 LOG = logging.getLogger(__name__)
 
 
@@ -291,7 +290,6 @@ def cleanup():
             except Exception as exc:
                 LOG.debug(exc)
                 pass
-
 
     networks = manager._get_compute_client().networks.list()
     for network in networks:

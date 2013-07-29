@@ -25,6 +25,7 @@ from fuel_health import nmanager
 
 LOG = logging.getLogger(__name__)
 
+
 class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     """
@@ -73,7 +74,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         """
         try:
             self.keypairs[self.tenant_id] = self._create_keypair(
-                 self.compute_client)
+                self.compute_client)
         except Exception as e:
             LOG.error("Keypair creation failed: %s" % e)
             self.fail("Step 1 failed: Create keypair.")
@@ -127,7 +128,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                                       failed_step=3)
 
     @attr(type=['fuel', 'smoke'])
-    @timed(65)
+    @timed(150)
     def test_005_create_servers(self):
         """Instance creation
         Target component: Nova
@@ -136,7 +137,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             1. Create new keypair (if it`s nonexistent yet).
             2. Create new sec group (if it`s nonexistent yet).
             3. Create instance with usage of created sec group and keypair.
-        Duration: 50-65 s.
+        Duration: 50-150 s.
         """
         if not self.keypairs:
             try:
@@ -167,7 +168,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         except Exception as e:
             LOG.error("Server creation failed: %s" % e)
             self.fail("Step 3: create instance with usage of created "
-                       "security group and keypair failed.")
+                      "security group and keypair failed.")
         self.servers.append(server)
 
     @attr(type=['fuel', 'smoke'])
@@ -250,7 +251,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                         self.keypairs[self.tenant_id] = self._create_keypair(
                             self.compute_client)
                     except Exception as e:
-                        LOG.error("Keypair creation failed: %s" % e)
+                        LOG.debug("Keypair creation failed: %s" % e)
                         self.fail("Step 1 failed: Necessary resources"
                                   " for booting instance"
                                   " has not been created.")
@@ -259,7 +260,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                         self.security_groups[self.tenant_id] = self.\
                             _create_security_group(self.compute_client)
                     except Exception as e:
-                        LOG.error("Security group creation failed: %s" % e)
+                        LOG.debug("Security group creation failed: %s" % e)
                         self.fail("Step 2 failed: Necessary resources "
                                   "for booting instance"
                                   " has not been created.")
@@ -270,23 +271,24 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
                 try:
                     server = self._create_server(
-                        self.compute_client, name, keypair_name, security_groups)
+                        self.compute_client, name, keypair_name,
+                        security_groups)
                     self.servers.append(server)
                 except Exception as e:
-                    LOG.error("Server creation failed: %s" % e)
+                    LOG.debug("Server creation failed: %s" % e)
                     self.fail("Step 3 failed: create server.")
             for server in self.servers:
                 try:
                     floating_ip = self._create_floating_ip()
                 except Exception as e:
-                    LOG.error("Floating IP creation failed. %s" % e)
+                    LOG.debug("Floating IP creation failed. %s" % e)
                     self.fail("Step 4 failed: Create floating IP.")
                 try:
                     self._assign_floating_ip_to_instance(
                         self.compute_client, server, floating_ip)
                     self.floating_ips.append(floating_ip)
                 except Exception as e:
-                    LOG.error("Floating IP assignment failed: %s" % e)
+                    LOG.debug("Floating IP assignment failed: %s" % e)
                     self.fail("Step 5 failed: Assign floating IP "
                               "to an instance.")
 
@@ -299,5 +301,5 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                 ip_address = floating_ip.ip
                 self._check_vm_connectivity(ip_address, ssh_login, private_key)
         except Exception as e:
-            LOG.error("VM connectivity check failed: %s" % e)
+            LOG.debug("VM connectivity check failed: %s" % e)
             self.fail("Step 6 failed: Check VM connectivity.")

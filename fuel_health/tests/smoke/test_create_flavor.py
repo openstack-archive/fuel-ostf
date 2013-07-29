@@ -48,7 +48,7 @@ class FlavorsAdminTest(nmanager.SmokeChecksTest):
         fail_msg = ("Flavor was not created properly."
                     "Please, check Nova.")
         try:
-           flavor = self._create_flavors(self.compute_client, 225, 1)
+            flavor = self._create_flavors(self.compute_client, 225, 1)
         except Exception as exc:
             LOG.debug(exc)
             self.fail('Step 1 failed: ' + fail_msg)

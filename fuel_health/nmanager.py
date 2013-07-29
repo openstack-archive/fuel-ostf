@@ -170,9 +170,9 @@ class OfficialClientTest(fuel_health.test.TestCase):
                     LOG.info('42 flavor id already exists')
                     return flavor.id
 
-            flavor = cls.compute_client.flavors.create(name, 64, 1, 1, flavorid)
+            flavor = cls.compute_client.flavors.create(
+                name, 64, 1, 1, flavorid)
             return flavor.id
-
 
     @classmethod
     def tearDownClass(cls):
@@ -240,7 +240,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         if not self._enabled:
             self.skip(reason='Nova Networking not available')
 
-
     @classmethod
     def setUpClass(cls):
         super(NovaNetworkScenarioTest, cls).setUpClass()
@@ -260,7 +259,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         self.set_resource(kp_name, keypair)
         return keypair
 
-    def _create_security_group(self, client, namestart='ost1_test-secgroup-smoke-'):
+    def _create_security_group(
+            self, client, namestart='ost1_test-secgroup-smoke-'):
         # Create security group
         sg_name = rand_name(namestart)
         sg_desc = sg_name + " description"
@@ -306,7 +306,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def _create_network(self, label='ost1_test-network-smoke-'):
         n_label = rand_name(label)
         cidr = self.config.network.tenant_network_cidr
-        networks = self.compute_client.networks.create(label=n_label, cidr=cidr)
+        networks = self.compute_client.networks.create(
+            label=n_label, cidr=cidr)
         self.set_resource(n_label, networks)
         self.network.append(networks)
         self.verify_response_body_content(networks.label,
@@ -333,6 +334,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             'key_name': key_name,
             'security_groups': security_groups,
         }
+        self._create_nano_flavor()
         server = client.servers.create(name, base_image_id, 42,
                                        **create_kwargs)
         self.verify_response_body_content(server.name,
@@ -409,14 +411,16 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 def get_image_from_name():
     cfg = config.FuelConfig()
     image_name = cfg.compute.image_name
-    image_client = OfficialClientManager()._get_image_client()
+    image_client = OfficialClientManager()._get_compute_client()
     images = image_client.images.list()
+    LOG.debug(images)
     if images:
         for im in images:
+            LOG.debug(im.name)
             if im.name.strip().lower() == image_name.strip().lower():
                 return im.id
-            else:
-                raise exceptions.ImageFault
+    else:
+        raise exceptions.ImageFault
 
 
 class SanityChecksTest(OfficialClientTest):
@@ -491,18 +495,13 @@ class SanityChecksTest(OfficialClientTest):
         return networks
 
     def _list_ports(self, client):
-        ports  = []
+        ports = []
         networks = client.networks.list()
 
         if networks:
             for net in networks:
                 ports.append(net.vpn_public_port)
         return ports
-
-
-    @classmethod
-    def tearDownClass(cls):
-        super(SanityChecksTest, cls).tearDownClass()
 
 
 class SmokeChecksTest(OfficialClientTest):
@@ -533,64 +532,6 @@ class SmokeChecksTest(OfficialClientTest):
         cls.users = []
         cls.roles = []
         cls.volumes = []
-
-    def _list_instances(self, client):
-        instances = client.servers.list()
-        return instances
-
-    def _list_images(self, client):
-        images = client.images.list()
-        return images
-
-    def _list_volumes(self, client):
-        volumes = client.volumes.list(detailed=False)
-        return volumes
-
-    def _list_snapshots(self, client):
-        snapshots = client.volume_snapshots.list(detailed=False)
-        return snapshots
-
-    def _list_flavors(self, client):
-        flavors = client.flavors.list()
-        return flavors
-
-    def _list_limits(self, client):
-        limits = client.limits.get()
-        return limits
-
-    def _list_services(self, client):
-        services = client.services.list()
-        return services
-
-    def _list_users(self, client):
-        users = client.users.list()
-        return users
-
-    def _list_networks(self, client):
-        networks = client.networks.list()
-        return networks
-
-    def _list_ports(self, client):
-        ports  = []
-        networks = client.networks.list()
-
-        if networks:
-            for net in networks:
-                ports.append(net.vpn_public_port)
-        return ports
-
-    def _create_flavors(self, client, ram, disk, vcpus=1):
-        name = rand_name('ost1_test-flavor-')
-        flavorid = rand_int_id()
-        flavor = client.flavors.create(name, ram, disk, vcpus, flavorid)
-        self.flavors.append(flavor)
-        return flavor
-
-    @classmethod
-    def _clean_flavors(cls):
-        if cls.flavors:
-            for flav in cls.flavors:
-                cls.compute_client.flavors.delete(flav)
 
     def _create_flavors(self, client, ram, disk, vcpus=1):
         name = rand_name('ost1_test-flavor-')
@@ -665,17 +606,16 @@ class SmokeChecksTest(OfficialClientTest):
     def _create_server(self, client):
         name = rand_name('ost1_test-volume-instance')
         base_image_id = get_image_from_name()
-        server = client.servers.create(name, base_image_id, 42)
+        flavor_id = self._create_nano_flavor()
+        server = client.servers.create(name, base_image_id, flavor_id)
         self.verify_response_body_content(server.name,
                                           name,
                                           "Instance creation failed")
         self.set_resource(name, server)
-        self.status_timeout(client.servers, server.id, 'ACTIVE')
         # The instance retrieved on creation is missing network
         # details, necessitating retrieval after it becomes active to
         # ensure correct details.
         server = client.servers.get(server.id)
-        self.set_resource(name, server)
         return server
 
     def _attach_volume_to_instance(self, client, volume, instance):
@@ -693,7 +633,6 @@ class SmokeChecksTest(OfficialClientTest):
         except exceptions.NotFound:
             return True
         return False
-
 
     @classmethod
     def tearDownClass(cls):

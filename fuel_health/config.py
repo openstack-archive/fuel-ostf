@@ -38,10 +38,10 @@ IdentityGroup = [
                 default=False,
                 help="Set to True if using self-signed SSL certificates."),
     cfg.StrOpt('uri',
-               default='',
+               default='http://localhost/',
                help="Full URI of the OpenStack Identity API (Keystone), v2"),
     cfg.StrOpt('url',
-               default='',
+               default='http://localhost:5000/v2.0/',
                help="Dashboard Openstack url, v2"),
     cfg.StrOpt('uri_v3',
                help='Full URI of the OpenStack Identity API (Keystone), v3'),
@@ -53,15 +53,15 @@ IdentityGroup = [
                default='RegionOne',
                help="The identity region name to use."),
     cfg.StrOpt('admin_username',
-               default='admin',
+               default='nova',
                help="Administrative Username to use for"
                     "Keystone API requests."),
     cfg.StrOpt('admin_tenant_name',
-               default='admin',
+               default='service',
                help="Administrative Tenant name to use for Keystone API "
                     "requests."),
     cfg.StrOpt('admin_password',
-               default='admin',
+               default='nova',
                help="API key to use when authenticating as admin.",
                secret=True),
 ]
@@ -154,7 +154,7 @@ ComputeGroup = [
                default="TestVM",
                help="Valid secondary image reference to be used in tests."),
     cfg.IntOpt('flavor_ref',
-               default=1,
+               default=42,
                help="Valid primary flavor to use in tests."),
 ]
 
@@ -401,7 +401,7 @@ class NailgunConfig(object):
 
     def _parse_cluster_attributes(self):
         api_url = '/api/clusters/%s/attributes' % self.cluster_id
-        response = self.req_session.get(self.nailgun_url+api_url)
+        response = self.req_session.get(self.nailgun_url + api_url)
         LOG.info('RESPONSE %s STATUS %s' % (api_url, response.status_code))
         data = response.json()
         LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
@@ -412,7 +412,7 @@ class NailgunConfig(object):
 
     def _parse_nodes_cluster_id(self):
         api_url = '/api/nodes?clusters_id=%s' % self.cluster_id
-        response = self.req_session.get(self.nailgun_url+api_url)
+        response = self.req_session.get(self.nailgun_url + api_url)
         LOG.info('RESPONSE %s STATUS %s' % (api_url, response.status_code))
         data = response.json()
         controller_nodes = filter(lambda node: node['role'] == 'controller',
@@ -434,12 +434,12 @@ class NailgunConfig(object):
 
     def _parse_meta(self):
         api_url = '/api/clusters/%s' % self.cluster_id
-        data = self.req_session.get(self.nailgun_url+api_url).json()
+        data = self.req_session.get(self.nailgun_url + api_url).json()
         self.mode = data['mode']
 
     def _parse_networks_configuration(self):
         api_url = '/api/clusters/%s/network_configuration/' % self.cluster_id
-        data = self.req_session.get(self.nailgun_url+api_url).json()
+        data = self.req_session.get(self.nailgun_url + api_url).json()
         self.network.raw_data = data
 
     def _parse_ostf_api(self):
@@ -447,7 +447,7 @@ class NailgunConfig(object):
             will leave this
         """
         api_url = '/api/ostf/%s' % self.cluster_id
-        response = self.req_session.get(self.nailgun_url+api_url)
+        response = self.req_session.get(self.nailgun_url + api_url)
         data = response.json()
         self.identity.url = data['horizon_url'] + 'dashboard'
         self.identity.uri = data['keystone_url'] + 'v2.0/'
@@ -473,6 +473,4 @@ class NailgunConfig(object):
 
 
 def FuelConfig():
-    # if all(item in os.environ for item in (
-    #     'NAILGUN_HOST', 'NAILGUN_PORT', 'CLUSTER_ID')):
     return NailgunConfig()

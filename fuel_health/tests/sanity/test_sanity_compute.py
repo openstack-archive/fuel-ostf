@@ -27,7 +27,6 @@ class SanityComputeTest(nmanager.SanityChecksTest):
     """
     TestClass contains tests check base Compute functionality.
     """
-    _interface = 'json'
 
     @attr(type=['sanity', 'fuel'])
     @timed(6)
@@ -75,7 +74,6 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         self.verify_response_true(
             len(list_images_resp) >= 0, "Step 2 failed: " + fail_msg)
 
-
     @attr(type=['sanity', 'fuel'])
     @timed(6)
     def test_list_volumes(self):
@@ -101,7 +99,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
             len(list_volumes_resp) >= 0, "Step 2 failed: " + fail_msg)
 
     @attr(type=['sanity', 'fuel'])
-    @timed(6)
+    @timed(10)
     def test_list_snapshots(self):
         """Snapshots list availability
         Test checks that list of snapshots is available.
@@ -110,7 +108,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         Scenario:
             1. Request list of snapshots.
             2. Check response.
-        Duration: 1-6 s.
+        Duration: 1-10 s.
         """
         fail_msg = ('Snapshots list is unavailable. '
                     'Looks like something is broken in Nova or Cinder.')
@@ -123,7 +121,6 @@ class SanityComputeTest(nmanager.SanityChecksTest):
 
         self.verify_response_true(
             len(list_snapshots_resp) >= 0, "Step 2 failed: " + fail_msg)
-
 
     @attr(type=['sanity', 'fuel'])
     @timed(6)

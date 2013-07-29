@@ -41,7 +41,7 @@ class TestImageAction(nmanager.OfficialClientTest):
                             status)
 
     def _wait_for_image_status(self, image_id, status):
-        self.status_timeout(self.image_client.images, image_id, status)
+        self.status_timeout(self.compute_client.images, image_id, status)
 
     def _boot_image(self, image_id):
         name = rand_name('ost1_test-image')
@@ -73,10 +73,10 @@ class TestImageAction(nmanager.OfficialClientTest):
         snapshot_name = rand_name('ost1_test-snapshot-')
         create_image_client = self.compute_client.servers.create_image
         image_id = create_image_client(server, snapshot_name)
-        self.addCleanup(self.image_client.images.delete, image_id)
+        self.addCleanup(self.compute_client.images.delete, image_id)
         self._wait_for_server_status(server, 'ACTIVE')
-        self._wait_for_image_status(image_id, 'active')
-        snapshot_image = self.image_client.images.get(image_id)
+        self._wait_for_image_status(image_id, 'ACTIVE')
+        snapshot_image = self.compute_client.images.get(image_id)
         self.verify_response_body_content(
             snapshot_name, snapshot_image.name,
             msg="Looks like Glance service doesn`t work properly.")
@@ -120,6 +120,5 @@ class TestImageAction(nmanager.OfficialClientTest):
             # boot a second instance from the snapshot
             self._boot_image(snapshot_image_id)
         except Exception as e:
-            LOG.error("Booting second instance from the snapshot failed: "
-                "%s" %e)
+            LOG.error("Booting instance from the snapshot failed: %s" % e)
             self.fail("Step 4 failed: Boot second instance from the snapshot.")

@@ -50,7 +50,8 @@ class ServicesTestJSON(nmanager.SanityChecksTest):
         except Exception as exc:
             LOG.debug(exc)
             self.fail("Step 1 failed: " + fail_msg)
-        self.verify_response_true(len(services) >= 0, "Step 2 failed: " + fail_msg)
+        self.verify_response_true(
+            len(services) >= 0, "Step 2 failed: " + fail_msg)
 
     @attr(type=['sanity', 'fuel'])
     @timed(6)
@@ -71,5 +72,5 @@ class ServicesTestJSON(nmanager.SanityChecksTest):
         except Exception as exc:
             LOG.debug(exc)
             self.fail("Step 1 failed: " + fail_msg)
-        self.verify_response_true(len(users) >= 0, "Step 2 failed: " + fail_msg)
-
+        self.verify_response_true(
+            len(users) >= 0, "Step 2 failed: " + fail_msg)

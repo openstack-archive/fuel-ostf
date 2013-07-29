@@ -37,8 +37,11 @@ class VolumesTest(nmanager.SmokeChecksTest):
     def _wait_for_volume_status(self, volume_id, status):
         self.status_timeout(self.volume_client.volumes, volume_id, status)
 
+    def _wait_for_instance_status(self, server, status):
+        self.status_timeout(self.compute_client.servers, server.id, status)
+
     @attr(type=["fuel", "smoke"])
-    @timed(61)
+    @timed(100)
     def test_volume_create(self):
         """Volume creation
         Target component: Compute
@@ -54,7 +57,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
             8. Detach volume from instance.
             9. Check volume has "available" status.
             10. Delete volume.
-        Duration: 47.1-60.5 s.
+        Duration: 48-100 s.
         """
 
         msg_s1 = ('Volume is not created. Looks like '
@@ -80,19 +83,20 @@ class VolumesTest(nmanager.SmokeChecksTest):
         try:
             # create instance
             instance = self._create_server(self.compute_client)
+            self._wait_for_instance_status(instance, 'ACTIVE')
         except Exception as exc:
             LOG.debug(exc)
-            self.fail("Step 4 failed:" + "Instance creation failed."
+            self.fail("Step 4 failed:" + "Instance creation failed. "
                                          "Looks like something is "
                                          "broken in Compute")
 
         # Attach volume
         try:
-            attached_volume = self._attach_volume_to_instance(
+            self._attach_volume_to_instance(
                 self.volume_client.volumes, instance.id, volume)
         except Exception as exc:
             LOG.debug(exc)
-            self.fail('Step 5 failed: ' + "Volume attachment failed,"
+            self.fail('Step 5 failed: ' + "Volume attachment failed. "
                                           "Looks like something is "
                                           "broken in Cinder or Nova")
 
@@ -112,26 +116,29 @@ class VolumesTest(nmanager.SmokeChecksTest):
             LOG.info(volume_details)
         except Exception as exc:
             LOG.debug(exc)
-            self.fail('Step 7 failed:' + "Can not retrieve volume details,"
-                                         "Looks like something is broken in Cinder")
-
+            self.fail('Step 7 failed:' + "Can not retrieve volume "
+                                         "details. Looks like something is "
+                                         "broken in Cinder")
 
         # detach volume
         try:
             self._detach_volume(self.volume_client, volume)
         except Exception as exc:
             LOG.debug(exc)
-            self.fail('Step 8 failed:' + 'Can not detach volume,'
-                                         'Looks like something  is broken in Cinder')
+            self.fail('Step 8 failed:' + 'Can not detach volume. '
+                                         'Looks like something  is broken'
+                                         ' in Cinder')
         try:
             self._wait_for_volume_status(volume.id, 'available')
         except Exception as exc:
             LOG.debug(exc)
-            self.fail('Step 9 failed:' + 'Volume does not get available status,'
-                                         'Looks like something is broken in Cinder')
+            self.fail('Step 9 failed:' + 'Volume does not get available'
+                                         ' status. Looks like something is '
+                                         'broken in Cinder')
         try:
             self.volume_client.volumes.delete(volume)
         except Exception as exc:
             LOG.debug(exc)
-            self.fail('Step 10 failed: ' + 'Can not delete volume,'
-                                          'Looks like something is broken in Cinder')
+            self.fail('Step 10 failed: ' + 'Can not delete volume. '
+                                           'Looks like something is broken '
+                                           'in Cinder')
