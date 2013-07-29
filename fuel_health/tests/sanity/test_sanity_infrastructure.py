@@ -109,7 +109,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         """
         if len(self.computes):
             expected_output = "0% packet loss"
-            cmd = "ping 8.8.8.8 -c 1"
+            cmd = "ping 8.8.8.8 -c 1 -w 1"
             output = ''
             try:
                 output = SSHClient(self.computes[0],
@@ -119,9 +119,9 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                    timeout=self.timeout).exec_command(cmd)
             except SSHExecCommandFailed as exc:
                 LOG.debug(exc)
-                if ('1 packets transmitted' not in exc._error_string):
+                if ("exit status: 1" not in exc._error_string):
                     self.fail("Step 2 failed: ping command failed. "
-                              "Detail: " + exc._error_string)
+                              "Details: " + exc._error_string)
             except Exception as exc:
                 LOG.debug(exc)
                 self.fail("Step 1 failed: connection fail")
