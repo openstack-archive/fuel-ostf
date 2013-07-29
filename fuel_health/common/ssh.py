@@ -145,7 +145,7 @@ class Client(object):
         if 0 != exit_status:
             raise exceptions.SSHExecCommandFailed(
                 command=cmd, exit_status=exit_status,
-                strerror=''.join(err_data))
+                strerror=''.join(err_data).join(out_data))
         return ''.join(out_data)
 
     def test_connection_auth(self):

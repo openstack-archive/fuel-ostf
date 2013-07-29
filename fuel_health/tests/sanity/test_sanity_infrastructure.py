@@ -105,7 +105,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             3. Check all the packages were received.
             4. Execute host 8.8.8.8 from the controller.
             5. Check 8.8.8.8 host is resolved.
-        Duration: 1-6 s.
+        Duration: 1-12 s.
         """
         if len(self.computes):
             expected_output = "0% packet loss"
@@ -118,16 +118,18 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                    key_filename=self.key,
                                    timeout=self.timeout).exec_command(cmd)
             except SSHExecCommandFailed as exc:
-                output = "ping command failed."
                 LOG.debug(exc)
-                self.fail("Step 2 failed: " + output)
+                if ('1 packets transmitted' not in exc._error_string):
+                    self.fail("Step 2 failed: ping command failed. "
+                              "Detail: " + exc._error_string)
             except Exception as exc:
                 LOG.debug(exc)
                 self.fail("Step 1 failed: connection fail")
             LOG.debug(output)
             self.verify_response_true(expected_output in output,
                             'Step 3 failed: packets to 8.8.8.8 were lost, '
-                            'there is no Internet connection on the compute')
+                            'there is no Internet connection'
+                            ' on the compute node')
 
             expected_output = ("8.8.8.8.in-addr.arpa domain name pointer "
                                "google-public-dns-a.google.com.")
@@ -140,9 +142,11 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                    key_filename=self.key,
                                    timeout=self.timeout).exec_command(cmd)
             except SSHExecCommandFailed as exc:
-                output = "'host' command failed."
                 LOG.debug(exc)
-                self.fail("Step 4 failed: " + output)
+                if("Host 8.8.8.8.in-addr.arpa. not found" not in
+                       exc._error_string):
+                    self.fail("Step 4 failed: host command failed. "
+                              "Details: " + exc._error_string)
             except Exception as exc:
                 LOG.debug(exc)
                 self.fail("Step 4 failed: connection to the compute fail")
