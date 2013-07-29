@@ -436,8 +436,8 @@ class NailgunConfig(object):
         self.compute.public_ips = public_ips
         self.compute.controller_nodes = controller_ips
         self.compute.controller_nodes_name = conntroller_names
-        if cinder_nodes:
-            self.volume.cinder_node_exist = True
+        if not cinder_nodes:
+            self.volume.cinder_node_exist = False
 
     def _parse_meta(self):
         api_url = '/api/clusters/%s' % self.cluster_id
