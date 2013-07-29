@@ -246,7 +246,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             2. Create new sec group (if it`s nonexistent yet).
             3. Create instance with usage of created sec group and keypair.
             4. Check connectivity for all floating ips using ping command.
-        Duration: 40-55 s.
+        Duration: 40-155 s.
         """
         if not self.floating_ips:
             if not self.servers:
