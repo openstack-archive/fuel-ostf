@@ -414,7 +414,7 @@ class NailgunConfig(object):
         self.identity.admin_password = access_data['password']['value']
 
     def _parse_nodes_cluster_id(self):
-        api_url = '/api/nodes?clusters_id=%s' % self.cluster_id
+        api_url = '/api/nodes?cluster_id=%s' % self.cluster_id
         response = self.req_session.get(self.nailgun_url + api_url)
         LOG.info('RESPONSE %s STATUS %s' % (api_url, response.status_code))
         data = response.json()
