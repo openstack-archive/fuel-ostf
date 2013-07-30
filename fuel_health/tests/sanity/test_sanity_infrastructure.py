@@ -16,10 +16,8 @@
 
 import logging
 from nose.plugins.attrib import attr
-from nose.tools import timed
 
 from fuel_health.common.ssh import Client as SSHClient
-from fuel_health.exceptions import SSHExecCommandFailed
 from fuel_health import nmanager
 
 LOG = logging.getLogger(__name__)
@@ -54,7 +52,6 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         pass
 
     @attr(type=['sanity', 'fuel'])
-    @timed(50)
     def test_services_state(self):
         """Services execution monitoring
         Test all of the expected services are on.
@@ -69,32 +66,33 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         output_msg = ''
         cmd = 'nova-manage service list'
         if len(self.hostname) and len(self.host):
-
             try:
-                output = SSHClient(self.host[0],
-                                   self.usr, self.pwd,
-                                   key_filename=self.key,
-                                   timeout=self.timeout).exec_command(cmd)
-            except SSHExecCommandFailed as exc:
-                output_msg = "Error: 'nova-manage' command execution failed."
-                LOG.debug(exc)
-                self.fail("Step 2 failed: " + output_msg)
+                ssh_client = SSHClient(self.host[0],
+                                       self.usr, self.pwd,
+                                       key_filename=self.key,
+                                       timeout=self.timeout)
             except Exception as exc:
                 LOG.debug(exc)
-                self.fail("Step 1 failed: connection fail")
+                self.fail("Step 1 failed: connection failed. ")
+            output = self.verify(50, ssh_client.exec_command,
+                                 2, "'nova-manage' command"
+                                 " execution failed. ",
+                                 "nova-manage command execution",
+                                 cmd)
 
             output_msg = output_msg or (
-                'Some nova services has not been started')
+                'Some nova services have not been started')
             LOG.debug(output)
             self.verify_response_true(
                 u'XXX' not in output, 'Step 3 failed: ' + output_msg)
         else:
-            self.fail('Wrong tests configurations, one from the next '
-                      'parameters are empty controller_node_name or '
+            self.fail('Step 1 failed: Wrong tests configurations,'
+                      ' one of the next '
+                      'parameters is empty '
+                      'controller_node_name or '
                       'controller_node_ip ')
 
     @attr(type=['sanity', 'fuel'])
-    @timed(50)
     def test_dns_state(self):
         """DNS availability
         Test dns is available.
@@ -111,22 +109,25 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             cmd = "host " + self.host[0]
             output = ''
             try:
-                output = SSHClient(self.host[0],
-                                   self.usr,
-                                   self.pwd,
-                                   key_filename=self.key,
-                                   timeout=self.timeout).exec_command(cmd)
-            except SSHExecCommandFailed as exc:
-                output = "'host' command failed."
-                LOG.debug(exc)
-                self.fail("Step 2 failed: " + output)
+                ssh_client = SSHClient(self.host[0],
+                                       self.usr,
+                                       self.pwd,
+                                       key_filename=self.key,
+                                       timeout=self.timeout)
             except Exception as exc:
                 LOG.debug(exc)
                 self.fail("Step 1 failed: connection fail")
+            output = self.verify(50, ssh_client.exec_command, 2,
+                                 "'host' command failed. ",
+                                 "'host' command",
+                                 cmd)
+
             LOG.debug(output)
             self.verify_response_true(expected_output in output,
-                            'Step 3 failed: DNS name cannot be resolved')
+                                      'Step 3 failed: DNS name'
+                                      ' cannot be resolved')
         else:
-            self.fail('Wrong tests configurations, one from the next '
-                      'parameters are empty controller_node_name or '
+            self.fail('Step 1 failed: Wrong tests configurations,'
+                      ' one of the next parameters  empty '
+                      'controller_node_name or '
                       'controller_node_ip ')

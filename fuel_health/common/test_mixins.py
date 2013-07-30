@@ -1,6 +1,12 @@
 # Copyright 2013 Mirantis, Inc.
 # All Rights Reserved.
 
+import signal
+import time
+
+from fuel_health.common import log as logging
+
+LOG = logging.getLogger(__name__)
 
 class FuelTestAssertMixin(object):
     """
@@ -99,7 +105,7 @@ class FuelTestAssertMixin(object):
         if exp_content == act_content:
             return
         if failed_step:
-            failed_step_msg = ('Step %s failed. ' % str(failed_step))
+            failed_step_msg = ('Step %s failed: ' % str(failed_step))
         self.fail(''.join(failed_step_msg +
                           'Actual value - {actual_content}'.format(
                               actual_content=act_content), '\n', msg))
@@ -107,5 +113,66 @@ class FuelTestAssertMixin(object):
     def verify_response_true(self, resp, msg):
         if resp:
             return
-        self.fail(msg)
+        self.fail(msg + " Please, refer to OpenStack logs for more details.")
+
+    def verify(self, secs, func, step='', msg ='', action='', *args, **kwargs):
+        """
+        Arguments:
+        :secs: timeout time;
+        :func: function to be verified;
+        :step: number of test step;
+        :msg: message that will be displayed if an exception occurs;
+        :action: action that is performed by the method (e.g. "image listing").
+        """
+        try:
+            with timeout(secs, action):
+                result = func(*args, **kwargs)
+        except Exception as exc:
+            LOG.debug(exc)
+            if type(exc) is AssertionError:
+                msg = exc.message
+            self.fail("Step %s failed: " % step + msg + " Please,"
+                                                        " refer to OpenStack"
+                                                        " logs for more details.")
+        else:
+            return result
+
+
+
+class TimeOutError(Exception):
+    def __init__(self):
+        Exception.__init__(self)
+
+
+def _raise_TimeOut(sig, stack):
+    raise TimeOutError()
+
+
+class timeout(object):
+    """
+    Timeout context that will stop code running within context
+    if timeout is reached
+
+    >>with timeout(2):
+    ...     requests.get("http://msdn.com")
+    """
+    def __init__(self, timeout, action):
+        self.timeout = timeout
+        self.action = action
+
+    def __enter__(self):
+        signal.signal(signal.SIGALRM, _raise_TimeOut)
+        signal.alarm(self.timeout)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        signal.alarm(0)  # disable the alarm
+        if exc_type is not TimeOutError:
+            return False  # never swallow other exceptions
+        else:
+            msg = "Time limit exceeded while waiting" \
+                  " for {call} to be performed."\
+                .format(call=self.action)
+            raise AssertionError(msg)
+
+
 

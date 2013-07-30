@@ -18,7 +18,6 @@
 import logging
 
 from nose.plugins.attrib import attr
-from nose.tools import timed
 
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import nmanager
@@ -63,7 +62,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         cls.floating_ips = []
 
     @attr(type=['fuel', 'smoke'])
-    @timed(25)
     def test_001_create_keypairs(self):
         """Keypair creation
         Target component: Nova.
@@ -72,15 +70,14 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             1. Create a new keypair, check if it was created successfully.
         Duration: 10-25 s.
         """
-        try:
-            self.keypairs[self.tenant_id] = self._create_keypair(
-                self.compute_client)
-        except Exception as e:
-            LOG.error("Keypair creation failed: %s" % e)
-            self.fail("Step 1 failed: Create keypair.")
+        self.keypairs[self.tenant_id] = self.verify(25,
+                                                    self._create_keypair,
+                                                    1,
+                                                    'Keypair creation failed.',
+                                                    'keypair creation',
+                                                    self.compute_client)
 
     @attr(type=['fuel', 'smoke'])
-    @timed(25)
     def test_002_create_security_groups(self):
         """Security group creation
         Target component: Nova
@@ -89,15 +86,15 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             1. Create security group, check if it was created correctly.
         Duration: 2-25 s.
         """
-        try:
-            self.security_groups[self.tenant_id] = self._create_security_group(
-                self.compute_client)
-        except Exception as e:
-            LOG.error("Security group creation failed: %s" % e)
-            self.fail("Step 1 failed: Create security group.")
+        self.security_groups[self.tenant_id] = self.verify(
+            25,
+            self._create_security_group,
+            1,
+            "Security group couldn`t be created.",
+            'security group creation',
+            self.compute_client)
 
     @attr(type=['fuel', 'smoke'])
-    @timed(50)
     def test_004_check_networks(self):
         """Network parameters check
         Target component: Nova
@@ -108,27 +105,28 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             3. Check seen network ids equal to expected ones.
         Duration: 1-50 s.
         """
-        try:
-            seen_nets = self._list_networks()
-        except Exception as e:
-            LOG.error("Getting network list failed: %s" % e)
-            self.fail("Step 1 failed: Get list of networks.")
+        seen_nets = self.verify(
+            50,
+            self._list_networks,
+            1,
+            "List of networks is not available.",
+            'networks listing'
+        )
         seen_labels = [n.label for n in seen_nets]
         seen_ids = [n.id for n in seen_nets]
         for mynet in self.network:
             self.verify_response_body(seen_labels,
                                       mynet.label,
-                                      ('Network is not created '
+                                      ('Network was not created.'
                                        'properly'),
                                       failed_step=2)
             self.verify_response_body(seen_ids,
                                       mynet.id,
-                                      ('Network is not created'
+                                      ('Network was not created.'
                                        ' properly '),
                                       failed_step=3)
 
     @attr(type=['fuel', 'smoke'])
-    @timed(150)
     def test_005_create_servers(self):
         """Instance creation
         Target component: Nova
@@ -140,39 +138,42 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Duration: 50-150 s.
         """
         if not self.keypairs:
-            try:
-                self.keypairs[self.tenant_id] = self._create_keypair(
-                    self.compute_client)
-            except Exception as e:
-                LOG.error("Keypair creation failed: %s" % e)
-                self.fail("Step 1 failed: Necessary resources for "
-                          "booting instance"
-                          " has not been created")
+            self.keypairs[self.tenant_id] = self.verify(
+                25,
+                self._create_keypair,
+                1,
+                "Keypair couldn`t be created.",
+                "keypair creation",
+                self.compute_client
+            )
+
         if not self.security_groups:
-            try:
-                self.security_groups[self.tenant_id] = \
-                    self._create_security_group(self.compute_client)
-            except Exception as e:
-                LOG.error("Security group creation failed: %s" % e)
-                self.fail("Step 2 failed: Necessary resources for"
-                          " booting instance"
-                          " has not been created")
+            self.security_groups[self.tenant_id] = self.verify(
+                25,
+                self._create_security_group,
+                2,
+                "Security group couldn`t be created.",
+                'security group creation',
+                self.compute_client)
+
 
         name = rand_name('ost1_test-server-smoke-')
         keypair_name = self.keypairs[self.tenant_id].name
         security_groups = [self.security_groups[self.tenant_id].name]
 
-        try:
-            server = self._create_server(self.compute_client,
-                                         name, keypair_name, security_groups)
-        except Exception as e:
-            LOG.error("Server creation failed: %s" % e)
-            self.fail("Step 3: create instance with usage of created "
-                      "security group and keypair failed.")
+        server = self.verify(
+            200,
+            self._create_server,
+            3,
+            "Creating instance with usage of created security group"
+            "and keypair failed.",
+            'image creation',
+            self.compute_client, name, keypair_name, security_groups
+        )
+
         self.servers.append(server)
 
     @attr(type=['fuel', 'smoke'])
-    @timed(55)
     def test_007_assign_floating_ips(self):
         """Floating IP assignment
         Target component: Nova
@@ -185,54 +186,57 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             5. Assign floating ip to created instance.
         Duration: 40-55 s.
         """
-        if not self.servers:
-            if not self.keypairs:
-                try:
-                    self.keypairs[self.tenant_id] = self._create_keypair(
-                        self.compute_client)
-                except Exception as e:
-                    LOG.error("Keypair creation failed: %s" % e)
-                    self.fail("Step 1 failed: Necessary resources "
-                              "for booting instance"
-                              " has not been created.")
-            if not self.security_groups:
-                try:
-                    self.security_groups[self.tenant_id] = self.\
-                        _create_security_group(self.compute_client)
-                except Exception as e:
-                    LOG.error("Security group creation failed: %s" % e)
-                    self.fail("Step 2 failed: Necessary resources "
-                              "for booting instance"
-                              " has not been created.")
+        if not self.keypairs:
+            self.keypairs[self.tenant_id] = self.verify(
+                25,
+                self._create_keypair,
+                1,
+                "Keypair couldn`t be created.",
+                "keypair creation",
+                self.compute_client
+            )
+        if not self.security_groups:
+            self.security_groups[self.tenant_id] = self.verify(
+                25,
+                self._create_security_group,
+                2,
+                "Security group couldn`t be created.",
+                'security group creation',
+                self.compute_client)
 
             name = rand_name('ost1_test-server-smoke-')
             keypair_name = self.keypairs[self.tenant_id].name
             security_groups = [self.security_groups[self.tenant_id].name]
 
-            try:
-                server = self._create_server(self.compute_client,
-                            name, keypair_name, security_groups)
-            except Exception as e:
-                LOG.error("Server creation failed: %s" % e)
-                self.fail("Step 3 failed: Create server.")
-            self.servers.append(server)
-            try:
-                floating_ip = self._create_floating_ip()
-            except Exception as e:
-                LOG.error("Floating IP creation failed. %s" % e)
-                self.fail("Step 4 failed: Create floating IP.")
+            server = self.verify(
+                200,
+                self._create_server,
+                3,
+                "Server couldn`t be created.",
+                "server creation",
+                self.compute_client, name, keypair_name, security_groups
+            )
 
-            try:
-                self._assign_floating_ip_to_instance(
-                    self.compute_client, server, floating_ip)
-            except Exception as e:
-                LOG.error("Floating IP assignment failed: %s" % e)
-                self.fail("Step 5 failed: Assign floating "
-                          "IP to an instance.")
+            floating_ip = self.verify(
+                20,
+                self._create_floating_ip,
+                4,
+                "Floating IP couldn`t be created.",
+                'floating IP creation'
+            )
+
+            self.verify(
+                10,
+                self._assign_floating_ip_to_instance,
+                5,
+                "Floating IP couldn`t be assigned.",
+                'floating IP assignment',
+                self.compute_client, server, floating_ip
+            )
+
             self.floating_ips.append(floating_ip)
 
     @attr(type=['fuel', 'smoke'])
-    @timed(55)
     def test_008_check_public_network_connectivity(self):
         """Network connectivity check through floating ip.
         Target component: Nova
@@ -247,59 +251,68 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         if not self.floating_ips:
             if not self.servers:
                 if not self.keypairs:
-                    try:
-                        self.keypairs[self.tenant_id] = self._create_keypair(
-                            self.compute_client)
-                    except Exception as e:
-                        LOG.debug("Keypair creation failed: %s" % e)
-                        self.fail("Step 1 failed: Necessary resources"
-                                  " for booting instance"
-                                  " has not been created.")
+                    self.keypairs[self.tenant_id] = self.verify(
+                        25,
+                        self._create_keypair,
+                        1,
+                        "Keypair couldn`t be created.",
+                        "keypair creation",
+                        self.compute_client
+                    )
                 if not self.security_groups:
-                    try:
-                        self.security_groups[self.tenant_id] = self.\
-                            _create_security_group(self.compute_client)
-                    except Exception as e:
-                        LOG.debug("Security group creation failed: %s" % e)
-                        self.fail("Step 2 failed: Necessary resources "
-                                  "for booting instance"
-                                  " has not been created.")
+                    self.security_groups[self.tenant_id] = self.verify(
+                        25,
+                        self._create_security_group,
+                        2,
+                        "Security group couldn`t be created.",
+                        'security group creation',
+                        self.compute_client)
 
                 name = rand_name('ost1_test-server-smoke-')
                 keypair_name = self.keypairs[self.tenant_id].name
                 security_groups = [self.security_groups[self.tenant_id].name]
 
-                try:
-                    server = self._create_server(
-                        self.compute_client, name, keypair_name,
-                        security_groups)
-                    self.servers.append(server)
-                except Exception as e:
-                    LOG.debug("Server creation failed: %s" % e)
-                    self.fail("Step 3 failed: create server.")
+                server = self.verify(
+                    200,
+                    self._create_server,
+                    3,
+                    "Server couldn`t be created.",
+                    'server creation',
+                    self.compute_client, name, keypair_name,
+                    security_groups
+                )
+
             for server in self.servers:
-                try:
-                    floating_ip = self._create_floating_ip()
-                except Exception as e:
-                    LOG.debug("Floating IP creation failed. %s" % e)
-                    self.fail("Step 4 failed: Create floating IP.")
-                try:
-                    self._assign_floating_ip_to_instance(
-                        self.compute_client, server, floating_ip)
-                    self.floating_ips.append(floating_ip)
-                except Exception as e:
-                    LOG.debug("Floating IP assignment failed: %s" % e)
-                    self.fail("Step 5 failed: Assign floating IP "
-                              "to an instance.")
+                floating_ip = self.verify(
+                    20,
+                    self._create_floating_ip,
+                    4,
+                    "Floating IP couldn`t be created.",
+                    'floating IP creation'
+                )
+
+                self.verify(
+                    10,
+                    self._assign_floating_ip_to_instance,
+                    5,
+                    "Floating IP couldn`t be assigned.",
+                    "floating IP assignment",
+                    self.compute_client, server, floating_ip
+                )
 
         # The target login is assumed to have been configured for
         # key-based authentication by cloud-init.
         ssh_login = self.config.compute.image_ssh_user
         private_key = self.keypairs[self.tenant_id].private_key
-        try:
-            for floating_ip in self.floating_ips:
-                ip_address = floating_ip.ip
-                self._check_vm_connectivity(ip_address, ssh_login, private_key)
-        except Exception as e:
-            LOG.debug("VM connectivity check failed: %s" % e)
-            self.fail("Step 6 failed: Check VM connectivity.")
+        # try
+        for floating_ip in self.floating_ips:
+            ip_address = floating_ip.ip
+            self.verify(
+                30,
+                self._check_vm_connectivity,
+                6,
+                "VM connectivity doesn`t function properly.",
+                'VM connectivity checking',
+                ip_address, ssh_login, private_key
+            )
+            self._check_vm_connectivity(ip_address, ssh_login, private_key)

@@ -16,7 +16,6 @@
 
 import logging
 from nose.plugins.attrib import attr
-from nose.tools import timed
 
 
 from fuel_health.common.utils.data_utils import rand_name
@@ -55,7 +54,7 @@ class TestImageAction(nmanager.OfficialClientTest):
         self.addCleanup(self.compute_client.servers.delete, server)
         self.verify_response_body_content(
             name, server.name,
-            msg="Looks like Glance service doesn`t work properly.")
+            msg="Please, refer to OpenStack logs for more details.")
         self._wait_for_server_status(server, 'ACTIVE')
         server = client.servers.get(server)  # getting network information
         LOG.debug("server:%s" % server)
@@ -67,7 +66,7 @@ class TestImageAction(nmanager.OfficialClientTest):
         self.addCleanup(self.compute_client.keypairs.delete, self.keypair)
         self.verify_response_body_content(
             name, self.keypair.name,
-            msg="Looks like Nova service doesn`t work properly.")
+            msg="Please, refer to OpenStack logs for more details.")
 
     def _create_image(self, server):
         snapshot_name = rand_name('ost1_test-snapshot-')
@@ -79,13 +78,12 @@ class TestImageAction(nmanager.OfficialClientTest):
         snapshot_image = self.compute_client.images.get(image_id)
         self.verify_response_body_content(
             snapshot_name, snapshot_image.name,
-            msg="Looks like Glance service doesn`t work properly.")
+            msg="Please, refer to OpenStack logs for more details.")
         return image_id
 
     @attr(type=['sanity', 'fuel'])
-    @timed(310.0)
     def test_snapshot(self):
-        """Instance booting and snapshotting
+        """Launching instance
         Target component: Glance
 
         Scenario:
@@ -95,30 +93,24 @@ class TestImageAction(nmanager.OfficialClientTest):
             4. Boot another instance from created snapshot.
         Duration: 80-310 s.
         """
-        try:
-            # prepare for booting an instance
-            self._add_keypair()
-        except Exception as e:
-            LOG.error("Keypair creation failed: %s" % e)
-            self.fail("Step 1 failed: Create keypair.")
+        self.verify(25, self._add_keypair, 1,
+                    "Keypair couldn`t be created.",
+                    "keypair creation")
 
-        try:
-            # boot a instance and create a timestamp file in it
-            server = self._boot_image(nmanager.get_image_from_name())
-        except Exception as e:
-            LOG.error("Image booting failed: %s" % e)
-            self.fail("Step 2 failed: Boot default image.")
+        # boot an instance and create a timestamp file in it
+        server = self.verify(100, self._boot_image, 2,
+                             "Image couldn`t be booted.",
+                             "image booting",
+                             nmanager.get_image_from_name())
 
-        try:
-            # snapshot the instance
-            snapshot_image_id = self._create_image(server)
-        except Exception as e:
-            LOG.error("Making snapshot of an instance failed: %s" % e)
-            self.fail("Step 3 failed: Make snapshot of an instance.")
+        # snapshot the instance
+        snapshot_image_id = self.verify(100, self._create_image, 3,
+                                        "Making snapshot of an"
+                                        " instance failed.",
+                                        'snapshotting an instance',
+                                        server)
 
-        try:
-            # boot a second instance from the snapshot
-            self._boot_image(snapshot_image_id)
-        except Exception as e:
-            LOG.error("Booting instance from the snapshot failed: %s" % e)
-            self.fail("Step 4 failed: Boot second instance from the snapshot.")
+        self.verify(100, self._boot_image, 4,
+                    "Booting instance from the snapshot failed.",
+                    'booting instance from snapshot',
+                    snapshot_image_id)

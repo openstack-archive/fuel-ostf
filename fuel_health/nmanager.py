@@ -618,9 +618,9 @@ class SmokeChecksTest(OfficialClientTest):
         server = client.servers.get(server.id)
         return server
 
-    def _attach_volume_to_instance(self, client, volume, instance):
+    def _attach_volume_to_instance(self, volume, instance):
         device = '/dev/vdb'
-        attached_volume = client.attach(instance, volume, mountpoint=device)
+        attached_volume = self.volume_client.volumes.attach(volume, instance, mountpoint=device)
         return attached_volume
 
     def _detach_volume(self, client, volume):
