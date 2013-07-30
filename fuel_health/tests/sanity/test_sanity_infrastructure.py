@@ -28,15 +28,10 @@ LOG = logging.getLogger(__name__)
 class SanityInfrastructureTest(nmanager.SanityChecksTest):
     """TestClass contains tests check the whole OpenStack availability.
     Special requirements:
-            1. A controller's IP should be specified in
-                controller_nodes parameter of the config file.
-            2. The controller's domain name should be specified in
-                controller_nodes_name parameter of the config file.
-            3. SSH user credentials should be specified in
-                controller_node_ssh_user/password parameters
-                of the config file.
-            4. List of services are expected to be run should be specified in
-                enabled_services parameter of the config file.
+            1. A controller's IP should be specified.
+            2. A compute's IP should be specified.
+            3. SSH user credentials for the controller and the compute
+                should be specified controller_node_ssh_user parameter
     """
     _interface = 'json'
 

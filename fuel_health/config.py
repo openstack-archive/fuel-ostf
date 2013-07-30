@@ -428,7 +428,6 @@ class NailgunConfig(object):
         LOG.info("NAMES %s IPS %s" % (controller_ips, conntroller_names))
         self.compute.public_ips = public_ips
         self.compute.controller_nodes = controller_ips
-        self.compute.controller_nodes_name = conntroller_names
         if not cinder_nodes:
             self.volume.cinder_node_exist = False
 
