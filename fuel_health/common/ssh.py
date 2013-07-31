@@ -157,3 +157,38 @@ class Client(object):
             return False
 
         return True
+
+
+    def _get_ssh_connection_to_vm(self, usr, pwd, host, sleep=1.5, backoff=1.01):
+        """Returns an ssh connection to the specified host."""
+        _timeout = True
+        bsleep = sleep
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(
+            paramiko.AutoAddPolicy())
+        _start_time = time.time()
+
+        while not self._is_timed_out(self.timeout, _start_time):
+            try:
+                ssh.connect(host, username=usr,
+                            password=pwd)
+                _timeout = False
+                break
+            except (socket.error,
+                    paramiko.AuthenticationException):
+                time.sleep(bsleep)
+                bsleep *= backoff
+                continue
+        if _timeout:
+            raise exceptions.SSHTimeout(host=host,
+                                        user=usr,
+                                        password=pwd)
+        return ssh
+
+    def create_ssh_connection_to_vm(self):
+        connection = self._get_ssh_connection()
+        return connection
+
+    def close_ssh_connection(self, connection):
+        connection.close()
+

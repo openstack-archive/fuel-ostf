@@ -387,7 +387,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def _ping_ip_address(self, ip_address):
         def ping():
             cmd = 'ping -c1 -w1 ' + ip_address
-            time.sleep(40)
+            time.sleep(20)
 
             if len(self.host):
 
@@ -414,6 +414,32 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         # TODO Allow configuration of execution and sleep duration.
         return fuel_health.test.call_until_true(ping, 40, 1)
 
+    def _ping_ip_address_from_instance(self, ip_address):
+        def ping():
+            time.sleep(10)
+            if len(self.host):
+                try:
+                    ssh = SSHClient(self.host[0],
+                              self.usr, self.pwd,
+                              key_filename=self.key,
+                              timeout=self.timeout)._get_ssh_connection()
+                    ssh._get_ssh_connection_to_vm(usr='cirros', pwd='cubswin:)', host=ip_address).exec_command('ping -c1 -w1 8.8.8.8')
+
+                    return True
+                except SSHExecCommandFailed as exc:
+                    output_msg = "Error: instance is not reachable by floating ip."
+                    LOG.debug(exc)
+                    self.fail(output_msg)
+                except Exception as exc:
+                    LOG.debug(exc)
+                    self.fail("Connection fail")
+            else:
+                self.fail('Wrong tests configurations, one from the next '
+                          'parameters are empty controller_node_name or '
+                          'controller_node_ip ')
+
+        # TODO Allow configuration of execution and sleep duration.
+        return fuel_health.test.call_until_true(ping, 40, 1)
      # def ping():
         #     proc = subprocess.Popen(cmd,
         #                             stdout=subprocess.PIPE,
@@ -431,6 +457,12 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     #     return ssh_client.test_connection_auth()
     def _check_vm_connectivity(self, ip_address):
         self.assertTrue(self._ping_ip_address(ip_address),
+                        "Timed out waiting for %s to become "
+                        "reachable. Please, check Network "
+                        "configuration" % ip_address)
+
+    def _check_connectivity_from_vm(self, ip_address):
+        self.assertTrue(self._ping_ip_address_from_instance(ip_address),
                         "Timed out waiting for %s to become "
                         "reachable. Please, check Network "
                         "configuration" % ip_address)

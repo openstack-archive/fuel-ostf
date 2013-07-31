@@ -308,3 +308,78 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         except Exception as e:
             LOG.debug("VM connectivity check failed: %s" % e)
             self.fail("Step 6 failed: Check VM connectivity.")
+
+
+    @attr(type=['fuel', 'smoke'])
+    @timed(155)
+    def test_008_check_public_instance_connectivity_from_instace(self):
+        """Network connectivity check from instance through floating ip.
+        Target component: Nova
+
+        Scenario:
+            1. Create new keypair (if it`s nonexistent yet).
+            2. Create new sec group (if it`s nonexistent yet).
+            3. Create instance with usage of created sec group and keypair.
+            4. Ssh on instance from controller and execute ping command
+        Duration: 40-155 s.
+        """
+        if not self.floating_ips:
+            if not self.servers:
+                if not self.keypairs:
+                    try:
+                        self.keypairs[self.tenant_id] = self._create_keypair(
+                            self.compute_client)
+                    except Exception as e:
+                        LOG.debug("Keypair creation failed: %s" % e)
+                        self.fail("Step 1 failed: Necessary resources"
+                                  " for booting instance"
+                                  " has not been created.")
+                if not self.security_groups:
+                    try:
+                        self.security_groups[self.tenant_id] = self.\
+                            _create_security_group(self.compute_client)
+                    except Exception as e:
+                        LOG.debug("Security group creation failed: %s" % e)
+                        self.fail("Step 2 failed: Necessary resources "
+                                  "for booting instance"
+                                  " has not been created.")
+
+                name = rand_name('ost1_test-server-smoke-')
+                keypair_name = self.keypairs[self.tenant_id].name
+                security_groups = [self.security_groups[self.tenant_id].name]
+
+                try:
+                    server = self._create_server(
+                        self.compute_client, name, keypair_name,
+                        security_groups)
+                    self.servers.append(server)
+                except Exception as e:
+                    LOG.debug("Server creation failed: %s" % e)
+                    self.fail("Step 3 failed: create server.")
+            for server in self.servers:
+                try:
+                    floating_ip = self._create_floating_ip()
+                except Exception as e:
+                    LOG.debug("Floating IP creation failed. %s" % e)
+                    self.fail("Step 4 failed: Create floating IP.")
+                try:
+                    self._assign_floating_ip_to_instance(
+                        self.compute_client, server, floating_ip)
+                    self.floating_ips.append(floating_ip)
+                except Exception as e:
+                    LOG.debug("Floating IP assignment failed: %s" % e)
+                    self.fail("Step 5 failed: Assign floating IP "
+                              "to an instance.")
+
+        # The target login is assumed to have been configured for
+        # key-based authentication by cloud-init.
+        # ssh_login = self.config.compute.image_ssh_user
+        # private_key = self.keypairs[self.tenant_id].private_key
+        try:
+            for floating_ip in self.floating_ips:
+                ip_address = floating_ip.ip
+                LOG.debug(ip_address)
+                self._check_connectivity_from_vm(ip_address)
+        except Exception as e:
+            LOG.debug("VM connectivity check failed: %s" % e)
+            self.fail("Step 6 failed: Check VM connectivity.")
