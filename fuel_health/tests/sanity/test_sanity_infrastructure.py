@@ -82,13 +82,8 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             self.verify_response_true(
                 u'XXX' not in output, 'Step 3 failed: ' + output_msg)
         else:
-            self.fail('Wrong tests configurations, controller '
+            self.fail('Step 1 failed: Wrong tests configurations, controller '
                       'node ip is not specified')
-            self.fail('Step 1 failed: Wrong tests configurations,'
-                      ' one of the next '
-                      'parameters is empty '
-                      'controller_node_name or '
-                      'controller_node_ip ')
 
     @attr(type=['sanity', 'fuel'])
     def test_dns_state(self):
@@ -136,13 +131,9 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                  "'host' command failed. ",
                                  "'host' command",
                                  cmd)
-            
-           
+
             self.verify_response_true(expected_output in output,
                                       'Step 5 failed: DNS name'
                                       ' cannot be resolved')
         else:
-            self.fail('Step 1 failed: Wrong tests configurations,'
-                      ' one of the next parameters  empty '
-                      'controller_node_name or '
-                      'controller_node_ip ')
+            self.fail('Step 1 failed: There are no compute nodes')

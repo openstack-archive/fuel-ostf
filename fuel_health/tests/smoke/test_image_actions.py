@@ -105,7 +105,7 @@ class TestImageAction(nmanager.OfficialClientTest):
                     "keypair creation")
 
         # boot an instance and create a timestamp file in it
-        server = self.verify(100, self._boot_image, 2,
+        server = self.verify(180, self._boot_image, 2,
                              "Image couldn`t be booted.",
                              "image booting",
                              nmanager.get_image_from_name())
