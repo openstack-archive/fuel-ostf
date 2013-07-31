@@ -26,25 +26,20 @@ LOG = logging.getLogger(__name__)
 class SanityInfrastructureTest(nmanager.SanityChecksTest):
     """TestClass contains tests check the whole OpenStack availability.
     Special requirements:
-            1. A controller's IP should be specified in
-                controller_nodes parameter of the config file.
-            2. The controller's domain name should be specified in
-                controller_nodes_name parameter of the config file.
-            3. SSH user credentials should be specified in
-                controller_node_ssh_user/password parameters
-                of the config file.
-            4. List of services are expected to be run should be specified in
-                enabled_services parameter of the config file.
+            1. A controller's IP should be specified.
+            2. A compute's IP should be specified.
+            3. SSH user credentials for the controller and the compute
+                should be specified controller_node_ssh_user parameter
     """
     _interface = 'json'
 
     @classmethod
     def setUpClass(cls):
-        cls.host = cls.config.compute.controller_nodes
+        cls.controllers = cls.config.compute.controller_nodes
+        cls.computes = cls.config.compute.compute_nodes
         cls.usr = cls.config.compute.controller_node_ssh_user
         cls.pwd = cls.config.compute.controller_node_ssh_password
-        cls.key = cls.config.compute.controller_node_ssh_key_path
-        cls.hostname = cls.config.compute.controller_nodes_name
+        cls.key = cls.config.compute.path_to_private_key
         cls.timeout = cls.config.compute.ssh_timeout
 
     @classmethod
@@ -65,9 +60,10 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         """
         output_msg = ''
         cmd = 'nova-manage service list'
-        if len(self.hostname) and len(self.host):
+        if self.controllers:
+
             try:
-                ssh_client = SSHClient(self.host[0],
+                ssh_client = SSHClient(self.controllers[0],
                                        self.usr, self.pwd,
                                        key_filename=self.key,
                                        timeout=self.timeout)
@@ -86,6 +82,8 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             self.verify_response_true(
                 u'XXX' not in output, 'Step 3 failed: ' + output_msg)
         else:
+            self.fail('Wrong tests configurations, controller '
+                      'node ip is not specified')
             self.fail('Step 1 failed: Wrong tests configurations,'
                       ' one of the next '
                       'parameters is empty '
@@ -99,17 +97,19 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Target component: OpenStack
 
         Scenario:
-            1. Connect to a controller node via SSH.
-            2. Execute host command for the controller IP.
-            3. Check DNS name is resolved.
-        Duration: 1-6 s.
+            1. Connect to a compute node via SSH.
+            2. Execute ping 8.8.8.8 from the compute.
+            3. Check all the packages were received.
+            4. Execute host 8.8.8.8 from the controller.
+            5. Check 8.8.8.8 host is resolved.
+        Duration: 1-12 s.
         """
-        if len(self.hostname) and len(self.host):
-            expected_output = "in-addr.arpa domain name pointer"
-            cmd = "host " + self.host[0]
+        if self.computes:
+            expected_output = "0% packet loss"
+            cmd = "ping 8.8.8.8 -c 1 -w 1"
             output = ''
             try:
-                ssh_client = SSHClient(self.host[0],
+                ssh_client = SSHClient(self.computes[0],
                                        self.usr,
                                        self.pwd,
                                        key_filename=self.key,
@@ -118,13 +118,28 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                 LOG.debug(exc)
                 self.fail("Step 1 failed: connection fail")
             output = self.verify(50, ssh_client.exec_command, 2,
-                                 "'host' command failed. ",
-                                 "'host' command",
+                                 "'ping' command failed. ",
+                                 "'ping' command",
                                  cmd)
 
             LOG.debug(output)
+            self.verify_response_true(
+                expected_output in output,
+                'Step 3 failed: packets to 8.8.8.8 were lost, '
+                'there is no Internet connection'
+                ' on the compute node')
+
+            expected_output = ("8.8.8.8.in-addr.arpa domain name pointer "
+                               "google-public-dns-a.google.com.")
+            cmd = "host 8.8.8.8"
+            output = self.verify(50, ssh_client.exec_command, 4,
+                                 "'host' command failed. ",
+                                 "'host' command",
+                                 cmd)
+            
+           
             self.verify_response_true(expected_output in output,
-                                      'Step 3 failed: DNS name'
+                                      'Step 5 failed: DNS name'
                                       ' cannot be resolved')
         else:
             self.fail('Step 1 failed: Wrong tests configurations,'

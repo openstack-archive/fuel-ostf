@@ -34,6 +34,10 @@ class TestImageAction(nmanager.OfficialClientTest):
       - verify instance can be booted from snapshot.
     """
 
+    def setUp(self):
+        if not self.config.compute.compute_nodes:
+            self.fail('There are not any compute nodes')
+
     def _wait_for_server_status(self, server, status):
         self.status_timeout(self.compute_client.servers,
                             server.id,
@@ -51,7 +55,8 @@ class TestImageAction(nmanager.OfficialClientTest):
                                        image=image_id,
                                        flavor=flavor_id,
                                        key_name=self.keypair.name)
-        self.addCleanup(self.compute_client.servers.delete, server)
+        self.set_resource(name, server)
+        #self.addCleanup(self.compute_client.servers.delete, server)
         self.verify_response_body_content(
             name, server.name,
             msg="Please, refer to OpenStack logs for more details.")
@@ -63,6 +68,7 @@ class TestImageAction(nmanager.OfficialClientTest):
     def _add_keypair(self):
         name = rand_name('ost1_test-keypair-')
         self.keypair = self.compute_client.keypairs.create(name=name)
+        self.set_resource(name, self.keypair)
         self.addCleanup(self.compute_client.keypairs.delete, self.keypair)
         self.verify_response_body_content(
             name, self.keypair.name,
@@ -90,7 +96,8 @@ class TestImageAction(nmanager.OfficialClientTest):
             1. Create new keypair to boot an instance.
             2. Boot default image.
             3. Make snapshot of created server.
-            4. Boot another instance from created snapshot.
+            4. Delete instance from step 1
+            5. Boot another instance from created snapshot.
         Duration: 80-310 s.
         """
         self.verify(25, self._add_keypair, 1,
@@ -109,8 +116,14 @@ class TestImageAction(nmanager.OfficialClientTest):
                                         " instance failed.",
                                         'snapshotting an instance',
                                         server)
+        
+        self.verify(100, self.compute_client.servers.delete, 4,
+                    "Instance deletion failed.",
+                    'Instance deletion',
+                    server)
 
-        self.verify(100, self._boot_image, 4,
+            
+        self.verify(100, self._boot_image, 5,
                     "Booting instance from the snapshot failed.",
                     'booting instance from snapshot',
                     snapshot_image_id)

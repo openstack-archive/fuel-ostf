@@ -34,7 +34,7 @@ with warnings.catch_warnings():
 class Client(object):
 
     def __init__(self, host, username, password=None, timeout=300, pkey=None,
-                 channel_timeout=10, look_for_keys=False, key_filename=None):
+                 channel_timeout=70, look_for_keys=False, key_filename=None):
         self.host = host
         self.username = username
         self.password = password
@@ -145,7 +145,7 @@ class Client(object):
         if 0 != exit_status:
             raise exceptions.SSHExecCommandFailed(
                 command=cmd, exit_status=exit_status,
-                strerror=''.join(err_data))
+                strerror=''.join(err_data).join(out_data))
         return ''.join(out_data)
 
     def test_connection_auth(self):
@@ -157,3 +157,37 @@ class Client(object):
             return False
 
         return True
+
+    def _get_ssh_connection_to_vm(self, usr, pwd, host, sleep=1.5, backoff=1.01):
+        """Returns an ssh connection to the specified host."""
+        _timeout = True
+        bsleep = sleep
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(
+            paramiko.AutoAddPolicy())
+        _start_time = time.time()
+
+        while not self._is_timed_out(self.timeout, _start_time):
+            try:
+                ssh.connect(host, username=usr,
+                            password=pwd)
+                _timeout = False
+                break
+            except (socket.error,
+                    paramiko.AuthenticationException):
+                time.sleep(bsleep)
+                bsleep *= backoff
+                continue
+        if _timeout:
+            raise exceptions.SSHTimeout(host=host,
+                                        user=usr,
+                                        password=pwd)
+        return ssh
+
+    def create_ssh_connection_to_vm(self):
+        connection = self._get_ssh_connection()
+        return connection
+
+    def close_ssh_connection(self, connection):
+        connection.close()
+

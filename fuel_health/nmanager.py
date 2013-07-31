@@ -25,13 +25,17 @@ import glanceclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
 
-from fuel_health.common import ssh
+#from fuel_health.common import ssh
+import time
+from fuel_health.common.ssh import Client as SSHClient
+from fuel_health.exceptions import SSHExecCommandFailed
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health.common.utils.data_utils import rand_int_id
 from fuel_health import exceptions
 import fuel_health.manager
 import fuel_health.test
 from fuel_health import config
+
 
 
 LOG = logging.getLogger(__name__)
@@ -178,7 +182,8 @@ class OfficialClientTest(fuel_health.test.TestCase):
     def tearDownClass(cls):
         try:
             cls.compute_client.flavors.delete('42')
-        except Exception:
+        except Exception as exc:
+            LOG.debug(exc)
             pass
         while cls.os_resources:
             thing = cls.os_resources.pop()
@@ -193,7 +198,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 # If the resource is already missing, mission accomplished.
                 if e.__class__.__name__ == 'NotFound':
                     continue
-                raise
+                LOG.debug(e)
 
             def is_deletion_complete():
                 # Deletion testing is only required for objects whose
@@ -207,7 +212,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                     # called 'NotFound' if retrieval fails.
                     if e.__class__.__name__ == 'NotFound':
                         return True
-                    raise
+                    LOG.debug(e)
                 return False
 
             # Block until resource deletion has completed or timed-out
@@ -243,35 +248,42 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     @classmethod
     def setUpClass(cls):
         super(NovaNetworkScenarioTest, cls).setUpClass()
+        cls.host = cls.config.compute.controller_nodes
+        cls.usr = cls.config.compute.controller_node_ssh_user
+        cls.pwd = cls.config.compute.controller_node_ssh_password
+        cls.key = cls.config.compute.path_to_private_key
+        cls.timeout = cls.config.compute.ssh_timeout
         cls.tenant_id = cls.manager._get_identity_client(
             cls.config.identity.admin_username,
             cls.config.identity.admin_password,
             cls.config.identity.admin_tenant_name).tenant_id
         cls.network = []
         cls.floating_ips = []
+        cls.sec_group = []
 
     def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
         kp_name = rand_name(namestart)
         keypair = client.keypairs.create(kp_name)
+        self.set_resource(kp_name, keypair)
         self.verify_response_body_content(keypair.id,
                                           kp_name,
                                           'Keypair creation failed')
-        self.set_resource(kp_name, keypair)
         return keypair
 
     def _create_security_group(
-            self, client, namestart='ost1_test-secgroup-smoke-'):
+            self, client, namestart='ost1_test-secgroup-smoke-netw'):
         # Create security group
         sg_name = rand_name(namestart)
         sg_desc = sg_name + " description"
         secgroup = client.security_groups.create(sg_name, sg_desc)
+        self.set_resource(sg_name, secgroup)
         self.verify_response_body_content(secgroup.name,
                                           sg_name,
                                           "Security group creation failed")
         self.verify_response_body_content(secgroup.description,
                                           sg_desc,
                                           "Security group creation failed")
-        self.set_resource(sg_name, secgroup)
+
 
         # Add rules to the security group
 
@@ -297,7 +309,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         ]
         for ruleset in rulesets:
             try:
-                client.security_group_rules.create(secgroup.id, **ruleset)
+               client.security_group_rules.create(secgroup.id, **ruleset)
             except Exception:
                 self.fail("Failed to create rule in security group.")
 
@@ -320,7 +332,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         try:
             for net in cls.network:
                 cls.compute_client.networks.delete(net)
-        except Exception:
+        except Exception as exc:
+            LOG.debug(exc)
             pass
 
     def _list_networks(self):
@@ -352,7 +365,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def _create_floating_ip(self):
         floating_ips_pool = self.compute_client.floating_ip_pools.list()
 
-        if len(floating_ips_pool):
+        if floating_ips_pool:
             floating_ip = self.compute_client.floating_ips.create(
                 pool=floating_ips_pool[0].name)
 
@@ -371,32 +384,93 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     @classmethod
     def _clean_floating_is(cls):
         for ip in cls.floating_ips:
-            cls.compute_client.floating_ips.delete(ip)
+            try:
+                cls.compute_client.floating_ips.delete(ip)
+            except Exception as exc:
+                LOG.debug(exc)
+                pass
 
     def _ping_ip_address(self, ip_address):
-        cmd = ['ping', '-c1', '-w1', ip_address]
-
         def ping():
-            proc = subprocess.Popen(cmd,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
-            proc.wait()
-            if proc.returncode == 0:
-                return True
+            cmd = 'ping -c1 -w1 ' + ip_address
+            time.sleep(20)
+
+            if self.host:
+
+                try:
+                    SSHClient(self.host[0],
+                              self.usr, self.pwd,
+                              key_filename=self.key,
+                              timeout=self.timeout).exec_command(cmd)
+                    return True
+
+                except SSHExecCommandFailed as exc:
+                    output_msg = "Error: instance is not reachable by floating ip."
+                    LOG.debug(exc)
+                    self.fail(output_msg)
+                except Exception as exc:
+                    LOG.debug(exc)
+                    self.fail("Connection fail")
+
+            else:
+                self.fail('Wrong tests configurations, one from the next '
+                          'parameters are empty controller_node_name or '
+                          'controller_node_ip ')
 
         # TODO Allow configuration of execution and sleep duration.
         return fuel_health.test.call_until_true(ping, 40, 1)
 
-    def _is_reachable_via_ssh(self, ip_address, username, private_key,
-                              timeout=120):
-        ssh_client = ssh.Client(ip_address, username,
-                                pkey=private_key,
-                                timeout=timeout)
-        return ssh_client.test_connection_auth()
+    def _ping_ip_address_from_instance(self, ip_address):
+        def ping():
+            time.sleep(10)
+            if self.host:
+                try:
+                    ssh = SSHClient(self.host[0],
+                              self.usr, self.pwd,
+                              key_filename=self.key,
+                              timeout=self.timeout)
+                    ssh.exec_command('ping -c1 -w1 8.8.8.8')
+                    LOG.debug('Get ssh to controller')
+                    ssh._get_ssh_connection_to_vm(usr='cirros', pwd='cubswin:)', host=ip_address).exec_command('ping -c1 -w1 8.8.8.8')
+                    LOG.debug('Get ssh to instance')
+                    return True
+                except SSHExecCommandFailed as exc:
+                    output_msg = "Error: instance is not reachable by floating ip."
+                    LOG.debug(exc)
+                    self.fail(output_msg)
+                except Exception as exc:
+                    LOG.debug(exc)
+                    self.fail("Connection fail")
+            else:
+                self.fail('Wrong tests configurations, one from the next '
+                          'parameters are empty controller_node_name or '
+                          'controller_node_ip ')
 
-    def _check_vm_connectivity(self, ip_address, username, private_key,
-                               timeout=120):
+        # TODO Allow configuration of execution and sleep duration.
+        return fuel_health.test.call_until_true(ping, 40, 1)
+     # def ping():
+        #     proc = subprocess.Popen(cmd,
+        #                             stdout=subprocess.PIPE,
+        #                             stderr=subprocess.PIPE)
+        #     proc.wait()
+        #     if proc.returncode == 0:
+        #         return True
+        #
+
+    # def _is_reachable_via_ssh(self, ip_address, username, private_key,
+    #                           timeout=120):
+    #     ssh_client = SSHClient(ip_address, username,
+    #                             pkey=private_key,
+    #                             timeout=timeout)
+    #     return ssh_client.test_connection_auth()
+    def _check_vm_connectivity(self, ip_address):
         self.assertTrue(self._ping_ip_address(ip_address),
+                        "Timed out waiting for %s to become "
+                        "reachable. Please, check Network "
+                        "configuration" % ip_address)
+
+    def _check_connectivity_from_vm(self, ip_address):
+        self.assertTrue(self._ping_ip_address_from_instance(ip_address),
                         "Timed out waiting for %s to become "
                         "reachable. Please, check Network "
                         "configuration" % ip_address)
@@ -458,6 +532,10 @@ class SanityChecksTest(OfficialClientTest):
         cls.network = []
         cls.floating_ips = []
 
+    @classmethod
+    def tearDownClass(cls):
+        pass
+
     def _list_instances(self, client):
         instances = client.servers.list()
         return instances
@@ -493,15 +571,6 @@ class SanityChecksTest(OfficialClientTest):
     def _list_networks(self, client):
         networks = client.networks.list()
         return networks
-
-    def _list_ports(self, client):
-        ports = []
-        networks = client.networks.list()
-
-        if networks:
-            for net in networks:
-                ports.append(net.vpn_public_port)
-        return ports
 
 
 class SmokeChecksTest(OfficialClientTest):
@@ -544,7 +613,11 @@ class SmokeChecksTest(OfficialClientTest):
     def _clean_flavors(cls):
         if cls.flavors:
             for flav in cls.flavors:
-                cls.compute_client.flavors.delete(flav)
+                try:
+                    cls.compute_client.flavors.delete(flav)
+                except Exception as exc:
+                    LOG.debug(exc)
+                    pass
 
     def _create_tenant(self, client):
         name = rand_name('ost1_test-tenant-')
@@ -556,7 +629,11 @@ class SmokeChecksTest(OfficialClientTest):
     def _clean_tenants(cls):
         if cls.tenants:
             for ten in cls.tenants:
-                cls.identity_client.tenants.delete(ten)
+                try:
+                    cls.identity_client.tenants.delete(ten)
+                except Exception as exc:
+                    LOG.debug(exc)
+                    pass
 
     def _create_user(self, client, tenant_id):
         password = "123456"
@@ -570,7 +647,11 @@ class SmokeChecksTest(OfficialClientTest):
     def _clean_users(cls):
         if cls.users:
             for user in cls.users:
-                cls.identity_client.users.delete(user)
+                try:
+                    cls.identity_client.users.delete(user)
+                except Exception as exc:
+                    LOG.debug(exc)
+                    pass
 
     def _create_role(self, client):
         name = rand_name('ost1_test-role-')
@@ -582,11 +663,16 @@ class SmokeChecksTest(OfficialClientTest):
     def _clean_roles(cls):
         if cls.roles:
             for role in cls.roles:
-                cls.identity_client.roles.delete(role)
+                try:
+                    cls.identity_client.roles.delete(role)
+                except Exception as exc:
+                    LOG.debug(exc)
+                    pass
 
     def _create_volume(self, client):
         display_name = rand_name('ost1_test-volume')
         volume = client.volumes.create(size=1, display_name=display_name)
+        self.set_resource(display_name, volume)
         self.volumes.append(volume)
         return volume
 
@@ -608,14 +694,15 @@ class SmokeChecksTest(OfficialClientTest):
         base_image_id = get_image_from_name()
         flavor_id = self._create_nano_flavor()
         server = client.servers.create(name, base_image_id, flavor_id)
+        self.set_resource(name, server)
         self.verify_response_body_content(server.name,
                                           name,
                                           "Instance creation failed")
-        self.set_resource(name, server)
         # The instance retrieved on creation is missing network
         # details, necessitating retrieval after it becomes active to
         # ensure correct details.
         server = client.servers.get(server.id)
+        #self.set_resource(name, server)
         return server
 
     def _attach_volume_to_instance(self, volume, instance):

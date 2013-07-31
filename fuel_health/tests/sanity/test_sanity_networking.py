@@ -47,23 +47,3 @@ class NetworksTest(nmanager.SanityChecksTest):
         self.verify_response_true(len(networks) >= 0,
                                   'Step 2 failed:' + fail_msg)
 
-    @attr(type=['sanity', 'fuel'])
-    def test_list_ports(self):
-        """Ports availability
-        Test checks that existing ports can be listed.
-        Target component: Nova Networking.
-
-        Scenario:
-            1. Request list of ports.
-            2. Check response.
-        Duration: 1-6 s.
-        """
-        fail_msg = 'Ports list is unavailable. '
-
-        ports = self.verify(20, self._list_ports, 1,
-                            fail_msg,
-                            "ports listing",
-                            self.compute_client)
-
-        self.verify_response_true(
-            len(ports) >= 0, 'Step 2 failed:' + fail_msg)
