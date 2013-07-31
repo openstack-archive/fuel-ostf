@@ -16,7 +16,6 @@
 
 import logging
 from nose.plugins.attrib import attr
-from nose.tools import timed
 
 from fuel_health import nmanager
 
@@ -29,7 +28,6 @@ class NetworksTest(nmanager.SanityChecksTest):
     """
 
     @attr(type=['sanity', 'fuel'])
-    @timed(6)
     def test_list_networks(self):
         """Networks availability
         Test checks that available networks can be listed.
@@ -40,13 +38,11 @@ class NetworksTest(nmanager.SanityChecksTest):
             2. Check response.
         Duration: 1-6 s.
         """
-        fail_msg = ("Network list is unavailable. "
-                    "Looks like something is broken in Network Networking")
-        try:
-            networks = self._list_networks(self.compute_client)
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail(fail_msg)
+        fail_msg = "Network list is unavailable. "
+        networks = self.verify(20, self._list_networks, 1,
+                               fail_msg,
+                               "networks listing",
+                               self.compute_client)
 
         self.verify_response_true(len(networks) >= 0,
                                   'Step 2 failed:' + fail_msg)

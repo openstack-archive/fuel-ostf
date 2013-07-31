@@ -393,7 +393,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def _ping_ip_address(self, ip_address):
         def ping():
             cmd = 'ping -c1 -w1 ' + ip_address
-            time.sleep(20)
+            time.sleep(30)
 
             if self.host:
 
@@ -422,14 +422,14 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def _ping_ip_address_from_instance(self, ip_address):
         def ping():
-            time.sleep(10)
+            time.sleep(30)
             if self.host:
                 try:
                     ssh = SSHClient(self.host[0],
                               self.usr, self.pwd,
                               key_filename=self.key,
                               timeout=self.timeout)
-                    ssh.exec_command('ping -c1 -w1 8.8.8.8')
+                    #ssh.exec_command('ping -c1 -w1 8.8.8.8')
                     LOG.debug('Get ssh to controller')
                     ssh._get_ssh_connection_to_vm(usr='cirros', pwd='cubswin:)', host=ip_address).exec_command('ping -c1 -w1 8.8.8.8')
                     LOG.debug('Get ssh to instance')
@@ -705,9 +705,9 @@ class SmokeChecksTest(OfficialClientTest):
         #self.set_resource(name, server)
         return server
 
-    def _attach_volume_to_instance(self, client, volume, instance):
+    def _attach_volume_to_instance(self, volume, instance):
         device = '/dev/vdb'
-        attached_volume = client.attach(instance, volume, mountpoint=device)
+        attached_volume = self.volume_client.volumes.attach(volume, instance, mountpoint=device)
         return attached_volume
 
     def _detach_volume(self, client, volume):

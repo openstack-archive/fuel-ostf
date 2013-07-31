@@ -18,7 +18,6 @@ import logging
 
 import requests
 from nose.plugins.attrib import attr
-from nose.tools import timed
 
 from fuel_health import nmanager
 
@@ -36,7 +35,6 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
     _interface = 'json'
 
     @attr(type=["fuel", "smoke"])
-    @timed(31)
     def test_create_user(self):
         """User creation and authentication in Horizon.
         Target components: Nova, Keystone
@@ -55,39 +53,32 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
         Duration: 1-31 s.
         """
         # Create a tenant:
-        msg_s1 = ('Tenant creation failure, please, '
-                  'check Keystone configuration ')
-        try:
-            tenant = self._create_tenant(self.identity_client)
+        msg_s1 = 'Tenant creation failure. '
 
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail("Step 1 failed: " + msg_s1)
+        tenant = self.verify(20, self._create_tenant, 1,
+            msg_s1, 'tenant creation', self.identity_client)
 
         self.verify_response_true(
             tenant.name.startswith('ost1_test'),
             "Step 2 failed: " + msg_s1)
 
         # Create a user:
-        msg_s3 = "Can't create a user. Please, check Keystone service"
-        try:
-            user = self._create_user(self.identity_client, tenant.id)
+        msg_s3 = "Can't create a user."
 
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail("Step 3 failed: " + msg_s3)
+        user = self.verify(20, self._create_user, 3, msg_s3,
+                           'user creation', self.identity_client,
+                           tenant.id)
 
         self.verify_response_true(
             user.name.startswith('ost1_test'),
             'Step 4 failed: ' + msg_s3)
 
-        msg_s5 = "User role creation fails. Please, check Keystone service"
+        msg_s5 = "User role creation fails. "
 
-        try:
-            role = self._create_role(self.identity_client)
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail("Step 5 failed: " + msg_s5)
+        role = self.verify(20, self._create_role,
+                           5, msg_s5,
+                           'user role creation',
+                           self.identity_client)
 
         self.verify_response_true(
             role.name.startswith('ost1_test'),
@@ -95,14 +86,15 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
 
         # Authenticate with created user:
         password = '123456'
-        msg_s7 = "Can not get auth token, check Keystone service"
-        try:
-            auth = self.identity_client.tokens.authenticate(
-                username=user.name, password=password, tenant_id=tenant.id,
-                tenant_name=tenant.name)
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail("Step 7 failed: " + msg_s7)
+        msg_s7 = "Can not get auth token."
+
+        auth = self.verify(40, self.identity_client.tokens.authenticate,
+                           7, msg_s7,
+                           'authentication',
+                           username=user.name,
+                           password=password,
+                           tenant_id=tenant.id,
+                           tenant_name=tenant.name)
 
         self.verify_response_true(auth, 'Step 8 failed: ' + msg_s7)
 
@@ -121,7 +113,9 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                                    headers=dict(Referer=url))
                 self.verify_response_status(
                     resp.status_code,
-                    msg="Verify request was successful.", failed_step=9)
+                    msg="Verify request was successful."
+                        "Please, refer to OpenStack logs for more details.",
+                    failed_step=9)
             else:
                 csrftoken = client.cookies['csrftoken']
                 login_data = dict(username=user.name,
@@ -132,8 +126,9 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                                    headers=dict(Referer=url))
                 self.verify_response_status(
                     resp.status_code,
-                    msg="Verify request was successful.",
+                    msg="Verify request was successful."
+                    "Please, refer to OpenStack logs for more details.",
                     failed_step=9)
         except Exception:
-            self.fail("Step 10 failed: Can not auth in Horizon, "
-                      "please check Horizon is alive")
+            self.fail("Step 10 failed: Can not auth in Horizon. "
+                      "Please, refer to OpenStack logs for more details.")

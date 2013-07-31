@@ -16,7 +16,6 @@
 
 import logging
 from nose.plugins.attrib import attr
-from nose.tools import timed
 
 from fuel_health import nmanager
 
@@ -29,7 +28,6 @@ class SanityComputeTest(nmanager.SanityChecksTest):
     """
 
     @attr(type=['sanity', 'fuel'])
-    @timed(6)
     def test_list_instances(self):
         """Instances list availability
         Test checks that list of instances is available.
@@ -39,20 +37,15 @@ class SanityComputeTest(nmanager.SanityChecksTest):
             2. Check response.
         Duration: 1-6 s.
         """
-        fail_msg = ('Servers list is unavailable. '
-                    'Looks like something is broken in Nova.')
-        try:
-            list_instance_resp = self._list_instances(
-                self.compute_client)
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail("Step 1 failed: " + fail_msg)
+        fail_msg = 'Servers list is unavailable. '
+        list_instance_resp = self.verify(20, self._list_instances,
+                                         1, fail_msg, "instances listing",
+                                         self.compute_client)
 
         self.verify_response_true(
             len(list_instance_resp) >= 0, "Step 2 failed: " + fail_msg)
 
     @attr(type=['sanity', 'fuel'])
-    @timed(8)
     def test_list_images(self):
         """Images list availability
         Test checks that list of images is available.
@@ -62,20 +55,15 @@ class SanityComputeTest(nmanager.SanityChecksTest):
             2. Check response.
         Duration: 1-8 s.
         """
-        fail_msg = ('Images list is unavailable. '
-                    'Looks like something is broken in Nova or Glance.')
-        try:
-            list_images_resp = self._list_images(
-                self.compute_client)
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail("Step 1 failed: " + fail_msg)
+        fail_msg = 'Images list is unavailable. '
+        list_images_resp = self.verify(20, self._list_images,
+                                       1, fail_msg, "images listing",
+                                       self.compute_client)
 
         self.verify_response_true(
             len(list_images_resp) >= 0, "Step 2 failed: " + fail_msg)
 
     @attr(type=['sanity', 'fuel'])
-    @timed(6)
     def test_list_volumes(self):
         """Volumes list availability
         Test checks that list of volumes is available.
@@ -86,20 +74,15 @@ class SanityComputeTest(nmanager.SanityChecksTest):
             2. Check response.
         Duration: 1-6 s.
         """
-        fail_msg = ('Volumes list is unavailable. '
-                    'Looks like something is broken in Nova or Cinder.')
-        try:
-            list_volumes_resp = self._list_volumes(
-                self.volume_client)
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail("Step 1 failed: " + fail_msg)
+        fail_msg = 'Volumes list is unavailable. '
+        list_volumes_resp = self.verify(20, self._list_volumes,
+                                        1, fail_msg, "volumes listing",
+                                        self.volume_client)
 
         self.verify_response_true(
             len(list_volumes_resp) >= 0, "Step 2 failed: " + fail_msg)
 
     @attr(type=['sanity', 'fuel'])
-    @timed(10)
     def test_list_snapshots(self):
         """Snapshots list availability
         Test checks that list of snapshots is available.
@@ -110,20 +93,14 @@ class SanityComputeTest(nmanager.SanityChecksTest):
             2. Check response.
         Duration: 1-10 s.
         """
-        fail_msg = ('Snapshots list is unavailable. '
-                    'Looks like something is broken in Nova or Cinder.')
-        try:
-            list_snapshots_resp = self._list_snapshots(
-                self.volume_client)
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail("Step 1 failed: " + fail_msg)
-
+        fail_msg = 'Snapshots list is unavailable. '
+        list_snapshots_resp = self.verify(20, self._list_snapshots,
+                                          1, fail_msg, "snapshots listing",
+                                          self.volume_client)
         self.verify_response_true(
             len(list_snapshots_resp) >= 0, "Step 2 failed: " + fail_msg)
 
     @attr(type=['sanity', 'fuel'])
-    @timed(6)
     def test_list_flavors(self):
         """Flavors list availability
         Test checks that list of flavors is available.
@@ -134,20 +111,15 @@ class SanityComputeTest(nmanager.SanityChecksTest):
             2. Check response.
         Duration: 1-6 s.
         """
-        fail_msg = ('Flavors list is unavailable. '
-                    'Looks like something is broken in Nova.')
-        try:
-            list_flavors_resp = self._list_flavors(
-                self.compute_client)
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail("Step 1 failed: " + fail_msg)
+        fail_msg = 'Flavors list is unavailable. '
+        list_flavors_resp = self.verify(30, self._list_flavors,
+                                        1, fail_msg, "flavors listing",
+                                        self.compute_client)
 
         self.verify_response_true(
             len(list_flavors_resp) >= 0, "Step 2 failed: " + fail_msg)
 
     @attr(type=['sanity', 'fuel'])
-    @timed(6)
     def test_list_rate_limits(self):
         """Limits list availability
         Test checks that list of absolute limits is available.
@@ -158,15 +130,11 @@ class SanityComputeTest(nmanager.SanityChecksTest):
             2. Check response.
         Duration: 2-6 s.
         """
-        fail_msg = ('Limits list is unavailable. '
-                    'Looks like something is broken in Nova.')
-        try:
-            list_limits_resp = self._list_limits(
-                self.compute_client)
+        fail_msg = 'Limits list is unavailable. '
 
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail("Step 1 failed: " + fail_msg)
+        list_limits_resp = self.verify(20, self._list_limits,
+                                       1, fail_msg, "limits listing",
+                                       self.compute_client)
 
         self.verify_response_true(
             list_limits_resp, "Step 2 failed: " + fail_msg)

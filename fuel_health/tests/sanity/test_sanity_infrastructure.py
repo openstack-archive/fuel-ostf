@@ -16,10 +16,8 @@
 
 import logging
 from nose.plugins.attrib import attr
-from nose.tools import timed
 
 from fuel_health.common.ssh import Client as SSHClient
-from fuel_health.exceptions import SSHExecCommandFailed
 from fuel_health import nmanager
 
 LOG = logging.getLogger(__name__)
@@ -49,7 +47,6 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         pass
 
     @attr(type=['sanity', 'fuel'])
-    @timed(50)
     def test_services_state(self):
         """Services execution monitoring
         Test all of the expected services are on.
@@ -66,29 +63,29 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         if self.controllers:
 
             try:
-                output = SSHClient(self.controllers[0],
-                                   self.usr, self.pwd,
-                                   key_filename=self.key,
-                                   timeout=self.timeout).exec_command(cmd)
-            except SSHExecCommandFailed as exc:
-                output_msg = "Error: 'nova-manage' command execution failed."
-                LOG.debug(exc)
-                self.fail("Step 2 failed: " + output_msg)
+                ssh_client = SSHClient(self.controllers[0],
+                                       self.usr, self.pwd,
+                                       key_filename=self.key,
+                                       timeout=self.timeout)
             except Exception as exc:
                 LOG.debug(exc)
-                self.fail("Step 1 failed: connection fail")
+                self.fail("Step 1 failed: connection failed. ")
+            output = self.verify(50, ssh_client.exec_command,
+                                 2, "'nova-manage' command"
+                                 " execution failed. ",
+                                 "nova-manage command execution",
+                                 cmd)
 
             output_msg = output_msg or (
-                'Some nova services has not been started')
+                'Some nova services have not been started')
             LOG.debug(output)
             self.verify_response_true(
                 u'XXX' not in output, 'Step 3 failed: ' + output_msg)
         else:
-            self.fail('Wrong tests configurations, controller '
+            self.fail('Step 1 failed: Wrong tests configurations, controller '
                       'node ip is not specified')
 
     @attr(type=['sanity', 'fuel'])
-    @timed(50)
     def test_dns_state(self):
         """DNS availability
         Test dns is available.
@@ -107,19 +104,19 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             cmd = "ping 8.8.8.8 -c 1 -w 1"
             output = ''
             try:
-                output = SSHClient(self.computes[0],
-                                   self.usr,
-                                   self.pwd,
-                                   key_filename=self.key,
-                                   timeout=self.timeout).exec_command(cmd)
-            except SSHExecCommandFailed as exc:
-                LOG.debug(exc)
-                if "exit status: 1" not in exc._error_string:
-                    self.fail("Step 2 failed: ping command failed. "
-                              "Details: " + exc._error_string)
+                ssh_client = SSHClient(self.computes[0],
+                                       self.usr,
+                                       self.pwd,
+                                       key_filename=self.key,
+                                       timeout=self.timeout)
             except Exception as exc:
                 LOG.debug(exc)
                 self.fail("Step 1 failed: connection fail")
+            output = self.verify(50, ssh_client.exec_command, 2,
+                                 "'ping' command failed. ",
+                                 "'ping' command",
+                                 cmd)
+
             LOG.debug(output)
             self.verify_response_true(
                 expected_output in output,
@@ -130,24 +127,13 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             expected_output = ("8.8.8.8.in-addr.arpa domain name pointer "
                                "google-public-dns-a.google.com.")
             cmd = "host 8.8.8.8"
-            output = ''
-            try:
-                output = SSHClient(self.computes[0],
-                                   self.usr,
-                                   self.pwd,
-                                   key_filename=self.key,
-                                   timeout=self.timeout).exec_command(cmd)
-            except SSHExecCommandFailed as exc:
-                LOG.debug(exc)
-                if("Host 8.8.8.8.in-addr.arpa. not found" not in
-                       exc._error_string):
-                    self.fail("Step 4 failed: host command failed. "
-                              "Details: " + exc._error_string)
-            except Exception as exc:
-                LOG.debug(exc)
-                self.fail("Step 4 failed: connection to the compute fail")
-            LOG.debug(output)
+            output = self.verify(50, ssh_client.exec_command, 4,
+                                 "'host' command failed. ",
+                                 "'host' command",
+                                 cmd)
+
             self.verify_response_true(expected_output in output,
-                            'Step 5 failed: DNS name cannot be resolved')
+                                      'Step 5 failed: DNS name'
+                                      ' cannot be resolved')
         else:
-            self.fail('Step 1 failed:    There is no compute node')
+            self.fail('Step 1 failed: There are no compute nodes')
