@@ -131,25 +131,18 @@ ComputeGroup = [
                default='/root/.ssh/id_rsa',
                help="Path to a private key file for SSH access to remote "
                     "hosts"),
-    cfg.ListOpt('enabled_services',
-                default=[],
-                help="If false, skip config tests regardless of the "
-                     "extension status"),
     cfg.ListOpt('controller_nodes',
                 default=[],
-                help="IP address of one of the controller nodes"),
-    cfg.ListOpt('controller_nodes_name',
+                help="IP addresses of controller nodes"),
+    cfg.ListOpt('compute_nodes',
                 default=[],
-                help="DNS name of one of the controller nodes"),
+                help="IP addresses of compute nodes"),
     cfg.StrOpt('controller_node_ssh_user',
                default='root',
                help="ssh user of one of the controller nodes"),
     cfg.StrOpt('controller_node_ssh_password',
                default='r00tme',
                help="ssh user pass of one of the controller nodes"),
-    cfg.StrOpt('controller_node_ssh_key_path',
-               default='/root/.ssh/id_rsa',
-               help="path to ssh key"),
     cfg.StrOpt('image_name',
                default="TestVM",
                help="Valid secondary image reference to be used in tests."),
@@ -435,9 +428,16 @@ class NailgunConfig(object):
         LOG.info("NAMES %s IPS %s" % (controller_ips, conntroller_names))
         self.compute.public_ips = public_ips
         self.compute.controller_nodes = controller_ips
-        self.compute.controller_nodes_name = conntroller_names
         if not cinder_nodes:
             self.volume.cinder_node_exist = False
+
+        compute_nodes = filter(lambda node: node['role'] == 'compute',
+                                  data)
+        compute_ips = []
+        for node in compute_nodes:
+            compute_ips.append(node['ip'])
+        LOG.info("COMPUTES IPS %s" % compute_ips)
+        self.compute.compute_nodes = compute_ips
 
     def _parse_meta(self):
         api_url = '/api/clusters/%s' % self.cluster_id

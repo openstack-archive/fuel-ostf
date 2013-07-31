@@ -35,6 +35,10 @@ class TestImageAction(nmanager.OfficialClientTest):
       - verify instance can be booted from snapshot.
     """
 
+    def setUp(self):
+        if not self.config.compute.compute_nodes:
+            self.fail('There are not any compute nodes')
+
     def _wait_for_server_status(self, server, status):
         self.status_timeout(self.compute_client.servers,
                             server.id,
@@ -53,7 +57,7 @@ class TestImageAction(nmanager.OfficialClientTest):
                                        flavor=flavor_id,
                                        key_name=self.keypair.name)
         self.set_resource(name, server)
-        self.addCleanup(self.compute_client.servers.delete, server)
+        #self.addCleanup(self.compute_client.servers.delete, server)
         self.verify_response_body_content(
             name, server.name,
             msg="Looks like Glance service doesn`t work properly.")
@@ -94,7 +98,8 @@ class TestImageAction(nmanager.OfficialClientTest):
             1. Create new keypair to boot an instance.
             2. Boot default image.
             3. Make snapshot of created server.
-            4. Boot another instance from created snapshot.
+            4. Delete instance from step 1
+            5. Boot another instance from created snapshot.
         Duration: 80-310 s.
         """
         try:
@@ -119,8 +124,15 @@ class TestImageAction(nmanager.OfficialClientTest):
             self.fail("Step 3 failed: Make snapshot of an instance.")
 
         try:
+            # delete first instance
+            self.compute_client.servers.delete(server)
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail('Step 4 failed: Instance deletion failed')
+
+        try:
             # boot a second instance from the snapshot
             self._boot_image(snapshot_image_id)
         except Exception as e:
             LOG.error("Booting instance from the snapshot failed: %s" % e)
-            self.fail("Step 4 failed: Boot second instance from the snapshot.")
+            self.fail("Step 5 failed: Boot second instance from the snapshot.")

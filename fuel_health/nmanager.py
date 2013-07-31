@@ -182,7 +182,8 @@ class OfficialClientTest(fuel_health.test.TestCase):
     def tearDownClass(cls):
         try:
             cls.compute_client.flavors.delete('42')
-        except Exception:
+        except Exception as exc:
+            LOG.debug(exc)
             pass
         while cls.os_resources:
             thing = cls.os_resources.pop()
@@ -197,7 +198,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 # If the resource is already missing, mission accomplished.
                 if e.__class__.__name__ == 'NotFound':
                     continue
-                raise
+                LOG.debug(e)
 
             def is_deletion_complete():
                 # Deletion testing is only required for objects whose
@@ -211,7 +212,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                     # called 'NotFound' if retrieval fails.
                     if e.__class__.__name__ == 'NotFound':
                         return True
-                    raise
+                    LOG.debug(e)
                 return False
 
             # Block until resource deletion has completed or timed-out
@@ -250,7 +251,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         cls.host = cls.config.compute.controller_nodes
         cls.usr = cls.config.compute.controller_node_ssh_user
         cls.pwd = cls.config.compute.controller_node_ssh_password
-        cls.key = cls.config.compute.controller_node_ssh_key_path
+        cls.key = cls.config.compute.path_to_private_key
         cls.timeout = cls.config.compute.ssh_timeout
         cls.tenant_id = cls.manager._get_identity_client(
             cls.config.identity.admin_username,
@@ -331,7 +332,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         try:
             for net in cls.network:
                 cls.compute_client.networks.delete(net)
-        except Exception:
+        except Exception as exc:
+            LOG.debug(exc)
             pass
 
     def _list_networks(self):
@@ -363,7 +365,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def _create_floating_ip(self):
         floating_ips_pool = self.compute_client.floating_ip_pools.list()
 
-        if len(floating_ips_pool):
+        if floating_ips_pool:
             floating_ip = self.compute_client.floating_ips.create(
                 pool=floating_ips_pool[0].name)
 
@@ -382,14 +384,18 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     @classmethod
     def _clean_floating_is(cls):
         for ip in cls.floating_ips:
-            cls.compute_client.floating_ips.delete(ip)
+            try:
+                cls.compute_client.floating_ips.delete(ip)
+            except Exception as exc:
+                LOG.debug(exc)
+                pass
 
     def _ping_ip_address(self, ip_address):
         def ping():
             cmd = 'ping -c1 -w1 ' + ip_address
             time.sleep(20)
 
-            if len(self.host):
+            if self.host:
 
                 try:
                     SSHClient(self.host[0],
@@ -417,14 +423,16 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def _ping_ip_address_from_instance(self, ip_address):
         def ping():
             time.sleep(10)
-            if len(self.host):
+            if self.host:
                 try:
                     ssh = SSHClient(self.host[0],
                               self.usr, self.pwd,
                               key_filename=self.key,
-                              timeout=self.timeout)._get_ssh_connection()
+                              timeout=self.timeout)
+                    ssh.exec_command('ping -c1 -w1 8.8.8.8')
+                    LOG.debug('Get ssh to controller')
                     ssh._get_ssh_connection_to_vm(usr='cirros', pwd='cubswin:)', host=ip_address).exec_command('ping -c1 -w1 8.8.8.8')
-
+                    LOG.debug('Get ssh to instance')
                     return True
                 except SSHExecCommandFailed as exc:
                     output_msg = "Error: instance is not reachable by floating ip."
@@ -524,6 +532,10 @@ class SanityChecksTest(OfficialClientTest):
         cls.network = []
         cls.floating_ips = []
 
+    @classmethod
+    def tearDownClass(cls):
+        pass
+
     def _list_instances(self, client):
         instances = client.servers.list()
         return instances
@@ -601,7 +613,11 @@ class SmokeChecksTest(OfficialClientTest):
     def _clean_flavors(cls):
         if cls.flavors:
             for flav in cls.flavors:
-                cls.compute_client.flavors.delete(flav)
+                try:
+                    cls.compute_client.flavors.delete(flav)
+                except Exception as exc:
+                    LOG.debug(exc)
+                    pass
 
     def _create_tenant(self, client):
         name = rand_name('ost1_test-tenant-')
@@ -613,7 +629,11 @@ class SmokeChecksTest(OfficialClientTest):
     def _clean_tenants(cls):
         if cls.tenants:
             for ten in cls.tenants:
-                cls.identity_client.tenants.delete(ten)
+                try:
+                    cls.identity_client.tenants.delete(ten)
+                except Exception as exc:
+                    LOG.debug(exc)
+                    pass
 
     def _create_user(self, client, tenant_id):
         password = "123456"
@@ -627,7 +647,11 @@ class SmokeChecksTest(OfficialClientTest):
     def _clean_users(cls):
         if cls.users:
             for user in cls.users:
-                cls.identity_client.users.delete(user)
+                try:
+                    cls.identity_client.users.delete(user)
+                except Exception as exc:
+                    LOG.debug(exc)
+                    pass
 
     def _create_role(self, client):
         name = rand_name('ost1_test-role-')
@@ -639,7 +663,11 @@ class SmokeChecksTest(OfficialClientTest):
     def _clean_roles(cls):
         if cls.roles:
             for role in cls.roles:
-                cls.identity_client.roles.delete(role)
+                try:
+                    cls.identity_client.roles.delete(role)
+                except Exception as exc:
+                    LOG.debug(exc)
+                    pass
 
     def _create_volume(self, client):
         display_name = rand_name('ost1_test-volume')

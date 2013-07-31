@@ -79,7 +79,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
     def test_list_volumes(self):
         """Volumes list availability
         Test checks that list of volumes is available.
-        Target component: Swift
+        Target component: Cinder
 
         Scenario:
             1. Request list of volumes.
