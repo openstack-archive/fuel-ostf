@@ -94,7 +94,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Scenario:
             1. Connect to a compute node via SSH.
             2. Execute ping 8.8.8.8 from the compute.
-            3. Check all the packages were received.
+            3. Check all the packets were received.
             4. Execute host 8.8.8.8 from the controller.
             5. Check 8.8.8.8 host is resolved.
         Duration: 1-12 s.
