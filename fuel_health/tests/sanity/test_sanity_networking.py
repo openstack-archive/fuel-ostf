@@ -36,7 +36,7 @@ class NetworksTest(nmanager.SanityChecksTest):
         Scenario:
             1. Request list of networks.
             2. Check response.
-        Duration: 1-6 s.
+        Duration: 1-20 s.
         """
         fail_msg = "Network list is unavailable. "
         networks = self.verify(20, self._list_networks, 1,
@@ -45,5 +45,5 @@ class NetworksTest(nmanager.SanityChecksTest):
                                self.compute_client)
 
         self.verify_response_true(len(networks) >= 0,
-                                  'Step 2 failed:' + fail_msg)
+                                  'Step 2 failed:'.join(fail_msg))
 

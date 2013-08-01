@@ -36,7 +36,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
 
     @attr(type=["fuel", "smoke"])
     def test_create_user(self):
-        """User creation and authentication in Horizon.
+        """User creation and authentication in Horizon
         Target components: Nova, Keystone
 
         Scenario:
@@ -50,20 +50,20 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
             8. Check authentication was successful.
             9. Send authentication request to Horizon.
             10. Verify response status is 200.
-        Duration: 1-31 s.
+        Duration: 1-50 s.
         """
         # Create a tenant:
-        msg_s1 = 'Tenant creation failure. '
+        msg_s1 = 'Tenant can not be created. '
 
         tenant = self.verify(20, self._create_tenant, 1,
             msg_s1, 'tenant creation', self.identity_client)
 
         self.verify_response_true(
             tenant.name.startswith('ost1_test'),
-            "Step 2 failed: " + msg_s1)
+            "Step 2 failed: ".join(msg_s1))
 
         # Create a user:
-        msg_s3 = "Can't create a user."
+        msg_s3 = "User can not be created."
 
         user = self.verify(20, self._create_user, 3, msg_s3,
                            'user creation', self.identity_client,
@@ -71,9 +71,9 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
 
         self.verify_response_true(
             user.name.startswith('ost1_test'),
-            'Step 4 failed: ' + msg_s3)
+            'Step 4 failed: '.join(msg_s3))
 
-        msg_s5 = "User role creation fails. "
+        msg_s5 = "User role can not be created. "
 
         role = self.verify(20, self._create_role,
                            5, msg_s5,
@@ -82,7 +82,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
 
         self.verify_response_true(
             role.name.startswith('ost1_test'),
-            "Step 6 failed: " + msg_s5)
+            "Step 6 failed: ".join(msg_s5))
 
         # Authenticate with created user:
         password = '123456'
@@ -96,7 +96,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                            tenant_id=tenant.id,
                            tenant_name=tenant.name)
 
-        self.verify_response_true(auth, 'Step 8 failed: ' + msg_s7)
+        self.verify_response_true(auth, 'Step 8 failed: '.join(msg_s7))
 
         try:
             #Auth in horizon with non-admin user
@@ -113,7 +113,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                                    headers=dict(Referer=url))
                 self.verify_response_status(
                     resp.status_code,
-                    msg="Verify request was successful."
+                    msg="Check that request was successful."
                         "Please, refer to OpenStack logs for more details.",
                     failed_step=9)
             else:
@@ -126,7 +126,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                                    headers=dict(Referer=url))
                 self.verify_response_status(
                     resp.status_code,
-                    msg="Verify request was successful."
+                    msg="Check that request was successful."
                     "Please, refer to OpenStack logs for more details.",
                     failed_step=9)
         except Exception:

@@ -61,7 +61,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
             8. Detach volume from instance.
             9. Check volume has "available" status.
             10. Delete volume.
-        Duration: 48-100 s.
+        Duration: 48-200 s.
         """
 
         msg_s1 = 'Volume was not created.'
@@ -79,7 +79,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
 
         self.verify_response_true(
             volume.display_name.startswith('ost1_test-volume'),
-            'Step 3 failed: ' + msg_s1)
+            'Step 3 failed: '.join(msg_s1))
 
         # create instance
         instance = self.verify(100, self._create_server, 4,

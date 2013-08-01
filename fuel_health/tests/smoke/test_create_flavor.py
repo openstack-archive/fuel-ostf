@@ -34,14 +34,14 @@ class FlavorsAdminTest(nmanager.SmokeChecksTest):
     @attr(type=["fuel", "smoke"])
     def test_create_flavor(self):
         """Flavor creation
-        Test check that low requirements flavor can be created.
+        Test check that low requirements flavor can be created
         Target component: Nova
 
         Scenario:
             1. Create small-size flavor.
             2. Check created flavor has expected name.
             3. Check flavor disk has expected size.
-        Duration: 1-11 s.
+        Duration: 1-30 s.
         """
         fail_msg = "Flavor was not created properly."
         flavor = self.verify(30, self._create_flavors, 1,
@@ -52,9 +52,9 @@ class FlavorsAdminTest(nmanager.SmokeChecksTest):
         msg_s2 = "Flavor name is not the same as requested."
         self.verify_response_true(
             flavor.name.startswith('ost1_test-flavor'),
-            'Step 2 failed: ' + msg_s2)
+            'Step 2 failed: '.join(msg_s2))
 
         msg_s3 = "Disk size is not the same as requested."
         self.verify_response_body_value(
             flavor.disk, 1,
-            "Step 3 failed: " + msg_s3)
+            "Step 3 failed: ".join(msg_s3))

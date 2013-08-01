@@ -48,7 +48,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_services_state(self):
-        """Services execution monitoring
+        """Service execution monitoring
         Test all of the expected services are on.
         Target component: OpenStack
 
@@ -56,7 +56,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             1. Connect to a controller node via SSH.
             2. Execute nova-manage service list command.
             3. Check there is no failed services (with XXX state)
-        Duration: 2-8 s.
+        Duration: 2-50 s.
         """
         output_msg = ''
         cmd = 'nova-manage service list'
@@ -80,7 +80,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                 'Some nova services have not been started')
             LOG.debug(output)
             self.verify_response_true(
-                u'XXX' not in output, 'Step 3 failed: ' + output_msg)
+                u'XXX' not in output, 'Step 3 failed: '.join(output_msg))
         else:
             self.fail('Step 1 failed: Wrong tests configurations, controller '
                       'node ip is not specified')
@@ -97,7 +97,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             3. Check all the packages were received.
             4. Execute host 8.8.8.8 from the controller.
             5. Check 8.8.8.8 host is resolved.
-        Duration: 1-12 s.
+        Duration: 1-100 s.
         """
         if self.computes:
             expected_output = "0% packet loss"
