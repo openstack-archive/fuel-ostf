@@ -102,7 +102,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_004_check_networks(self):
-        """Network parameter check
+        """Check network parameters
         Target component: Nova
 
         Scenario:
@@ -129,7 +129,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_005_create_servers(self):
-        """Instance creation
+        """Create instance
         Target component: Nova
 
         Scenario:
@@ -175,7 +175,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_006_assign_floating_ips(self):
-        """Floating IP assignment
+        """Assign floating IP
         Target component: Nova
 
         Scenario:
@@ -233,7 +233,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_007_check_public_network_connectivity(self):
-        """Network connectivity check through floating ip
+        """Check network connectivity via floating IP
         Target component: Nova
 
         Scenario:
@@ -290,8 +290,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_008_check_public_instance_connectivity_from_instance(self):
-        """Network connectivity check from instance through floating ip
-        Target component: Nova
+        """Check network connectivity from instance via floating ip
 
         Scenario:
             1. Create new keypair (if it`s nonexistent yet).

@@ -33,7 +33,7 @@ class FlavorsAdminTest(nmanager.SmokeChecksTest):
 
     @attr(type=["fuel", "smoke"])
     def test_create_flavor(self):
-        """Flavor creation
+        """Create instance flavor
         Test check that low requirements flavor can be created
         Target component: Nova
 
