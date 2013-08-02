@@ -85,24 +85,24 @@ class TestImageAction(nmanager.SmokeChecksTest):
             4. Boot another instance from created snapshot.
         Duration: 80-180 s.
         """
-        server = self.verify(180, self._boot_image, 2,
+        server = self.verify(180, self._boot_image, 1,
                              "Image can not be booted.",
                              "image booting",
                              nmanager.get_image_from_name())
 
         # snapshot the instance
-        snapshot_image_id = self.verify(180, self._create_image, 3,
+        snapshot_image_id = self.verify(180, self._create_image, 2,
                                         "Snapshot of an"
                                         " instance can not be made.",
                                         'snapshotting an instance',
                                         server)
         
-        self.verify(180, self.compute_client.servers.delete, 4,
+        self.verify(180, self.compute_client.servers.delete, 3,
                     "Instance can not be deleted.",
                     'Instance deletion',
                     server)
             
-        self.verify(180, self._boot_image, 5,
+        self.verify(180, self._boot_image, 4,
                     "Instance can not be booted from snapshot.",
                     'booting instance from snapshot',
                     snapshot_image_id)

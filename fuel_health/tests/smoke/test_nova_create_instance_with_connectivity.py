@@ -137,7 +137,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.security_groups[self.tenant_id] = self.verify(
                 25,
                 self._create_security_group,
-                2,
+                1,
                 "Security group can not be created.",
                 'security group creation',
                 self.compute_client)
@@ -148,7 +148,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         server = self.verify(
             200,
             self._create_server,
-            3,
+            2,
             "Creating instance with usage of created security group failed.",
             'image creation',
             self.compute_client, name, security_groups
@@ -171,7 +171,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         if not self.servers:
             if not self.security_groups:
                 self.security_groups[self.tenant_id] = self.verify(
-                    25, self._create_security_group, 2,
+                    25, self._create_security_group, 1,
                     "Security group can not be created.",
                     'security group creation',
                     self.compute_client)
@@ -182,7 +182,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             server = self.verify(
                 200,
                 self._create_server,
-                3,
+                2,
                 "Server can not be created.",
                 "server creation",
                 self.compute_client, name, security_groups
@@ -192,7 +192,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         floating_ip = self.verify(
             20,
             self._create_floating_ip,
-            4,
+            3,
             "Floating IP can not be created.",
             'floating IP creation')
 
@@ -200,7 +200,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.verify(
                 10,
                 self._assign_floating_ip_to_instance,
-                5,
+                4,
                 "Floating IP can not be assigned.",
                 'floating IP assignment',
                 self.compute_client, self.servers[0], floating_ip)
@@ -225,7 +225,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             if not self.servers:
                 if not self.security_groups:
                     self.security_groups[self.tenant_id] = self.verify(
-                        25, self._create_security_group, 2,
+                        25, self._create_security_group, 1,
                         "Security group can not be created.",
                         'security group creation', self.compute_client)
 
@@ -233,27 +233,27 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                 security_groups = [self.security_groups[self.tenant_id].name]
 
                 server = self.verify(
-                    200, self._create_server, 3,
+                    200, self._create_server, 2,
                     "Server can not be created.",
                     'server creation',
                     self.compute_client, name, security_groups)
 
                 self.servers.append(server)
 
-            floating_ip = self.verify(20, self._create_floating_ip, 4,
+            floating_ip = self.verify(20, self._create_floating_ip, 3,
                                       "Floating IP can not be created.",
                                       'floating IP creation')
             self.floating_ips.append(floating_ip)
 
         if self.servers and self.floating_ips:
-            self.verify(10, self._assign_floating_ip_to_instance, 5,
+            self.verify(10, self._assign_floating_ip_to_instance, 4,
                         "Floating IP can not be assigned.",
                         "floating IP assignment",
                         self.compute_client, self.servers[0], self.floating_ips[0])
 
         if self.floating_ips:
             ip_address = self.floating_ips[0].ip
-            self.verify(100, self._check_vm_connectivity, 6,
+            self.verify(100, self._check_vm_connectivity, 5,
                         "VM connectivity doesn`t function properly.",
                         'VM connectivity checking', ip_address)
 
@@ -274,7 +274,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             if not self.servers:
                 if not self.security_groups:
                     self.security_groups[self.tenant_id] = self.verify(
-                        25, self._create_security_group, 2,
+                        25, self._create_security_group, 1,
                         "Security group can not be created.",
                         'security group creation', self.compute_client)
 
@@ -282,7 +282,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                 security_groups = [self.security_groups[self.tenant_id].name]
 
                 server = self.verify(
-                    200, self._create_server, 3,
+                    200, self._create_server, 2,
                     "Server can not be created.",
                     'server creation',
                     self.compute_client, name, security_groups)
@@ -290,14 +290,14 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                 self.servers.append(server)
 
             floating_ip = self.verify(
-                20, self._create_floating_ip, 4,
+                20, self._create_floating_ip, 3,
                 "Floating IP can not be created.",
                 'floating IP creation')
 
             self.floating_ips.append(floating_ip)
 
         if self.servers and self.floating_ips:
-            self.verify(10, self._assign_floating_ip_to_instance, 5,
+            self.verify(10, self._assign_floating_ip_to_instance, 4,
                     "Floating IP can not be assigned.",
                     "floating IP assignment",
                     self.compute_client, self.servers[0], self.floating_ips[0])
@@ -306,6 +306,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             ip_address = self.floating_ips[0].ip
             LOG.debug(ip_address)
             self.verify(100, self._check_connectivity_from_vm,
-                        6, ("Connectivity to 8.8.8.8 from VM doesn`t "
+                        5, ("Connectivity to 8.8.8.8 from VM doesn`t "
                             "function properly."),
                         'public connectivity checking from VM', ip_address)
