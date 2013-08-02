@@ -102,7 +102,6 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         if self.computes:
             expected_output = "0% packet loss"
             cmd = "ping 8.8.8.8 -c 1 -w 1"
-            output = ''
             try:
                 ssh_client = SSHClient(self.computes[0],
                                        self.usr,

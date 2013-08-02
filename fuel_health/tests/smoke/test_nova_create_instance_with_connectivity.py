@@ -61,10 +61,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         cls.servers = []
         cls.floating_ips = []
 
-    def setUp(self):
-        if not self.config.compute.compute_nodes:
-            self.fail('There are not any compute nodes')
-
     @classmethod
     def tearDownClass(cls):
         super(TestNovaNetwork, cls).tearDownClass()
@@ -136,7 +132,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_005_create_servers(self):
-        """Instance creation
+        """Launching instance
         Target component: Nova
 
         Scenario:

@@ -86,6 +86,10 @@ class TestCase(BaseTestCase):
         cls.resource_keys = {}
         cls.os_resources = []
 
+    def setUp(self):
+        if not self.config.compute.compute_nodes:
+            self.skip(reason='There are not any compute nodes')
+
     def set_resource(self, key, thing):
         LOG.debug("Adding %r to shared resources of %s" %
                   (thing, self.__class__.__name__))

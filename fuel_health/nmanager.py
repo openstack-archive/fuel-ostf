@@ -17,7 +17,6 @@
 #    under the License.
 
 import logging
-import subprocess
 
 # Default client libs
 import cinderclient.client
@@ -25,8 +24,8 @@ import glanceclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
 
-#from fuel_health.common import ssh
 import time
+
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.exceptions import SSHExecCommandFailed
 from fuel_health.common.utils.data_utils import rand_name
@@ -180,9 +179,11 @@ class OfficialClientTest(fuel_health.test.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        cls.error_msg = []
         try:
             cls.compute_client.flavors.delete('42')
         except Exception as exc:
+            cls.error_msg.append(exc)
             LOG.debug(exc)
             pass
         while cls.os_resources:
@@ -198,6 +199,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 # If the resource is already missing, mission accomplished.
                 if e.__class__.__name__ == 'NotFound':
                     continue
+                cls.error_msg.append(e)
                 LOG.debug(e)
 
             def is_deletion_complete():
@@ -212,6 +214,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                     # called 'NotFound' if retrieval fails.
                     if e.__class__.__name__ == 'NotFound':
                         return True
+                    cls.error_msg.append(e)
                     LOG.debug(e)
                 return False
 
@@ -244,6 +247,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         super(NovaNetworkScenarioTest, self).setUp()
         if not self._enabled:
             self.skip(reason='Nova Networking not available')
+        if not self.config.compute.compute_nodes:
+            self.skip(reason='There are not any compute nodes')
 
     @classmethod
     def setUpClass(cls):
@@ -260,6 +265,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         cls.network = []
         cls.floating_ips = []
         cls.sec_group = []
+        cls.error_msg = []
 
     def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
         kp_name = rand_name(namestart)
@@ -333,6 +339,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             for net in cls.network:
                 cls.compute_client.networks.delete(net)
         except Exception as exc:
+            cls.error_msg.append(exc)
             LOG.debug(exc)
             pass
 
@@ -387,6 +394,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             try:
                 cls.compute_client.floating_ips.delete(ip)
             except Exception as exc:
+                cls.error_msg.append(exc)
                 LOG.debug(exc)
                 pass
 
@@ -448,21 +456,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
         # TODO Allow configuration of execution and sleep duration.
         return fuel_health.test.call_until_true(ping, 40, 1)
-     # def ping():
-        #     proc = subprocess.Popen(cmd,
-        #                             stdout=subprocess.PIPE,
-        #                             stderr=subprocess.PIPE)
-        #     proc.wait()
-        #     if proc.returncode == 0:
-        #         return True
-        #
 
-    # def _is_reachable_via_ssh(self, ip_address, username, private_key,
-    #                           timeout=120):
-    #     ssh_client = SSHClient(ip_address, username,
-    #                             pkey=private_key,
-    #                             timeout=timeout)
-    #     return ssh_client.test_connection_auth()
     def _check_vm_connectivity(self, ip_address):
         self.assertTrue(self._ping_ip_address(ip_address),
                         "Timed out waiting for %s to become "
@@ -476,10 +470,24 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                         "configuration" % ip_address)
 
     @classmethod
+    def _verification_of_exceptions(cls):
+        if cls.error_msg:
+            for err in cls.error_msg:
+                if err.__class__.__name__ == 'InternalServerError':
+                    raise cls.failureException('REST API of '
+                                               'OpenStack is inaccessible.'
+                                               ' Please try again')
+                if err.__class__.__name__ == 'ClientException':
+                    raise cls.failureException('REST API of '
+                                               'OpenStack is inaccessible.'
+                                               ' Please try again')
+
+    @classmethod
     def tearDownClass(cls):
         super(NovaNetworkScenarioTest, cls).tearDownClass()
         cls._clean_floating_is()
         cls._clear_networks()
+        cls._verification_of_exceptions()
 
 
 def get_image_from_name():
@@ -584,6 +592,11 @@ class SmokeChecksTest(OfficialClientTest):
         super(SmokeChecksTest, self).setUp()
         if not self._enabled:
             self.skip(reason='Nova Networking not available')
+        if not self.config.volume.cinder_node_exist:
+            self.skip(reason='There are not any cinder nodes')
+        if not self.config.compute.compute_nodes:
+            self.skip(reason='There are not any compute nodes')
+
 
     @classmethod
     def setUpClass(cls):
@@ -601,6 +614,7 @@ class SmokeChecksTest(OfficialClientTest):
         cls.users = []
         cls.roles = []
         cls.volumes = []
+        cls.error_msg = []
 
     def _create_flavors(self, client, ram, disk, vcpus=1):
         name = rand_name('ost1_test-flavor-')
@@ -616,6 +630,7 @@ class SmokeChecksTest(OfficialClientTest):
                 try:
                     cls.compute_client.flavors.delete(flav)
                 except Exception as exc:
+                    cls.error_msg.append(exc)
                     LOG.debug(exc)
                     pass
 
@@ -632,6 +647,7 @@ class SmokeChecksTest(OfficialClientTest):
                 try:
                     cls.identity_client.tenants.delete(ten)
                 except Exception as exc:
+                    cls.error_msg.append(exc)
                     LOG.debug(exc)
                     pass
 
@@ -650,6 +666,7 @@ class SmokeChecksTest(OfficialClientTest):
                 try:
                     cls.identity_client.users.delete(user)
                 except Exception as exc:
+                    cls.error_msg.append(exc)
                     LOG.debug(exc)
                     pass
 
@@ -666,6 +683,7 @@ class SmokeChecksTest(OfficialClientTest):
                 try:
                     cls.identity_client.roles.delete(role)
                 except Exception as exc:
+                    cls.error_msg.append(exc)
                     LOG.debug(exc)
                     pass
 
@@ -684,6 +702,7 @@ class SmokeChecksTest(OfficialClientTest):
                     try:
                         cls.volume_client.volumes.delete(v)
                     except Exception as exc:
+                        cls.error_msg.append(exc)
                         LOG.debug(exc)
                         pass
                 else:
@@ -722,6 +741,19 @@ class SmokeChecksTest(OfficialClientTest):
         return False
 
     @classmethod
+    def _verification_of_exceptions(cls):
+        if cls.error_msg:
+            for err in cls.error_msg:
+                if err.__class__.__name__ == 'InternalServerError':
+                    raise cls.failureException('REST API of '
+                                               'OpenStack is inaccessible.'
+                                               ' Please try again')
+                if err.__class__.__name__ == 'ClientException':
+                    raise cls.failureException('REST API of '
+                                               'OpenStack is inaccessible.'
+                                               ' Please try again')
+
+    @classmethod
     def tearDownClass(cls):
         super(SmokeChecksTest, cls).tearDownClass()
         cls._clean_flavors()
@@ -729,3 +761,4 @@ class SmokeChecksTest(OfficialClientTest):
         cls._clean_users()
         cls._clean_roles()
         cls._clean_volumes()
+        cls._verification_of_exceptions()

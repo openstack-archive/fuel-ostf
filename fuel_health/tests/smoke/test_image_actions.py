@@ -25,7 +25,7 @@ from fuel_health import nmanager
 LOG = logging.getLogger(__name__)
 
 
-class TestImageAction(nmanager.OfficialClientTest):
+class TestImageAction(nmanager.SmokeChecksTest):
     """
     Test class verifies the following:
       - verify image can be created;
@@ -33,10 +33,6 @@ class TestImageAction(nmanager.OfficialClientTest):
       - verify snapshot can be created from instance;
       - verify instance can be booted from snapshot.
     """
-
-    def setUp(self):
-        if not self.config.compute.compute_nodes:
-            self.fail('There are not any compute nodes')
 
     def _wait_for_server_status(self, server, status):
         self.status_timeout(self.compute_client.servers,
@@ -89,7 +85,7 @@ class TestImageAction(nmanager.OfficialClientTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_snapshot(self):
-        """Launching instance
+        """Launching instance, snapshot it and launching from snapshot
         Target component: Glance
 
         Scenario:
@@ -111,19 +107,18 @@ class TestImageAction(nmanager.OfficialClientTest):
                              nmanager.get_image_from_name())
 
         # snapshot the instance
-        snapshot_image_id = self.verify(100, self._create_image, 3,
+        snapshot_image_id = self.verify(180, self._create_image, 3,
                                         "Making snapshot of an"
                                         " instance failed.",
                                         'snapshotting an instance',
                                         server)
         
-        self.verify(100, self.compute_client.servers.delete, 4,
+        self.verify(180, self.compute_client.servers.delete, 4,
                     "Instance deletion failed.",
                     'Instance deletion',
                     server)
-
             
-        self.verify(100, self._boot_image, 5,
+        self.verify(180, self._boot_image, 5,
                     "Booting instance from the snapshot failed.",
                     'booting instance from snapshot',
                     snapshot_image_id)

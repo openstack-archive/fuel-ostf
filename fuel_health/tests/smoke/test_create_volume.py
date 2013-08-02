@@ -33,12 +33,6 @@ class VolumesTest(nmanager.SmokeChecksTest):
     def tearDownClass(cls):
         super(VolumesTest, cls).tearDownClass()
 
-    def setUp(self):
-        if not self.config.volume.cinder_node_exist:
-            self.fail('There are not any cinder nodes')
-        if not self.config.compute.compute_nodes:
-            self.fail('There are not any compute nodes')
-
     def _wait_for_volume_status(self, volume, status):
         self.status_timeout(self.volume_client.volumes, volume.id, status)
 
@@ -67,7 +61,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
         msg_s1 = 'Volume was not created.'
 
         #Create volume
-        volume = self.verify(20, self._create_volume, 1,
+        volume = self.verify(120, self._create_volume, 1,
                              msg_s1,
                              "volume creation",
                              self.volume_client)
@@ -82,7 +76,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
             'Step 3 failed: ' + msg_s1)
 
         # create instance
-        instance = self.verify(100, self._create_server, 4,
+        instance = self.verify(200, self._create_server, 4,
                                "Instance creation failed. ",
                                "server creation",
                                self.compute_client)
@@ -93,12 +87,12 @@ class VolumesTest(nmanager.SmokeChecksTest):
                     instance, 'ACTIVE')
 
         # Attach volume
-        self.verify(20, self._attach_volume_to_instance, 6,
+        self.verify(120, self._attach_volume_to_instance, 6,
                     'Volume couldn`t be attached.',
                     'volume attachment',
                     volume, instance.id)
 
-        self.verify(100, self._wait_for_volume_status, 7,
+        self.verify(180, self._wait_for_volume_status, 7,
                     'Attached volume can not '
                     'get expected state',
                     "volume becoming 'in-use'",
@@ -119,7 +113,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
                     "volume detachment",
                     self.volume_client, volume)
 
-        self.verify(100, self._wait_for_volume_status, 10,
+        self.verify(180, self._wait_for_volume_status, 10,
                     'Volume does not get "available"'
                     ' status.',
                     "volume becoming 'available'",
