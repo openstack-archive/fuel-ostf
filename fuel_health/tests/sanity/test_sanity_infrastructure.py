@@ -18,6 +18,7 @@ import logging
 from nose.plugins.attrib import attr
 
 from fuel_health.common.ssh import Client as SSHClient
+from fuel_health.exceptions import SSHExecCommandFailed
 from fuel_health import nmanager
 
 LOG = logging.getLogger(__name__)
@@ -53,37 +54,36 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Target component: OpenStack
 
         Scenario:
-            1. Connect to a controller node via SSH.
-            2. Execute nova-manage service list command.
-            3. Check there is no failed services (with XXX state)
+            1. Execute nova-manage service list command on a controller node.
+            2. Check there is no failed services (with XXX state).
         Duration: 2-8 s.
         """
-        output_msg = ''
+        output = u'XXX'
         cmd = 'nova-manage service list'
-        if self.controllers:
+        if not self.controllers:
+            self.fail('Step 1 failed: there is no controller nodes')
 
-            try:
-                ssh_client = SSHClient(self.controllers[0],
-                                       self.usr, self.pwd,
-                                       key_filename=self.key,
-                                       timeout=self.timeout)
-            except Exception as exc:
-                LOG.debug(exc)
-                self.fail("Step 1 failed: connection failed. ")
+        try:
+            ssh_client = SSHClient(self.controllers[0],
+                                   self.usr, self.pwd,
+                                   key_filename=self.key,
+                                   timeout=self.timeout)
             output = self.verify(50, ssh_client.exec_command,
-                                 2, "'nova-manage' command"
-                                 " execution failed. ",
+                                 1, "'nova-manage' command"
+                                    " execution failed. ",
                                  "nova-manage command execution",
                                  cmd)
+        except SSHExecCommandFailed as exc:
+            LOG.debug(exc)
+            self.fail("Step 1 failed: %s commanf failed" % cmd)
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail("Step 1 failed: unexpected error %s" % str(exc))
 
-            output_msg = output_msg or (
-                'Some nova services have not been started')
-            LOG.debug(output)
-            self.verify_response_true(
-                u'XXX' not in output, 'Step 3 failed: ' + output_msg)
-        else:
-            self.fail('Step 1 failed: Wrong tests configurations, controller '
-                      'node ip is not specified')
+        LOG.debug(output)
+        self.verify_response_true(
+            u'XXX' not in output, 'Step 2 failed: Some nova services '
+                                  'have not been started')
 
     @attr(type=['sanity', 'fuel'])
     def test_dns_state(self):
@@ -92,48 +92,44 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Target component: OpenStack
 
         Scenario:
-            1. Connect to a compute node via SSH.
-            2. Execute ping 8.8.8.8 from the compute.
-            3. Check all the packets were received.
-            4. Execute host 8.8.8.8 from the controller.
-            5. Check 8.8.8.8 host is resolved.
+            1. Execute ping 8.8.8.8 from a compute node.
+            2. Check all the packets were received.
+            3. Execute host 8.8.8.8 from the compute.
+            4. Check 8.8.8.8 host is resolved.
         Duration: 1-12 s.
         """
-        if self.computes:
-            expected_output = "0% packet loss"
-            cmd = "ping 8.8.8.8 -c 1 -w 1"
-            output = ''
-            try:
-                ssh_client = SSHClient(self.computes[0],
-                                       self.usr,
-                                       self.pwd,
-                                       key_filename=self.key,
-                                       timeout=self.timeout)
-            except Exception as exc:
-                LOG.debug(exc)
-                self.fail("Step 1 failed: connection fail")
-            output = self.verify(50, ssh_client.exec_command, 2,
-                                 "'ping' command failed. ",
-                                 "'ping' command",
-                                 cmd)
+        if not self.computes:
+            self.fail('Step 1 failed: There are no compute nodes')
 
-            LOG.debug(output)
-            self.verify_response_true(
-                expected_output in output,
-                'Step 3 failed: packets to 8.8.8.8 were lost, '
-                'there is no Internet connection'
-                ' on the compute node')
+        cmd = "ping 8.8.8.8 -c 1 -w 1"
+        try:
+            ssh_client = SSHClient(self.computes[0],
+                                   self.usr,
+                                   self.pwd,
+                                   key_filename=self.key,
+                                   timeout=self.timeout)
+            self.verify(50, ssh_client.exec_command, 1,
+                        "'ping' command failed. ",
+                        "'ping' command",
+                        cmd)
+        except SSHExecCommandFailed as exc:
+            LOG.debug(exc)
+            self.fail("Step 2 failed: ping to 8.8.8.8 was unsuccessful")
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail("Step 1 failed: unexpected error %s" % str(exc))
 
-            expected_output = ("8.8.8.8.in-addr.arpa domain name pointer "
-                               "google-public-dns-a.google.com.")
-            cmd = "host 8.8.8.8"
+        expected_output = "google"
+        cmd = "host 8.8.8.8"
+
+        try:
             output = self.verify(50, ssh_client.exec_command, 4,
                                  "'host' command failed. ",
                                  "'host' command",
                                  cmd)
+        except SSHExecCommandFailed as exc:
+            LOG.debug(exc)
+            self.fail("Step 3 failed: %s command was unsuccessful" % cmd)
 
-            self.verify_response_true(expected_output in output,
-                                      'Step 5 failed: DNS name'
-                                      ' cannot be resolved')
-        else:
-            self.fail('Step 1 failed: There are no compute nodes')
+        self.verify_response_true(expected_output in output,
+                                  'Step 4 failed: DNS name cannot be resolved')
