@@ -129,7 +129,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_005_create_servers(self):
-        """Create instance
+        """Launch instance
         Target component: Nova
 
         Scenario:

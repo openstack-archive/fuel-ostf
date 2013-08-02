@@ -89,14 +89,14 @@ class TestImageAction(nmanager.OfficialClientTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_snapshot(self):
-        """Launching instance
+        """Launch instance, create snapshot, launch instance from snapshot
         Target component: Glance
 
         Scenario:
             1. Create new keypair to boot an instance.
             2. Boot default image.
             3. Make snapshot of created server.
-            4. Delete instance from step 1
+            4. Delete instance created in step 1.
             5. Boot another instance from created snapshot.
         Duration: 80-180 s.
         """
