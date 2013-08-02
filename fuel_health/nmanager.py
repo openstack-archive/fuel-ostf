@@ -379,8 +379,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             self.floating_ips.append(floating_ip)
             return floating_ip
         else:
-            self.fail('Incorrect OpenStack configurations. '
-                      'No floating_ips pools found')
+            self.fail('No available floating IP found')
 
     def _assign_floating_ip_to_instance(self, client, server, floating_ip):
         try:

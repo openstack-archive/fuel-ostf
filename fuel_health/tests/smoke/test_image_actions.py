@@ -49,8 +49,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
         LOG.debug("name:%s, image:%s" % (name, image_id))
         server = client.servers.create(name=name,
                                        image=image_id,
-                                       flavor=flavor_id,
-                                       key_name=self.keypair.name)
+                                       flavor=flavor_id)
         self.set_resource(name, server)
         #self.addCleanup(self.compute_client.servers.delete, server)
         self.verify_response_body_content(
@@ -60,15 +59,6 @@ class TestImageAction(nmanager.SmokeChecksTest):
         server = client.servers.get(server)  # getting network information
         LOG.debug("server:%s" % server)
         return server
-
-    def _add_keypair(self):
-        name = rand_name('ost1_test-keypair-')
-        self.keypair = self.compute_client.keypairs.create(name=name)
-        self.set_resource(name, self.keypair)
-        self.addCleanup(self.compute_client.keypairs.delete, self.keypair)
-        self.verify_response_body_content(
-            name, self.keypair.name,
-            msg="Please, refer to OpenStack logs for more details.")
 
     def _create_image(self, server):
         snapshot_name = rand_name('ost1_test-snapshot-')
@@ -89,18 +79,12 @@ class TestImageAction(nmanager.SmokeChecksTest):
         Target component: Glance
 
         Scenario:
-            1. Create new keypair to boot an instance.
-            2. Boot default image.
-            3. Make snapshot of created server.
-            4. Delete instance created in step 1.
-            5. Boot another instance from created snapshot.
+            1. Boot default image.
+            2. Make snapshot of created server.
+            3. Delete instance created in step 1.
+            4. Boot another instance from created snapshot.
         Duration: 80-180 s.
         """
-        self.verify(25, self._add_keypair, 1,
-                    "Keypair can not be created.",
-                    "keypair creation")
-
-        # boot an instance and create a timestamp file in it
         server = self.verify(180, self._boot_image, 2,
                              "Image can not be booted.",
                              "image booting",
