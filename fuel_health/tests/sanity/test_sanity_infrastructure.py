@@ -61,7 +61,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         output = u'XXX'
         cmd = 'nova-manage service list'
         if not self.controllers:
-            self.fail('Step 1 failed: there is no controller nodes')
+            self.fail('Step 1 failed: there is no controller nodes.')
 
         try:
             ssh_client = SSHClient(self.controllers[0],
@@ -89,8 +89,8 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Target component: OpenStack
 
         Scenario:
-            1. Check ping 8.8.8.8 command executes successfully.
-            2. Check host 8.8.8.8 command executes successfully.
+            1. Check ping 8.8.8.8 command from a compute node.
+            2. Check host 8.8.8.8 command from the compute node.
         Duration: 1-12 s.
         """
         if not self.computes:
@@ -108,15 +108,18 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             self.fail("Step 1 failed: %s" % str(exc))
 
         self.verify(50, ssh_client.exec_command, 1,
-                    "'ping' command failed. ",
+                    "'ping' command failed. Looks like there is no "
+                    "Internet connection on the compute node.",
                     "'ping' command",
                     cmd)
 
         expected_output = "google"
         cmd = "host 8.8.8.8"
         output = self.verify(50, ssh_client.exec_command, 2,
-                             "'host' command failed. ",
+                             "'host' command failed. "
+                             "DNS name cannot be resolved.",
                              "'host' command",
                              cmd)
         self.verify_response_true(expected_output in output,
-                                  'Step 2 failed: DNS name cannot be resolved')
+                                  'Step 2 failed: '
+                                  'DNS name cannot be resolved.')
