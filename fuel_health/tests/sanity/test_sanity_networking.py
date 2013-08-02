@@ -24,7 +24,7 @@ LOG = logging.getLogger(__name__)
 
 class NetworksTest(nmanager.SanityChecksTest):
     """
-    TestClass contains tests that check basic networking functionality
+    TestClass contains tests check base networking functionality
     """
 
     @attr(type=['sanity', 'fuel'])
