@@ -55,7 +55,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Scenario:
             1. Connect to a controller node via SSH.
             2. Execute nova-manage service list command.
-            3. Check there is no failed services (with XXX state)
+            3. Check there are no failed services (with XXX state)
         Duration: 2-50 s.
         """
         output_msg = ''
@@ -77,10 +77,10 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                  cmd)
 
             output_msg = output_msg or (
-                'Some nova services have not been started')
+                'Some nova services have not been started.')
             LOG.debug(output)
             self.verify_response_true(
-                u'XXX' not in output, 'Step 3 failed: '.join(output_msg))
+                u'XXX' not in output, "Step 3 failed: {msg}".format(msg=output_msg))
         else:
             self.fail('Step 1 failed: Wrong tests configurations, controller '
                       'node ip is not specified')

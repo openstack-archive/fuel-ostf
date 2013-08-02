@@ -45,5 +45,5 @@ class NetworksTest(nmanager.SanityChecksTest):
                                self.compute_client)
 
         self.verify_response_true(len(networks) >= 0,
-                                  'Step 2 failed:'.join(fail_msg))
+                                  "Step 2 failed: {msg}".format(msg=fail_msg))
 

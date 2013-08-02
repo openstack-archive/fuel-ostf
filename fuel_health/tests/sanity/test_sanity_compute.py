@@ -43,7 +43,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
                                          self.compute_client)
 
         self.verify_response_true(
-            len(list_instance_resp) >= 0, "Step 2 failed: ".join(fail_msg))
+            len(list_instance_resp) >= 0, "Step 2 failed: {msg}".format(msg=fail_msg))
 
     @attr(type=['sanity', 'fuel'])
     def test_list_images(self):
@@ -61,7 +61,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
                                        self.compute_client)
 
         self.verify_response_true(
-            len(list_images_resp) >= 0, "Step 2 failed: ".join(fail_msg))
+            len(list_images_resp) >= 0, "Step 2 failed: {msg}".format(msg=fail_msg))
 
     @attr(type=['sanity', 'fuel'])
     def test_list_volumes(self):
@@ -80,7 +80,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
                                         self.volume_client)
 
         self.verify_response_true(
-            len(list_volumes_resp) >= 0, "Step 2 failed: ".join(fail_msg))
+            len(list_volumes_resp) >= 0, "Step 2 failed: {msg}".format(msg=fail_msg))
 
     @attr(type=['sanity', 'fuel'])
     def test_list_snapshots(self):
@@ -98,7 +98,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
                                           1, fail_msg, "snapshots listing",
                                           self.volume_client)
         self.verify_response_true(
-            len(list_snapshots_resp) >= 0, "Step 2 failed: ".join(fail_msg))
+            len(list_snapshots_resp) >= 0, "Step 2 failed: {msg}".format(msg=fail_msg))
 
     @attr(type=['sanity', 'fuel'])
     def test_list_flavors(self):
@@ -117,7 +117,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
                                         self.compute_client)
 
         self.verify_response_true(
-            len(list_flavors_resp) >= 0, "Step 2 failed: ".join(fail_msg))
+            len(list_flavors_resp) >= 0, "Step 2 failed: {msg}".format(msg=fail_msg))
 
     @attr(type=['sanity', 'fuel'])
     def test_list_rate_limits(self):
@@ -137,4 +137,4 @@ class SanityComputeTest(nmanager.SanityChecksTest):
                                        self.compute_client)
 
         self.verify_response_true(
-            list_limits_resp, "Step 2 failed: ".join(fail_msg))
+            list_limits_resp, "Step 2 failed: {msg}".format(msg=fail_msg))

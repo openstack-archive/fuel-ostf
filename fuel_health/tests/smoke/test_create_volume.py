@@ -79,7 +79,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
 
         self.verify_response_true(
             volume.display_name.startswith('ost1_test-volume'),
-            'Step 3 failed: '.join(msg_s1))
+            'Step 3 failed: {msg}'.format(msg=msg_s1))
 
         # create instance
         instance = self.verify(100, self._create_server, 4,

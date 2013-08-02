@@ -60,7 +60,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
 
         self.verify_response_true(
             tenant.name.startswith('ost1_test'),
-            "Step 2 failed: ".join(msg_s1))
+            "Step 2 failed: {msg}".format(msg=msg_s1))
 
         # Create a user:
         msg_s3 = "User can not be created."
@@ -71,7 +71,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
 
         self.verify_response_true(
             user.name.startswith('ost1_test'),
-            'Step 4 failed: '.join(msg_s3))
+            'Step 4 failed: {msg}'.format(msg=msg_s3))
 
         msg_s5 = "User role can not be created. "
 
@@ -82,7 +82,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
 
         self.verify_response_true(
             role.name.startswith('ost1_test'),
-            "Step 6 failed: ".join(msg_s5))
+            "Step 6 failed: {msg}".format(msg=msg_s5))
 
         # Authenticate with created user:
         password = '123456'
@@ -96,7 +96,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                            tenant_id=tenant.id,
                            tenant_name=tenant.name)
 
-        self.verify_response_true(auth, 'Step 8 failed: '.join(msg_s7))
+        self.verify_response_true(auth, 'Step 8 failed: {msg}'.format(msg=msg_s7))
 
         try:
             #Auth in horizon with non-admin user
