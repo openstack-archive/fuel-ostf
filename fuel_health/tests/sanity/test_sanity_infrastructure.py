@@ -111,7 +111,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                        timeout=self.timeout)
             except Exception as exc:
                 LOG.debug(exc)
-                self.fail("Step 1 failed: connection fail")
+                self.fail("Step 1 failed: connection failed.")
             output = self.verify(50, ssh_client.exec_command, 2,
                                  "'ping' command failed. ",
                                  "'ping' command",
@@ -120,7 +120,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             LOG.debug(output)
             self.verify_response_true(
                 expected_output in output,
-                'Step 3 failed: packets to 8.8.8.8 were lost, '
+                'Step 3 failed: packets sent to 8.8.8.8 were lost, '
                 'there is no Internet connection'
                 ' on the compute node')
 
@@ -134,6 +134,6 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
             self.verify_response_true(expected_output in output,
                                       'Step 5 failed: DNS name'
-                                      ' cannot be resolved')
+                                      ' cannot be resolved.')
         else:
-            self.fail('Step 1 failed: There are no compute nodes')
+            self.fail('Step 1 failed: There are no compute nodes.')

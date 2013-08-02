@@ -60,9 +60,9 @@ class ServicesTestJSON(nmanager.SanityChecksTest):
             2. Check response.
         Duration: 1-20 s.
         """
-        fail_msg = 'Users list is unavailable. '
+        fail_msg = 'User list is unavailable. '
         users = self.verify(20, self._list_users,
-                            1, fail_msg, "users listing",
+                            1, fail_msg, "user listing",
                             self.identity_client)
 
         self.verify_response_true(
