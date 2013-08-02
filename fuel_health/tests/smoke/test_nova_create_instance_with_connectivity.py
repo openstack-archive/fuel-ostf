@@ -129,21 +129,10 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Target component: Nova
 
         Scenario:
-            1. Create new keypair (if it`s nonexistent yet).
-            2. Create new sec group (if it`s nonexistent yet).
-            3. Create instance with usage of created sec group and keypair.
+            1. Create new sec group (if it`s nonexistent yet).
+            2. Create instance with usage of created sec group.
         Duration: 50-200 s.
         """
-        if not self.keypairs:
-            self.keypairs[self.tenant_id] = self.verify(
-                25,
-                self._create_keypair,
-                1,
-                "Keypair can not be created.",
-                "keypair creation",
-                self.compute_client
-            )
-
         if not self.security_groups:
             self.security_groups[self.tenant_id] = self.verify(
                 25,
@@ -154,17 +143,15 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                 self.compute_client)
 
         name = rand_name('ost1_test-server-smoke-')
-        keypair_name = self.keypairs[self.tenant_id].name
         security_groups = [self.security_groups[self.tenant_id].name]
 
         server = self.verify(
             200,
             self._create_server,
             3,
-            "Creating instance with usage of created security group"
-            "and keypair failed.",
+            "Creating instance with usage of created security group failed.",
             'image creation',
-            self.compute_client, name, keypair_name, security_groups
+            self.compute_client, name, security_groups
         )
 
         self.servers.append(server)
@@ -175,19 +162,13 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Target component: Nova
 
         Scenario:
-            1. Create new keypair (if it`s nonexistent yet).
-            2. Create new sec group (if it`s nonexistent yet).
-            3. Create instance with usage of created sec group and keypair.
-            4. Create new floating ip.
-            5. Assign floating ip to created instance.
+            1. Create new sec group (if it`s nonexistent yet).
+            2. Create instance with usage of created sec group.
+            3. Create new floating ip.
+            4. Assign floating ip to created instance.
         Duration: 40-200 s.
         """
         if not self.servers:
-            if not self.keypairs:
-                self.keypairs[self.tenant_id] = self.verify(
-                    25, self._create_keypair, 1,
-                    "Keypair can not be created.",
-                    "keypair creation", self.compute_client)
             if not self.security_groups:
                 self.security_groups[self.tenant_id] = self.verify(
                     25, self._create_security_group, 2,
@@ -196,7 +177,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                     self.compute_client)
 
             name = rand_name('ost1_test-server-smoke-')
-            keypair_name = self.keypairs[self.tenant_id].name
             security_groups = [self.security_groups[self.tenant_id].name]
 
             server = self.verify(
@@ -205,7 +185,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                 3,
                 "Server can not be created.",
                 "server creation",
-                self.compute_client, name, keypair_name, security_groups
+                self.compute_client, name, security_groups
             )
             self.servers.append(server)
 
@@ -233,22 +213,16 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Target component: Nova
 
         Scenario:
-            1. Create new keypair (if it`s nonexistent yet).
-            2. Create new sec group (if it`s nonexistent yet).
-            3. Create instance with usage of created sec group and keypair.
+            1. Create new sec group (if it`s nonexistent yet).
+            2. Create instance with usage of created sec group.
             (if it`s nonexistent yet).
-            4. Create new floating IP (if it`s nonexistent yet).
-            5. Assign new floating IP to instance.
-            6. Check connectivity for the floating ip using ping command.
+            3. Create new floating IP (if it`s nonexistent yet).
+            4. Assign new floating IP to instance.
+            5. Check connectivity for the floating ip using ping command.
         Duration: 40-200 s.
         """
         if not self.floating_ips:
             if not self.servers:
-                if not self.keypairs:
-                    self.keypairs[self.tenant_id] = self.verify(
-                        25, self._create_keypair, 1,
-                        "Keypair can not be created.",
-                        "keypair creation", self.compute_client)
                 if not self.security_groups:
                     self.security_groups[self.tenant_id] = self.verify(
                         25, self._create_security_group, 2,
@@ -256,14 +230,13 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                         'security group creation', self.compute_client)
 
                 name = rand_name('ost1_test-server-smoke-')
-                keypair_name = self.keypairs[self.tenant_id].name
                 security_groups = [self.security_groups[self.tenant_id].name]
 
                 server = self.verify(
                     200, self._create_server, 3,
                     "Server can not be created.",
                     'server creation',
-                    self.compute_client, name, keypair_name, security_groups)
+                    self.compute_client, name, security_groups)
 
                 self.servers.append(server)
 
@@ -289,22 +262,16 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         """Check network connectivity from instance via floating ip
 
         Scenario:
-            1. Create new keypair (if it`s nonexistent yet).
-            2. Create new sec group (if it`s nonexistent yet).
-            3. Create instance with usage of created sec group and keypair
+            1. Create new sec group (if it`s nonexistent yet).
+            2. Create instance with usage of created sec group.
             (if it`s nonexistent yet).
-            4. Create new floating IP (if it`s nonexistent yet).
-            5. Assign new floating IP to instance.
-            6. Ssh on instance from controller and execute ping command.
+            3. Create new floating IP (if it`s nonexistent yet).
+            4. Assign new floating IP to instance.
+            5. Ssh on instance from controller and execute ping command.
         Duration: 40-200 s.
         """
         if not self.floating_ips:
             if not self.servers:
-                if not self.keypairs:
-                    self.keypairs[self.tenant_id] = self.verify(
-                        25, self._create_keypair, 1,
-                        "Keypair can not be created.",
-                        "keypair creation", self.compute_client)
                 if not self.security_groups:
                     self.security_groups[self.tenant_id] = self.verify(
                         25, self._create_security_group, 2,
@@ -312,15 +279,13 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                         'security group creation', self.compute_client)
 
                 name = rand_name('ost1_test-server-smoke-')
-                keypair_name = self.keypairs[self.tenant_id].name
                 security_groups = [self.security_groups[self.tenant_id].name]
 
                 server = self.verify(
                     200, self._create_server, 3,
                     "Server can not be created.",
                     'server creation',
-                    self.compute_client, name, keypair_name,
-                    security_groups)
+                    self.compute_client, name, security_groups)
 
                 self.servers.append(server)
 
