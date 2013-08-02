@@ -39,7 +39,7 @@ class ServicesTestJSON(nmanager.SanityChecksTest):
         Scenario:
             1. Request list of services.
             2. Check response.
-        Duration: 1-6 s.
+        Duration: 1-20 s.
         """
         fail_msg = 'Services list is unavailable. '
         services = self.verify(20, self._list_services,
@@ -47,7 +47,7 @@ class ServicesTestJSON(nmanager.SanityChecksTest):
                                self.compute_client)
 
         self.verify_response_true(
-            len(services) >= 0, "Step 2 failed: " + fail_msg)
+            len(services) >= 0, "Step 2 failed: {msg}".format(msg=fail_msg))
 
     @attr(type=['sanity', 'fuel'])
     def test_list_users(self):
@@ -58,12 +58,12 @@ class ServicesTestJSON(nmanager.SanityChecksTest):
         Scenario:
             1. Request list of users.
             2. Check response.
-        Duration: 1-6 s.
+        Duration: 1-20 s.
         """
-        fail_msg = 'Users list is unavailable. '
+        fail_msg = 'User list is unavailable. '
         users = self.verify(20, self._list_users,
-                            1, fail_msg, "users listing",
+                            1, fail_msg, "user listing",
                             self.identity_client)
 
         self.verify_response_true(
-            len(users) >= 0, "Step 2 failed: " + fail_msg)
+            len(users) >= 0, "Step 2 failed: {msg}".format(msg=fail_msg))

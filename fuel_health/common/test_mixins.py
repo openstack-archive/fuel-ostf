@@ -98,8 +98,12 @@ class FuelTestAssertMixin(object):
                 return
         failed_step_msg = ''
         if failed_step:
-            failed_step_msg = ('Step %s failed: ' % str(failed_step))
-        self.fail(failed_step_msg + body_structure + '!=' + value + ' ' + msg)
+            failed_step_msg = ('Step {step} failed: {msg}{refer}'.format(
+                step=str(failed_step),
+                msg=msg,
+                refer=" Please, refer to OpenStack"
+                      " logs for more details."))
+        self.fail(failed_step_msg)
 
     def verify_response_body_content(self, exp_content, act_content, msg='', failed_step=''):
         if exp_content == act_content:

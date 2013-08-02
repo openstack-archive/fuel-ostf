@@ -413,12 +413,12 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                     return True
 
                 except SSHExecCommandFailed as exc:
-                    output_msg = "Error: instance is not reachable by floating ip."
+                    output_msg = "Instance is not reachable by floating ip."
                     LOG.debug(exc)
                     self.fail(output_msg)
                 except Exception as exc:
                     LOG.debug(exc)
-                    self.fail("Connection fail")
+                    self.fail("Connection failed.")
 
             else:
                 self.fail('Wrong tests configurations, one from the next '
@@ -448,7 +448,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                     self.fail(output_msg)
                 except Exception as exc:
                     LOG.debug(exc)
-                    self.fail("Connection fail")
+                    self.fail("Connection failed.")
             else:
                 self.fail('Wrong tests configurations, one from the next '
                           'parameters are empty controller_node_name or '

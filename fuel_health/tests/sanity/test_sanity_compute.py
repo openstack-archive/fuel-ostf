@@ -29,21 +29,21 @@ class SanityComputeTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_list_instances(self):
-        """Instances list availability
+        """Instance list availability
         Test checks that list of instances is available.
         Target component: Nova
         Scenario:
             1. Request list of instances.
             2. Check response.
-        Duration: 1-6 s.
+        Duration: 1-20 s.
         """
-        fail_msg = 'Servers list is unavailable. '
+        fail_msg = 'Instance list is unavailable. '
         list_instance_resp = self.verify(20, self._list_instances,
-                                         1, fail_msg, "instances listing",
+                                         1, fail_msg, "instance listing",
                                          self.compute_client)
 
         self.verify_response_true(
-            len(list_instance_resp) >= 0, "Step 2 failed: " + fail_msg)
+            len(list_instance_resp) >= 0, "Step 2 failed: {msg}".format(msg=fail_msg))
 
     @attr(type=['sanity', 'fuel'])
     def test_list_images(self):
@@ -53,7 +53,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         Scenario:
             1. Request list of images.
             2. Check response.
-        Duration: 1-8 s.
+        Duration: 1-20 s.
         """
         fail_msg = 'Images list is unavailable. '
         list_images_resp = self.verify(20, self._list_images,
@@ -61,26 +61,26 @@ class SanityComputeTest(nmanager.SanityChecksTest):
                                        self.compute_client)
 
         self.verify_response_true(
-            len(list_images_resp) >= 0, "Step 2 failed: " + fail_msg)
+            len(list_images_resp) >= 0, "Step 2 failed: {msg}".format(msg=fail_msg))
 
     @attr(type=['sanity', 'fuel'])
     def test_list_volumes(self):
-        """Volumes list availability
+        """Volume list availability
         Test checks that list of volumes is available.
         Target component: Cinder
 
         Scenario:
             1. Request list of volumes.
             2. Check response.
-        Duration: 1-6 s.
+        Duration: 1-20 s.
         """
-        fail_msg = 'Volumes list is unavailable. '
+        fail_msg = 'Volume list is unavailable. '
         list_volumes_resp = self.verify(20, self._list_volumes,
-                                        1, fail_msg, "volumes listing",
+                                        1, fail_msg, "volume listing",
                                         self.volume_client)
 
         self.verify_response_true(
-            len(list_volumes_resp) >= 0, "Step 2 failed: " + fail_msg)
+            len(list_volumes_resp) >= 0, "Step 2 failed: {msg}".format(msg=fail_msg))
 
     @attr(type=['sanity', 'fuel'])
     def test_list_snapshots(self):
@@ -91,33 +91,33 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         Scenario:
             1. Request list of snapshots.
             2. Check response.
-        Duration: 1-10 s.
+        Duration: 1-20 s.
         """
         fail_msg = 'Snapshots list is unavailable. '
         list_snapshots_resp = self.verify(20, self._list_snapshots,
                                           1, fail_msg, "snapshots listing",
                                           self.volume_client)
         self.verify_response_true(
-            len(list_snapshots_resp) >= 0, "Step 2 failed: " + fail_msg)
+            len(list_snapshots_resp) >= 0, "Step 2 failed: {msg}".format(msg=fail_msg))
 
     @attr(type=['sanity', 'fuel'])
     def test_list_flavors(self):
-        """Flavors list availability
+        """Flavor list availability
         Test checks that list of flavors is available.
         Target component: Nova
 
         Scenario:
             1. Request list of flavors.
             2. Check response.
-        Duration: 1-6 s.
+        Duration: 1-20 s.
         """
         fail_msg = 'Flavors list is unavailable. '
         list_flavors_resp = self.verify(30, self._list_flavors,
-                                        1, fail_msg, "flavors listing",
+                                        1, fail_msg, "flavor listing",
                                         self.compute_client)
 
         self.verify_response_true(
-            len(list_flavors_resp) >= 0, "Step 2 failed: " + fail_msg)
+            len(list_flavors_resp) >= 0, "Step 2 failed: {msg}".format(msg=fail_msg))
 
     @attr(type=['sanity', 'fuel'])
     def test_list_rate_limits(self):
@@ -128,7 +128,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         Scenario:
             1. Request list of limits.
             2. Check response.
-        Duration: 2-6 s.
+        Duration: 2-20 s.
         """
         fail_msg = 'Limits list is unavailable. '
 
@@ -137,4 +137,4 @@ class SanityComputeTest(nmanager.SanityChecksTest):
                                        self.compute_client)
 
         self.verify_response_true(
-            list_limits_resp, "Step 2 failed: " + fail_msg)
+            list_limits_resp, "Step 2 failed: {msg}".format(msg=fail_msg))

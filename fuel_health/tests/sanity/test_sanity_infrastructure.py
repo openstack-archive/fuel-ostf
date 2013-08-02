@@ -48,15 +48,15 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_services_state(self):
-        """Services execution monitoring
+        """Service execution monitoring
         Test all of the expected services are on.
         Target component: OpenStack
 
         Scenario:
             1. Connect to a controller node via SSH.
             2. Execute nova-manage service list command.
-            3. Check there is no failed services (with XXX state)
-        Duration: 2-8 s.
+            3. Check there are no failed services (with XXX state)
+        Duration: 2-50 s.
         """
         output_msg = ''
         cmd = 'nova-manage service list'
@@ -77,10 +77,10 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                  cmd)
 
             output_msg = output_msg or (
-                'Some nova services have not been started')
+                'Some nova services have not been started.')
             LOG.debug(output)
             self.verify_response_true(
-                u'XXX' not in output, 'Step 3 failed: ' + output_msg)
+                u'XXX' not in output, "Step 3 failed: {msg}".format(msg=output_msg))
         else:
             self.fail('Step 1 failed: Wrong tests configurations, controller '
                       'node ip is not specified')
@@ -97,7 +97,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             3. Check all the packets were received.
             4. Execute host 8.8.8.8 from the controller.
             5. Check 8.8.8.8 host is resolved.
-        Duration: 1-12 s.
+        Duration: 1-100 s.
         """
         if self.computes:
             expected_output = "0% packet loss"
@@ -110,7 +110,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                        timeout=self.timeout)
             except Exception as exc:
                 LOG.debug(exc)
-                self.fail("Step 1 failed: connection fail")
+                self.fail("Step 1 failed: connection failed.")
             output = self.verify(50, ssh_client.exec_command, 2,
                                  "'ping' command failed. ",
                                  "'ping' command",
@@ -119,7 +119,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             LOG.debug(output)
             self.verify_response_true(
                 expected_output in output,
-                'Step 3 failed: packets to 8.8.8.8 were lost, '
+                'Step 3 failed: packets sent to 8.8.8.8 were lost, '
                 'there is no Internet connection'
                 ' on the compute node')
 
@@ -133,6 +133,6 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
             self.verify_response_true(expected_output in output,
                                       'Step 5 failed: DNS name'
-                                      ' cannot be resolved')
+                                      ' cannot be resolved.')
         else:
-            self.fail('Step 1 failed: There are no compute nodes')
+            self.fail('Step 1 failed: There are no compute nodes.')
