@@ -68,17 +68,14 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                    self.usr, self.pwd,
                                    key_filename=self.key,
                                    timeout=self.timeout)
-            output = self.verify(50, ssh_client.exec_command,
-                                 1, "'nova-manage' command"
-                                    " execution failed. ",
-                                 "nova-manage command execution",
-                                 cmd)
-        except SSHExecCommandFailed as exc:
-            LOG.debug(exc)
-            self.fail("Step 1 failed: %s commanf failed" % cmd)
         except Exception as exc:
             LOG.debug(exc)
-            self.fail("Step 1 failed: unexpected error %s" % str(exc))
+            self.fail("Step 1 failed: %s" % str(exc))
+
+        output = self.verify(50, ssh_client.exec_command,
+                             1, "'nova-manage' command execution failed. ",
+                             "nova-manage command execution",
+                             cmd)
 
         LOG.debug(output)
         self.verify_response_true(
@@ -92,10 +89,8 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Target component: OpenStack
 
         Scenario:
-            1. Execute ping 8.8.8.8 from a compute node.
-            2. Check all the packets were received.
-            3. Execute host 8.8.8.8 from the compute.
-            4. Check 8.8.8.8 host is resolved.
+            1. Check ping 8.8.8.8 command executes successfully.
+            2. Check host 8.8.8.8 command executes successfully.
         Duration: 1-12 s.
         """
         if not self.computes:
@@ -108,28 +103,20 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                    self.pwd,
                                    key_filename=self.key,
                                    timeout=self.timeout)
-            self.verify(50, ssh_client.exec_command, 1,
-                        "'ping' command failed. ",
-                        "'ping' command",
-                        cmd)
-        except SSHExecCommandFailed as exc:
-            LOG.debug(exc)
-            self.fail("Step 2 failed: ping to 8.8.8.8 was unsuccessful")
         except Exception as exc:
             LOG.debug(exc)
-            self.fail("Step 1 failed: unexpected error %s" % str(exc))
+            self.fail("Step 1 failed: %s" % str(exc))
+
+        self.verify(50, ssh_client.exec_command, 1,
+                    "'ping' command failed. ",
+                    "'ping' command",
+                    cmd)
 
         expected_output = "google"
         cmd = "host 8.8.8.8"
-
-        try:
-            output = self.verify(50, ssh_client.exec_command, 4,
-                                 "'host' command failed. ",
-                                 "'host' command",
-                                 cmd)
-        except SSHExecCommandFailed as exc:
-            LOG.debug(exc)
-            self.fail("Step 3 failed: %s command was unsuccessful" % cmd)
-
+        output = self.verify(50, ssh_client.exec_command, 2,
+                             "'host' command failed. ",
+                             "'host' command",
+                             cmd)
         self.verify_response_true(expected_output in output,
-                                  'Step 4 failed: DNS name cannot be resolved')
+                                  'Step 2 failed: DNS name cannot be resolved')
