@@ -47,21 +47,22 @@ class VolumesTest(nmanager.SmokeChecksTest):
 
     @attr(type=["fuel", "smoke"])
     def test_volume_create(self):
-        """Volume creation
+        """Create instance volume
         Target component: Compute
 
         Scenario:
             1. Create a new small-size volume.
             2. Wait for "available" volume status.
-            3. Check response contains "display_name" section.
-            4. Create instance and wait for "Active" status
-            5. Attach volume to instance.
-            6. Check volume status is "in use".
-            7. Get created volume information by its id.
-            8. Detach volume from instance.
-            9. Check volume has "available" status.
-            10. Delete volume.
-        Duration: 48-100 s.
+            3. Check volume has correct name.
+            4. Create new instance.
+            5. Wait for "Active" status
+            6. Attach volume to instance.
+            7. Check volume status is "in use".
+            8. Get created volume information by its id.
+            9. Detach volume from instance.
+            10. Check volume has "available" status.
+            11. Delete volume.
+        Duration: 48-200 s.
         """
 
         msg_s1 = 'Volume was not created.'
@@ -79,7 +80,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
 
         self.verify_response_true(
             volume.display_name.startswith('ost1_test-volume'),
-            'Step 3 failed: ' + msg_s1)
+            'Step 3 failed: {msg}'.format(msg=msg_s1))
 
         # create instance
         instance = self.verify(100, self._create_server, 4,
@@ -88,14 +89,15 @@ class VolumesTest(nmanager.SmokeChecksTest):
                                self.compute_client)
 
         self.verify(200, self._wait_for_instance_status, 5,
-                    msg_s1,
-                    "volume becoming 'available'",
+                    'Instance did not get "available" status',
+                    "instance becoming 'available'",
                     instance, 'ACTIVE')
 
         # Attach volume
         self.verify(20, self._attach_volume_to_instance, 6,
                     'Volume couldn`t be attached.',
                     'volume attachment',
+                    # volume, instance.id)
                     volume, instance.id)
 
         self.verify(100, self._wait_for_volume_status, 7,
@@ -120,7 +122,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
                     self.volume_client, volume)
 
         self.verify(100, self._wait_for_volume_status, 10,
-                    'Volume does not get "available"'
+                    'Volume did not get "available"'
                     ' status.',
                     "volume becoming 'available'",
                     volume, 'available')

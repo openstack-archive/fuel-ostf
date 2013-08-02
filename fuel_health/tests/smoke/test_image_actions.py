@@ -89,41 +89,40 @@ class TestImageAction(nmanager.OfficialClientTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_snapshot(self):
-        """Launching instance
+        """Launch instance, create snapshot, launch instance from snapshot
         Target component: Glance
 
         Scenario:
             1. Create new keypair to boot an instance.
             2. Boot default image.
             3. Make snapshot of created server.
-            4. Delete instance from step 1
+            4. Delete instance created in step 1.
             5. Boot another instance from created snapshot.
-        Duration: 80-310 s.
+        Duration: 80-180 s.
         """
         self.verify(25, self._add_keypair, 1,
-                    "Keypair couldn`t be created.",
+                    "Keypair can not be created.",
                     "keypair creation")
 
         # boot an instance and create a timestamp file in it
         server = self.verify(180, self._boot_image, 2,
-                             "Image couldn`t be booted.",
+                             "Image can not be booted.",
                              "image booting",
                              nmanager.get_image_from_name())
 
         # snapshot the instance
         snapshot_image_id = self.verify(100, self._create_image, 3,
-                                        "Making snapshot of an"
-                                        " instance failed.",
+                                        "Snapshot of an"
+                                        " instance can not be made.",
                                         'snapshotting an instance',
                                         server)
         
         self.verify(100, self.compute_client.servers.delete, 4,
-                    "Instance deletion failed.",
+                    "Instance can not be deleted.",
                     'Instance deletion',
                     server)
-
             
         self.verify(100, self._boot_image, 5,
-                    "Booting instance from the snapshot failed.",
+                    "Instance can not be booted from snapshot.",
                     'booting instance from snapshot',
                     snapshot_image_id)
