@@ -80,7 +80,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         LOG.debug(output)
         self.verify_response_true(
             u'XXX' not in output, 'Step 2 failed: Some nova services '
-                                  'have not been started')
+                                  'have not been started.')
 
     @attr(type=['sanity', 'fuel'])
     def test_dns_state(self):
