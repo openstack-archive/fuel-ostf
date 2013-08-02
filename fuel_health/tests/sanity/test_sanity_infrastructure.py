@@ -18,7 +18,6 @@ import logging
 from nose.plugins.attrib import attr
 
 from fuel_health.common.ssh import Client as SSHClient
-from fuel_health.exceptions import SSHExecCommandFailed
 from fuel_health import nmanager
 
 LOG = logging.getLogger(__name__)
