@@ -245,7 +245,9 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def setUp(self):
         super(NovaNetworkScenarioTest, self).setUp()
-            self.skip(reason='Nova Networking is not available')
+        if not self._enabled:
+            self.fail('Nova Networking is not available')
+
 
     @classmethod
     def setUpClass(cls):
@@ -344,11 +346,9 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         nets = self.compute_client.networks.list()
         return nets
 
-    def _create_server(self, client, name, key_name, security_groups):
+    def _create_server(self, client, name, security_groups):
         base_image_id = get_image_from_name()
         create_kwargs = {
-
-            'key_name': key_name,
             'security_groups': security_groups,
         }
         self._create_nano_flavor()
@@ -376,8 +376,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             self.floating_ips.append(floating_ip)
             return floating_ip
         else:
-            self.fail('Incorrect OpenStack configurations. '
-                      'No floating_ips pools found')
+            self.fail('No available floating IP found')
 
     def _assign_floating_ip_to_instance(self, client, server, floating_ip):
         try:
@@ -525,7 +524,7 @@ class SanityChecksTest(OfficialClientTest):
     def setUp(self):
         super(SanityChecksTest, self).setUp()
         if not self._enabled:
-            self.fail(reason='Nova Networking is not available')
+            self.fail('Nova Networking is not available')
 
     @classmethod
     def setUpClass(cls):
@@ -588,8 +587,7 @@ class SmokeChecksTest(OfficialClientTest):
     def setUp(self):
         super(SmokeChecksTest, self).setUp()
         if not self._enabled:
-            self.fail(reason='Nova Networking is not available')
-
+            self.fail('Nova Networking is not available')
 
     @classmethod
     def setUpClass(cls):

@@ -61,10 +61,10 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         cls.servers = []
         cls.floating_ips = []
 
-        def setUp(self):
-            super(TestNovaNetwork, self).setUp()
-            if not self.config.compute.compute_nodes:
-                self.fail(reason='There are not any compute nodes')
+    def setUp(self):
+        super(TestNovaNetwork, self).setUp()
+        if not self.config.compute.compute_nodes:
+            self.fail('There are not compute nodes')
 
     @classmethod
     def tearDownClass(cls):
@@ -134,42 +134,29 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Target component: Nova
 
         Scenario:
-            1. Create new keypair (if it`s nonexistent yet).
-            2. Create new sec group (if it`s nonexistent yet).
-            3. Create instance with usage of created sec group and keypair.
+            1. Create new sec group (if it`s nonexistent yet).
+            2. Create instance with usage of created sec group.
         Duration: 50-200 s.
         """
-        if not self.keypairs:
-            self.keypairs[self.tenant_id] = self.verify(
-                25,
-                self._create_keypair,
-                1,
-                "Keypair can not be created.",
-                "keypair creation",
-                self.compute_client
-            )
-
         if not self.security_groups:
             self.security_groups[self.tenant_id] = self.verify(
                 25,
                 self._create_security_group,
-                2,
+                1,
                 "Security group can not be created.",
                 'security group creation',
                 self.compute_client)
 
         name = rand_name('ost1_test-server-smoke-')
-        keypair_name = self.keypairs[self.tenant_id].name
         security_groups = [self.security_groups[self.tenant_id].name]
 
         server = self.verify(
             200,
             self._create_server,
-            3,
-            "Creating instance with usage of created security group"
-            "and keypair failed.",
+            2,
+            "Creating instance with usage of created security group failed.",
             'image creation',
-            self.compute_client, name, keypair_name, security_groups
+            self.compute_client, name, security_groups
         )
 
         self.servers.append(server)
@@ -180,44 +167,37 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Target component: Nova
 
         Scenario:
-            1. Create new keypair (if it`s nonexistent yet).
-            2. Create new sec group (if it`s nonexistent yet).
-            3. Create instance with usage of created sec group and keypair.
-            4. Create new floating ip.
-            5. Assign floating ip to created instance.
+            1. Create new sec group (if it`s nonexistent yet).
+            2. Create instance with usage of created sec group.
+            3. Create new floating ip.
+            4. Assign floating ip to created instance.
         Duration: 40-200 s.
         """
         if not self.servers:
-            if not self.keypairs:
-                self.keypairs[self.tenant_id] = self.verify(
-                    25, self._create_keypair, 1,
-                    "Keypair can not be created.",
-                    "keypair creation", self.compute_client)
             if not self.security_groups:
                 self.security_groups[self.tenant_id] = self.verify(
-                    25, self._create_security_group, 2,
+                    25, self._create_security_group, 1,
                     "Security group can not be created.",
                     'security group creation',
                     self.compute_client)
 
             name = rand_name('ost1_test-server-smoke-')
-            keypair_name = self.keypairs[self.tenant_id].name
             security_groups = [self.security_groups[self.tenant_id].name]
 
             server = self.verify(
                 200,
                 self._create_server,
-                3,
+                2,
                 "Server can not be created.",
                 "server creation",
-                self.compute_client, name, keypair_name, security_groups
+                self.compute_client, name, security_groups
             )
             self.servers.append(server)
 
         floating_ip = self.verify(
             20,
             self._create_floating_ip,
-            4,
+            3,
             "Floating IP can not be created.",
             'floating IP creation')
 
@@ -225,7 +205,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.verify(
                 10,
                 self._assign_floating_ip_to_instance,
-                5,
+                4,
                 "Floating IP can not be assigned.",
                 'floating IP assignment',
                 self.compute_client, self.servers[0], floating_ip)
@@ -234,58 +214,51 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_007_check_public_network_connectivity(self):
-        """Check network connectivity via floating IP
+        """Check that VM is accessible via floating IP address
         Target component: Nova
 
         Scenario:
-            1. Create new keypair (if it`s nonexistent yet).
-            2. Create new sec group (if it`s nonexistent yet).
-            3. Create instance with usage of created sec group and keypair.
+            1. Create new sec group (if it`s nonexistent yet).
+            2. Create instance with usage of created sec group.
             (if it`s nonexistent yet).
-            4. Create new floating IP (if it`s nonexistent yet).
-            5. Assign new floating IP to instance.
-            6. Check connectivity for the floating ip using ping command.
+            3. Create new floating IP (if it`s nonexistent yet).
+            4. Assign new floating IP to instance.
+            5. Check connectivity for the floating ip using ping command.
         Duration: 40-200 s.
         """
         if not self.floating_ips:
             if not self.servers:
-                if not self.keypairs:
-                    self.keypairs[self.tenant_id] = self.verify(
-                        25, self._create_keypair, 1,
-                        "Keypair can not be created.",
-                        "keypair creation", self.compute_client)
                 if not self.security_groups:
                     self.security_groups[self.tenant_id] = self.verify(
-                        25, self._create_security_group, 2,
+                        25, self._create_security_group, 1,
                         "Security group can not be created.",
                         'security group creation', self.compute_client)
 
                 name = rand_name('ost1_test-server-smoke-')
-                keypair_name = self.keypairs[self.tenant_id].name
                 security_groups = [self.security_groups[self.tenant_id].name]
 
                 server = self.verify(
-                    200, self._create_server, 3,
+                    200, self._create_server, 2,
                     "Server can not be created.",
                     'server creation',
-                    self.compute_client, name, keypair_name, security_groups)
+                    self.compute_client, name, security_groups)
 
                 self.servers.append(server)
 
-            floating_ip = self.verify(20, self._create_floating_ip, 4,
+            floating_ip = self.verify(20, self._create_floating_ip, 3,
                                       "Floating IP can not be created.",
                                       'floating IP creation')
             self.floating_ips.append(floating_ip)
 
         if self.servers and self.floating_ips:
-            self.verify(10, self._assign_floating_ip_to_instance, 5,
+            self.verify(10, self._assign_floating_ip_to_instance, 4,
                         "Floating IP can not be assigned.",
                         "floating IP assignment",
                         self.compute_client, self.servers[0], self.floating_ips[0])
 
         if self.floating_ips:
             ip_address = self.floating_ips[0].ip
-            self.verify(100, self._check_vm_connectivity, 6,
+            self.verify(100, self._check_vm_connectivity, 5,
                         "VM connectivity doesn`t function properly.",
                         'VM connectivity checking', ip_address)
 
@@ -294,50 +267,42 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         """Check network connectivity from instance via floating ip
 
         Scenario:
-            1. Create new keypair (if it`s nonexistent yet).
-            2. Create new sec group (if it`s nonexistent yet).
-            3. Create instance with usage of created sec group and keypair
+            1. Create new sec group (if it`s nonexistent yet).
+            2. Create instance with usage of created sec group.
             (if it`s nonexistent yet).
-            4. Create new floating IP (if it`s nonexistent yet).
-            5. Assign new floating IP to instance.
-            6. Ssh on instance from controller and execute ping command.
+            3. Create new floating IP (if it`s nonexistent yet).
+            4. Assign new floating IP to instance.
+            5. Ssh on instance from controller and execute ping command.
         Duration: 40-200 s.
         """
         if not self.floating_ips:
             if not self.servers:
-                if not self.keypairs:
-                    self.keypairs[self.tenant_id] = self.verify(
-                        25, self._create_keypair, 1,
-                        "Keypair can not be created.",
-                        "keypair creation", self.compute_client)
                 if not self.security_groups:
                     self.security_groups[self.tenant_id] = self.verify(
-                        25, self._create_security_group, 2,
+                        25, self._create_security_group, 1,
                         "Security group can not be created.",
                         'security group creation', self.compute_client)
 
                 name = rand_name('ost1_test-server-smoke-')
-                keypair_name = self.keypairs[self.tenant_id].name
                 security_groups = [self.security_groups[self.tenant_id].name]
 
                 server = self.verify(
-                    200, self._create_server, 3,
+                    200, self._create_server, 2,
                     "Server can not be created.",
                     'server creation',
-                    self.compute_client, name, keypair_name,
-                    security_groups)
+                    self.compute_client, name, security_groups)
 
                 self.servers.append(server)
 
             floating_ip = self.verify(
-                20, self._create_floating_ip, 4,
+                20, self._create_floating_ip, 3,
                 "Floating IP can not be created.",
                 'floating IP creation')
 
             self.floating_ips.append(floating_ip)
 
         if self.servers and self.floating_ips:
-            self.verify(10, self._assign_floating_ip_to_instance, 5,
+            self.verify(10, self._assign_floating_ip_to_instance, 4,
                     "Floating IP can not be assigned.",
                     "floating IP assignment",
                     self.compute_client, self.servers[0], self.floating_ips[0])
@@ -346,6 +311,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             ip_address = self.floating_ips[0].ip
             LOG.debug(ip_address)
             self.verify(100, self._check_connectivity_from_vm,
-                        6, ("Connectivity to 8.8.8.8 from VM doesn`t "
+                        5, ("Connectivity to 8.8.8.8 from VM doesn`t "
                             "function properly."),
                         'public connectivity checking from VM', ip_address)
