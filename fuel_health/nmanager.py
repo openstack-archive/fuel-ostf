@@ -245,10 +245,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def setUp(self):
         super(NovaNetworkScenarioTest, self).setUp()
-        if not self._enabled:
             self.skip(reason='Nova Networking not available')
-        if not self.config.compute.compute_nodes:
-            self.skip(reason='There are not any compute nodes')
 
     @classmethod
     def setUpClass(cls):
@@ -528,7 +525,7 @@ class SanityChecksTest(OfficialClientTest):
     def setUp(self):
         super(SanityChecksTest, self).setUp()
         if not self._enabled:
-            self.skip(reason='Nova Networking not available')
+            self.fail(reason='Nova Networking not available')
 
     @classmethod
     def setUpClass(cls):
@@ -591,11 +588,7 @@ class SmokeChecksTest(OfficialClientTest):
     def setUp(self):
         super(SmokeChecksTest, self).setUp()
         if not self._enabled:
-            self.skip(reason='Nova Networking not available')
-        if not self.config.volume.cinder_node_exist:
-            self.skip(reason='There are not any cinder nodes')
-        if not self.config.compute.compute_nodes:
-            self.skip(reason='There are not any compute nodes')
+            self.fail(reason='Nova Networking not available')
 
 
     @classmethod

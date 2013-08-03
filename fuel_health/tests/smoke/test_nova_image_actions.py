@@ -34,6 +34,11 @@ class TestImageAction(nmanager.SmokeChecksTest):
       - verify instance can be booted from snapshot.
     """
 
+    def setUp(self):
+        super(TestImageAction, self).setUp()
+        if not self.config.compute.compute_nodes:
+            self.fail(reason='There are not any compute nodes')
+
     def _wait_for_server_status(self, server, status):
         self.status_timeout(self.compute_client.servers,
                             server.id,
