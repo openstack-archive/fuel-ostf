@@ -61,6 +61,11 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         cls.servers = []
         cls.floating_ips = []
 
+    def setUp(self):
+        super(TestNovaNetwork, self).setUp()
+        if not self.config.compute.compute_nodes:
+            self.fail('There are not any compute nodes')
+
     @classmethod
     def tearDownClass(cls):
         super(TestNovaNetwork, cls).tearDownClass()
