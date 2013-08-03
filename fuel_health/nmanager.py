@@ -245,7 +245,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def setUp(self):
         super(NovaNetworkScenarioTest, self).setUp()
-            self.skip(reason='Nova Networking not available')
+            self.skip(reason='Nova Networking is not available')
 
     @classmethod
     def setUpClass(cls):
@@ -525,7 +525,7 @@ class SanityChecksTest(OfficialClientTest):
     def setUp(self):
         super(SanityChecksTest, self).setUp()
         if not self._enabled:
-            self.fail(reason='Nova Networking not available')
+            self.fail(reason='Nova Networking is not available')
 
     @classmethod
     def setUpClass(cls):
@@ -588,7 +588,7 @@ class SmokeChecksTest(OfficialClientTest):
     def setUp(self):
         super(SmokeChecksTest, self).setUp()
         if not self._enabled:
-            self.fail(reason='Nova Networking not available')
+            self.fail(reason='Nova Networking is not available')
 
 
     @classmethod
