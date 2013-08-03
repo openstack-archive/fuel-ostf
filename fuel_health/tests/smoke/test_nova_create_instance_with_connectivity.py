@@ -272,7 +272,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             (if it`s nonexistent yet).
             3. Create new floating IP (if it`s nonexistent yet).
             4. Assign new floating IP to instance.
-            5. Ssh on instance from controller and execute ping command.
+            5. Check that public IP address 8.8.8.8 is available from instance.
         Duration: 40-200 s.
         """
         if not self.floating_ips:
