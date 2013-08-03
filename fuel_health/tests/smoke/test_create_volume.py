@@ -29,6 +29,13 @@ class VolumesTest(nmanager.SmokeChecksTest):
     def setUpClass(cls):
         super(VolumesTest, cls).setUpClass()
 
+    def setUp(self):
+        super(VolumesTest, self).setUp()
+        if not self.config.volume.cinder_node_exist:
+            self.fail(reason='There are not any cinder nodes')
+        if not self.config.compute.compute_nodes:
+            self.fail(reason='There are not any compute nodes')
+
     @classmethod
     def tearDownClass(cls):
         super(VolumesTest, cls).tearDownClass()
