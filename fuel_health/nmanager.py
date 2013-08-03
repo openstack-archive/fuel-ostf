@@ -346,11 +346,9 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         nets = self.compute_client.networks.list()
         return nets
 
-    def _create_server(self, client, name, key_name, security_groups):
+    def _create_server(self, client, name, security_groups):
         base_image_id = get_image_from_name()
         create_kwargs = {
-
-            'key_name': key_name,
             'security_groups': security_groups,
         }
         self._create_nano_flavor()
