@@ -38,8 +38,8 @@ class FlavorsAdminTest(nmanager.SmokeChecksTest):
 
         Scenario:
             1. Create small-size flavor.
-            2. Check created flavor has expected name.
-            3. Check flavor disk has expected size.
+            2. Check that created flavor has the expected name.
+            3. Check that the flavor disk has the expected size.
         Duration: 1-30 s.
         """
         fail_msg = "Flavor was not created properly."

@@ -12,7 +12,7 @@ class FuelTestAssertMixin(object):
     """
     Mixin class with a set of assert methods created to abstract
     from unittest assertion methods and provide human
-    readable descriptions where it is possible
+    readable descriptions where possible
     """
     def verify_response_status(self, status, appl='Application', msg='', failed_step=''):
         """
@@ -23,7 +23,7 @@ class FuelTestAssertMixin(object):
         :param appl: the name of application requested
         :param status: response status
         :param msg: message to be used instead the default one
-        :failed_step: specifies step of the test scenario was not successful
+        :failed_step: the step of the test scenario that has failed
         """
         if status in [200, 201, 202]:
             return
@@ -31,20 +31,20 @@ class FuelTestAssertMixin(object):
         human_readable_statuses = {
             400: ('Something changed in {appl} and request is no '
                   'longer recognized as valid. Please verify that you '
-                  'are not trying to address HTTP request to HTTPS socket'),
+                  'are not sending an HTTP request to an HTTPS socket'),
             401: 'Unauthorized, please check Keystone and {appl} connectivity',
-            403: ('Forbidden, please verify Keystone and {appl} '
-                  'security policies did not change'),
-            404: '{appl} server is running but application is not found',
+            403: ('Forbidden, please check if Keystone and {appl} '
+                  'security policies have changed'),
+            404: '{appl} server is running but the application is not found',
             500: '{appl} server is experiencing some problems',
             503: '{appl} server is experiencing problems'
         }
 
         human_readable_status_groups = {
             3: ('Status {status}. Redirection. Please check that all {appl}'
-                ' proxy settings are set correctly'),
+                ' proxy settings are correct'),
             4: ('Status {status}. Client error. Please verify that your {appl}'
-                ' configurations corresponds to re one defined in '
+                ' configuration corresponds to the one defined in '
                 'Fuel configuration '),
             5: 'Status {status}. Server error. Please check {appl} logs'
         }
@@ -101,7 +101,7 @@ class FuelTestAssertMixin(object):
             failed_step_msg = ('Step {step} failed: {msg}{refer}'.format(
                 step=str(failed_step),
                 msg=msg,
-                refer=" Please, refer to OpenStack"
+                refer=" Please refer to OpenStack"
                       " logs for more details."))
         self.fail(failed_step_msg)
 
@@ -117,7 +117,7 @@ class FuelTestAssertMixin(object):
     def verify_response_true(self, resp, msg):
         if resp:
             return
-        self.fail(msg + " Please, refer to OpenStack logs for more details.")
+        self.fail(msg + " Please refer to OpenStack logs for more details.")
 
     def verify(self, secs, func, step='', msg ='', action='', *args, **kwargs):
         """
@@ -126,7 +126,7 @@ class FuelTestAssertMixin(object):
         :func: function to be verified;
         :step: number of test step;
         :msg: message that will be displayed if an exception occurs;
-        :action: action that is performed by the method (e.g. "image listing").
+        :action: action that is performed by the method (e.g. "listing images").
         """
         try:
             with timeout(secs, action):
@@ -135,7 +135,7 @@ class FuelTestAssertMixin(object):
             LOG.debug(exc)
             if type(exc) is AssertionError:
                 msg = exc.message
-            self.fail("Step %s failed: " % step + msg + " Please,"
+            self.fail("Step %s failed: " % step + msg + " Please"
                                                         " refer to OpenStack"
                                                         " logs for more details.")
         else:
@@ -174,7 +174,7 @@ class timeout(object):
             return False  # never swallow other exceptions
         else:
             msg = "Time limit exceeded while waiting" \
-                  " for {call} to be performed."\
+                  " for {call} to finish."\
                 .format(call=self.action)
             raise AssertionError(msg)
 

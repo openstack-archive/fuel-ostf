@@ -25,8 +25,8 @@ LOG = logging.getLogger(__name__)
 
 class ServicesTestJSON(nmanager.SanityChecksTest):
     """
-    TestClass contains tests check base authentication functionality.
-    Special requirements: OS admin user permissions needed
+    TestClass contains tests that check basic authentication functionality.
+    Special requirements: OS admin user permissions are needed
     """
     _interface = 'json'
 
@@ -37,8 +37,8 @@ class ServicesTestJSON(nmanager.SanityChecksTest):
         Target component: Nova
 
         Scenario:
-            1. Request list of services.
-            2. Check response.
+            1. Request the list of services.
+            2. Confirm that a response is received.
         Duration: 1-20 s.
         """
         fail_msg = 'Services list is unavailable. '
@@ -56,8 +56,8 @@ class ServicesTestJSON(nmanager.SanityChecksTest):
         Target component: Keystone
 
         Scenario:
-            1. Request list of users.
-            2. Check response.
+            1. Request the list of users.
+            2. Confirm that a response is received.
         Duration: 1-20 s.
         """
         fail_msg = 'User list is unavailable. '

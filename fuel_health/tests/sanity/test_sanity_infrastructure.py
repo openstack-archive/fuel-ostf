@@ -24,12 +24,12 @@ LOG = logging.getLogger(__name__)
 
 
 class SanityInfrastructureTest(nmanager.SanityChecksTest):
-    """TestClass contains tests check the whole OpenStack availability.
+    """TestClass contains tests that check the whole OpenStack availability.
     Special requirements:
-            1. A controller's IP should be specified.
-            2. A compute's IP should be specified.
+            1. A controller's IP address should be specified.
+            2. A compute's IP address should be specified.
             3. SSH user credentials for the controller and the compute
-                should be specified controller_node_ssh_user parameter
+               should be specified in the controller_node_ssh_user parameter
     """
     _interface = 'json'
 
@@ -48,14 +48,14 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_services_state(self):
-        """Service execution monitoring
-        Test all of the expected services are on.
+        """Service status monitoring
+        Confirm that all required services are running.
         Target component: OpenStack
 
         Scenario:
             1. Connect to a controller node via SSH.
             2. Execute nova-manage service list command.
-            3. Check there are no failed services (with XXX state)
+            3. Confirm that there are no failed services (with state 'XXX')
         Duration: 2-50 s.
         """
         output_msg = ''
@@ -71,8 +71,8 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                 LOG.debug(exc)
                 self.fail("Step 1 failed: connection failed. ")
             output = self.verify(50, ssh_client.exec_command,
-                                 2, "'nova-manage' command"
-                                 " execution failed. ",
+                                 2, "Failed to execute the"
+								 " 'nova-manage' command.",
                                  "nova-manage command execution",
                                  cmd)
 
@@ -82,13 +82,13 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             self.verify_response_true(
                 u'XXX' not in output, "Step 3 failed: {msg}".format(msg=output_msg))
         else:
-            self.fail('Step 1 failed: Wrong tests configurations, controller '
-                      'node ip is not specified')
+            self.fail('Step 1 failed: Test configuration is invalid, controller '
+                      'node IP address is not specified')
 
     @attr(type=['sanity', 'fuel'])
     def test_dns_state(self):
         """DNS availability
-        Test dns is available.
+        Test DNS resolution on compute nodes.
         Target component: OpenStack
 
         Scenario:
@@ -121,7 +121,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                 expected_output in output,
                 'Step 3 failed: packets sent to 8.8.8.8 were lost, '
                 'there is no Internet connection'
-                ' on the compute node')
+                ' on the compute node.')
 
             expected_output = ("8.8.8.8.in-addr.arpa domain name pointer "
                                "google-public-dns-a.google.com.")
