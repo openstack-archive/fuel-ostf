@@ -24,6 +24,53 @@ class MuranoSanityTests(murano.MuranoTest):
         1. Murano component should be installed.
     """
 
+    def test_check_default_key_pair(self):
+        """Check Default Key Pair 'murano-lb-key' For Server Farms
+        Test checks that user has Key Pair 'murano-lb-key'.
+        Please, see more detailed information in Murano Administrator Guide.
+        Target component: Murano
+
+        Scenario:
+            1. Check that Key Pair 'murano-lb-key' exists.
+
+        Duration: 5 s.
+
+        Deployment tags: Murano
+        """
+
+        keyname = 'murano-lb-key'
+        fail_msg = "Key Pair %s does not exist. " % keyname
+
+        self.verify(5, self.is_keypair_available, 1, fail_msg,
+                    "checking if %s keypair is available" % keyname,
+                    keyname)
+
+    def test_check_windows_image_with_murano_tag(self):
+        """Check Windows Image With Murano Tag
+        Test checks that user has windows image with murano tag.
+        Please, see more detailed information in Murano Administrator Guide.
+        Target component: Murano
+
+        Scenario:
+            1. Check that image with Murano tag imported in Glance.
+
+        Duration: 5 s.
+
+        Deployment tags: Murano
+        """
+
+        exp_key = 'murano_image_info'
+
+        fail_msg = "Image with Murano tag wasn't imported into Glance"
+
+        find_image = lambda k: len(
+            [i for i in self.compute_client.images.list()
+             if k in i.metadata) > 0
+
+        self.verify(5, find_image, 1, fail_msg,
+                    "checking if image with Murano tag is available", exp_key)
+
+
     def test_create_and_delete_service(self):
         """Murano environment and service creation, listing and deletion
         Test checks if it's possible to create and delete service.
@@ -37,7 +84,10 @@ class MuranoSanityTests(murano.MuranoTest):
             5. Request the list of services.
             6. Send request to delete service.
             7. Send request to delete environment.
-        Duration: 35 s.
+
+        Duration: 10 s.
+
+        Deployment tags: Murano
         """
 
         fail_msg = 'Cannot create environment.'
