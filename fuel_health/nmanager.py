@@ -409,7 +409,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                     return True
 
                 except SSHExecCommandFailed as exc:
-                    output_msg = "Instance is not reachable by floating ip."
+                    output_msg = "Instance is not reachable by floating IP."
                     LOG.debug(exc)
                     self.fail(output_msg)
                 except Exception as exc:
@@ -439,7 +439,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                     LOG.debug('Get ssh to instance')
                     return True
                 except SSHExecCommandFailed as exc:
-                    output_msg = "Error: instance is not reachable by floating ip."
+                    output_msg = "Instance is not reachable by floating IP."
                     LOG.debug(exc)
                     self.fail(output_msg)
                 except Exception as exc:

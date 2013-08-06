@@ -34,7 +34,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
      - Network creation
      - Instance creation
      - Floating ip creation
-     - Instance connectivity by floating ip
+     - Instance connectivity by floating IP
     """
 
     @classmethod
@@ -64,7 +64,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     def setUp(self):
         super(TestNovaNetwork, self).setUp()
         if not self.config.compute.compute_nodes:
-            self.fail('There are not compute nodes')
+            self.fail('There are no compute nodes')
 
     @classmethod
     def tearDownClass(cls):
@@ -92,7 +92,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Target component: Nova
 
         Scenario:
-            1. Create security group, check if it was created correctly.
+            1. Create a security group, check if it was created correctly.
         Duration: 2-25 s.
         """
         self.security_groups[self.tenant_id] = self.verify(
@@ -107,9 +107,9 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Target component: Nova
 
         Scenario:
-            1. Get list of networks.
-            2. Check seen network labels equal to expected ones.
-            3. Check seen network ids equal to expected ones.
+            1. Get the list of networks.
+            2. Confirm that networks have expected labels.
+            3. Confirm that networks have expected ids.
         Duration: 1-50 s.
         """
         seen_nets = self.verify(
@@ -117,7 +117,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self._list_networks,
             1,
             "List of networks is not available.",
-            'networks listing'
+            'listing networks'
         )
         seen_labels, seen_ids = zip(*((n.label, n.id) for n in seen_nets))
         for mynet in self.network:
@@ -134,8 +134,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Target component: Nova
 
         Scenario:
-            1. Create new sec group (if it`s nonexistent yet).
-            2. Create instance with usage of created sec group.
+            1. Create a new security group (if it doesn`t exist yet).
+            2. Create an instance using the new security group.
         Duration: 50-200 s.
         """
         if not self.security_groups:
@@ -154,7 +154,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             200,
             self._create_server,
             2,
-            "Creating instance with usage of created security group failed.",
+            "Creating instance using the new security group has failed.",
             'image creation',
             self.compute_client, name, security_groups
         )
@@ -167,10 +167,10 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Target component: Nova
 
         Scenario:
-            1. Create new sec group (if it`s nonexistent yet).
-            2. Create instance with usage of created sec group.
-            3. Create new floating ip.
-            4. Assign floating ip to created instance.
+            1. Create a new security group (if doesn`t exist yet).
+            2. Create instance using the new security group.
+            3. Create a new floating IP.
+            4. Assign the new floating IP to the instance.
         Duration: 40-200 s.
         """
         if not self.servers:
@@ -218,12 +218,12 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Target component: Nova
 
         Scenario:
-            1. Create new sec group (if it`s nonexistent yet).
-            2. Create instance with usage of created sec group.
-            (if it`s nonexistent yet).
-            3. Create new floating IP (if it`s nonexistent yet).
-            4. Assign new floating IP to instance.
-            5. Check connectivity for the floating ip using ping command.
+            1. Create a new security group (if it doesn`t exist yet).
+            2. Create an instance using the new security group
+			(if it doesn`t exist yet).
+            3. Create a new floating IP (if doesn`t exist yet).
+            4. Assign the new floating IP to the instance.
+            5. Check connectivity to the floating IP using ping command.
         Duration: 40-200 s.
         """
         if not self.floating_ips:
@@ -264,15 +264,15 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_008_check_public_instance_connectivity_from_instance(self):
-        """Check network connectivity from instance via floating ip
+        """Check network connectivity from instance via floating IP
 
         Scenario:
-            1. Create new sec group (if it`s nonexistent yet).
-            2. Create instance with usage of created sec group.
-            (if it`s nonexistent yet).
-            3. Create new floating IP (if it`s nonexistent yet).
-            4. Assign new floating IP to instance.
-            5. Check that public IP address 8.8.8.8 is available from instance.
+            1. Create a new security group (if it doesn`t exist yet).
+            2. Create an instance using the new security group.
+            (if it doesn`t exist yet).
+            3. Create a new floating IP (if it doesn`t exist yet).
+            4. Assign the new floating IP to the instance.
+            5. Check that public IP address 8.8.8.8 can be pinged from instance.
         Duration: 40-200 s.
         """
         if not self.floating_ips:
@@ -311,6 +311,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             ip_address = self.floating_ips[0].ip
             LOG.debug(ip_address)
             self.verify(100, self._check_connectivity_from_vm,
-                        5, ("Connectivity to 8.8.8.8 from VM doesn`t "
+                        5, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                             "function properly."),
                         'public connectivity checking from VM', ip_address)

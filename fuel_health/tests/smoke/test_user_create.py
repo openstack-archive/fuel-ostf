@@ -27,9 +27,9 @@ LOG = logging.getLogger(__name__)
 class TestUserTenantRole(nmanager.SmokeChecksTest):
     """
     Test class verifies the following:
-      - verify tenant can be created;
-      - verify user can be created on base of created tenant;
-      - verify user role can be created.
+      - verify that a tenant can be created;
+      - verify that a user can be created based on the new tenant;
+      - verify that a user role can be created.
     """
 
     _interface = 'json'
@@ -41,15 +41,15 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
 
         Scenario:
             1. Create a new tenant.
-            2. Check tenant was created successfully.
+            2. Check that tenant was created successfully.
             3. Create a new user.
-            4. Check user was created successfully.
+            4. Check that user was created successfully.
             5. Create a new user role.
-            6. Check user role was created successfully.
+            6. Check that user role was created successfully.
             7. Perform token authentication.
-            8. Check authentication was successful.
+            8. Check that authentication was successful.
             9. Send authentication request to Horizon.
-            10. Verify response status is 200.
+            10. Confirm that response status is 200.
         Duration: 1-50 s.
         """
         # Create a tenant:
@@ -86,7 +86,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
 
         # Authenticate with created user:
         password = '123456'
-        msg_s7 = "Can not get auth token."
+        msg_s7 = "Can not get authentication token."
 
         auth = self.verify(40, self.identity_client.tokens.authenticate,
                            7, msg_s7,
@@ -113,8 +113,8 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                                    headers=dict(Referer=url))
                 self.verify_response_status(
                     resp.status_code,
-                    msg="Check that request was successful."
-                        "Please, refer to OpenStack logs for more details.",
+                    msg="Check that the request was successful. "
+                        "Please refer to OpenStack logs for more details.",
                     failed_step=9)
             else:
                 csrftoken = client.cookies['csrftoken']
@@ -126,9 +126,9 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                                    headers=dict(Referer=url))
                 self.verify_response_status(
                     resp.status_code,
-                    msg="Check that request was successful."
+                    msg="Check that the request was successful. "
                     "Please, refer to OpenStack logs for more details.",
                     failed_step=9)
         except Exception:
-            self.fail("Step 10 failed: Can not auth in Horizon. "
-                      "Please, refer to OpenStack logs for more details.")
+            self.fail("Step 10 failed: Can not authenticate in Horizon. "
+                      "Please refer to OpenStack logs for more details.")

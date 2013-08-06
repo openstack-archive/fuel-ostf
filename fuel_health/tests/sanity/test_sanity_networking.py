@@ -24,7 +24,7 @@ LOG = logging.getLogger(__name__)
 
 class NetworksTest(nmanager.SanityChecksTest):
     """
-    TestClass contains tests check base networking functionality
+    TestClass contains tests that check basic networking functionality
     """
 
     @attr(type=['sanity', 'fuel'])
@@ -34,14 +34,14 @@ class NetworksTest(nmanager.SanityChecksTest):
         Target component: Nova Networking.
 
         Scenario:
-            1. Request list of networks.
-            2. Check response.
+            1. Request the list of networks.
+            2. Confirm that a response is received.
         Duration: 1-20 s.
         """
-        fail_msg = "Network list is unavailable. "
+        fail_msg = "Networks list is unavailable. "
         networks = self.verify(20, self._list_networks, 1,
                                fail_msg,
-                               "networks listing",
+                               "listing networks",
                                self.compute_client)
 
         self.verify_response_true(len(networks) >= 0,

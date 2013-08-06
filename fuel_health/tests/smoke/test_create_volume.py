@@ -32,9 +32,9 @@ class VolumesTest(nmanager.SmokeChecksTest):
     def setUp(self):
         super(VolumesTest, self).setUp()
         if not self.config.volume.cinder_node_exist:
-            self.fail('There are not cinder nodes')
+            self.fail('There are no cinder nodes')
         if not self.config.compute.compute_nodes:
-            self.fail('There are not compute nodes')
+            self.fail('There are no compute nodes')
 
     @classmethod
     def tearDownClass(cls):
@@ -53,14 +53,14 @@ class VolumesTest(nmanager.SmokeChecksTest):
 
         Scenario:
             1. Create a new small-size volume.
-            2. Wait for "available" volume status.
+            2. Wait for volume status to become "available".
             3. Check volume has correct name.
             4. Create new instance.
             5. Wait for "Active" status
-            6. Attach volume to instance.
+            6. Attach volume to an instance.
             7. Check volume status is "in use".
-            8. Get created volume information by its id.
-            9. Detach volume from instance.
+            8. Get information on the created volume by its id.
+            9. Detach volume from the instance.
             10. Check volume has "available" status.
             11. Delete volume.
         Duration: 48-200 s.
@@ -90,7 +90,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
                                self.compute_client)
 
         self.verify(200, self._wait_for_instance_status, 5,
-                    'Instance did not get "available" status',
+                    'Instance status did not become "available".',
                     "instance becoming 'available'",
                     instance, 'ACTIVE')
 
@@ -101,8 +101,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
                     volume, instance.id)
 
         self.verify(180, self._wait_for_volume_status, 7,
-                    'Attached volume can not '
-                    'get expected state',
+                    'Attached volume status did not become "in-use".',
                     "volume becoming 'in-use'",
                     volume, 'in-use')
 
@@ -122,8 +121,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
                     self.volume_client, volume)
 
         self.verify(120, self._wait_for_volume_status, 10,
-                    'Volume did not get "available"'
-                    ' status.',
+                    'Volume status did not become "available".',
                     "volume becoming 'available'",
                     volume, 'available')
 
