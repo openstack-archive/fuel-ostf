@@ -36,7 +36,6 @@ import fuel_health.test
 from fuel_health import config
 
 
-
 LOG = logging.getLogger(__name__)
 
 
@@ -314,7 +313,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         ]
         for ruleset in rulesets:
             try:
-               client.security_group_rules.create(secgroup.id, **ruleset)
+                client.security_group_rules.create(secgroup.id, **ruleset)
             except Exception:
                 self.fail("Failed to create rule in security group.")
 
@@ -426,29 +425,31 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def _ping_ip_address_from_instance(self, ip_address):
         def ping():
-            time.sleep(30)
-            if self.host:
-                try:
-                    ssh = SSHClient(self.host[0],
-                              self.usr, self.pwd,
-                              key_filename=self.key,
-                              timeout=self.timeout)
-                    #ssh.exec_command('ping -c1 -w1 8.8.8.8')
-                    LOG.debug('Get ssh to controller')
-                    ssh._get_ssh_connection_to_vm(usr='cirros', pwd='cubswin:)', host=ip_address).exec_command('ping -c1 -w1 8.8.8.8')
-                    LOG.debug('Get ssh to instance')
-                    return True
-                except SSHExecCommandFailed as exc:
-                    output_msg = "Instance is not reachable by floating IP."
-                    LOG.debug(exc)
-                    self.fail(output_msg)
-                except Exception as exc:
-                    LOG.debug(exc)
-                    self.fail("Connection failed.")
-            else:
+            ssh_timeout = self.timeout > 30 and self.timeout or 30
+            if not self.host:
                 self.fail('Wrong tests configurations, one from the next '
                           'parameters are empty controller_node_name or '
                           'controller_node_ip ')
+            try:
+                ssh = SSHClient(self.host[0],
+                                self.usr, self.pwd,
+                                key_filename=self.key,
+                                timeout=ssh_timeout)
+                LOG.debug('Get ssh to controller')
+                ssh.exec_command('ping -c1 -w1 8.8.8.8',
+                                 ssh._get_ssh_connection_to_vm(usr='cirros',
+                                                               pwd='cubswin:)',
+                                                               host=ip_address)
+                )
+                LOG.debug('Get ssh to instance')
+                return True
+            except SSHExecCommandFailed as exc:
+                output_msg = "Instance is not reachable by floating IP."
+                LOG.debug(exc)
+                self.fail(output_msg)
+            except Exception as exc:
+                LOG.debug(exc)
+                self.fail("Connection failed.")
 
         # TODO Allow configuration of execution and sleep duration.
         return fuel_health.test.call_until_true(ping, 40, 1)
