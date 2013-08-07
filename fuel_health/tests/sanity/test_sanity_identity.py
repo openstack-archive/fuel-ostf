@@ -17,7 +17,6 @@
 import logging
 
 from nose.plugins.attrib import attr
-from nose.tools import timed
 
 from fuel_health import nmanager
 
@@ -26,51 +25,45 @@ LOG = logging.getLogger(__name__)
 
 class ServicesTestJSON(nmanager.SanityChecksTest):
     """
-    TestClass contains tests check base authentication functionality.
-    Special requirements: OS admin user permissions needed
+    TestClass contains tests that check basic authentication functionality.
+    Special requirements: OS admin user permissions are needed
     """
     _interface = 'json'
 
     @attr(type=['sanity', 'fuel'])
-    @timed(6)
     def test_list_services(self):
         """Services list availability
         Test checks that active services can be listed.
         Target component: Nova
 
         Scenario:
-            1. Request list of services.
-            2. Check response.
-        Duration: 1-6 s.
+            1. Request the list of services.
+            2. Confirm that a response is received.
+        Duration: 1-20 s.
         """
-        fail_msg = ('Services list is unavailable. '
-                    'Looks like something is broken in Nova or Keystone.')
-        try:
-            services = self._list_services(self.compute_client)
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail("Step 1 failed: " + fail_msg)
+        fail_msg = 'Services list is unavailable. '
+        services = self.verify(20, self._list_services,
+                               1, fail_msg, "services listing",
+                               self.compute_client)
+
         self.verify_response_true(
-            len(services) >= 0, "Step 2 failed: " + fail_msg)
+            len(services) >= 0, "Step 2 failed: {msg}".format(msg=fail_msg))
 
     @attr(type=['sanity', 'fuel'])
-    @timed(6)
     def test_list_users(self):
         """User list availability
         Test checks that existing users can be listed.
         Target component: Keystone
 
         Scenario:
-            1. Request list of users.
-            2. Check response.
-        Duration: 1-6 s.
+            1. Request the list of users.
+            2. Confirm that a response is received.
+        Duration: 1-20 s.
         """
-        fail_msg = ('Users list is unavailable. '
-                    'Looks like something is broken in Keystone.')
-        try:
-            users = self._list_users(self.identity_client)
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail("Step 1 failed: " + fail_msg)
+        fail_msg = 'User list is unavailable. '
+        users = self.verify(20, self._list_users,
+                            1, fail_msg, "user listing",
+                            self.identity_client)
+
         self.verify_response_true(
-            len(users) >= 0, "Step 2 failed: " + fail_msg)
+            len(users) >= 0, "Step 2 failed: {msg}".format(msg=fail_msg))

@@ -17,7 +17,6 @@
 import logging
 
 from nose.plugins.attrib import attr
-from nose.tools import timed
 
 from fuel_health import nmanager
 
@@ -33,31 +32,29 @@ class FlavorsAdminTest(nmanager.SmokeChecksTest):
     _interface = 'json'
 
     @attr(type=["fuel", "smoke"])
-    @timed(11)
     def test_create_flavor(self):
-        """Flavor creation
-        Test check that low requirements flavor can be created.
+        """Create instance flavor
         Target component: Nova
 
         Scenario:
             1. Create small-size flavor.
-            2. Check created flavor has expected name.
-            3. Check flavor disk has expected size.
-        Duration: 1-11 s.
+            2. Check that created flavor has the expected name.
+            3. Check that the flavor disk has the expected size.
+        Duration: 1-30 s.
         """
-        fail_msg = ("Flavor was not created properly."
-                    "Please, check Nova.")
-        try:
-            flavor = self._create_flavors(self.compute_client, 225, 1)
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail('Step 1 failed: ' + fail_msg)
+        fail_msg = "Flavor was not created properly."
+        flavor = self.verify(30, self._create_flavors, 1,
+                             fail_msg,
+                             "flavor creation",
+                             self.compute_client, 255, 1)
+
         msg_s2 = "Flavor name is not the same as requested."
         self.verify_response_true(
             flavor.name.startswith('ost1_test-flavor'),
-            'Step 2 failed: ' + msg_s2)
+            'Step 2 failed: {msg}'.format(msg=msg_s2))
 
         msg_s3 = "Disk size is not the same as requested."
         self.verify_response_body_value(
-            flavor.disk, 1,
-            "Step 3 failed: " + msg_s3)
+            body_structure=flavor.disk,
+            value=1, msg=msg_s3, failed_step=3)
+

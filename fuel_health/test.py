@@ -16,7 +16,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import time
 
 import testresources
@@ -28,7 +27,6 @@ from fuel_health.common.test_mixins import FuelTestAssertMixin
 
 
 LOG = logging.getLogger(__name__)
-
 
 class BaseTestCase(unittest2.TestCase,
                    testresources.ResourcedTestCase,
@@ -116,9 +114,8 @@ class TestCase(BaseTestCase):
             thing = things.get(thing_id)
             new_status = thing.status
             if new_status == 'ERROR':
-                self.fail("%s failed to get to expected status."
-                          "In ERROR state."
-                          % thing)
+                self.fail("Failed to get to expected status."
+                          "In ERROR state.")
             elif new_status == expected_status:
                 return True  # All good.
             LOG.debug("Waiting for %s to get to %s status. "
@@ -128,5 +125,5 @@ class TestCase(BaseTestCase):
         if not call_until_true(check_status,
                                conf.compute.build_timeout,
                                conf.compute.build_interval):
-            self.fail("Timed out waiting for thing %s to become %s"
-                      % (thing_id, expected_status))
+            self.fail("Timed out waiting to become %s"
+                      % (expected_status))

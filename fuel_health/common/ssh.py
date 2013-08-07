@@ -158,7 +158,6 @@ class Client(object):
 
         return True
 
-
     def _get_ssh_connection_to_vm(self, usr, pwd, host, sleep=1.5, backoff=1.01):
         """Returns an ssh connection to the specified host."""
         _timeout = True
