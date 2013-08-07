@@ -41,9 +41,11 @@ class MuranoSanityTests(murano.MuranoTest):
         keyname = 'murano-lb-key'
         fail_msg = "Key Pair %s does not exist. " % keyname
 
-        self.verify(5, self.is_keypair_available, 1, fail_msg,
-                    "checking if %s keypair is available" % keyname,
-                    keyname)
+        result = self.verify(5, self.is_keypair_available, 1, fail_msg,
+                             "checking if %s keypair is available" % keyname,
+                             keyname)
+        if not result:
+            self.fail(fail_msg)
 
     def test_check_windows_image_with_murano_tag(self):
         """Check Windows Image With Murano Tag
@@ -59,18 +61,20 @@ class MuranoSanityTests(murano.MuranoTest):
         Deployment tags: Murano
         """
 
-        exp_key = 'murano_image_info'
+        fail_msg = "Windows image 'ws-2012-std' with Murano tag wasn't" + \
+                   " imported into Glance"
+        action_msg = "checking if Windows image with Murano tag is available"
+        def find_image(tag):
+            for i in self.compute_client.images.list():
+                if 'murano_image_info' in i.metadata:
+                    return True
+            return False
 
-        fail_msg = "Image with Murano tag wasn't imported into Glance"
+        image = self.verify(4, find_image, 1, fail_msg,
+                            action_msg, 'murano_image_info')
 
-        def find_image(k):
-            image_len = len([i for i in self.compute_client.images.list()
-                             if k in i.metadata])
-            return image_len > 0
-
-        self.verify(5, find_image, 1, fail_msg,
-                    "checking if image with Murano tag is available", exp_key)
-
+        if not image:
+            self.fail(fail_msg)
 
     def test_create_and_delete_service(self):
         """Murano environment and service creation, listing and deletion

@@ -30,24 +30,6 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                                   "title":"Windows Server 2012"}
     """
 
-    def check_image(self):
-        fail_msg = "Windows image 'ws-2012-std' with Murano tag wasn't" + \
-                   " imported into Glance"
-        action_msg = "checking if Windows image with Murano tag is available"
-        def find_image(tag):
-            for i in self.compute_client.images.list():
-                if 'murano_image_info' in i.metadata and \
-                'ws-2012-std' == i.name and \
-                'ws-2012-std' == i.metadata[tag]['type']:
-                    return True
-            return False
-        
-        image = self.verify(4, find_image, 1, fail_msg,
-                            action_msg, 'murano_image_info')
-
-        if not image:
-            self.fail(fail_msg)
-
     def test_deploy_ad(self):
         """Murano environment with AD service deployment
         Test checks that user can deploy AD.
