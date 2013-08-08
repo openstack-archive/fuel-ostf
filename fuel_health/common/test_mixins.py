@@ -1,5 +1,18 @@
+# vim: tabstop=4 shiftwidth=4 softtabstop=4
+
 # Copyright 2013 Mirantis, Inc.
-# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 import signal
 import time
@@ -7,6 +20,7 @@ import time
 from fuel_health.common import log as logging
 
 LOG = logging.getLogger(__name__)
+
 
 class FuelTestAssertMixin(object):
     """
@@ -55,16 +69,16 @@ class FuelTestAssertMixin(object):
             status_msg = human_readable_statuses[status].format(
                 status=status, appl=appl)
         else:
-            status_msg = human_readable_status_groups.get(status / 100,
-                unknown_msg).format(status=status, appl=appl)
+            status_msg = human_readable_status_groups.get(
+                status / 100, unknown_msg).format(status=status, appl=appl)
 
         failed_step_msg = ''
         if failed_step:
             failed_step_msg = ('Step %s failed: ' % str(failed_step))
 
         self.fail(''.join((failed_step_msg +
-                           'Status - {status} '.format(status=status),
-                            status_msg, '\n', msg)))
+                           'Status - {status} '.format(
+                               status=status), status_msg, '\n', msg)))
 
     def verify_response_body(self, body, content='', msg='', failed_step=''):
         """
@@ -142,7 +156,6 @@ class FuelTestAssertMixin(object):
             return result
 
 
-
 class TimeOutError(Exception):
     def __init__(self):
         Exception.__init__(self)
@@ -173,10 +186,6 @@ class timeout(object):
         if exc_type is not TimeOutError:
             return False  # never swallow other exceptions
         else:
-            msg = "Time limit exceeded while waiting" \
-                  " for {call} to finish."\
-                .format(call=self.action)
+            msg = ("Time limit exceeded while waiting for {call} to "
+                   "finish.").format(call=self.action)
             raise AssertionError(msg)
-
-
-

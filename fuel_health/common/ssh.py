@@ -103,7 +103,7 @@ class Client(object):
         except (EOFError, paramiko.AuthenticationException, socket.error):
             return
 
-    def exec_command(self, cmd):
+    def exec_command(self, cmd, connection=None):
         """
         Execute the specified command on the server.
 
@@ -114,7 +114,7 @@ class Client(object):
         :raises: SSHExecCommandFailed if command returns nonzero
                  status. The exception contains command status stderr content.
         """
-        ssh = self._get_ssh_connection()
+        ssh = connection or self._get_ssh_connection()
         transport = ssh.get_transport()
         channel = transport.open_session()
         channel.fileno()  # Register event pipe

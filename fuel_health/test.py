@@ -28,6 +28,7 @@ from fuel_health.common.test_mixins import FuelTestAssertMixin
 
 LOG = logging.getLogger(__name__)
 
+
 class BaseTestCase(unittest2.TestCase,
                    testresources.ResourcedTestCase,
                    FuelTestAssertMixin):
@@ -126,4 +127,4 @@ class TestCase(BaseTestCase):
                                conf.compute.build_timeout,
                                conf.compute.build_interval):
             self.fail("Timed out waiting to become %s"
-                      % (expected_status))
+                      % expected_status)
