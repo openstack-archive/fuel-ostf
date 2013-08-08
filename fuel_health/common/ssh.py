@@ -162,7 +162,7 @@ class Client(object):
         """Returns an ssh connection to the specified host."""
         _timeout = True
         bsleep = sleep
-        ssh = paramiko.SSHClient()
+        ssh = self._get_ssh_connection()
         ssh.set_missing_host_key_policy(
             paramiko.AutoAddPolicy())
         _start_time = time.time()
