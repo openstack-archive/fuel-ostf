@@ -718,7 +718,8 @@ class SmokeChecksTest(OfficialClientTest):
 
     def _attach_volume_to_instance(self, volume, instance):
         device = '/dev/vdb'
-        attached_volume = self.volume_client.volumes.attach(volume, instance, mountpoint=device)
+        attached_volume = self.compute_client.volumes.create_server_volume(
+            volume_id=volume.id, server_id=instance, device=device)
         return attached_volume
 
     def _detach_volume(self, client, volume):
