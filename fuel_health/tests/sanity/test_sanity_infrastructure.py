@@ -82,15 +82,14 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                   'have not been started.')
 
     @attr(type=['sanity', 'fuel'])
-    def test_dns_state(self):
-        """DNS availability
+    def test_internet_connectivity_from_compute(self):
+        """Internet connectivity
         Test DNS resolution on compute nodes.
         Target component: OpenStack
 
         Scenario:
-            1. Check ping 8.8.8.8 command from a compute node.
-            2. Check host 8.8.8.8 command from the compute node.
-        Duration: 1-12 s.
+            1. Execute ping 8.8.8.8 command from a compute node.
+        Duration: 1-8 s.
         """
         if not self.computes:
             self.fail('Step 1 failed: There are no compute nodes')
@@ -112,13 +111,52 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                     "'ping' command",
                     cmd)
 
+    @attr(type=['sanity', 'fuel'])
+    def test_dns_resolution(self):
+        """DNS availability
+        Test DNS resolution on compute nodes.
+        Target component: OpenStack
+
+        Scenario:
+            1. Execute host 8.8.8.8 command from a compute node.
+            2. Check 8.8.8.8 host was successfully resolved
+            3. Check host google.com command from the compute node.
+            4. Check google.com host was successfully resolved.
+        Duration: 1-12 s.
+        """
+        if not self.computes:
+            self.fail('Step 1 failed: There are no compute nodes')
+        try:
+            ssh_client = SSHClient(self.computes[0],
+                                   self.usr,
+                                   self.pwd,
+                                   key_filename=self.key,
+                                   timeout=self.timeout)
+        except Exception as exc:
+            LOG.debug(exc)
+            self.fail("Step 1 failed: %s" % str(exc))
+
         expected_output = "google"
         cmd = "host 8.8.8.8"
-        output = self.verify(50, ssh_client.exec_command, 2,
+        output = self.verify(50, ssh_client.exec_command, 1,
+                             "'ping' command failed. Looks like there is no "
+                             "Internet connection on the compute node.",
+                             "'ping' command",
+                             cmd)
+        LOG.debug(output)
+        self.verify_response_true(expected_output in output,
+                                  'Step 2 failed: '
+                                  'DNS name for 8.8.8.8 host '
+                                  'cannot be resolved.')
+
+        expected_output = "google.com has address"
+        cmd = "host google.com"
+        output = self.verify(50, ssh_client.exec_command, 3,
                              "'host' command failed. "
                              "DNS name cannot be resolved.",
                              "'host' command",
                              cmd)
+        LOG.debug(output)
         self.verify_response_true(expected_output in output,
-                                  'Step 2 failed: '
+                                  'Step 4 failed: '
                                   'DNS name cannot be resolved.')
