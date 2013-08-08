@@ -47,8 +47,8 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         pass
 
     @attr(type=['sanity', 'fuel'])
-    def test_services_state(self):
-        """Service status monitoring
+    def test_001_services_state(self):
+        """Services status monitoring
         Confirm that all required services are running.
         Target component: OpenStack
 
@@ -60,7 +60,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         output = u'XXX'
         cmd = 'nova-manage service list'
         if not self.controllers:
-            self.fail('Step 1 failed: there is no controller nodes.')
+            self.fail('Step 1 failed: there are no controller nodes.')
 
         try:
             ssh_client = SSHClient(self.controllers[0],
@@ -82,9 +82,9 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                   'have not been started.')
 
     @attr(type=['sanity', 'fuel'])
-    def test_internet_connectivity_from_compute(self):
+    def test_002_internet_connectivity_from_compute(self):
         """Internet connectivity
-        Test DNS resolution on compute nodes.
+        Test internet connections on compute nodes.
         Target component: OpenStack
 
         Scenario:
@@ -112,7 +112,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                     cmd)
 
     @attr(type=['sanity', 'fuel'])
-    def test_dns_resolution(self):
+    def test_003_dns_resolution(self):
         """DNS availability
         Test DNS resolution on compute nodes.
         Target component: OpenStack
