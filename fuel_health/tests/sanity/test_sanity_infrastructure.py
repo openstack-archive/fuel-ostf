@@ -48,7 +48,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_001_services_state(self):
-        """Services status monitoring
+        """Check all the services execute normally
         Confirm that all required services are running.
         Target component: OpenStack
 
@@ -61,21 +61,14 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         cmd = 'nova-manage service list'
         if not self.controllers:
             self.fail('Step 1 failed: there are no controller nodes.')
-
-        try:
-            ssh_client = SSHClient(self.controllers[0],
-                                   self.usr, self.pwd,
-                                   key_filename=self.key,
-                                   timeout=self.timeout)
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail("Step 1 failed: %s" % str(exc))
-
+        ssh_client = SSHClient(self.controllers[0],
+                               self.usr, self.pwd,
+                               key_filename=self.key,
+                               timeout=self.timeout)
         output = self.verify(50, ssh_client.exec_command,
                              1, "'nova-manage' command execution failed. ",
                              "nova-manage command execution",
                              cmd)
-
         LOG.debug(output)
         self.verify_response_true(
             u'XXX' not in output, 'Step 2 failed: Some nova services '
@@ -83,7 +76,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_002_internet_connectivity_from_compute(self):
-        """Internet connectivity
+        """Check Internet connectivity from a compute
         Test internet connections on compute nodes.
         Target component: OpenStack
 
@@ -95,16 +88,11 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             self.fail('Step 1 failed: There are no compute nodes')
 
         cmd = "ping 8.8.8.8 -c 1 -w 1"
-        try:
-            ssh_client = SSHClient(self.computes[0],
-                                   self.usr,
-                                   self.pwd,
-                                   key_filename=self.key,
-                                   timeout=self.timeout)
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail("Step 1 failed: %s" % str(exc))
-
+        ssh_client = SSHClient(self.computes[0],
+                               self.usr,
+                               self.pwd,
+                               key_filename=self.key,
+                               timeout=self.timeout)
         self.verify(50, ssh_client.exec_command, 1,
                     "'ping' command failed. Looks like there is no "
                     "Internet connection on the compute node.",
@@ -113,7 +101,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_003_dns_resolution(self):
-        """DNS availability
+        """Check DNS resolution on a compute
         Test DNS resolution on compute nodes.
         Target component: OpenStack
 
@@ -126,16 +114,11 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         """
         if not self.computes:
             self.fail('Step 1 failed: There are no compute nodes')
-        try:
-            ssh_client = SSHClient(self.computes[0],
-                                   self.usr,
-                                   self.pwd,
-                                   key_filename=self.key,
-                                   timeout=self.timeout)
-        except Exception as exc:
-            LOG.debug(exc)
-            self.fail("Step 1 failed: %s" % str(exc))
-
+        ssh_client = SSHClient(self.computes[0],
+                               self.usr,
+                               self.pwd,
+                               key_filename=self.key,
+                               timeout=self.timeout)
         expected_output = "google"
         cmd = "host 8.8.8.8"
         output = self.verify(50, ssh_client.exec_command, 1,

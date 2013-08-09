@@ -15,8 +15,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-import cStringIO
 import os
 import select
 import socket
@@ -24,7 +22,6 @@ import time
 import warnings
 
 from fuel_health import exceptions
-
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -103,7 +100,7 @@ class Client(object):
         except (EOFError, paramiko.AuthenticationException, socket.error):
             return
 
-    def exec_command(self, cmd, connection=None):
+    def exec_command(self, cmd):
         """
         Execute the specified command on the server.
 
@@ -115,7 +112,7 @@ class Client(object):
                  status. The exception contains command status stderr content.
         """
         ssh = self._get_ssh_connection()
-        transport = connection or ssh.get_transport()
+        transport = ssh.get_transport()
         channel = transport.open_session()
         channel.fileno()  # Register event pipe
         channel.exec_command(cmd)
@@ -159,8 +156,14 @@ class Client(object):
         return True
 
     def exec_command_on_vm(self, command, user, password, vm):
-        """Returns an ssh transport to the specified instance
-        via currently connected host."""
+        """Execute the specified command on the instance.
+
+        Note that this method is reading whole command outputs to memory, thus
+        shouldn't be used for large outputs.
+
+        :returns: data read from standard output of the command.
+        :raises: SSHExecCommandFailed if command returns nonzero
+            status. The exception contains command status stderr content."""
         ssh = self._get_ssh_connection()
         _intermediate_transport = ssh.get_transport()
         _intermediate_channel = \
@@ -170,16 +173,9 @@ class Client(object):
         transport = paramiko.Transport(_intermediate_channel)
         transport.start_client()
         transport.auth_password(user, password)
-        import logging
-        LOG = logging.getLogger(__name__)
-        LOG.debug('++++++++++++++++++++++++++++++++++++++++')
-        LOG.debug(transport)
         channel = transport.open_session()
-        LOG.debug('channel: ')
-        LOG.debug(channel)
         channel.exec_command(command)
         exit_status = channel.recv_exit_status()
-        LOG.debug(exit_status)
         channel.shutdown_write()
         out_data = []
         err_data = []
@@ -210,4 +206,3 @@ class Client(object):
 
     def close_ssh_connection(self, connection):
         connection.close()
-
