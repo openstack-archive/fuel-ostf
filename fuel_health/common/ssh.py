@@ -114,8 +114,7 @@ class Client(object):
         :raises: SSHExecCommandFailed if command returns nonzero
                  status. The exception contains command status stderr content.
         """
-        ssh = connection or self._get_ssh_connection()
-        transport = ssh.get_transport()
+        transport = connection or self._get_ssh_connection().get_transport()
         channel = transport.open_session()
         channel.fileno()  # Register event pipe
         channel.exec_command(cmd)
@@ -158,34 +157,21 @@ class Client(object):
 
         return True
 
-    def _get_ssh_connection_to_vm(self, usr, pwd, host, sleep=1.5, backoff=1.01):
-        """Returns an ssh connection to the specified host."""
-        _timeout = True
-        bsleep = sleep
-        ssh = self._get_ssh_connection()
-        ssh.set_missing_host_key_policy(
-            paramiko.AutoAddPolicy())
-        _start_time = time.time()
+    def _get_ssh_connection_to_vm(self, usr, pwd, host):
+        """Returns an ssh transport to the specified instance
+        via currently connected host."""
+        _intermediate_transport = self._get_ssh_connection().get_transport()
+        _intermediate_channel = \
+            _intermediate_transport.open_channel('direct-tcpip',
+                                                 (host, 22),
+                                                 (self.host, 0))
+        transport = paramiko.Transport(_intermediate_channel)
+        transport.start_client()
+        transport.auth_password(usr, pwd)
+        return transport
 
-        while not self._is_timed_out(self.timeout, _start_time):
-            try:
-                ssh.connect(host, username=usr,
-                            password=pwd)
-                _timeout = False
-                break
-            except (socket.error,
-                    paramiko.AuthenticationException):
-                time.sleep(bsleep)
-                bsleep *= backoff
-                continue
-        if _timeout:
-            raise exceptions.SSHTimeout(host=host,
-                                        user=usr,
-                                        password=pwd)
-        return ssh
-
-    def create_ssh_connection_to_vm(self):
-        connection = self._get_ssh_connection()
+    def create_connection_to_vm(self, host, user, password):
+        connection = self._get_ssh_connection_to_vm(self, user, password, host)
         return connection
 
     def close_ssh_connection(self, connection):
