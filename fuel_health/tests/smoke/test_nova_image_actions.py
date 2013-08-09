@@ -88,7 +88,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
             2. Make snapshot of the created instance.
             3. Delete the instance created in step 1.
             4. Launch another instance from the snapshot created in step 2.
-        Duration: 80-180 s.
+        Duration: 180 s.
         """
         server = self.verify(180, self._boot_image, 1,
                              "Image can not be booted.",

@@ -56,7 +56,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             1. Connect to a controller node via SSH.
             2. Execute nova-manage service list command.
             3. Confirm that there are no failed services (with state 'XXX')
-        Duration: 2-50 s.
+        Duration: 50 s.
         """
         output_msg = ''
         cmd = 'nova-manage service list'
@@ -97,7 +97,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             3. Check all the packets were received.
             4. Execute host 8.8.8.8 from the controller.
             5. Check 8.8.8.8 host is resolved.
-        Duration: 1-100 s.
+        Duration: 100 s.
         """
         if self.computes:
             expected_output = "0% packet loss"

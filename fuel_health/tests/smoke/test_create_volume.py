@@ -63,7 +63,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
             9. Detach volume from the instance.
             10. Check volume has "available" status.
             11. Delete volume.
-        Duration: 48-200 s.
+        Duration: 200 s.
         """
 
         msg_s1 = 'Volume was not created.'
