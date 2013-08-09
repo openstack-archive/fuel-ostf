@@ -114,7 +114,8 @@ class Client(object):
         :raises: SSHExecCommandFailed if command returns nonzero
                  status. The exception contains command status stderr content.
         """
-        transport = connection or self._get_ssh_connection().get_transport()
+        ssh = self._get_ssh_connection()
+        transport = connection or ssh.get_transport()
         channel = transport.open_session()
         channel.fileno()  # Register event pipe
         channel.exec_command(cmd)
@@ -157,22 +158,55 @@ class Client(object):
 
         return True
 
-    def _get_ssh_connection_to_vm(self, usr, pwd, host):
+    def exec_command_on_vm(self, command, user, password, vm):
         """Returns an ssh transport to the specified instance
         via currently connected host."""
-        _intermediate_transport = self._get_ssh_connection().get_transport()
+        ssh = self._get_ssh_connection()
+        _intermediate_transport = ssh.get_transport()
         _intermediate_channel = \
             _intermediate_transport.open_channel('direct-tcpip',
-                                                 (host, 22),
+                                                 (vm, 22),
                                                  (self.host, 0))
         transport = paramiko.Transport(_intermediate_channel)
         transport.start_client()
-        transport.auth_password(usr, pwd)
-        return transport
+        transport.auth_password(user, password)
+        import logging
+        LOG = logging.getLogger(__name__)
+        LOG.debug('++++++++++++++++++++++++++++++++++++++++')
+        LOG.debug(transport)
+        channel = transport.open_session()
+        LOG.debug('channel: ')
+        LOG.debug(channel)
+        channel.exec_command(command)
+        exit_status = channel.recv_exit_status()
+        LOG.debug(exit_status)
+        channel.shutdown_write()
+        out_data = []
+        err_data = []
 
-    def create_connection_to_vm(self, host, user, password):
-        connection = self._get_ssh_connection_to_vm(self, user, password, host)
-        return connection
+        select_params = [channel], [], [], self.channel_timeout
+        while True:
+            ready = select.select(*select_params)
+            if not any(ready):
+                raise exceptions.TimeoutException(
+                    "Command: '{0}' executed on host '{1}'.".format(
+                        command, self.host))
+            if not ready[0]:        # If there is nothing to read.
+                continue
+            out_chunk = err_chunk = None
+            if channel.recv_ready():
+                out_chunk = channel.recv(self.buf_size)
+                out_data += out_chunk,
+            if channel.recv_stderr_ready():
+                err_chunk = channel.recv_stderr(self.buf_size)
+                err_data += err_chunk,
+            if channel.closed and not err_chunk and not out_chunk:
+                break
+        if 0 != exit_status:
+            raise exceptions.SSHExecCommandFailed(
+                command=command, exit_status=exit_status,
+                strerror=''.join(err_data).join(out_data))
+        return ''.join(out_data)
 
     def close_ssh_connection(self, connection):
         connection.close()

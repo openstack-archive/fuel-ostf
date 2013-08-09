@@ -436,11 +436,10 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                 key_filename=self.key,
                                 timeout=ssh_timeout)
                 LOG.debug('Get ssh to controller')
-                ssh.exec_command('ping -c1 -w1 8.8.8.8',
-                                 ssh.create_connection_to_vm(
-                                     user='cirros',
-                                     password='cubswin:)',
-                                     host=ip_address)
+                ssh.exec_command_on_vm(command='ping -c1 -w1 8.8.8.8',
+                                       user='cirros',
+                                       password='cubswin:)',
+                                       host=ip_address)
                 )
                 LOG.debug('Get ssh to instance')
                 return True

@@ -139,7 +139,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         expected_output = "google"
         cmd = "host 8.8.8.8"
         output = self.verify(50, ssh_client.exec_command, 1,
-                             "'ping' command failed. Looks like there is no "
+                             "'host' command failed. Looks like there is no "
                              "Internet connection on the compute node.",
                              "'ping' command",
                              cmd)
