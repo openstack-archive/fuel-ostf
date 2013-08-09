@@ -35,7 +35,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         Scenario:
             1. Request the list of instances.
             2. Confirm that a response is received.
-        Duration: 1-20 s.
+        Duration: 20 s.
         """
         fail_msg = 'Instance list is unavailable. '
         list_instance_resp = self.verify(20, self._list_instances,
@@ -53,7 +53,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         Scenario:
             1. Request the list of images.
             2. Confirm that a response is received.
-        Duration: 1-20 s.
+        Duration: 20 s.
         """
         fail_msg = 'Images list is unavailable. '
         list_images_resp = self.verify(20, self._list_images,
@@ -72,7 +72,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         Scenario:
             1. Request the list of volumes.
             2. Confirm that a response is received.
-        Duration: 1-20 s.
+        Duration: 20 s.
         """
         fail_msg = 'Volume list is unavailable. '
         list_volumes_resp = self.verify(20, self._list_volumes,
@@ -91,7 +91,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         Scenario:
             1. Request the list of snapshots.
             2. Confirm that a response is received.
-        Duration: 1-20 s.
+        Duration: 20 s.
         """
         fail_msg = 'Snapshots list is unavailable. '
         list_snapshots_resp = self.verify(20, self._list_snapshots,
@@ -109,7 +109,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         Scenario:
             1. Request the list of flavors.
             2. Confirm that a response is received.
-        Duration: 1-20 s.
+        Duration: 20 s.
         """
         fail_msg = 'Flavors list is unavailable. '
         list_flavors_resp = self.verify(30, self._list_flavors,
@@ -128,7 +128,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         Scenario:
             1. Request the list of limits.
             2. Confirm that a response is received.
-        Duration: 2-20 s.
+        Duration: 20 s.
         """
         fail_msg = 'Limits list is unavailable. '
 

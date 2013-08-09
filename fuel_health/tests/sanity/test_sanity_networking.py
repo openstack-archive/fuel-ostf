@@ -36,7 +36,7 @@ class NetworksTest(nmanager.SanityChecksTest):
         Scenario:
             1. Request the list of networks.
             2. Confirm that a response is received.
-        Duration: 1-20 s.
+        Duration: 20 s.
         """
         fail_msg = "Networks list is unavailable. "
         networks = self.verify(20, self._list_networks, 1,
