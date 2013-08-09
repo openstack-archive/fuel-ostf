@@ -440,7 +440,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                        user='cirros',
                                        password='cubswin:)',
                                        host=ip_address)
-                )
+                
                 LOG.debug('Get ssh to instance')
                 return True
             except SSHExecCommandFailed as exc:
