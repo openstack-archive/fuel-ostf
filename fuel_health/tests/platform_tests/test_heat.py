@@ -25,7 +25,7 @@ LOG = logging.getLogger(__name__)
 
 class TestStackAction(heatmanager.HeatBaseTest):
     """
-    Test class verifies that stack can be created, updated and deleted.
+    Test class verifies that stack can be created, updated and deleted
     Special requirements:
         1. Heat component should be installed.
     """
