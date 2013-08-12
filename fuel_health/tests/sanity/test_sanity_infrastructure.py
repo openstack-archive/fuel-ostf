@@ -55,7 +55,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Scenario:
             1. Execute nova-manage service list command on a controller node.
             2. Check there is no failed services (with XXX state).
-        Duration: 2-8 s.
+        Duration: 50 s.
         """
         output = u'XXX'
         cmd = 'nova-manage service list'
@@ -82,7 +82,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
         Scenario:
             1. Execute ping 8.8.8.8 command from a compute node.
-        Duration: 1-8 s.
+        Duration: 40 s.
         """
         if not self.computes:
             self.fail('Step 1 failed: There are no compute nodes')
@@ -110,7 +110,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             2. Check 8.8.8.8 host was successfully resolved
             3. Check host google.com command from the compute node.
             4. Check google.com host was successfully resolved.
-        Duration: 1-12 s.
+        Duration: 60 s.
         """
         if not self.computes:
             self.fail('Step 1 failed: There are no compute nodes')

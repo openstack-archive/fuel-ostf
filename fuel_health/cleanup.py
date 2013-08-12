@@ -161,38 +161,42 @@ def cleanup():
     servers = manager._get_compute_client().servers.list()
     floating_ips = manager._get_compute_client().floating_ips.list()
 
-    for s in servers:
-        if s.name.startswith('ost1_test-'):
-            instances_id.append(s.id)
-            for f in floating_ips:
-                if f.instance_id in instances_id:
-                    try:
-                        LOG.info('Delete floating ip %s' % f.ip)
-                        manager._get_compute_client().floating_ips.delete(f.id)
-                    except Exception as exc:
-                        LOG.debug(exc)
-                        pass
+    if servers:
+        for s in servers:
+            if s.name.startswith('ost1_test-'):
+                instances_id.append(s.id)
+                for f in floating_ips:
+                    if f.instance_id in instances_id:
+                        try:
+                            LOG.info('Delete floating ip %s' % f.ip)
+                            manager._get_compute_client().floating_ips.delete(f.id)
+                        except Exception as exc:
+                            LOG.debug(exc)
+                            pass
+                try:
+                    LOG.info('Delete server with name %s' % s.name)
+                    manager._get_compute_client().servers.delete(s.id)
+                except Exception as exc:
+                    LOG.debug(exc)
+                    pass
+    else:
+        LOG.info('No servers found')
+
+        for s in servers:
             try:
-                LOG.info('Delete server with name %s' % s.name)
-                manager._get_compute_client().servers.delete(s.id)
+                LOG.info('Wait for server terminations')
+                manager.wait_for_server_termination(s)
             except Exception as exc:
                 LOG.debug(exc)
                 pass
 
-    for s in servers:
-        try:
-            LOG.info('Wait for server terminations')
-            manager.wait_for_server_termination(s)
-        except Exception as exc:
-            LOG.debug(exc)
-            pass
-
     keypairs = manager._get_compute_client().keypairs.list()
+
 
     for k in keypairs:
         if k.name.startswith('ost1_test-'):
             try:
-                LOG.info('Start keypair deletion')
+                LOG.info('Start keypair deletion: %s' % k)
                 manager._get_compute_client().keypairs.delete(k)
             except Exception as exc:
                 LOG.debug(exc)
@@ -219,31 +223,46 @@ def cleanup():
                 pass
 
     roles = manager._get_identity_client().roles.list()
-    for role in roles:
-        if role.name.startswith('ost1_test-'):
-            try:
-                LOG.info('Start roles deletion')
-                manager._get_identity_client().roles.delete(role)
-            except Exception as exc:
-                LOG.debug(exc)
-                pass
+    if roles:
+        for role in roles:
+            if role.name.startswith('ost1_test-'):
+                try:
+                    LOG.info('Start roles deletion')
+                    manager._get_identity_client().roles.delete(role)
+                except Exception as exc:
+                    LOG.debug(exc)
+                    pass
+    else:
+        LOG.info('no roles')
 
-    images = manager._get_image_client().images.list()
+    images = manager._get_compute_client().images.list()
     for image in images:
-        if image.name.startswith('ost1_test-'):
+        if image.name.startswith('ost1'):
             try:
                 LOG.info('Start images deletion')
-                manager._get_image_client().images.delete(image)
+                manager._get_compute_client().images.delete(image)
             except Exception as exc:
                 LOG.debug(exc)
                 pass
 
-    snapshots = manager._get_volume_client().volume_snapshots.list()
+
+    snapshots = manager._get_compute_client().volume_snapshots.list()
     for snapshot in snapshots:
         if snapshot.name.startswith('ost1_test-'):
             try:
                 LOG.info('Start snapshot deletion')
-                manager._get_volume_client().volume_snapshots.delete(snapshot)
+                manager._get_compute_client().volume_snapshots.delete(snapshot)
+            except Exception as exc:
+                LOG.debug(exc)
+                pass
+
+    sec_groups = manager._get_compute_client().security_groups.list()
+
+    for sgroup in sec_groups:
+        if sgroup.name.startswith('ost1_test-'):
+            try:
+                LOG.info('Start deletion of security groups')
+                manager._get_compute_client().security_groups.delete(sgroup.id)
             except Exception as exc:
                 LOG.debug(exc)
                 pass
@@ -270,17 +289,6 @@ def cleanup():
                 LOG.debug(exc)
                 pass
 
-    sec_groups = manager._get_compute_client().security_groups.list()
-
-    for sgroup in sec_groups:
-        if sgroup.name.startswith('ost1_test-'):
-            try:
-                LOG.info('Start deletion of security groups')
-                manager._get_compute_client().security_groups.delete(sgroup)
-            except Exception as exc:
-                LOG.debug(exc)
-                pass
-
     vtypes = manager._get_volume_client().volume_types.list()
     for vtype in vtypes:
         if vtype.name.startswith('ost1_test-'):
@@ -288,16 +296,6 @@ def cleanup():
                 LOG.info('start deletion of volume types')
                 manager._get_volume_client().volume_types.delete(vtype)
             except Exception as exc:
-                LOG.debug(exc)
-                pass
-
-    networks = manager._get_compute_client().networks.list()
-    for network in networks:
-        if network.label.startswith('ost1_test-'):
-            try:
-                LOG.info('Start networks deletion')
-                manager._get_compute_client().networks.delete(network)
-            except Exception as exce:
                 LOG.debug(exc)
                 pass
 

@@ -40,7 +40,7 @@ class FlavorsAdminTest(nmanager.SmokeChecksTest):
             1. Create small-size flavor.
             2. Check that created flavor has the expected name.
             3. Check that the flavor disk has the expected size.
-        Duration: 1-30 s.
+        Duration: 30 s.
         """
         fail_msg = "Flavor was not created properly."
         flavor = self.verify(30, self._create_flavors, 1,
@@ -57,4 +57,3 @@ class FlavorsAdminTest(nmanager.SmokeChecksTest):
         self.verify_response_body_value(
             body_structure=flavor.disk,
             value=1, msg=msg_s3, failed_step=3)
-

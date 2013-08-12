@@ -26,7 +26,6 @@ LOG = logging.getLogger(__name__)
 
 
 class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
-
     """
     Test suit verifies:
      - keypairs creation
@@ -77,12 +76,13 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
         Scenario:
             1. Create a new keypair, check if it was created successfully.
-        Duration: 10-25 s.
+        Duration: 25 s.
         """
         self.keypairs[self.tenant_id] = self.verify(25,
                                                     self._create_keypair,
                                                     1,
-                                                    'Keypair can not be created.',
+                                                    'Keypair can not be'
+                                                    ' created.',
                                                     'keypair creation',
                                                     self.compute_client)
 
@@ -93,7 +93,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
         Scenario:
             1. Create a security group, check if it was created correctly.
-        Duration: 2-25 s.
+        Duration: 25 s.
         """
         self.security_groups[self.tenant_id] = self.verify(
             25, self._create_security_group, 1,
@@ -110,7 +110,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             1. Get the list of networks.
             2. Confirm that networks have expected labels.
             3. Confirm that networks have expected ids.
-        Duration: 1-50 s.
+        Duration: 50 s.
         """
         seen_nets = self.verify(
             50,
@@ -136,7 +136,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Scenario:
             1. Create a new security group (if it doesn`t exist yet).
             2. Create an instance using the new security group.
-        Duration: 50-200 s.
+        Duration: 200 s.
         """
         if not self.security_groups:
             self.security_groups[self.tenant_id] = self.verify(
@@ -171,7 +171,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             2. Create instance using the new security group.
             3. Create a new floating IP.
             4. Assign the new floating IP to the instance.
-        Duration: 40-200 s.
+        Duration: 200 s.
         """
         if not self.servers:
             if not self.security_groups:
@@ -220,11 +220,11 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Scenario:
             1. Create a new security group (if it doesn`t exist yet).
             2. Create an instance using the new security group
-			(if it doesn`t exist yet).
+            (if it doesn`t exist yet).
             3. Create a new floating IP (if doesn`t exist yet).
             4. Assign the new floating IP to the instance.
             5. Check connectivity to the floating IP using ping command.
-        Duration: 40-200 s.
+        Duration: 200 s.
         """
         if not self.floating_ips:
             if not self.servers:
@@ -254,7 +254,9 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.verify(10, self._assign_floating_ip_to_instance, 4,
                         "Floating IP can not be assigned.",
                         "floating IP assignment",
-                        self.compute_client, self.servers[0], self.floating_ips[0])
+                        self.compute_client,
+                        self.servers[0],
+                        self.floating_ips[0])
 
         if self.floating_ips:
             ip_address = self.floating_ips[0].ip
@@ -272,8 +274,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             (if it doesn`t exist yet).
             3. Create a new floating IP (if it doesn`t exist yet).
             4. Assign the new floating IP to the instance.
-            5. Check that public IP address 8.8.8.8 can be pinged from instance.
-        Duration: 40-200 s.
+            5. Check that public IP 8.8.8.8 can be pinged from instance.
+        Duration: 200 s.
         """
         if not self.floating_ips:
             if not self.servers:
@@ -303,9 +305,11 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
         if self.servers and self.floating_ips:
             self.verify(10, self._assign_floating_ip_to_instance, 4,
-                    "Floating IP can not be assigned.",
-                    "floating IP assignment",
-                    self.compute_client, self.servers[0], self.floating_ips[0])
+                        "Floating IP can not be assigned.",
+                        "floating IP assignment",
+                        self.compute_client,
+                        self.servers[0],
+                        self.floating_ips[0])
 
         if self.floating_ips:
             ip_address = self.floating_ips[0].ip
