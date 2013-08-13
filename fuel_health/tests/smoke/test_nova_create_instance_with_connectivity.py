@@ -318,3 +318,42 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                         5, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                             "function properly."),
                         'public connectivity checking from VM', ip_address)
+
+    @attr(type=['fuel', 'smoke'])
+    def test_009_check_internet_connectivity_instance_without_floatingIP(self):
+        """Check network connectivity from instance without floating IP
+
+        Scenario:
+            1. Create a new security group (if it doesn`t exist yet).
+            2. Create an instance using the new security group.
+            (if it doesn`t exist yet).
+            3. Check that public IP 8.8.8.8 can be pinged from instance.
+        Duration: 200 s.
+        """
+        if not self.servers:
+            if not self.security_groups:
+                self.security_groups[self.tenant_id] = self.verify(
+                    25, self._create_security_group, 1,
+                    "Security group can not be created.",
+                    'security group creation', self.compute_client)
+
+            name = rand_name('ost1_test-server-smoke-')
+            security_groups = [self.security_groups[self.tenant_id].name]
+
+            server = self.verify(
+                200, self._create_server, 2,
+                "Server can not be created.",
+                'server creation',
+                self.compute_client, name, security_groups)
+
+            self.servers.append(server)
+        server = self.servers[-1]
+        nstance_ip = server.addresses['novanetwork'][0]['addr']
+        compute = getattr(server, 'OS-EXT-SRV-ATTR:host')
+
+        self.verify(100, self._check_connectivity_from_vm,
+                    3, ("Connectivity to 8.8.8.8 from the VM doesn`t "
+                        "function properly."),
+                    'public connectivity checking from VM',
+                    instance_ip,
+                    compute)
