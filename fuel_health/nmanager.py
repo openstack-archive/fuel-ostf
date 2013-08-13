@@ -460,7 +460,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                         "configuration" % ip_address)
 
     def _check_connectivity_from_vm(self, ip_address, viaHost=None):
-        self.assertTrue(self._ping_ip_address_from_instance(ip_address, viaHost=viaHost),
+        self.assertTrue(self._ping_ip_address_from_instance(ip_address,
+                                                            viaHost=viaHost),
                         "Timed out waiting for %s to become "
                         "reachable. Please, check Network "
                         "configuration" % ip_address)
