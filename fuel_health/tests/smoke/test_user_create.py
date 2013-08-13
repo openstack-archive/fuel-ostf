@@ -56,7 +56,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
         msg_s1 = 'Tenant can not be created. '
 
         tenant = self.verify(20, self._create_tenant, 1,
-            msg_s1, 'tenant creation', self.identity_client)
+                             msg_s1, 'tenant creation', self.identity_client)
 
         self.verify_response_true(
             tenant.name.startswith('ost1_test'),
@@ -96,7 +96,8 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                            tenant_id=tenant.id,
                            tenant_name=tenant.name)
 
-        self.verify_response_true(auth, 'Step 8 failed: {msg}'.format(msg=msg_s7))
+        self.verify_response_true(auth,
+                                  'Step 8 failed: {msg}'.format(msg=msg_s7))
 
         try:
             #Auth in horizon with non-admin user
@@ -127,7 +128,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                 self.verify_response_status(
                     resp.status_code,
                     msg="Check that the request was successful. "
-                    "Please, refer to OpenStack logs for more details.",
+                        "Please, refer to OpenStack logs for more details.",
                     failed_step=9)
         except Exception:
             self.fail("Step 10 failed: Can not authenticate in Horizon. "

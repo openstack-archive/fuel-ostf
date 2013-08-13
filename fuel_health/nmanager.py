@@ -247,7 +247,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         if not self._enabled:
             self.fail('Nova Networking is not available')
 
-
     @classmethod
     def setUpClass(cls):
         super(NovaNetworkScenarioTest, cls).setUpClass()
@@ -287,7 +286,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         self.verify_response_body_content(secgroup.description,
                                           sg_desc,
                                           "Security group creation failed")
-
 
         # Add rules to the security group
 
@@ -436,11 +434,10 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                 key_filename=self.key,
                                 timeout=ssh_timeout)
                 LOG.debug('Get ssh to controller')
-                ssh.exec_command('ping -c1 -w1 8.8.8.8',
-                                 ssh._get_ssh_connection_to_vm(usr='cirros',
-                                                               pwd='cubswin:)',
-                                                               host=ip_address)
-                )
+                ssh.exec_command_on_vm(command='ping -c1 -w1 8.8.8.8',
+                                       user='cirros',
+                                       password='cubswin:)',
+                                       vm=ip_address)
                 LOG.debug('Get ssh to instance')
                 return True
             except SSHExecCommandFailed as exc:

@@ -148,7 +148,7 @@ class FuelTestAssertMixin(object):
         except Exception as exc:
             LOG.debug(exc)
             if type(exc) is AssertionError:
-                msg = exc.message
+                msg = str(exc)
             self.fail("Step %s failed: " % step + msg + " Please"
                                                         " refer to OpenStack"
                                                         " logs for more details.")

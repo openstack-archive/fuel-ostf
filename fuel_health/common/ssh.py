@@ -15,8 +15,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-import cStringIO
 import os
 import select
 import socket
@@ -24,7 +22,6 @@ import time
 import warnings
 
 from fuel_health import exceptions
-
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -103,7 +100,7 @@ class Client(object):
         except (EOFError, paramiko.AuthenticationException, socket.error):
             return
 
-    def exec_command(self, cmd, connection=None):
+    def exec_command(self, cmd):
         """
         Execute the specified command on the server.
 
@@ -114,7 +111,7 @@ class Client(object):
         :raises: SSHExecCommandFailed if command returns nonzero
                  status. The exception contains command status stderr content.
         """
-        ssh = connection or self._get_ssh_connection()
+        ssh = self._get_ssh_connection()
         transport = ssh.get_transport()
         channel = transport.open_session()
         channel.fileno()  # Register event pipe
@@ -158,36 +155,54 @@ class Client(object):
 
         return True
 
-    def _get_ssh_connection_to_vm(self, usr, pwd, host, sleep=1.5, backoff=1.01):
-        """Returns an ssh connection to the specified host."""
-        _timeout = True
-        bsleep = sleep
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(
-            paramiko.AutoAddPolicy())
-        _start_time = time.time()
+    def exec_command_on_vm(self, command, user, password, vm):
+        """Execute the specified command on the instance.
 
-        while not self._is_timed_out(self.timeout, _start_time):
-            try:
-                ssh.connect(host, username=usr,
-                            password=pwd)
-                _timeout = False
-                break
-            except (socket.error,
-                    paramiko.AuthenticationException):
-                time.sleep(bsleep)
-                bsleep *= backoff
+        Note that this method is reading whole command outputs to memory, thus
+        shouldn't be used for large outputs.
+
+        :returns: data read from standard output of the command.
+        :raises: SSHExecCommandFailed if command returns nonzero
+            status. The exception contains command status stderr content."""
+        ssh = self._get_ssh_connection()
+        _intermediate_transport = ssh.get_transport()
+        _intermediate_channel = \
+            _intermediate_transport.open_channel('direct-tcpip',
+                                                 (vm, 22),
+                                                 (self.host, 0))
+        transport = paramiko.Transport(_intermediate_channel)
+        transport.start_client()
+        transport.auth_password(user, password)
+        channel = transport.open_session()
+        channel.exec_command(command)
+        exit_status = channel.recv_exit_status()
+        channel.shutdown_write()
+        out_data = []
+        err_data = []
+
+        select_params = [channel], [], [], self.channel_timeout
+        while True:
+            ready = select.select(*select_params)
+            if not any(ready):
+                raise exceptions.TimeoutException(
+                    "Command: '{0}' executed on host '{1}'.".format(
+                        command, self.host))
+            if not ready[0]:        # If there is nothing to read.
                 continue
-        if _timeout:
-            raise exceptions.SSHTimeout(host=host,
-                                        user=usr,
-                                        password=pwd)
-        return ssh
-
-    def create_ssh_connection_to_vm(self):
-        connection = self._get_ssh_connection()
-        return connection
+            out_chunk = err_chunk = None
+            if channel.recv_ready():
+                out_chunk = channel.recv(self.buf_size)
+                out_data += out_chunk,
+            if channel.recv_stderr_ready():
+                err_chunk = channel.recv_stderr(self.buf_size)
+                err_data += err_chunk,
+            if channel.closed and not err_chunk and not out_chunk:
+                break
+        if 0 != exit_status:
+            raise exceptions.SSHExecCommandFailed(
+                command=command, exit_status=exit_status,
+                strerror=''.join(err_data).join(out_data))
+        return ''.join(out_data)
 
     def close_ssh_connection(self, connection):
         connection.close()
-

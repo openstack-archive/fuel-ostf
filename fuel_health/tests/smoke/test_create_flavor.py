@@ -57,4 +57,3 @@ class FlavorsAdminTest(nmanager.SmokeChecksTest):
         self.verify_response_body_value(
             body_structure=flavor.disk,
             value=1, msg=msg_s3, failed_step=3)
-

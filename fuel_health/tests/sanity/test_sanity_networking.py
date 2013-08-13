@@ -24,7 +24,7 @@ LOG = logging.getLogger(__name__)
 
 class NetworksTest(nmanager.SanityChecksTest):
     """
-    TestClass contains tests that check basic networking functionality
+    TestClass contains tests check base networking functionality
     """
 
     @attr(type=['sanity', 'fuel'])
@@ -44,6 +44,5 @@ class NetworksTest(nmanager.SanityChecksTest):
                                "listing networks",
                                self.compute_client)
 
-        self.verify_response_true(len(networks) >= 0,
+        self.verify_response_true(networks,
                                   "Step 2 failed: {msg}".format(msg=fail_msg))
-

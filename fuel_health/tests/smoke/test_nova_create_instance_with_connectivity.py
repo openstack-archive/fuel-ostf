@@ -26,7 +26,6 @@ LOG = logging.getLogger(__name__)
 
 
 class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
-
     """
     Test suit verifies:
      - keypairs creation
@@ -82,7 +81,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         self.keypairs[self.tenant_id] = self.verify(25,
                                                     self._create_keypair,
                                                     1,
-                                                    'Keypair can not be created.',
+                                                    'Keypair can not be'
+                                                    ' created.',
                                                     'keypair creation',
                                                     self.compute_client)
 
@@ -254,7 +254,9 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.verify(10, self._assign_floating_ip_to_instance, 4,
                         "Floating IP can not be assigned.",
                         "floating IP assignment",
-                        self.compute_client, self.servers[0], self.floating_ips[0])
+                        self.compute_client,
+                        self.servers[0],
+                        self.floating_ips[0])
 
         if self.floating_ips:
             ip_address = self.floating_ips[0].ip
@@ -272,7 +274,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             (if it doesn`t exist yet).
             3. Create a new floating IP (if it doesn`t exist yet).
             4. Assign the new floating IP to the instance.
-            5. Check that public IP address 8.8.8.8 can be pinged from instance.
+            5. Check that public IP 8.8.8.8 can be pinged from instance.
         Duration: 200 s.
         """
         if not self.floating_ips:
@@ -303,9 +305,11 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
         if self.servers and self.floating_ips:
             self.verify(10, self._assign_floating_ip_to_instance, 4,
-                    "Floating IP can not be assigned.",
-                    "floating IP assignment",
-                    self.compute_client, self.servers[0], self.floating_ips[0])
+                        "Floating IP can not be assigned.",
+                        "floating IP assignment",
+                        self.compute_client,
+                        self.servers[0],
+                        self.floating_ips[0])
 
         if self.floating_ips:
             ip_address = self.floating_ips[0].ip

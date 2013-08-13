@@ -47,92 +47,99 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         pass
 
     @attr(type=['sanity', 'fuel'])
-    def test_services_state(self):
-        """Service status monitoring
+    def test_001_services_state(self):
+        """Check all the services execute normally
         Confirm that all required services are running.
         Target component: OpenStack
 
         Scenario:
-            1. Connect to a controller node via SSH.
-            2. Execute nova-manage service list command.
-            3. Confirm that there are no failed services (with state 'XXX')
+            1. Execute nova-manage service list command on a controller node.
+            2. Check there are no failed services (with XXX state).
         Duration: 50 s.
         """
-        output_msg = ''
+        output = u'XXX'
         cmd = 'nova-manage service list'
-        if self.controllers:
-
-            try:
-                ssh_client = SSHClient(self.controllers[0],
-                                       self.usr, self.pwd,
-                                       key_filename=self.key,
-                                       timeout=self.timeout)
-            except Exception as exc:
-                LOG.debug(exc)
-                self.fail("Step 1 failed: connection failed. ")
-            output = self.verify(50, ssh_client.exec_command,
-                                 2, "Failed to execute the"
-								 " 'nova-manage' command.",
-                                 "nova-manage command execution",
-                                 cmd)
-
-            output_msg = output_msg or (
-                'Some nova services have not been started.')
-            LOG.debug(output)
-            self.verify_response_true(
-                u'XXX' not in output, "Step 3 failed: {msg}".format(msg=output_msg))
-        else:
-            self.fail('Step 1 failed: Test configuration is invalid, controller '
-                      'node IP address is not specified')
+        if not self.controllers:
+            self.fail('Step 1 failed: there are no controller nodes.')
+        ssh_client = SSHClient(self.controllers[0],
+                               self.usr, self.pwd,
+                               key_filename=self.key,
+                               timeout=self.timeout)
+        output = self.verify(50, ssh_client.exec_command,
+                             1, "'nova-manage' command execution failed. ",
+                             "nova-manage command execution",
+                             cmd)
+        LOG.debug(output)
+        self.verify_response_true(
+            u'XXX' not in output, 'Step 2 failed: Some nova services '
+                                  'have not been started.')
 
     @attr(type=['sanity', 'fuel'])
-    def test_dns_state(self):
-        """DNS availability
+    def test_002_internet_connectivity_from_compute(self):
+        """Check Internet connectivity from a compute
+        Test internet connections on compute nodes.
+        Target component: OpenStack
+
+        Scenario:
+            1. Execute ping 8.8.8.8 command from a compute node.
+        Duration: 40 s.
+        """
+        if not self.computes:
+            self.fail('Step 1 failed: There are no compute nodes')
+
+        cmd = "ping 8.8.8.8 -c 1 -w 1"
+        ssh_client = SSHClient(self.computes[0],
+                               self.usr,
+                               self.pwd,
+                               key_filename=self.key,
+                               timeout=self.timeout)
+        self.verify(50, ssh_client.exec_command, 1,
+                    "'ping' command failed. Looks like there is no "
+                    "Internet connection on the compute node.",
+                    "'ping' command",
+                    cmd)
+
+    @attr(type=['sanity', 'fuel'])
+    def test_003_dns_resolution(self):
+        """Check DNS resolution on a compute
         Test DNS resolution on compute nodes.
         Target component: OpenStack
 
         Scenario:
-            1. Connect to a compute node via SSH.
-            2. Execute ping 8.8.8.8 from the compute.
-            3. Check all the packets were received.
-            4. Execute host 8.8.8.8 from the controller.
-            5. Check 8.8.8.8 host is resolved.
-        Duration: 100 s.
+            1. Execute host 8.8.8.8 command from a compute node.
+            2. Check 8.8.8.8 host was successfully resolved
+            3. Check host google.com command from the compute node.
+            4. Check google.com host was successfully resolved.
+        Duration: 60 s.
         """
-        if self.computes:
-            expected_output = "0% packet loss"
-            cmd = "ping 8.8.8.8 -c 1 -w 1"
-            try:
-                ssh_client = SSHClient(self.computes[0],
-                                       self.usr,
-                                       self.pwd,
-                                       key_filename=self.key,
-                                       timeout=self.timeout)
-            except Exception as exc:
-                LOG.debug(exc)
-                self.fail("Step 1 failed: connection failed.")
-            output = self.verify(50, ssh_client.exec_command, 2,
-                                 "'ping' command failed. ",
-                                 "'ping' command",
-                                 cmd)
+        if not self.computes:
+            self.fail('Step 1 failed: There are no compute nodes')
+        ssh_client = SSHClient(self.computes[0],
+                               self.usr,
+                               self.pwd,
+                               key_filename=self.key,
+                               timeout=self.timeout)
+        expected_output = "google"
+        cmd = "host 8.8.8.8"
+        output = self.verify(50, ssh_client.exec_command, 1,
+                             "'host' command failed. Looks like there is no "
+                             "Internet connection on the compute node.",
+                             "'ping' command",
+                             cmd)
+        LOG.debug(output)
+        self.verify_response_true(expected_output in output,
+                                  'Step 2 failed: '
+                                  'DNS name for 8.8.8.8 host '
+                                  'cannot be resolved.')
 
-            LOG.debug(output)
-            self.verify_response_true(
-                expected_output in output,
-                'Step 3 failed: packets sent to 8.8.8.8 were lost, '
-                'there is no Internet connection'
-                ' on the compute node.')
-
-            expected_output = ("8.8.8.8.in-addr.arpa domain name pointer "
-                               "google-public-dns-a.google.com.")
-            cmd = "host 8.8.8.8"
-            output = self.verify(50, ssh_client.exec_command, 4,
-                                 "'host' command failed. ",
-                                 "'host' command",
-                                 cmd)
-
-            self.verify_response_true(expected_output in output,
-                                      'Step 5 failed: DNS name'
-                                      ' cannot be resolved.')
-        else:
-            self.fail('Step 1 failed: There are no compute nodes.')
+        expected_output = "google.com has address"
+        cmd = "host google.com"
+        output = self.verify(50, ssh_client.exec_command, 3,
+                             "'host' command failed. "
+                             "DNS name cannot be resolved.",
+                             "'host' command",
+                             cmd)
+        LOG.debug(output)
+        self.verify_response_true(expected_output in output,
+                                  'Step 4 failed: '
+                                  'DNS name cannot be resolved.')
