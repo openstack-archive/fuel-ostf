@@ -348,8 +348,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
             self.servers.append(server)
         server = self.servers[-1]
-        instance_ip = server.__dict__['addresses']['novanetwork'][0]['addr']
-        compute = server.__dict__['OS-EXT-SRV-ATTR:host']
+        instance_ip = getattr(server, 'addresses')['novanetwork'][0]['addr']
+        compute = getattr(server, 'OS-EXT-SRV-ATTR:host')
 
         self.verify(100, self._check_connectivity_from_vm,
                         3, ("Connectivity to 8.8.8.8 from the VM doesn`t "
