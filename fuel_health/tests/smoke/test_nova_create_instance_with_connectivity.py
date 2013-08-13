@@ -348,7 +348,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
             self.servers.append(server)
         server = self.servers[-1]
-        nstance_ip = server.addresses['novanetwork'][0]['addr']
+        instance_ip = server.addresses['novanetwork'][0]['addr']
         compute = getattr(server, 'OS-EXT-SRV-ATTR:host')
 
         self.verify(100, self._check_connectivity_from_vm,
