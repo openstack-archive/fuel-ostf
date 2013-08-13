@@ -54,7 +54,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
         Scenario:
             1. Execute nova-manage service list command on a controller node.
-            2. Check there is no failed services (with XXX state).
+            2. Check there are no failed services (with XXX state).
         Duration: 50 s.
         """
         output = u'XXX'
