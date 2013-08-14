@@ -343,6 +343,22 @@ def register_murano_opts(conf):
         conf.register_opt(opt, group='murano')
 
 
+heat_group = cfg.OptGroup(name='murano',
+                          title='Murano API Service Options')
+
+HeatConfig = [
+    cfg.StrOpt('endpoint',
+               default=None,
+               help="Heat API Service URL."),
+]
+
+
+def register_heat_opts(conf):
+    conf.register_group(heat_group)
+    for opt in HeatConfig:
+        conf.register_opt(opt, group='heat')
+
+
 def process_singleton(cls):
     """Wrapper for classes... To be instantiated only one time per process"""
     instances = {}
@@ -409,6 +425,7 @@ class FileConfig(object):
         self.network = cfg.CONF.network
         self.volume = cfg.CONF.volume
         self.murano = cfg.CONF.murano
+        self.heat = cfg.CONF.heat
 
 
 class ConfigGroup(object):
@@ -447,6 +464,7 @@ class NailgunConfig(object):
     volume = ConfigGroup(VolumeGroup)
     object_storage = ConfigGroup(ObjectStoreConfig)
     murano = ConfigGroup(MuranoConfig)
+    heat = ConfigGroup(HeatConfig)
 
     def __init__(self, parse=True):
         LOG.info('INITIALIZING NAILGUN CONFIG')
@@ -474,6 +492,7 @@ class NailgunConfig(object):
             LOG.info('set endpoints successful')
             self.set_proxy()
             LOG.info('set proxy successful')
+            self._parse_heat_configuration()
             self._parse_murano_configuration()
             LOG.info('parse murano configuration successful')
             self._parse_cluster_generated_data()
@@ -487,6 +506,12 @@ class NailgunConfig(object):
         if not murano_api_url:
             murano_api_url = self.compute.public_ips[0]
         self.murano.api_url = 'http://{0}:8082'.format(murano_api_url)
+
+    def _parse_heat_configuration(self):
+        endpoint = self.network.raw_data.get('public_vip', None)
+        if not endpoint:
+            endpoint = self.compute.public_ips[0]
+        self.heat.endpoint = 'http://{0}:8004/v1'.format(endpoint)
 
     def _parse_cluster_attributes(self):
         api_url = '/api/clusters/%s/attributes' % self.cluster_id
