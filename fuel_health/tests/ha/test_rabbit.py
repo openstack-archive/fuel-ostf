@@ -41,7 +41,6 @@ class RabbitSmokeTest(BaseTestCase):
         cls._rabbit_user = rand_name('ost1_testrabbitmquser')
         cls._rabbit_password = cls._rabbit_user
         cls._amqp_clients = []
-        cls._rabbit_user_exists = False
 
     @attr(type=['fuel', 'ha', 'non-destructive'])
     def test_rabbitmqctl_status(self):
@@ -145,8 +144,7 @@ class RabbitSmokeTest(BaseTestCase):
                     "Cannot create RabbitMQ user %s" % self._rabbit_user,
                     "Creating RabbitMQ user",
                     self._rabbit_user,
-                    self._rabbit_password,
-                    self._rabbit_user_exists)
+                    self._rabbit_password)
 
         message = 'ost1_test-test-message-' + str(rand_int_id(100000, 999999))
 
