@@ -1,13 +1,14 @@
+import logging
 from operator import eq
 from nose.plugins.attrib import attr
-from nose.tools import timed
 
-from fuel_health.common.amqp_client import AmqpClient, AmqpEx
+from fuel_health import config
+from fuel_health.common.amqp_client import AmqpClient
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.common.utils.data_utils import rand_name, rand_int_id
-from fuel_health.exceptions import SSHExecCommandFailed
 from fuel_health.test import BaseTestCase
 
+LOG = logging.getLogger(__name__)
 
 
 class RabbitSmokeTest(BaseTestCase):
@@ -28,12 +29,13 @@ class RabbitSmokeTest(BaseTestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.config = config.FuelConfig()
         cls._clients = {}
         cls._queue = ''
         cls._controllers = cls.config.compute.controller_nodes
         cls._usr = cls.config.compute.controller_node_ssh_user
         cls._pwd = cls.config.compute.controller_node_ssh_password
-        cls._key = cls.config.compute.controller_node_ssh_key_path
+        cls._key = cls.config.compute.path_to_private_key
         cls._ssh_timeout = cls.config.compute.ssh_timeout
         cls._queue = rand_name('ost1_test-test-queue')
         cls._rabbit_user = rand_name('ost1_testrabbitmquser')
@@ -41,187 +43,178 @@ class RabbitSmokeTest(BaseTestCase):
         cls._amqp_clients = []
         cls._rabbit_user_exists = False
 
-    # def setUp(self):
-    #     super(RabbitSmokeTest, self).setUp()
-    #     if self._rabbit_user and self._rabbit_password:
-    #         self._createRabbitUser(self._rabbit_user, self._rabbit_password,
-    #                               self._rabbit_user_exists)
-
-    # def tearDown(self):
-    #     try:
-    #         if self._queue:
-    #             for client in self._amqp_clients:
-    #                 client['client'].close(self._queue)
-    #     except:
-    #         pass
-    #
-    #     self._deleteRabbitUser(self._rabbit_user)
-    #     super(RabbitSmokeTest, self).tearDown()
-
     @attr(type=['fuel', 'ha', 'non-destructive'])
-    @timed(60.0)
     def test_rabbitmqctl_status(self):
-        """Test verifies RabbitMQ has proper cluster structure
-         is available from all the controllers"""
+        """RabbitMQ cluster availability
 
+        Scenario:
+          1. Retrieve cluster status for each the controller.
+          2. Check number of clusters are equal to number of controllers.
+          3. Check cluster list is the same for each the controller.
+        Duration: 100 s.
+        """
+        if not self._controllers:
+            self.fail('Step 1 failed: There are no controller nodes.')
         cmd = 'sudo rabbitmqctl cluster_status'
         nodes = []
         for node in self._controllers:
             output = ''
             error = ''
-            try:
-                output = self._format_output(SSHClient(host=node,
-                                   username=self._usr,
+            ssh_client = SSHClient(host=node, username=self._usr,
                                    password=self._pwd,
                                    pkey=self._key,
-                                   timeout=self._ssh_timeout).exec_command(
-                    cmd))
-            except SSHExecCommandFailed as exc:
-                self.fail(("Cannot get cluster status for %s node. "
-                           "The following error occurs: " % node) +
-                          exc._error_string)
-
+                                   timeout=self._ssh_timeout)
+            output = self._format_output(self.verify(20,
+                                                     ssh_client.exec_command,
+                                                     1,
+                                                     "Cannot get cluster "
+                                                     "status for %s node." %
+                                                     node,
+                                                     "Retrieve cluster status "
+                                                     "for each the controller",
+                                                     cmd))
             nodes.append({'controller': node, 'clusters': output})
-        #for HA configuration number of controllers and
+            #for HA configuration number of controllers and
         #number of clusters should be the same
         _num_of_controllers = len(self._controllers)
         _aux_node_clusters = sorted(nodes[0]['clusters'])
         for node in nodes[1:]:
             self.assertEqual(_num_of_controllers, len(node["clusters"]),
-                             'The number of clusters for node %s is not equal '
-                             'to number of controllers' % node['controller'])
+                             'Step 2 failed: The number of clusters for '
+                             'node %s is not equal to number of controllers' %
+                             node['controller'])
 
             self.assertTrue(map(eq, sorted(node['clusters']),
-                                _aux_node_clusters), "Cluster lists on nodes %s"
+                                _aux_node_clusters), "Step 3 failed: Cluster "
+                                                     "lists on nodes %s"
                                                      " and %s are different" %
                                                      (nodes[0]["controller"],
                                                       node["controller"]))
 
     @attr(type=['fuel', 'ha', 'non-destructive'])
-    @timed(60.0)
     def test_rabbit_queues(self):
-        """Test verifies RabbitMQ has proper queue list
-         are available from all the controllers"""
+        """RabbitMQ queues availability
+        Scenario:
+          1. Retrieve list of RabbitMQ queues for each controller
+          2. Check the same queue list is present on each node
+        Duration: 100
+        """
+        if not self._controllers:
+            self.fail('Step 1 failed: There are no controller nodes.')
         cmd = 'sudo rabbitmqctl list_queues'
         temp_set = set()
         get_name = lambda x: x.split('\t')[0]
         for node in self._controllers:
-            try:
-                output = SSHClient(host=node,
+            ssh_client = SSHClient(host=node,
                                    username=self._usr,
                                    password=self._pwd,
                                    pkey=self._key,
-                                   timeout=self._ssh_timeout).exec_command(
-                    cmd).splitlines()
-            except SSHExecCommandFailed as exc:
-                self.fail(("Cannot get queue list for %s node. "
-                           "The following error occurs: " % node) +
-                          exc._error_string)
-            output = [get_name(x) for x in output[1:-1]]
-            output = set(output)
-            if len(temp_set) == 0:
+                                   timeout=self._ssh_timeout)
+            output = self.verify(20, ssh_client.exec_command, 1,
+                                 "Cannot get queue list for %s node. " % node,
+                                 "Retrieve queue list",
+                                 cmd)
+            output = set([get_name(x) for x in (output.splitlines())[1:-1]])
+            if not temp_set:
                 #this means it is the first node,
                 #this case we check there are queues only
                 temp_set = output
-                self.assertTrue(len(output), "Queue list for %s controller is empty" % node)
+                self.assertTrue(output, "Step 2 failed: Queue list for %s"
+                                        " controller is empty" % node)
                 continue
-            #check all the queues are present on all the nodes
-            self.assertEqual(len(output.symmetric_difference(temp_set)), 0,
-                             "Queue lists are different for %s and %s "
-                             "controllers" % (self._controllers[0], node))
+                #check all the queues are present on all the nodes
+            self.assertFalse(output.symmetric_difference(temp_set),
+                             "Step 2 failed: Queue lists are different for %s "
+                             "and %s controllers" %
+                             (self._controllers[0], node))
 
+    @attr(type=['fuel', 'ha', 'non-destructive'])
     def test_rabbit_ha_messages(self):
-        """Test verifies all brokers RabbitMQ receive a message
-         has been sent"""
-
-        #this action needs for the following test steps
-        #the only reason why it is not in setUp is that this one
-        #is needed just for this test and will slow others
-        self._createRabbitUser(self._rabbit_user, self._rabbit_password,
-                                   self._rabbit_user_exists)
+        """RabbitMQ messages
+        Scenario:
+          1. Create RabbitMQ user.
+          2. Create test queue on one of controllers.
+          3. Send message to the queue per controller.
+          4. Check messages were received on all the controllers.
+          5. Delete the queue.
+          6. Delete the RabbitMQ user.
+        """
+        if not self._controllers:
+            self.fail('Step 1 failed: There are no controller nodes.')
+        self.verify(20, self._createRabbitUser, 1,
+                    "Cannot create RabbitMQ user %s" % self._rabbit_user,
+                    "Creating RabbitMQ user",
+                    self._rabbit_user,
+                    self._rabbit_password,
+                    self._rabbit_user_exists)
 
         message = 'ost1_test-test-message-' + str(rand_int_id(100000, 999999))
 
         for controller in self._controllers:
-            amqp_client = None
-            try:
-                amqp_client = AmqpClient(host=controller,
+            amqp_client = AmqpClient(host=controller,
                                      rabbit_username=self._rabbit_user,
                                      rabbit_password=self._rabbit_password)
 
-            except AmqpEx.AMQPConnectionError:
-                self.fail("Can not create AMQP Client for %s controller" %
-                      controller)
-            self._amqp_clients.append({'controller': controller, 'client': amqp_client})
+        self._amqp_clients.append({'controller': controller,
+                                   'client': amqp_client})
 
-        try:
-            self._amqp_clients[0]['client'].create_queue(self._queue)
-        except AmqpEx.AMQPConnectionError:
-            self.fail("Cannot create queue %s on %s controller" %
-                      (self._queue, self._amqp_clients[0]['controller']))
+        self.verify(20, self._amqp_clients[0]['client'].create_queue,
+                    2,
+                    "Cannot create queue %s on %s controller" %
+                    (self._queue, self._amqp_clients[0]['controller']),
+                    "Creating queue on controller", self._queue)
 
-        for controller in self._amqp_clients:
-            try:
-                controller['client'].send_message(self._queue, message)
-            except AmqpEx.AMQPConnectionError:
-                self.fail("Cannot send message to %s" % controller)
-
-        for controller in self._amqp_clients:
-            try:
-                out_mes = controller['client'].receive_message(self._queue)
-                print out_mes
-            except AmqpEx.AMQPConnectionError:
-                self.fail("Cannot receive message from %s controller" % controller['controller'])
-
-        try:
-            if self._queue:
-                for client in self._amqp_clients:
-                    client['client'].close(self._queue)
-        except AmqpEx.AMQPConnectionError:
-            self.fail("Cannot delete queue %s on %s controller" %
-                      (self._queue, self._amqp_clients[0]['controller']))
-
-        self._deleteRabbitUser(self._rabbit_user)
-        super(RabbitSmokeTest, self).tearDown()
-
-        self.assertEqual(out_mes, message,
-                             "Received message is different "
+        for controller_client in self._amqp_clients:
+            self.verify(20, controller_client['client'].send_message, 3,
+                        "Cannot send message to %s" % controller,
+                        "Sending message",
+                        self._queue, message)
+            out_mes = self.verify(20,
+                                  controller_client['client'].receive_message,
+                                  4,
+                                  "Cannot receive message from %s controller"
+                                  % controller['controller'],
+                                  "Receiving message",
+                                  self._queue)
+            self.assertEqual(out_mes, message,
+                             "Step 4 failed: Received message is different "
                              "from the one has been sent")
+        for client in self._amqp_clients:
+            self.verify(20, client['client'].close, 5,
+                        "Cannot delete queue %s on %s controller"
+                        % (self._queue, self._amqp_clients[0]['controller']),
+                        "Closing queue",
+                        self._queue)
 
+        self.verify(20, self._deleteRabbitUser, 6,
+                    "Cannot delete RabbitMQ user %s" % self._rabbit_user,
+                    "Deleting RabbitMQ user",
+                    self._rabbit_user)
 
     def _format_output(self, output):
-            """
-            Internal function allows remove all the not valuable chars
-            from the output
-            """
-            output = output.split('running_nodes,')[-1].split('...done.')[0]
-            for char in ' {[]}\n\r':
-                output = output.replace(char, '')
-            return output.split(',')
+        """
+        Internal function allows remove all the not valuable chars
+        from the output
+        """
+        output = output.split('running_nodes,')[-1].split('...done.')[0]
+        for char in ' {[]}\n\r':
+            output = output.replace(char, '')
+        return output.split(',')
 
-    def _createRabbitUser(self, username, password, flag=False):
-        if flag:
-            return
+    def _createRabbitUser(self, username, password):
         cmd = 'sudo rabbitmqctl add_user %s %s; ' \
               'sudo rabbitmqctl set_permissions %s' % \
               (username, password, username + ' ".*" ".*" ".*"')
-        try:
-            SSHClient(host=self._controllers[0],
-                    username=self._usr,
-                    password=self._pwd,
-                    pkey=self._key,
-                    timeout=self._ssh_timeout).exec_command(cmd)
-        except SSHExecCommandFailed as exc:
-            self.fail(("Cannot create RabbitMQ user %s. The following error "
-                       "occurs: " % username) + exc._error_string)
+        SSHClient(host=self._controllers[0],
+                  username=self._usr,
+                  password=self._pwd,
+                  pkey=self._key,
+                  timeout=self._ssh_timeout).exec_command(cmd)
 
     def _deleteRabbitUser(self, username):
-        cmd = 'sudo rabbitmqctl delete_user %s' % (username)
-        try:
-            SSHClient(host=self._controllers[0],
-                    username=self._usr,
-                    password=self._pwd,
-                    pkey=self._key,
-                    timeout=self._ssh_timeout).exec_command(cmd)
-        except SSHExecCommandFailed:
-            pass
+        cmd = 'sudo rabbitmqctl delete_user %s' % username
+        SSHClient(host=self._controllers[0],
+                  username=self._usr,
+                  password=self._pwd,
+                  pkey=self._key,
+                  timeout=self._ssh_timeout).exec_command(cmd)
