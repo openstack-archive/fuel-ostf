@@ -485,7 +485,7 @@ class NailgunConfig(object):
     def _parse_murano_configuration(self):
         murano_api_url = self.network.raw_data.get('public_vip', None)
         if not murano_api_url:
-            murano_api_url = self.compute.controller_nodes[0]
+            murano_api_url = self.compute.public_ips[0]
         self.murano.api_url = 'http://{0}:8082'.format(murano_api_url)
 
     def _parse_cluster_attributes(self):
