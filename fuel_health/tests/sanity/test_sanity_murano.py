@@ -39,7 +39,10 @@ class MuranoSanityTests(murano.MuranoTest):
         """
 
         keyname = 'murano-lb-key'
-        fail_msg = "Key Pair %s does not exist. " % keyname
+        fail_msg = "Key Pair %s does not exist. Need to create Key Pair" + \
+                   " manually. Please refer to the " + \
+                   "Fuel Web user documentation"
+        fail_msg = fail_msg % keyname
 
         result = self.verify(5, self.is_keypair_available, 1, fail_msg,
                              "checking if %s keypair is available" % keyname,
@@ -62,7 +65,8 @@ class MuranoSanityTests(murano.MuranoTest):
         """
 
         fail_msg = "Windows image 'ws-2012-std' with Murano tag wasn't" + \
-                   " imported into Glance"
+                   " imported into Glance. Please refer to the " + \
+                   "Fuel Web user documentation"
         action_msg = "checking if Windows image with Murano tag is available"
         def find_image(tag):
             for i in self.compute_client.images.list():

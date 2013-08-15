@@ -60,7 +60,8 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
     def check_image(self):
         fail_msg = "Windows image 'ws-2012-std' with Murano tag wasn't" + \
-                   " imported into Glance"
+                   " imported into Glance. Please refer to the " + \
+                   "Fuel Web user documentation"
         action_msg = "checking if Windows image with Murano tag is available"
         def find_image(tag):
             for i in self.compute_client.images.list():
