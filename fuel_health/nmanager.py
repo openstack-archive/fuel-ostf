@@ -197,7 +197,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
     def _get_murano_client(self):
         """
         This method returns Murano API client
-        or None if needed configuration parameters are unavailable.
         """
         # Get xAuth token from Keystone
         self.token_id = self._get_identity_client(
