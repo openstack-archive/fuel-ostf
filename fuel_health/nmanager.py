@@ -175,15 +175,17 @@ class OfficialClientManager(fuel_health.manager.Manager):
 
     def _get_heat_client(self, username=None, password=None):
         keystone = self._get_identity_client()
+        service_catalog = keystone.service_catalog
         token = keystone.auth_token
         auth_url = self.config.identity.uri
 
         if 'orchestration' not in [s.type for s in
                                    keystone.services.list()]:
-            return None
+            endpoint = self.config.heat.endpoint
+        else:
+            endpoint = service_catalog.url_for(service_type='orchestration',
+                                               endpoint_type='publicURL')
 
-        endpoint = keystone.service_catalog.url_for(
-            service_type='orchestration', endpoint_type='publicURL')
         if not username:
             username = self.config.identity.admin_username
         if not password:
