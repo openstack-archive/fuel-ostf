@@ -325,6 +325,9 @@ MuranoConfig = [
     cfg.StrOpt('api_url',
                default=None,
                help="Murano API Service URL."),
+    cfg.StrOpt('api_url_management',
+               default=None,
+               help="Murano API Service management URL."),
     cfg.BoolOpt('insecure',
                 default=False,
                 help="This parameter allow to enable SSL encription"),
@@ -350,6 +353,9 @@ HeatConfig = [
     cfg.StrOpt('endpoint',
                default=None,
                help="Heat API Service URL."),
+    cfg.StrOpt('endpoint_management',
+               default=None,
+               help="Heat API Service management URL."),
 ]
 
 def register_heat_opts(conf):
@@ -504,14 +510,18 @@ class NailgunConfig(object):
                         'Something wrong with endpoints')
 
     def _parse_murano_configuration(self):
-        murano_url = self.network.raw_data.get('public_vip',
+        murano_url_public = self.network.raw_data.get('public_vip',
                                                self.compute.public_ips[0])
-        self.murano.api_url = 'http://{0}:8082'.format(murano_url)
+        murano_url = self.compute.controller_nodes[0]
+        self.murano.api_url = 'http://{0}:8082'.format(murano_url_public)
+        self.murano.api_url_management = 'http://{0}:8082'.format(murano_url)
 
     def _parse_heat_configuration(self):
-        endpoint = self.network.raw_data.get('public_vip',
+        endpoint_public = self.network.raw_data.get('public_vip',
                                              self.compute.public_ips[0])
-        self.heat.endpoint = 'http://{0}:8004/v1'.format(endpoint)
+        endpoint = self.compute.controller_nodes[0]
+        self.heat.endpoint = 'http://{0}:8004/v1'.format(endpoint_public)
+        self.heat.endpoint_management = 'http://{0}:8004/v1'.format(endpoint)
 
     def _parse_cluster_attributes(self):
         api_url = '/api/clusters/%s/attributes' % self.cluster_id
