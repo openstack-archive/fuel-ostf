@@ -71,7 +71,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
                     return True
             return False
 
-        image = self.verify(4, find_image, 1, fail_msg,
+        image = self.verify(20, find_image, 1, fail_msg,
                             action_msg, 'murano_image_info')
 
         if not image:
@@ -86,8 +86,13 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             Returns the list of environments.
         """
-
-        return self.murano_client.environments.list()
+        msg = ("Can't get the list of environments. "
+               "Murano API service isn't available. ")
+        try:
+            result = self.murano_client.environments.list()
+            return result
+        except:
+            raise AssertionError(msg)
 
     def create_environment(self, name):
         """
@@ -98,8 +103,13 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             Returns new environment.
         """
-
-        return self.murano_client.environments.create(name)
+        msg = ("Can't create new environment. "
+               "Murano API service isn't available. ")
+        try:
+            result = self.murano_client.environments.create(name)
+            return result
+        except:
+            raise AssertionError(msg)
 
     def get_environment(self, environment_id, session_id=None):
         """
@@ -111,8 +121,14 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             Returns specific environment.
         """
-
-        return self.murano_client.environments.get(environment_id, session_id)
+        msg = ("Can't get the environment. "
+               "Murano API service isn't available. ")
+        try:
+            result = self.murano_client.environments.get(environment_id,
+                                                         session_id)
+            return result
+        except:
+            raise AssertionError(msg)
 
     def update_environment(self, environment_id, new_name):
         """
@@ -124,8 +140,14 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             Returns new environment.
         """
-
-        return self.murano_client.environments.update(environment_id, new_name)
+        msg = ("Can't update the environment. "
+               "Murano API service isn't available. ")
+        try:
+            result = self.murano_client.environments.update(environment_id,
+                                                            new_name)
+            return result
+        except:
+            raise AssertionError(msg)
 
     def delete_environment(self, environment_id):
         """
@@ -136,8 +158,12 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             Returns None.
         """
-
-        return self.murano_client.environments.delete(environment_id)
+        msg = ("Can't delete the environment. "
+               "Murano API service isn't available. ")
+        try:
+            self.murano_client.environments.delete(environment_id)
+        except:
+            raise AssertionError(msg)
 
     def create_session(self, environment_id):
         """
@@ -148,8 +174,13 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             Returns new session.
         """
-
-        return self.murano_client.sessions.configure(environment_id)
+        msg = ("Can't create session for environment. "
+               "Murano API service isn't available. ")
+        try:
+            result = self.murano_client.sessions.configure(environment_id)
+            return result
+        except:
+            raise AssertionError(msg)
 
     def get_session(self, environment_id, session_id):
         """
@@ -161,8 +192,14 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             Returns specific session.
         """
-
-        return self.murano_client.sessions.get(environment_id, session_id)
+        msg = ("Can't get session for environment. "
+               "Murano API service isn't available. ")
+        try:
+            result = self.murano_client.sessions.get(environment_id,
+                                                     session_id)
+            return result
+        except:
+            raise AssertionError(msg)
 
     def delete_session(self, environment_id, session_id):
         """
@@ -174,8 +211,14 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             Returns None.
         """
-
-        return self.murano_client.sessions.delete(environment_id, session_id)
+        msg = ("Can't delete session for environment. "
+               "Murano API service isn't available. ")
+        try:
+            result = self.murano_client.sessions.delete(environment_id,
+                                                        session_id)
+            return result
+        except:
+            raise AssertionError(msg)
 
     def deploy_session(self, environment_id, session_id):
         """
@@ -187,8 +230,14 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             Returns specific session.
         """
-
-        return self.murano_client.sessions.deploy(environment_id, session_id)
+        msg = ("Can't deploy session for environment. "
+               "Murano API service isn't available. ")
+        try:
+            result = self.murano_client.sessions.deploy(environment_id,
+                                                        session_id)
+            return result
+        except:
+            raise AssertionError(msg)
 
     def create_service(self, environment_id, session_id, json_data):
         """
@@ -201,9 +250,16 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             Returns specific service.
         """
-
-        return self.murano_client.services.post(environment_id, path='/',
-                                                data=json_data, session_id=session_id)
+        msg = ("Can't create service. "
+               "Murano API service isn't available. ")
+        try:
+            result = self.murano_client.services.post(environment_id,
+                                                      path='/',
+                                                      data=json_data,
+                                                      session_id=session_id)
+            return result
+        except:
+            raise AssertionError(msg)
 
     def list_services(self, environment_id, session_id=None):
         """
@@ -215,8 +271,14 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             Returns list of services.
         """
-
-        return self.murano_client.services.get(environment_id, '/', session_id)
+        msg = ("Can't get the list of services. "
+               "Murano API service isn't available. ")
+        try:
+            result = self.murano_client.services.get(environment_id, '/',
+                                                     session_id)
+            return result
+        except:
+            raise AssertionError(msg)
 
     def get_service(self, environment_id, session_id, service_id):
         """
@@ -229,10 +291,15 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             Returns specific service.
         """
-
-        return self.murano_client.services.get(environment_id,
-                                               '/{0}'.format(service_id),
-                                               session_id)
+        msg = ("Can't get the service. "
+               "Murano API service isn't available. ")
+        try:
+            path = '/{0}'.format(service_id)
+            result = self.murano_client.services.get(environment_id,
+                                                     path, session_id)
+            return result
+        except:
+            raise AssertionError(msg)
 
     def delete_service(self, environment_id, session_id, service_id):
         """
@@ -245,10 +312,15 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             Returns None.
         """
-
-        return self.murano_client.services.delete(environment_id,
-                                                  '/{0}'.format(service_id),
-                                                  session_id)
+        msg = ("Can't delete the service. "
+               "Murano API service isn't available. ")
+        try:
+            path = '/{0}'.format(service_id)
+            result = self.murano_client.services.delete(environment_id,
+                                                        path, session_id)
+            return result
+        except:
+            raise AssertionError(msg)
 
     def deploy_check(self, environment_id):
         """
@@ -259,12 +331,16 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             Returns 'OK'.
         """
-
-        infa = self.get_environment(environment_id)
-        while infa.status != 'ready':
-            time.sleep(15)
+        msg = ("Can't get environment status. "
+               "Murano API service isn't available. ")
+        try:
             infa = self.get_environment(environment_id)
-        return 'OK'
+            while infa.status != 'ready':
+                time.sleep(15)
+                infa = self.get_environment(environment_id)
+            return 'OK'
+        except:
+            raise AssertionError(msg)
 
     def deployments_status_check(self, environment_id):
         """
@@ -275,8 +351,13 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             Returns 'OK'.
         """
+        msg = ("Can't get deployment status. "
+               "Murano API service isn't available. ")
+        try:
+            deployments = self.murano_client.deployments.list(environment_id)
+        except:
+            raise AssertionError(msg)
 
-        deployments = self.murano_client.deployments.list(environment_id)
         for depl in deployments:
             assert depl.state == 'success'
         return 'OK'

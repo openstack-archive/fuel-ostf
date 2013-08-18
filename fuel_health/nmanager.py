@@ -181,16 +181,36 @@ class OfficialClientManager(fuel_health.manager.Manager):
         token = keystone.auth_token
         auth_url = self.config.identity.uri
 
-        endpoint = self.config.heat.endpoint
+        endpoint_public = self.config.heat.endpoint
+        endpoint_management = self.config.heat.endpoint_management
         if not username:
             username = self.config.identity.admin_username
         if not password:
             password = self.config.identity.admin_password
 
-        return heatclient.v1.client.Client(endpoint,
-                                           auth_url=auth_url, token=token,
-                                           username=username,
-                                           password=password)
+        client = None
+        try:
+            client =  heatclient.v1.client.Client(endpoint_public,
+                                                  auth_url=auth_url,
+                                                  token=token,
+                                                  username=username,
+                                                  password=password)
+            " verify that we can connect to this address "
+            client.stacks.list()
+            return client
+        except:
+            pass
+        try:
+            client =  heatclient.v1.client.Client(endpoint_management,
+                                                  auth_url=auth_url,
+                                                  token=token,
+                                                  username=username,
+                                                  password=password)
+            " verify that we can connect to this address "
+            client.stacks.list()
+            return client
+        except:
+            pass
 
     def _get_murano_client(self):
         """
@@ -204,15 +224,34 @@ class OfficialClientManager(fuel_health.manager.Manager):
 
         # Get Murano API parameters
         self.api_host = None
+        self.api_host_management = None
         self.insecure = False
         if hasattr(self.config.murano, 'api_url'):
             self.api_host = self.config.murano.api_url
+        if hasattr(self.config.murano, 'api_url_management'):
+            self.api_host_management = self.config.murano.api_url_management
         if hasattr(self.config.murano, 'insecure'):
             self.insecure = self.config.murano.insecure
 
-        return muranoclient.v1.client.Client(endpoint=self.api_host,
-                                             token=self.token_id,
-                                             insecure=self.insecure)
+        try:
+            client = muranoclient.v1.client.Client(endpoint=self.api_host,
+                                                   token=self.token_id,
+                                                   insecure=self.insecure)
+            " verify that we can connect to this address "
+            client.environments.list()
+            return client
+        except:
+            pass
+        try:
+            endpoint = self.api_host_management
+            client = muranoclient.v1.client.Client(endpoint=endpoint,
+                                                   token=self.token_id,
+                                                   insecure=self.insecure)
+            " verify that we can connect to this address "
+            client.environments.list()
+            return client
+        except:
+            pass
 
     def _get_savanna_client(self, username=None, password=None):
         auth_url = self.config.identity.uri
