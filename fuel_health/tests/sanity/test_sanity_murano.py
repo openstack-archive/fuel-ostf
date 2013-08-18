@@ -1,4 +1,4 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
+# vim: tabstop=4 shiftwidtЖ:h=4 softtabstop=4
 
 # Copyright 2013 Mirantis, Inc.
 #
@@ -33,7 +33,7 @@ class MuranoSanityTests(murano.MuranoTest):
         Scenario:
             1. Check that Key Pair 'murano-lb-key' exists.
 
-        Duration: 5 s.
+        Duration: 10 s.
 
         Deployment tags: Murano
         """
@@ -42,7 +42,7 @@ class MuranoSanityTests(murano.MuranoTest):
                    " Key Pair manually. Please refer to the "
                    "Fuel Web user documentation")
 
-        result = self.verify(5, self.is_keypair_available, 1, fail_msg,
+        result = self.verify(10, self.is_keypair_available, 1, fail_msg,
                              "checking if 'murano-lb-key' is available",
                              'murano-lb-key')
         if not result:
@@ -57,7 +57,7 @@ class MuranoSanityTests(murano.MuranoTest):
         Scenario:
             1. Check that image with Murano tag imported in Glance.
 
-        Duration: 5 s.
+        Duration: 10 s.
 
         Deployment tags: Murano
         """
@@ -72,7 +72,7 @@ class MuranoSanityTests(murano.MuranoTest):
                     return True
             return False
 
-        image = self.verify(4, find_image, 1, fail_msg,
+        image = self.verify(10, find_image, 1, fail_msg,
                             action_msg, 'murano_image_info')
 
         if not image:
@@ -92,38 +92,38 @@ class MuranoSanityTests(murano.MuranoTest):
             6. Send request to delete service.
             7. Send request to delete environment.
 
-        Duration: 10 s.
+        Duration: 30 s.
 
         Deployment tags: Murano
         """
 
-        fail_msg = 'Cannot create environment.'
-        self.environment = self.verify(5, self.create_environment,
+        fail_msg = "Can't create environment. Murano API is not available. "
+        self.environment = self.verify(10, self.create_environment,
                                        1, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
-        fail_msg = 'Environments list is unavailable.'
-        environments = self.verify(5, self.list_environments,
+        fail_msg = "Environments list is unavailable. "
+        environments = self.verify(10, self.list_environments,
                                    2, fail_msg, "listing environments")
 
-        step = '2. Request the list of environments.'
+        step = "2. Request the list of environments. "
         self.verify_elements_list(environments, ['id', 'name'],
                                   msg=fail_msg, failed_step=step)
 
-        fail_msg = 'Cannot create session for environment.'
-        session = self.verify(5, self.create_session,
+        fail_msg = "Cannot create session for environment. "
+        session = self.verify(10, self.create_session,
                               3, fail_msg, "creating session",
                               self.environment.id)
 
         srv = {"name": "new_service", "type": "test", "units": [{},]}
-        fail_msg = 'Cannot create service.'
-        service = self.verify(5, self.create_service,
+        fail_msg = "Cannot create service. "
+        service = self.verify(10, self.create_service,
                               4, fail_msg, "creating service",
                               self.environment.id, session.id, srv)
 
-        step = '4. Request the list of services.'
-        fail_msg = 'Cannot get list of services.'
-        services = self.verify(5, self.list_services,
+        step = "4. Request the list of services. "
+        fail_msg = "Cannot get list of services. "
+        services = self.verify(10, self.list_services,
                                5, fail_msg, "listing services",
                                self.environment.id, session.id)
 
@@ -131,12 +131,13 @@ class MuranoSanityTests(murano.MuranoTest):
                                   msg='Cannot get list of services',
                                   failed_step=step)
 
-        fail_msg = 'Cannot delete service.'
-        self.verify(5, self.delete_service,
+        fail_msg = "Cannot delete service. "
+        self.verify(10, self.delete_service,
                     6, fail_msg, "deleting service",
                     self.environment.id, session.id, service.id)
 
-        fail_msg = 'Cannot delete environment.'
-        self.verify(5, self.delete_environment,
+        fail_msg = ("Cannot delete environment. Murano API can't "
+                    "create tasks in RabbitMQ queues. ")
+        self.verify(10, self.delete_environment,
                     7, fail_msg, "deleting environment",
                     self.environment.id)
