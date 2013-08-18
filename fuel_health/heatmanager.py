@@ -68,8 +68,6 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
     @classmethod
     def setUpClass(cls):
         super(HeatBaseTest, cls).setUpClass()
-        cls.stacks = []
-        cls.flavor = None
         cls.wait_interval = cls.config.compute.build_interval
         cls.wait_timeout = cls.config.compute.build_timeout
 
@@ -78,32 +76,8 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
         if self.heat_client is None:
             self.fail('Heat is unavailable.')
 
-    @classmethod
-    def tearDownClass(cls):
-        if cls.heat_client is not None:
-            cls.clean_stacks()
-        super(HeatBaseTest, cls).tearDownClass()
-
-    @classmethod
-    def clean_stacks(cls):
-        """
-        Delete stacks that were created by OSTF tests.
-        """
-        for s in cls.heat_client.stacks.list():
-            if s.stack_name in cls.stacks:
-                if s.stack_status in ('CREATE_COMPLETE', 'ERROR'):
-                    try:
-                        cls.heat_client.stacks.delete(s.id)
-                    except Exception as exc:
-                        cls.error_msg.append(exc)
-                        LOG.debug(exc)
-
     def list_stacks(self, client):
         return client.stacks.list()
-
-    def _prepare_stack_resources(self):
-        if self.flavor is None:
-            self.flavor = self._create_nano_flavor()
 
     def find_stack(self, client, key, value):
         for stack in self.list_stacks(client):
@@ -113,30 +87,26 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
 
     def create_stack(self, client):
         stack_name = rand_name('ost1_test-stack')
-        self._prepare_stack_resources()
 
         client.stacks.create(stack_name=stack_name,
                              template=self.simple_template,
                              parameters={
                                  'ImageId': self.config.compute.image_name,
-                                 'InstanceType': self.flavor.name
+                                 'InstanceType': self._create_nano_flavor().name
                              })
         # heat client doesn't return stack details after creation
         # so need to request them:
         stack = self.find_stack(client, 'stack_name', stack_name)
-        if stack is not None:
-            self.stacks.append(stack_name)
         return stack
 
     def update_stack(self, client, stack_id, template=None):
         if template is None:
             template = self.simple_template
-        self._prepare_stack_resources()
         client.stacks.update(stack_id=stack_id,
                              template=template,
                              parameters={
                                  'ImageId': self.config.compute.image_name,
-                                 'InstanceType': self.flavor.name
+                                 'InstanceType': self._create_nano_flavor().name
                              })
         return self.find_stack(client, 'id', stack_id)
 
@@ -158,7 +128,6 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
                       "Currently in %s status",
                       stack, expected_status, new_status)
 
-        conf = config.FuelConfig()
         if not fuel_health.test.call_until_true(check_status,
                                                 self.wait_timeout,
                                                 self.wait_interval):
