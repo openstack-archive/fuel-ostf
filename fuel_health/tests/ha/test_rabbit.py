@@ -3,6 +3,7 @@ from operator import eq
 from nose.plugins.attrib import attr
 
 from fuel_health import config
+from fuel_health.common.amqp_client import RabbitClient
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.test import BaseTestCase
 
@@ -33,6 +34,13 @@ class RabbitSmokeTest(BaseTestCase):
         cls._pwd = cls.config.compute.controller_node_ssh_password
         cls._key = cls.config.compute.path_to_private_key
         cls._ssh_timeout = cls.config.compute.ssh_timeout
+        cls.amqp_clients = [RabbitClient(cnt,
+                                         cls._usr,
+                                         cls._pwd, cls._key,
+                                         cls._ssh_timeout,
+                                         cls._rabbit_user,
+                                         cls._rabbit_password)
+                            for cnt in cls._controllers]
 
     @attr(type=['fuel', 'ha', 'non-destructive'])
     def test_rabbitmqctl_status(self):
@@ -118,6 +126,21 @@ class RabbitSmokeTest(BaseTestCase):
                              "Step 2 failed: Queue lists are different for %s "
                              "and %s controllers" %
                              (self._controllers[0], node))
+
+    @attr(type=['fuel', 'ha', 'non-destructive'])
+    def test_rabbit_messages(self):
+        """RabbitMQ messages availability
+        Scenario:
+          1. Create a queue on one of the controllers
+          2. Check the same queue is available on each the controller
+          3. Publish message to the queue.
+          4. Check the message is available on other controllers
+        Duration: 100
+        """
+        if not self._controllers:
+            self.fail('Step 1 failed: There are no controller nodes.')
+
+        self.fail(self.amqp_clients[0].list_queues())
 
     def _format_output(self, output):
         """
