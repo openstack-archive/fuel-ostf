@@ -29,6 +29,8 @@ class RabbitSmokeTest(BaseTestCase):
     @classmethod
     def setUpClass(cls):
         cls.config = config.FuelConfig()
+        if cls.config.mode != 'ha':
+            cls.skipTest("It is not HA configuration")
         cls._controllers = cls.config.compute.controller_nodes
         cls._usr = cls.config.compute.controller_node_ssh_user
         cls._pwd = cls.config.compute.controller_node_ssh_password
