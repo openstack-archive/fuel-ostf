@@ -13,17 +13,6 @@ LOG = logging.getLogger(__name__)
 class RabbitSmokeTest(BaseTestCase):
     """
     TestClass contains tests check RabbitMQ.
-    Special requirements:
-            1. A controllers' IPs should be specified in
-                controller_nodes parameter of the config file.
-            2. The controllers' domain names should be specified in
-                controller_nodes_name parameter of the config file.
-            3. SSH user credentials should be specified in
-                controller_node_ssh_user/password parameters
-                of the config file.
-            4. List of services are expected to be run should be specified in
-                enabled_services parameter of the config file.
-            5. SSH user should have root permissions on controllers
     """
 
     @classmethod
@@ -61,9 +50,9 @@ class RabbitSmokeTest(BaseTestCase):
         first_list = self.amqp_clients[0].list_nodes()
         LOG.debug(first_list)
         if not first_list:
-                self.fail('Step 1 failed: Cannot retrieve cluster nodes list '
-                          'for {ctlr} controller.'.format(
-                    ctlr=self.amqp_clients[0].host))
+            self.fail('Step 1 failed: Cannot retrieve cluster nodes list for '
+                      '{ctlr} controller.'.
+                      format(ctlr=self.amqp_clients[0].host))
         LOG.debug(len(self._controllers))
         LOG.debug(len(first_list))
         if len(self._controllers) != len(eval(first_list)):
@@ -78,10 +67,8 @@ class RabbitSmokeTest(BaseTestCase):
             if list != first_list:
                 self.fail('Step 3 failed: Cluster nodes lists for controllers '
                           '{ctlr1} and {ctlr2} are different.'.format(
-                    ctlr1=client.host,
-                    ctlr2=self.amqp_clients[0].host)
-                )
-
+                          ctlr1=client.host,
+                          ctlr2=self.amqp_clients[0].host))
 
     @attr(type=['fuel', 'ha', 'non-destructive'])
     def test_002_rabbit_queues(self):
@@ -97,7 +84,7 @@ class RabbitSmokeTest(BaseTestCase):
         if not first_list:
                 self.fail('Step 1 failed: Cannot retrieve queues list for '
                           '{ctlr} controller.'.format(
-                    ctlr=self.amqp_clients[0].host))
+                          ctlr=self.amqp_clients[0].host))
         for client in self.amqp_clients[1:]:
             list = client.list_queues()
             if not list:
@@ -106,10 +93,8 @@ class RabbitSmokeTest(BaseTestCase):
             if list != first_list:
                 self.fail('Step 2 failed: Queue lists for controllers {ctlr1}'
                           ' and {ctlr2} are different.'.format(
-                    ctlr1=client.host,
-                    ctlr2=self.amqp_clients[0].host)
-                )
-
+                          ctlr1=client.host,
+                          ctlr2=self.amqp_clients[0].host))
 
     @attr(type=['fuel', 'ha', 'non-destructive'])
     def test_003_rabbit_messages(self):
@@ -132,24 +117,32 @@ class RabbitSmokeTest(BaseTestCase):
         new_binding = rand_name(name='ostf1-test-binding-')
         first_client = self.amqp_clients[0]
         result = self.verify(20, first_client.create_queue, 1,
-                    "Cannot create queue {name}.".format(name=new_queue),
-                    "Queue creation.", new_queue)
+                             "Cannot create queue {name}.".format(
+                                 name=new_queue),
+                             "Queue creation.",
+                             new_queue)
         self.verify_response_true('204 No Content' in result,
                                   'Step 1 failed: {queue} queue cannot be '
                                   'created on {ctlr} controller.'.format(
                                       queue=new_queue, ctlr=first_client.host))
 
         result = self.verify(20, first_client.create_exchange, 2,
-                    "Cannot create exchange {name}.".format(name=new_exchange),
-                    "Exchange creation.", new_exchange)
+                             "Cannot create exchange {name}.".format(
+                                 name=new_exchange),
+                             "Exchange creation.",
+                             new_exchange)
         self.verify_response_true('204 No Content' in result,
                                   'Step 2 failed: {ex} exchange cannot be '
                                   'created on {ctlr} controller.'.format(
                                       ex=new_exchange, ctlr=first_client.host))
 
         result = self.verify(20, first_client.create_binding, 3,
-                    "Cannot create binding {name}.".format(name=new_binding),
-                    "Binding creation.", new_exchange, new_queue, new_binding)
+                             "Cannot create binding {name}.".format(
+                                 name=new_binding),
+                             "Binding creation.",
+                             new_exchange,
+                             new_queue,
+                             new_binding)
         self.verify_response_true('204 No Content' in result,
                                   'Step 2 failed: {bin} binding cannot be '
                                   'created for {queue} queue and {ex} '
@@ -160,30 +153,34 @@ class RabbitSmokeTest(BaseTestCase):
         client_id = 0
         for clr in self._controllers:
             result = self.verify(20, first_client.publish_message, 4,
-                        "Cannot push message.", "Message pushing.",
-                        "Test Message", new_exchange, new_binding)
+                                 "Cannot push message.", "Message pushing.",
+                                 "Test Message", new_exchange, new_binding)
             self.verify_response_true('200 OK' in result,
-                                  'Step 4 failed: Message cannot be pushed.')
+                                      'Step 4 failed: '
+                                      'Message cannot be pushed.')
             self.verify(20, self.amqp_clients[client_id].get_message, 5,
                         "Cannot get message.", "Message receiving.",
                         new_queue)
             self.verify_response_true('200 OK' in result,
-                                  'Step 5 failed: Message cannot be received '
-                                  'on %s controller.' %
-                                  self.amqp_clients[client_id].host)
+                                      'Step 5 failed: '
+                                      'Message cannot be received '
+                                      'on %s controller.' %
+                                      self.amqp_clients[client_id].host)
             client_id = client_id + 1
 
         result = self.verify(20, first_client.delete_exchange, 6,
-                    "Cannot delete exchange {name}.".format(name=new_exchange),
-                    "Queue deletion.", new_exchange)
+                             "Cannot delete exchange {name}.".format(
+                                 name=new_exchange),
+                             "Queue deletion.", new_exchange)
         self.verify_response_true('204 No Content' in result,
                                   'Step 6 failed: {ex} exchange cannot be '
                                   'removed on {ctlr} controller.'.format(
                                       ctlr=first_client.host, ex=new_exchange))
 
         result = self.verify(20, first_client.delete_queue, 7,
-                    "Cannot delete queue {name}.".format(name=new_queue),
-                    "Queue deletion.", new_queue)
+                             "Cannot delete queue {name}.".format(
+                                 name=new_queue),
+                             "Queue deletion.", new_queue)
         self.verify_response_true('204 No Content' in result,
                                   'Step 7 failed: {queue} queue cannot be '
                                   'removed on {ctlr} controller.'.format(

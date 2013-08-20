@@ -5,8 +5,10 @@ from fuel_health.common.ssh import Client as SSHClient
 
 LOG = logging.getLogger(__name__)
 
+
 class RabbitClient(object):
-    def __init__(self, host, username, password, key, timeout, rabbit_username, rabbit_password):
+    def __init__(self, host, username, password, key, timeout,
+                 rabbit_username, rabbit_password):
         self.host = host
         self.username = username
         self.password = password
@@ -85,7 +87,8 @@ class RabbitClient(object):
             query='exchanges/%2f/{ename}/publish'.format(ename=exchange),
             type='-XPOST',
             arguments='-d \'{{"properties":{{}},"routing_key":"{bname}",'
-                      '"payload":"{msg}","payload_encoding":"string"}}\''.format(
+                      '"payload":"{msg}","payload_encoding":"string"}}\''.
+            format(
                 bname=binding,
                 msg=message
             )
@@ -103,17 +106,18 @@ class RabbitClient(object):
     def _query(self, query, header=True, type='-XGET', arguments=''):
         start = (header and 'curl -i') or 'curl'
         return '{start} -u {ruser}:{rpass} -H "content-type:application/json"'\
-                ' {type} {args} http://localhost:55672/api/{query}'.format(
-            start=start,
-            ruser=self.rabbit_user,
-            rpass=self.rabbit_password,
-            type=type, query=query,
-            args=arguments
-        )
+               ' {type} {args} http://localhost:55672/api/{query}'.\
+            format(
+                start=start,
+                ruser=self.rabbit_user,
+                rpass=self.rabbit_password,
+                type=type, query=query,
+                args=arguments
+            )
 
     def _execute(self, query, times=5):
         exception = None
-        for i in range(times+1):
+        for i in range(times + 1):
             try:
                 result = self.ssh.exec_command(query)
                 if result:
