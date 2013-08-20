@@ -20,8 +20,12 @@ class RabbitClient(object):
                              key_filename=self.key_file,
                              timeout=self.timeout)
 
+    def list_nodes(self):
+        query = self._query('nodes?"columns=name&sort=name"', header=False)
+        return self._execute(query)
+
     def list_queues(self):
-        query = self._query('/queues?columns=name&sort=name')
+        query = self._query('queues?"columns=name&sort=name"', header=False)
         return self._execute(query)
 
     def create_queue(self, queue_name):

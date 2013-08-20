@@ -1,5 +1,4 @@
 import logging
-from operator import eq
 from nose.plugins.attrib import attr
 
 from fuel_health import config
@@ -55,43 +54,32 @@ class RabbitSmokeTest(BaseTestCase):
           3. Check cluster list is the same for each the controller.
         Duration: 100 s.
         """
-        if not self._controllers:
+        if not self.amqp_clients:
             self.fail('Step 1 failed: There are no controller nodes.')
-        cmd = 'sudo rabbitmqctl cluster_status'
-        nodes = []
-        for node in self._controllers:
-            output = ''
-            error = ''
-            ssh_client = SSHClient(host=node, username=self._usr,
-                                   password=self._pwd,
-                                   pkey=self._key,
-                                   timeout=self._ssh_timeout)
-            output = self._format_output(self.verify(20,
-                                                     ssh_client.exec_command,
-                                                     1,
-                                                     "Cannot get cluster "
-                                                     "status for %s node." %
-                                                     node,
-                                                     "Retrieve cluster status "
-                                                     "for each the controller",
-                                                     cmd))
-            nodes.append({'controller': node, 'clusters': output})
-            #for HA configuration number of controllers and
-        #number of clusters should be the same
-        _num_of_controllers = len(self._controllers)
-        _aux_node_clusters = sorted(nodes[0]['clusters'])
-        for node in nodes[1:]:
-            self.assertEqual(_num_of_controllers, len(node["clusters"]),
-                             'Step 2 failed: The number of clusters for '
-                             'node %s is not equal to number of controllers' %
-                             node['controller'])
+        first_list = self.amqp_clients[0].list_nodes()
+        LOG.debug(first_list)
+        if not first_list:
+                self.fail('Step 1 failed: Cannot retrieve cluster nodes list '
+                          'for {ctlr} controller.'.format(
+                    ctlr=self.amqp_clients[0].host))
+        LOG.debug(len(self._controllers))
+        LOG.debug(len(first_list))
+        if len(self._controllers) != len(eval(first_list)):
+            self.fail('Step 2 failed: Number of controllers is not equal to '
+                      'number of cluster nodes.')
 
-            self.assertTrue(map(eq, sorted(node['clusters']),
-                                _aux_node_clusters), "Step 3 failed: Cluster "
-                                                     "lists on nodes %s"
-                                                     " and %s are different" %
-                                                     (nodes[0]["controller"],
-                                                      node["controller"]))
+        for client in self.amqp_clients[1:]:
+            list = client.list_nodes()
+            if not list:
+                self.fail('Step 1 failed: Cannot retrieve cluster nodes list '
+                          'for {ctlr} controller.'.format(ctlr=client.host))
+            if list != first_list:
+                self.fail('Step 3 failed: Cluster nodes lists for controllers '
+                          '{ctlr1} and {ctlr2} are different.'.format(
+                    ctlr1=client.host,
+                    ctlr2=self.amqp_clients[0].host)
+                )
+
 
     @attr(type=['fuel', 'ha', 'non-destructive'])
     def test_002_rabbit_queues(self):
@@ -104,6 +92,10 @@ class RabbitSmokeTest(BaseTestCase):
         if not self.amqp_clients:
             self.fail('Step 1 failed: There are no controller nodes.')
         first_list = self.amqp_clients[0].list_queues()
+        if not first_list:
+                self.fail('Step 1 failed: Cannot retrieve queues list for '
+                          '{ctlr} controller.'.format(
+                    ctlr=self.amqp_clients[0].host))
         for client in self.amqp_clients[1:]:
             list = client.list_queues()
             if not list:
@@ -194,13 +186,3 @@ class RabbitSmokeTest(BaseTestCase):
                                   'Step 7 failed: {queue} queue cannot be '
                                   'removed on {ctlr} controller.'.format(
                                       ctlr=first_client.host, queue=new_queue))
-
-    def _format_output(self, output):
-        """
-        Internal function allows remove all the not valuable chars
-        from the output
-        """
-        output = output.split('running_nodes,')[-1].split('...done.')[0]
-        for char in ' {[]}\n\r':
-            output = output.replace(char, '')
-        return output.split(',')
