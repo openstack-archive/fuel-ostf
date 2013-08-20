@@ -101,35 +101,21 @@ class RabbitSmokeTest(BaseTestCase):
           2. Check the same queue list is present on each node
         Duration: 100 s.
         """
-        if not self._controllers:
+        if not self.amqp_clients:
             self.fail('Step 1 failed: There are no controller nodes.')
-        cmd = 'sudo rabbitmqctl list_queues'
-        temp_set = set()
-        get_name = lambda x: x.split('\t')[0]
-        for node in self._controllers:
-            ssh_client = SSHClient(host=node,
-                                   username=self._usr,
-                                   password=self._pwd,
-                                   pkey=self._key,
-                                   timeout=self._ssh_timeout)
-            output = self.verify(20, ssh_client.exec_command, 1,
-                                 "Cannot get queue list for %s node. " % node,
-                                 "Retrieve queue list",
-                                 cmd)
-            output = set([get_name(x) for x in (output.splitlines())[1:-1]])
-            if not temp_set:
-                #this means it is the first node,
-                #this case we check there are queues only
-                temp_set = output
-                if not output:
-                    self.fail("Step 2 failed: Queue list for %s"
-                              " controller is empty" % node)
-                continue
-                #check all the queues are present on all the nodes
-            if output.symmetric_difference(temp_set):
-                self.fail("Step 2 failed: Queue lists are different for %s "
-                          "and %s controllers" %
-                          (self._controllers[0], node))
+        first_list = self.amqp_clients[0].list_queues()
+        for client in self.amqp_clients[1:]:
+            list = client.list_queues()
+            if not list:
+                self.fail('Step 1 failed: Cannot retrieve queues list for '
+                          '{ctlr} controller.'.format(ctlr=client.host))
+            if list != first_list:
+                self.fail('Step 2 failed: Queue lists for controllers {ctlr1}'
+                          ' and {ctlr2} are different.'.format(
+                    ctlr1=client.host,
+                    ctlr2=self.amqp_clients[0].host)
+                )
+
 
     @attr(type=['fuel', 'ha', 'non-destructive'])
     def test_003_rabbit_messages(self):
