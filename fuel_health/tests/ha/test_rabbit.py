@@ -17,8 +17,6 @@ class RabbitSmokeTest(BaseTestCase):
     @classmethod
     def setUpClass(cls):
         cls.config = config.FuelConfig()
-        if cls.config.mode != 'ha':
-            cls.skipTest("It is not HA configuration")
         cls._controllers = cls.config.compute.controller_nodes
         cls._usr = cls.config.compute.controller_node_ssh_user
         cls._pwd = cls.config.compute.controller_node_ssh_password
@@ -26,10 +24,16 @@ class RabbitSmokeTest(BaseTestCase):
         cls._ssh_timeout = cls.config.compute.ssh_timeout
         cls.amqp_clients = [RabbitClient(cnt,
                                          cls._usr,
-                                         cls._pwd, cls._key,
-                                         cls._ssh_timeout
-                                         )
+                                         cls._pwd,
+                                         cls._key,
+                                         cls._ssh_timeout)
                             for cnt in cls._controllers]
+    def setUp(self):
+        super(RabbitSmokeTest, self).setUp()
+        if self.config.mode != 'ha':
+            self.skipTest("It is not HA configuration")
+        if not self._controllers:
+            self.fail('There are no compute nodes')
 
     @attr(type=['fuel', 'ha', 'non-destructive'])
     def test_001_rabbitmqctl_status(self):
@@ -41,8 +45,6 @@ class RabbitSmokeTest(BaseTestCase):
           3. Check cluster list is the same for each the controller.
         Duration: 100 s.
         """
-        if not self.amqp_clients:
-            self.fail('Step 1 failed: There are no controller nodes.')
         first_list = self.amqp_clients[0].list_nodes()
         LOG.debug(first_list)
         if not first_list:
@@ -74,8 +76,6 @@ class RabbitSmokeTest(BaseTestCase):
           2. Check the same queue list is present on each node
         Duration: 100 s.
         """
-        if not self.amqp_clients:
-            self.fail('Step 1 failed: There are no controller nodes.')
         first_list = self.amqp_clients[0].list_queues()
         if not first_list:
                 self.fail('Step 1 failed: Cannot retrieve queues list for '
@@ -105,9 +105,6 @@ class RabbitSmokeTest(BaseTestCase):
           7. Delete the queue (with binding)
         Duration: 100 s.
         """
-        if not self._controllers:
-            self.fail('Step 1 failed: There are no controller nodes.')
-
         new_queue = rand_name(name='ostf1-test-queue-')
         new_exchange = rand_name(name='ostf1-test-exchange-')
         new_binding = rand_name(name='ostf1-test-binding-')
