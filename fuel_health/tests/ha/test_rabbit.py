@@ -3,7 +3,6 @@ from nose.plugins.attrib import attr
 
 from fuel_health import config
 from fuel_health.common.amqp_client import RabbitClient
-from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health.test import BaseTestCase
 
@@ -25,14 +24,11 @@ class RabbitSmokeTest(BaseTestCase):
         cls._pwd = cls.config.compute.controller_node_ssh_password
         cls._key = cls.config.compute.path_to_private_key
         cls._ssh_timeout = cls.config.compute.ssh_timeout
-        cls._rabbit_user = 'nova'
-        cls._rabbit_password = 'D4ZfVmsF'
         cls.amqp_clients = [RabbitClient(cnt,
                                          cls._usr,
                                          cls._pwd, cls._key,
-                                         cls._ssh_timeout,
-                                         cls._rabbit_user,
-                                         cls._rabbit_password)
+                                         cls._ssh_timeout
+                                         )
                             for cnt in cls._controllers]
 
     @attr(type=['fuel', 'ha', 'non-destructive'])

@@ -2,20 +2,26 @@ import time
 import logging
 
 from fuel_health.common.ssh import Client as SSHClient
+from fuel_health.common.facts import Facts
 
 LOG = logging.getLogger(__name__)
 
 
 class RabbitClient(object):
     def __init__(self, host, username, password, key, timeout,
-                 rabbit_username, rabbit_password):
+                 rabbit_username=None, rabbit_password=None):
         self.host = host
         self.username = username
         self.password = password
         self.key_file = key
         self.timeout = timeout
-        self.rabbit_user = rabbit_username
-        self.rabbit_password = rabbit_password
+        if rabbit_username and rabbit_password:
+            self.rabbit_user = rabbit_username
+            self.rabbit_password = rabbit_password
+        else:
+            _config = Facts()
+            self.rabbit_user = _config.amqp_user
+            self.rabbit_password = _config.amqp_password
         self.ssh = SSHClient(host=self.host,
                              username=self.username,
                              password=self.password,
