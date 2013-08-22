@@ -143,23 +143,21 @@ class RabbitSmokeTest(BaseTestCase):
                                       ex=new_exchange, ctlr=first_client.host,
                                       bin=new_binding, queue=new_queue))
 
-        client_id = 0
-        for clr in self._controllers:
+        for client in self.amqp_clients:
             result = self.verify(20, first_client.publish_message, 4,
                                  "Cannot push message.", "Message pushing.",
                                  "Test Message", new_exchange, new_binding)
             self.verify_response_true('200 OK' in result,
                                       'Step 4 failed: '
                                       'Message cannot be pushed.')
-            self.verify(20, self.amqp_clients[client_id].get_message, 5,
+            self.verify(20, client.get_message, 5,
                         "Cannot get message.", "Message receiving.",
                         new_queue)
             self.verify_response_true('200 OK' in result,
                                       'Step 5 failed: '
                                       'Message cannot be received '
                                       'on %s controller.' %
-                                      self.amqp_clients[client_id].host)
-            client_id = client_id + 1
+                                      client.host)
 
         result = self.verify(20, first_client.delete_exchange, 6,
                              "Cannot delete exchange {name}.".format(
