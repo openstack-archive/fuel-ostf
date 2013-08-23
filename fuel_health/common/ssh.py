@@ -190,33 +190,3 @@ class Client(object):
 
     def close_ssh_connection(self, connection):
         connection.close()
-
-##########################################################
-
-
-class SSH():
-    def __init__(self, **kwargs):
-        self.username = kwargs.get('username', None)
-        self.host = kwargs.get('host', None)
-        self.key = kwargs.get('key', None)
-        self.password = kwargs.get('password', None)
-        self.ssh = paramiko.SSHClient()
-
-    def _connect(self):
-        self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.ssh.connect(self.host,
-                         username=self.username,
-                         key_filename=self.key,
-                         password=self.password)
-
-    def exec_command(self, cmd):
-        self._connect()
-        _, stdout, _ = self.ssh.exec_command(cmd)
-        return stdout.read()
-
-    def _close_connect(self):
-        self.ssh.close()
-
-
-
-
