@@ -14,11 +14,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import time
 import logging
+import time
 
-from fuel_health.common.ssh import Client as SSHClient
-from fuel_health.common.facts import Facts
+import fuel_health.common.facts
+import fuel_health.common.ssh
 
 LOG = logging.getLogger(__name__)
 
@@ -35,14 +35,15 @@ class RabbitClient(object):
             self.rabbit_user = rabbit_username
             self.rabbit_password = rabbit_password
         else:
-            _config = Facts()
+            _config = fuel_health.common.facts.Facts()
             self.rabbit_user = _config.amqp_user
             self.rabbit_password = _config.amqp_password
-        self.ssh = SSHClient(host=self.host,
-                             username=self.username,
-                             password=self.password,
-                             key_filename=self.key_file,
-                             timeout=self.timeout)
+        self.ssh = fuel_health.common.ssh.Client(
+            host=self.host,
+            username=self.username,
+            password=self.password,
+            key_filename=self.key_file,
+            timeout=self.timeout)
 
     def list_nodes(self):
         query = self._query('nodes?"columns=name&sort=name"', header=False)

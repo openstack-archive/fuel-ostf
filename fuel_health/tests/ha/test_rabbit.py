@@ -14,11 +14,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 import logging
-from nose.plugins.attrib import attr
 
-from fuel_health import config
-from fuel_health.common.amqp_client import RabbitClient
-from fuel_health.common.utils.data_utils import rand_name
+import fuel_health
+import fuel_health.common.amqp_client
+import fuel_health.common.utils.data_utils
 from fuel_health.test import BaseTestCase
 
 LOG = logging.getLogger(__name__)
@@ -31,26 +30,28 @@ class RabbitSmokeTest(BaseTestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.config = config.FuelConfig()
+        cls.config = fuel_health.config.FuelConfig()
         cls._controllers = cls.config.compute.controller_nodes
         cls._usr = cls.config.compute.controller_node_ssh_user
         cls._pwd = cls.config.compute.controller_node_ssh_password
         cls._key = cls.config.compute.path_to_private_key
         cls._ssh_timeout = cls.config.compute.ssh_timeout
-        cls.amqp_clients = [RabbitClient(cnt,
-                                         cls._usr,
-                                         cls._pwd,
-                                         cls._key,
-                                         cls._ssh_timeout)
-                            for cnt in cls._controllers]
+        cls.amqp_clients = [fuel_health.common.amqp_client.RabbitClient(
+            cnt,
+            cls._usr,
+            cls._pwd,
+            cls._key,
+            cls._ssh_timeout) for cnt in cls._controllers]
+
     def setUp(self):
         super(RabbitSmokeTest, self).setUp()
         if self.config.mode != 'ha':
-            self.skipTest("It is not HA configuration")
+            self.fail("It is not HA configuration")
         if not self._controllers:
             self.fail('There are no compute nodes')
+        if not self.amqp_clients:
+            self.fail('Cannot create AMQP clients for controllers')
 
-    @attr(type=['fuel', 'ha', 'non-destructive'])
     def test_001_rabbitmqctl_status(self):
         """RabbitMQ cluster availability
 
@@ -60,20 +61,23 @@ class RabbitSmokeTest(BaseTestCase):
           3. Check cluster list is the same for each the controller.
         Duration: 100 s.
         """
-        first_list = self.amqp_clients[0].list_nodes()
-        LOG.debug(first_list)
+        first_list = self.verify(10, self.amqp_clients[0].list_nodes, 1,
+                                 'Cannot retrieve cluster nodes'
+                                 ' list for {ctlr} controller.'.format(
+                                     ctlr=self.amqp_clients[0].host))
         if not first_list:
             self.fail('Step 1 failed: Cannot retrieve cluster nodes list for '
                       '{ctlr} controller.'.
                       format(ctlr=self.amqp_clients[0].host))
-        LOG.debug(len(self._controllers))
-        LOG.debug(len(first_list))
         if len(self._controllers) != len(eval(first_list)):
             self.fail('Step 2 failed: Number of controllers is not equal to '
                       'number of cluster nodes.')
 
         for client in self.amqp_clients[1:]:
-            list = client.list_nodes()
+            list = self.verify(10, client.list_nodes, 1,
+                               'Cannot retrieve cluster nodes'
+                               ' list for {ctlr} controller.'.format(
+                                   ctlr=client.host))
             if not list:
                 self.fail('Step 1 failed: Cannot retrieve cluster nodes list '
                           'for {ctlr} controller.'.format(ctlr=client.host))
@@ -83,7 +87,6 @@ class RabbitSmokeTest(BaseTestCase):
                           ctlr1=client.host,
                           ctlr2=self.amqp_clients[0].host))
 
-    @attr(type=['fuel', 'ha', 'non-destructive'])
     def test_002_rabbit_queues(self):
         """RabbitMQ queues availability
         Scenario:
@@ -91,13 +94,20 @@ class RabbitSmokeTest(BaseTestCase):
           2. Check the same queue list is present on each node
         Duration: 100 s.
         """
-        first_list = self.amqp_clients[0].list_queues()
+        first_list = self.verify(10, self.amqp_clients[0].list_queues,
+                                 1,
+                                 'Cannot retrieve queues list for {ctlr} '
+                                 'controller.'.format(
+                                     ctlr=self.amqp_clients[0].host))
         if not first_list:
                 self.fail('Step 1 failed: Cannot retrieve queues list for '
                           '{ctlr} controller.'.format(
                           ctlr=self.amqp_clients[0].host))
         for client in self.amqp_clients[1:]:
-            list = client.list_queues()
+            list = self.verify(10, client.list_queues,
+                               1,
+                               'Cannot retrieve queues list for {ctlr} '
+                               'controller.'.format(ctlr=client.host))
             if not list:
                 self.fail('Step 1 failed: Cannot retrieve queues list for '
                           '{ctlr} controller.'.format(ctlr=client.host))
@@ -107,7 +117,6 @@ class RabbitSmokeTest(BaseTestCase):
                           ctlr1=client.host,
                           ctlr2=self.amqp_clients[0].host))
 
-    @attr(type=['fuel', 'ha', 'non-destructive'])
     def test_003_rabbit_messages(self):
         """RabbitMQ messages availability
         Scenario:
