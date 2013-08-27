@@ -129,9 +129,12 @@ class RabbitSmokeTest(BaseTestCase):
           7. Delete the queue (with binding)
         Duration: 100 s.
         """
-        new_queue = rand_name(name='ostf1-test-queue-')
-        new_exchange = rand_name(name='ostf1-test-exchange-')
-        new_binding = rand_name(name='ostf1-test-binding-')
+        new_queue = fuel_health.common.utils.data_utils.rand_name(
+            name='ostf1-test-queue-')
+        new_exchange = fuel_health.common.utils.data_utils.rand_name(
+            name='ostf1-test-exchange-')
+        new_binding = fuel_health.common.utils.data_utils.rand_name(
+            name='ostf1-test-binding-')
         first_client = self.amqp_clients[0]
         result = self.verify(20, first_client.create_queue, 1,
                              "Cannot create queue {name}.".format(
