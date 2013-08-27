@@ -287,7 +287,6 @@ def process_singleton(cls):
     return wrapper
 
 
-
 @process_singleton
 class FileConfig(object):
     """Provides OpenStack configuration information."""

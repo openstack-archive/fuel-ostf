@@ -58,7 +58,7 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
         Test checks that data replication happens in HA mode.
         Target Service: HA mysql
         Scenario:
-            1. Detect on of mysql node.
+            1. Detect mysql node.
             2. Create database on detected node
             3. Create table in created database
             4. Insert data to the created table
@@ -70,12 +70,12 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
         # Find mysql master node
         master_node_ip = []
         cmd = 'mysql -e "SHOW SLAVE STATUS\G"'
-        LOG.info("Controllers nodes is %s" % self.controllers)
+        LOG.info("Controllers nodes are %s" % self.controllers)
         for controller_ip in self.controllers:
             ssh_client = SSHClient(controller_ip, self.controller_user,
                       key_filename=self.controller_key, timeout=100)
             output = self.verify(
-                20, ssh_client.exec_command, 1, 'Mysql detection node failed',
+                20, ssh_client.exec_command, 1, 'Mysql node detection failed',
                 'detect mysql node', cmd)
             LOG.info('output is %s' % output)
             if not output:
@@ -153,12 +153,12 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
                     'database deletion', cmd)
 
     def test_os_databases(self):
-        """Test verifies count of os databases on each node
-        Test verifies count of os table on each node
+        """Check amount of tables in os databases is the same on each node
+        Test checks amount of os databases and tables on each node
         Target Service: HA mysql
         Scenario:
-            1. Request list of os databases.
-            2. Verify that count of database is identical on each node
+            1. Request list of tables for os databases on each node.
+            2. Check that amount of tables for each database is the same
         Duration: 1-40 s.
         """
         dbs = ['nova', 'glance', 'keystone']
@@ -175,29 +175,29 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
                     key_filename=self.controller_key,
                     timeout=self.config.compute.ssh_timeout)
                 output = self.verify(40, tables.exec_command, 1,
-                                     'Can list databases',
-                                     'get count of tables for each database',
+                                     'Can list tables',
+                                     'get amount of tables for each database',
                                      cmd1)
                 tables = set(output.splitlines())
                 if len(temp_set) == 0:
                     temp_set = tables
                 self.verify_response_true(
                     len(tables.symmetric_difference(temp_set)) == 0,
-                    "Step 2 failed: Tables in %s database is "
+                    "Step 2 failed: Tables in %s database are "
                     "different" % database)
 
             del temp_set
 
-    def test_state_of_mysql_master(self):
-        """Test verifies state of mysql cluster
-        Test verifies state of mysql master
+    def test_state_of_mysql_cluster(self):
+        """Check mysql cluster state
+        Test verifies state of mysql cluster
         Target Service: HA mysql
         Deployment: RHEL
         Scenario:
             1. Detect mysql master node.
-            2. Ssh on mysql-master node and request it status
+            2. Ssh on mysql-master node and request its status
             3. Verify that position field is not empty
-            4. Ssh on mysql-slave nodes and request it statuses
+            4. Ssh on mysql-slave nodes and request their statuses
             5. Verify that  Slave_IO_State is in appropriate state
             6. Verify that Slave_IO_Running is in appropriate state
             7. Verify that Slave_SQL_Running is in appropriate state
@@ -208,7 +208,7 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
             # Find mysql master node
             master_node_ip = []
             cmd = 'mysql -e "SHOW SLAVE STATUS\G"'
-            LOG.info("Controllers nodes is %s" % self.controllers)
+            LOG.info("Controllers nodes are %s" % self.controllers)
             for controller_ip in self.controllers:
                 ssh_client = SSHClient(controller_ip, self.controller_user,
                       key_filename=self.controller_key, timeout=100)
@@ -272,8 +272,8 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
             self.fail("There is no RHEL deployment")
 
     def test_state_of_galera_cluster(self):
-        """Test verifies state of galera cluster
-        Test verifies state of mysql master
+        """Check galera cluster state
+        Test verifies state of galera cluster
         Target Service: HA mysql
         Deployment: CENTOS
         Scenario:
