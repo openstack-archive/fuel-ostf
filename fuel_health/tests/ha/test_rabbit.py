@@ -20,12 +20,13 @@ import fuel_health.common.amqp_client
 import fuel_health.common.utils.data_utils
 from fuel_health.test import BaseTestCase
 
+
 LOG = logging.getLogger(__name__)
 
 
 class RabbitSmokeTest(BaseTestCase):
     """
-    TestClass contains tests check RabbitMQ.
+    TestClass contains RabbitMQ test checks.
     """
 
     @classmethod
@@ -39,7 +40,6 @@ class RabbitSmokeTest(BaseTestCase):
         cls.amqp_clients = [fuel_health.common.amqp_client.RabbitClient(
             cnt,
             cls._usr,
-            cls._pwd,
             cls._key,
             cls._ssh_timeout) for cnt in cls._controllers]
 
@@ -48,7 +48,7 @@ class RabbitSmokeTest(BaseTestCase):
         if self.config.mode != 'ha':
             self.fail("It is not HA configuration")
         if not self._controllers:
-            self.fail('There are no compute nodes')
+            self.fail('There are no controller nodes')
         if not self.amqp_clients:
             self.fail('Cannot create AMQP clients for controllers')
 
@@ -56,9 +56,9 @@ class RabbitSmokeTest(BaseTestCase):
         """RabbitMQ cluster availability
 
         Scenario:
-          1. Retrieve cluster status for each the controller.
-          2. Check number of clusters are equal to number of controllers.
-          3. Check cluster list is the same for each the controller.
+          1. Retrieve cluster status for each controller.
+          2. Check that the number of clusters equals to number of controllers.
+          3. Check that the cluster list is the same for each controller.
         Duration: 100 s.
         """
         first_list = self.verify(10, self.amqp_clients[0].list_nodes, 1,
@@ -81,17 +81,21 @@ class RabbitSmokeTest(BaseTestCase):
             if not list:
                 self.fail('Step 1 failed: Cannot retrieve cluster nodes list '
                           'for {ctlr} controller.'.format(ctlr=client.host))
-            if list != first_list:
-                self.fail('Step 3 failed: Cluster nodes lists for controllers '
-                          '{ctlr1} and {ctlr2} are different.'.format(
-                          ctlr1=client.host,
-                          ctlr2=self.amqp_clients[0].host))
+            self.verify_response_body_content(list,
+                                              first_list,
+                                              'Cluster nodes lists for '
+                                              'controllers {ctlr1} and {ctlr2}'
+                                              ' are different.'.format(
+                                                  ctlr1=client.host,
+                                                  ctlr2=
+                                                  self.amqp_clients[0].host),
+                                              3)
 
     def test_002_rabbit_queues(self):
         """RabbitMQ queues availability
         Scenario:
           1. Retrieve list of RabbitMQ queues for each controller
-          2. Check the same queue list is present on each node
+          2. Check that the same queue list is present on each node
         Duration: 100 s.
         """
         first_list = self.verify(10, self.amqp_clients[0].list_queues,
@@ -111,11 +115,15 @@ class RabbitSmokeTest(BaseTestCase):
             if not list:
                 self.fail('Step 1 failed: Cannot retrieve queues list for '
                           '{ctlr} controller.'.format(ctlr=client.host))
-            if list != first_list:
-                self.fail('Step 2 failed: Queue lists for controllers {ctlr1}'
-                          ' and {ctlr2} are different.'.format(
-                          ctlr1=client.host,
-                          ctlr2=self.amqp_clients[0].host))
+            self.verify_response_body_content(list,
+                                              first_list,
+                                              'Queue lists for controllers '
+                                              '{ctlr1} and {ctlr2} are '
+                                              'different.'.format(
+                                                  ctlr1=client.host,
+                                                  ctlr2=
+                                                  self.amqp_clients[0].host),
+                                              2)
 
     def test_003_rabbit_messages(self):
         """RabbitMQ messages availability
@@ -124,7 +132,7 @@ class RabbitSmokeTest(BaseTestCase):
           2. Create an exchange on the controller
           3. Create a binding for the queue and exchange
           4. Publish messages to the queue.
-          5. Check the messages are available on other controllers
+          5. Check that the messages are available on other controllers
           6. Delete the exchange
           7. Delete the queue (with binding)
         Duration: 100 s.

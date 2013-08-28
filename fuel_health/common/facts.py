@@ -19,6 +19,7 @@ import yaml
 
 from fuel_health.common import log as logging
 
+
 LOG = logging.getLogger(__name__)
 
 
@@ -75,7 +76,3 @@ class Facts:
 
         yaml.add_multi_constructor(u"!ruby/object:", _construct_ruby_object)
         yaml.add_multi_constructor(u"!ruby/sym", _construct_ruby_sym)
-
-if __name__=='__main__':
-    print Facts().amqp
-    print Facts().amqp_password

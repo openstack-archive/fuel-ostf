@@ -24,11 +24,10 @@ LOG = logging.getLogger(__name__)
 
 
 class RabbitClient(object):
-    def __init__(self, host, username, password, key, timeout,
+    def __init__(self, host, username, key, timeout,
                  rabbit_username=None, rabbit_password=None):
         self.host = host
         self.username = username
-        self.password = password
         self.key_file = key
         self.timeout = timeout
         if rabbit_username and rabbit_password:
