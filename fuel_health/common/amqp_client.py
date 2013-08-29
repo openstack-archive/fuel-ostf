@@ -40,7 +40,6 @@ class RabbitClient(object):
         self.ssh = fuel_health.common.ssh.Client(
             host=self.host,
             username=self.username,
-            password=self.password,
             key_filename=self.key_file,
             timeout=self.timeout)
 
