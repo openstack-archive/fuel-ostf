@@ -245,17 +245,6 @@ def cleanup():
                 LOG.debug(exc)
                 pass
 
-
-    snapshots = manager._get_compute_client().volume_snapshots.list()
-    for snapshot in snapshots:
-        if snapshot.name.startswith('ost1_test-'):
-            try:
-                LOG.info('Start snapshot deletion')
-                manager._get_compute_client().volume_snapshots.delete(snapshot)
-            except Exception as exc:
-                LOG.debug(exc)
-                pass
-
     sec_groups = manager._get_compute_client().security_groups.list()
 
     for sgroup in sec_groups:
