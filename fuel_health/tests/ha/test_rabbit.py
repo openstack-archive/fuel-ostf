@@ -46,14 +46,14 @@ class RabbitSmokeTest(BaseTestCase):
     def setUp(self):
         super(RabbitSmokeTest, self).setUp()
         if self.config.mode != 'ha':
-            self.skipTest("It is not HA configuration")
+            self.fail("It is not HA configuration")
         if not self._controllers:
-            self.fail('There are no compute nodes')
+            self.fail('There are no controller nodes')
 
     @attr(type=['fuel', 'ha', 'non-destructive'])
     def test_001_rabbitmqctl_status(self):
         """RabbitMQ cluster availability
-
+        Deployment: HA
         Scenario:
           1. Retrieve cluster status for each the controller.
           2. Check number of clusters are equal to number of controllers.
@@ -86,6 +86,7 @@ class RabbitSmokeTest(BaseTestCase):
     @attr(type=['fuel', 'ha', 'non-destructive'])
     def test_002_rabbit_queues(self):
         """RabbitMQ queues availability
+        Deployment: HA
         Scenario:
           1. Retrieve list of RabbitMQ queues for each controller
           2. Check the same queue list is present on each node
@@ -110,6 +111,7 @@ class RabbitSmokeTest(BaseTestCase):
     @attr(type=['fuel', 'ha', 'non-destructive'])
     def test_003_rabbit_messages(self):
         """RabbitMQ messages availability
+        Deployment: HA
         Scenario:
           1. Create a queue on a controller
           2. Create an exchange on the controller

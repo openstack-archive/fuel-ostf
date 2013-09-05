@@ -36,7 +36,6 @@ requirements = [
     'unittest2',
     'six==1.3.0',
     'testresources==0.2.7',
-    'testtools==0.9.32',
     'warlock==1.0.1',
     'wsgiref==0.1.2',
     'yaml==3.10'
