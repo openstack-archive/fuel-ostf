@@ -291,24 +291,29 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
                     output = self.verify(
                         20, ssh_client.exec_command, 1,
                         "Verification of galera cluster node status failed",
-                        'get status from galera node', command).splitlines()
+                        'get status from galera node', command).splitlines()[3:-2]
 
-                    res = [data.split('\t') for data in output]
-                    res_dict = dict((k, v) for (k, v) in res)
+                    LOG.debug('output is %s' % output)
+
+                    result = {}
+                    for i in output:
+                        key, value = i.split('|')[0:-2]
+                        result.update({key: value})
+                        return result
 
                     self.verify_response_body_content(
-                        res_dict['wsrep_cluster_size'], str(len(self.controllers)),
+                        result.get('wsrep_cluster_size', 0), str(len(self.controllers)),
                         msg='Cluster size on %s less '
                             'than controllers count' % controller,
                         failed_step='2')
 
                     self.verify_response_body_content(
-                        res_dict['wsrep_ready'], 'ON',
+                        result.get(('wsrep_ready', 'OFF')),
                         msg='wsrep_ready on %s is not ON' % controller,
                         failed_step='3')
 
                     self.verify_response_body_content(
-                        res_dict['wsrep_connected'], 'ON',
+                        result.get(('wsrep_connected', 'OFF')), 'ON',
                         msg='wsrep_connected on %s is not ON' % controller,
                         failed_step='3')
         else:
