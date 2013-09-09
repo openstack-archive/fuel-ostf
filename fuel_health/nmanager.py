@@ -23,6 +23,7 @@ import cinderclient.client
 import glanceclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
+import savannaclient.api.client
 
 import time
 
@@ -55,12 +56,14 @@ class OfficialClientManager(fuel_health.manager.Manager):
         self.identity_client = self._get_identity_client()
         self.network_client = self._get_network_client()
         self.volume_client = self._get_volume_client()
+        self.savanna_client = self._get_savanna_client()
         self.client_attr_names = [
             'compute_client',
             'image_client',
             'identity_client',
             'network_client',
-            'volume_client'
+            'volume_client',
+            'savanna_client'
         ]
 
     def _get_compute_client(self, username=None, password=None,
@@ -155,6 +158,22 @@ class OfficialClientManager(fuel_health.manager.Manager):
         dscv = self.config.identity.disable_ssl_certificate_validation
 
         return
+
+    def _get_savanna_client(self, username=None, password=None):
+        savanna_url = 'http://10.20.0.131:8386/v1.0'
+        keystone = self._get_identity_client()
+        token = keystone.auth_token
+        auth_url = self.config.identity.uri
+        tenant_name = self.config.identity.admin_tenant_name
+        if not username:
+            username = self.config.identity.admin_username
+        if not password:
+            password = self.config.identity.admin_password
+        return savannaclient.api.client.Client(username=username,
+                                               api_key=password,
+                                               project_id=tenant_name,
+                                               auth_url=auth_url,
+                                               savanna_url=savanna_url)
 
 
 class OfficialClientTest(fuel_health.test.TestCase):
@@ -576,6 +595,10 @@ class SanityChecksTest(OfficialClientTest):
     def _list_networks(self, client):
         networks = client.networks.list()
         return networks
+
+    def _list_cluster_templates(self, client):
+        cluster_templates = client.savanna.cluster_list()
+        return cluster_templates
 
 
 class SmokeChecksTest(OfficialClientTest):
