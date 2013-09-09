@@ -171,7 +171,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
             password = self.config.identity.admin_password
         return savannaclient.api.client.Client(username=username,
                                                api_key=password,
-                                               project_id=tenant_name,
+                                               project_name=tenant_name,
                                                auth_url=auth_url,
                                                savanna_url=savanna_url)
 
@@ -597,7 +597,7 @@ class SanityChecksTest(OfficialClientTest):
         return networks
 
     def _list_cluster_templates(self, client):
-        cluster_templates = client.savanna.cluster_list()
+        cluster_templates = client.cluster_templates.list()
         return cluster_templates
 
 
