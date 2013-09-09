@@ -348,8 +348,17 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
             self.servers.append(server)
         server = self.servers[-1]
-        instance_ip = server.addresses['novanetwork'][0]['addr']
-        compute = getattr(server, 'OS-EXT-SRV-ATTR:host')
+        try:
+            instance_ip = server.addresses['novanetwork'][0]['addr']
+        except KeyError as ke:
+            LOG.debug(ke)
+            self.fail("Step 3 failed: cannot get instance details. "
+                      "Please refer to OpenStack logs for more details.")
+
+        compute = self.verify(3, getattr, 3,
+                              "Compute for the instance cannot be found.",
+                              server,
+                              'OS-EXT-SRV-ATTR:host')
 
         self.verify(100, self._check_connectivity_from_vm,
                     3, ("Connectivity to 8.8.8.8 from the VM doesn`t "
