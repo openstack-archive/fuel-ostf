@@ -415,9 +415,9 @@ class NailgunConfig(object):
         response = self.req_session.get(self.nailgun_url + api_url)
         LOG.info('RESPONSE %s STATUS %s' % (api_url, response.status_code))
         data = response.json()
-        controller_nodes = filter(lambda node: node['role'] == 'controller',
+        controller_nodes = filter(lambda node: 'controller' in node['roles'],
                                   data)
-        cinder_nodes = filter(lambda node: node['role'] == 'cinder',
+        cinder_nodes = filter(lambda node: 'cinder' in node['roles'],
                                   data)
         controller_ips = []
         conntroller_names = []
@@ -435,8 +435,8 @@ class NailgunConfig(object):
         if not cinder_nodes:
             self.volume.cinder_node_exist = False
 
-        compute_nodes = filter(lambda node: node['role'] == 'compute',
-                                  data)
+        compute_nodes = filter(lambda node: 'compute' in node['roles'],
+                               data)
         compute_ips = []
         for node in compute_nodes:
             compute_ips.append(node['ip'])
