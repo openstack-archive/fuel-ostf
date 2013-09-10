@@ -29,9 +29,7 @@ class SanitySavannaTests(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_list_cluster_templates(self):
-        """Test checks cluster template creation with
-        configuration | JT + NN | TT + DN |.
-        Test checks that the list of instances is available.
+        """Test cluster template listing
         Target component: Savanna
         Scenario:
             1. Request the list of cluster templates.
@@ -44,4 +42,25 @@ class SanitySavannaTests(nmanager.SanityChecksTest):
                                                   "cluster template listing",
                                                   self.savanna_client)
 
-
+    @attr(type=['sanity', 'fuel'])
+    def test_create_node_group_template(self):
+        """Test create node group template
+        Target component: Savanna
+        Scenario:
+            1. Create node group template tt dn
+            2. Create node group template tt
+        Duration: 20 s.
+        """
+        fail_msg = 'Fail create node group template'
+        create_nodes_templates_tt_dn_resp = self.verify(
+            20,
+            self._create_node_group_template_tt_dn_id,
+            1, fail_msg,
+            "Create node group template",
+            self.savanna_client)
+        create_nodes_templates_tt_resp = self.verify(
+            20,
+            self._create_node_group_template_tt_id,
+            2, fail_msg,
+            "Create node group template",
+            self.savanna_client)

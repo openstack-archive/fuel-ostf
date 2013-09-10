@@ -1,7 +1,5 @@
 import setuptools
-
-
-requirements = [
+requirements=[
     'argparse==1.2.1',
     'cliff==1.4',
     'cmd2==0.6.5.1',
@@ -17,7 +15,7 @@ requirements = [
     'nose==1.3.0',
     'oslo.config==1.1.1',
     'paramiko==1.10.1',
-    'pbr==0.5.17',
+    #'pbr==0.5.21',
     'pika==0.9.13',
     'prettytable==0.7.2',
     'pyOpenSSL==0.13',
@@ -37,12 +35,12 @@ requirements = [
     'testresources==0.2.7',
     'warlock==1.0.1',
     'wsgiref==0.1.2',
-    'yaml==3.10'
-]
+    'savannaclient==0.1',
+],
 
 
 setuptools.setup(
-
+    dependency_links=['http://tarballs.openstack.org/python-savannaclient/python-savannaclient-master.tar.gz#egg=savannaclient-0.1',],
     name='ostf_tests',
     version='0.1',
 
