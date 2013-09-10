@@ -645,6 +645,28 @@ class SanityChecksTest(OfficialClientTest):
             )
         return node_group_template_tt_id
 
+    def _create_node_group_template_dn_id(self, client):
+        node_group_template_tt_id = \
+            self._create_node_group_template_and_get_id(
+                client,
+                'dd',
+                'vanilla',
+                '1.1.2',
+                description='test node group template',
+                volumes_per_node=0,
+                volume_size=0,
+                node_processes=['datanode'],
+                node_configs={
+                    #'MapReduce': hc.TT_CONFIG
+                }
+            )
+        LOG.debug(node_group_template_tt_id)
+        return node_group_template_tt_id
+
+    def _delete_node_group_template(self, client, id):
+        LOG.debug('id - %s' % id)
+        client.node_group_templates.delete(id)
+
     def _list_cluster_templates(self, client):
         cluster_templates = client.cluster_templates.list()
         return cluster_templates

@@ -43,24 +43,60 @@ class SanitySavannaTests(nmanager.SanityChecksTest):
                                                   self.savanna_client)
 
     @attr(type=['sanity', 'fuel'])
-    def test_create_node_group_template(self):
-        """Test create node group template
+    def test_01_create_node_group_template(self):
+        """Test create/delete node group template
         Target component: Savanna
         Scenario:
             1. Create node group template tt dn
             2. Create node group template tt
+            3. Create node group template dn
+            4. Delete node group template tt dn
+            5. Delete node group template tt
+            6. Delete node group template dn
         Duration: 20 s.
         """
-        fail_msg = 'Fail create node group template'
+        fail_msg = 'Fail create node group template tt+dn'
         create_nodes_templates_tt_dn_resp = self.verify(
             20,
             self._create_node_group_template_tt_dn_id,
             1, fail_msg,
             "Create node group template",
             self.savanna_client)
+        fail_msg = 'Fail create node group template tt'
         create_nodes_templates_tt_resp = self.verify(
             20,
             self._create_node_group_template_tt_id,
             2, fail_msg,
             "Create node group template",
             self.savanna_client)
+
+        fail_msg = 'Fail create node group template dn'
+        create_nodes_templates_dn_resp = self.verify(
+            20,
+            self._create_node_group_template_dn_id,
+            3, fail_msg,
+            "Create node group template",
+            self.savanna_client)
+
+        fail_msg = 'Fail delete node group template tt+dn'
+        self.verify(
+            20,
+            self._delete_node_group_template,
+            4, fail_msg,
+            "Delete node group template",
+            self.savanna_client, create_nodes_templates_tt_dn_resp)
+        fail_msg = 'Fail delete node group template tt'
+        self.verify(
+            20,
+            self._delete_node_group_template,
+            5, fail_msg,
+            "Delete node group template",
+            self.savanna_client, create_nodes_templates_tt_resp)
+
+        fail_msg = 'Fail delete node group template dn'
+        self.verify(
+            20,
+            self._delete_node_group_template,
+            6, fail_msg,
+            "Delete node group template",
+            self.savanna_client, create_nodes_templates_dn_resp)
