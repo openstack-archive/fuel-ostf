@@ -355,10 +355,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.fail("Step 3 failed: cannot get instance details. "
                       "Please refer to OpenStack logs for more details.")
 
-        compute = self.verify(3, getattr, 3,
-                              "Compute for the instance cannot be found.",
-                              server,
-                              'OS-EXT-SRV-ATTR:host')
+        compute = getattr(server, 'OS-EXT-SRV-ATTR:host', None)
+
 
         self.verify(100, self._check_connectivity_from_vm,
                     3, ("Connectivity to 8.8.8.8 from the VM doesn`t "
