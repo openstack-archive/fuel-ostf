@@ -55,14 +55,12 @@ class OfficialClientManager(fuel_health.manager.Manager):
         self.identity_client = self._get_identity_client()
         self.network_client = self._get_network_client()
         self.volume_client = self._get_volume_client()
-        self.savanna_client = self._get_savanna_client()
         self.client_attr_names = [
             'compute_client',
             'image_client',
             'identity_client',
             'network_client',
             'volume_client',
-            'savanna_client'
         ]
 
     def _get_compute_client(self, username=None, password=None,
