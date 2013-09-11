@@ -60,7 +60,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
             'image_client',
             'identity_client',
             'network_client',
-            'volume_client',
+            'volume_client'
         ]
 
     def _get_compute_client(self, username=None, password=None,

@@ -38,13 +38,10 @@ class SavannaClientManager(nmanager.OfficialClientManager):
         """
         super(SavannaClientManager, self).__init__()
         self.savanna_client = self._get_savanna_client()
-        self.client_attr_names = [
-            'savanna_client'
-        ]
+        self.client_attr_names.append('savanna_client')
 
     def _get_savanna_client(self, username=None, password=None):
         keystone = self._get_identity_client()
-        token = keystone.auth_token
         auth_url = self.config.identity.uri
         tenant_name = self.config.identity.admin_tenant_name
         if not username:
