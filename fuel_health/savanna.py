@@ -27,10 +27,8 @@ class SavannaClientManager(nmanager.OfficialClientManager):
     Manager that provides access to the Savanna python client for
     calling Savanna API.
     """
-
-    client = None
-    insecure = None
-    api_host = None
+    #TBD should be moved to nailgun or config file
+    savanna_url = 'http://10.20.0.131:8386/v1.0'
 
     def __init__(self):
         """
@@ -45,7 +43,6 @@ class SavannaClientManager(nmanager.OfficialClientManager):
         ]
 
     def _get_savanna_client(self, username=None, password=None):
-        savanna_url = 'http://10.20.0.131:8386/v1.0'
         keystone = self._get_identity_client()
         token = keystone.auth_token
         auth_url = self.config.identity.uri
@@ -58,7 +55,7 @@ class SavannaClientManager(nmanager.OfficialClientManager):
                                                api_key=password,
                                                project_name=tenant_name,
                                                auth_url=auth_url,
-                                               savanna_url=savanna_url)
+                                               savanna_url=self.savanna_url)
 
 
 class SavannaOfficialClientTest(nmanager.OfficialClientTest):
@@ -67,8 +64,12 @@ class SavannaOfficialClientTest(nmanager.OfficialClientTest):
 
 class SavannaSanityChecksTest(SavannaOfficialClientTest):
     """
-    Base class for openstack sanity tests
+    Base class for openstack sanity tests for Savanna
     """
+    #TBD should be movede to nailgun or config file
+    plugin = 'vanilla'
+    plugin_version = '1.1.2'
+
     def _create_node_group_template_and_get_id(
             self, client, name, plugin_name,
             hadoop_version, description,
@@ -88,8 +89,8 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
             self._create_node_group_template_and_get_id(
                 client,
                 'tt-dn',
-                'vanilla',
-                '1.1.2',
+                self.plugin,
+                self.plugin_version,
                 description='test node group template',
                 volumes_per_node=0,
                 volume_size=1,
@@ -106,8 +107,8 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
             self._create_node_group_template_and_get_id(
                 client,
                 'tt',
-                'vanilla',
-                '1.1.2',
+                self.plugin,
+                self.plugin_version,
                 description='test node group template',
                 volumes_per_node=0,
                 volume_size=0,
@@ -123,8 +124,8 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
             self._create_node_group_template_and_get_id(
                 client,
                 'dd',
-                'vanilla',
-                '1.1.2',
+                self.plugin,
+                self.plugin_version,
                 description='test node group template',
                 volumes_per_node=0,
                 volume_size=0,
@@ -137,18 +138,20 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         return node_group_template_tt_id
 
     def _delete_node_group_template(self, client, id):
-        LOG.debug('id - %s' % id)
         client.node_group_templates.delete(id)
+
+    def _list_node_group_template(self, client):
+        client.node_group_templates.list()
 
     def _list_cluster_templates(self, client):
         cluster_templates = client.cluster_templates.list()
         return cluster_templates
 
     def _create_cluster_templates(self, client):
-        cluster_templates = client.cluster_templates.create('name', 'vanilla',
-                                                            '1.1.2', 'descr',
-                                                            cluster_configs,
-                                                            node_groups,
-                                                            anti_affinity)
+        cluster_templates = client.cluster_templates.create(
+            'name', plugin,
+            self.plugin_version, 'descr',
+            cluster_configs,
+            node_groups,
+            anti_affinity)
         return cluster_templates
-

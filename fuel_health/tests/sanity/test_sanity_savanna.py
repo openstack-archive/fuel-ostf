@@ -44,59 +44,70 @@ class SanitySavannaTests(savanna.SavannaSanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_01_create_node_group_template(self):
-        """Test create/delete node group template
+        """Test create/list/delete Savanna node group templates
         Target component: Savanna
         Scenario:
-            1. Create node group template tt dn
-            2. Create node group template tt
-            3. Create node group template dn
-            4. Delete node group template tt dn
-            5. Delete node group template tt
-            6. Delete node group template dn
+            1. Create node group tasktracker and datanode template
+            2. Create node group tasktracker template
+            3. Create node group datanode template
+            4. List node group templates
+            5. Delete node group tasktracker and datanode template
+            6. Delete node group tasktracker template
+            7. Delete node group datanode template
         Duration: 20 s.
         """
-        fail_msg = 'Fail create node group template tt+dn'
+        fail_msg = 'Fail create node group tasktracker and datanode template'
         create_nodes_templates_tt_dn_resp = self.verify(
             20,
             self._create_node_group_template_tt_dn_id,
             1, fail_msg,
-            "Create node group template",
+            "Create node group tasktracker and datanode template",
             self.savanna_client)
-        fail_msg = 'Fail create node group template tt'
+
+        fail_msg = 'Fail create node group tasktracker template'
         create_nodes_templates_tt_resp = self.verify(
             20,
             self._create_node_group_template_tt_id,
             2, fail_msg,
-            "Create node group template",
+            "Create node group tasktracker template",
             self.savanna_client)
 
-        fail_msg = 'Fail create node group template dn'
+        fail_msg = 'Fail create node group datanode template'
         create_nodes_templates_dn_resp = self.verify(
             20,
             self._create_node_group_template_dn_id,
             3, fail_msg,
-            "Create node group template",
+            "Create node group datanode template",
             self.savanna_client)
 
-        fail_msg = 'Fail delete node group template tt+dn'
+        fail_msg = 'Fail list group template'
         self.verify(
             20,
-            self._delete_node_group_template,
+            self._list_node_group_template,
             4, fail_msg,
-            "Delete node group template",
-            self.savanna_client, create_nodes_templates_tt_dn_resp)
-        fail_msg = 'Fail delete node group template tt'
+            "List group templates",
+            self.savanna_client)
+
+        fail_msg = 'Fail delete node group tasktracker and datanode template'
         self.verify(
             20,
             self._delete_node_group_template,
             5, fail_msg,
             "Delete node group template",
-            self.savanna_client, create_nodes_templates_tt_resp)
+            self.savanna_client, create_nodes_templates_tt_dn_resp)
 
-        fail_msg = 'Fail delete node group template dn'
+        fail_msg = 'Fail delete node group tasktracker template'
         self.verify(
             20,
             self._delete_node_group_template,
             6, fail_msg,
-            "Delete node group template",
+            "Delete node group tasktracker template",
+            self.savanna_client, create_nodes_templates_tt_resp)
+
+        fail_msg = 'Fail delete node group datanode template'
+        self.verify(
+            20,
+            self._delete_node_group_template,
+            7, fail_msg,
+            "Delete node group datanode template",
             self.savanna_client, create_nodes_templates_dn_resp)
