@@ -18,7 +18,6 @@ requirements = [
     'oslo.config==1.1.1',
     'paramiko==1.10.1',
     'pbr>=0.5.21,<1.0',
-    'pika==0.9.13',
     'prettytable==0.7.2',
     'pyOpenSSL==0.13',
     'pycrypto==2.6',
