@@ -17,7 +17,7 @@ requirements = [
     'nose==1.3.0',
     'oslo.config==1.1.1',
     'paramiko==1.10.1',
-    'pbr==0.5.17',
+    'pbr>=0.5.21,<1.0',
     'pika==0.9.13',
     'prettytable==0.7.2',
     'pyOpenSSL==0.13',
@@ -37,7 +37,7 @@ requirements = [
     'testresources==0.2.7',
     'warlock==1.0.1',
     'wsgiref==0.1.2',
-    'yaml==3.10'
+    'pyyaml==3.10'
 ]
 
 
