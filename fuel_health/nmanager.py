@@ -23,7 +23,6 @@ import cinderclient.client
 import glanceclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
-import savannaclient.api.client
 
 import time
 
@@ -158,22 +157,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
         dscv = self.config.identity.disable_ssl_certificate_validation
 
         return
-
-    def _get_savanna_client(self, username=None, password=None):
-        savanna_url = 'http://10.20.0.131:8386/v1.0'
-        keystone = self._get_identity_client()
-        token = keystone.auth_token
-        auth_url = self.config.identity.uri
-        tenant_name = self.config.identity.admin_tenant_name
-        if not username:
-            username = self.config.identity.admin_username
-        if not password:
-            password = self.config.identity.admin_password
-        return savannaclient.api.client.Client(username=username,
-                                               api_key=password,
-                                               project_name=tenant_name,
-                                               auth_url=auth_url,
-                                               savanna_url=savanna_url)
 
 
 class OfficialClientTest(fuel_health.test.TestCase):
@@ -595,89 +578,6 @@ class SanityChecksTest(OfficialClientTest):
     def _list_networks(self, client):
         networks = client.networks.list()
         return networks
-
-    def _create_node_group_template_and_get_id(
-            self, client, name, plugin_name,
-            hadoop_version, description,
-            volumes_per_node, volume_size,
-            node_processes, node_configs):
-
-        data = client.node_group_templates.create(
-            name, plugin_name, hadoop_version, '42', description,
-            volumes_per_node, volume_size, node_processes, node_configs
-        )
-        node_group_template_id = str(data.id)
-
-        return node_group_template_id
-
-    def _create_node_group_template_tt_dn_id(self, client):
-        node_group_template_tt_dn_id = \
-            self._create_node_group_template_and_get_id(
-                client,
-                'tt-dn',
-                'vanilla',
-                '1.1.2',
-                description='test node group template',
-                volumes_per_node=0,
-                volume_size=1,
-                node_processes=['tasktracker', 'datanode'],
-                node_configs={
-                    #'HDFS': hc.DN_CONFIG,
-                    #'MapReduce': '515'
-                }
-            )
-        return node_group_template_tt_dn_id
-
-    def _create_node_group_template_tt_id(self, client):
-        node_group_template_tt_id = \
-            self._create_node_group_template_and_get_id(
-                client,
-                'tt',
-                'vanilla',
-                '1.1.2',
-                description='test node group template',
-                volumes_per_node=0,
-                volume_size=0,
-                node_processes=['tasktracker'],
-                node_configs={
-                    #'MapReduce': hc.TT_CONFIG
-                }
-            )
-        return node_group_template_tt_id
-
-    def _create_node_group_template_dn_id(self, client):
-        node_group_template_tt_id = \
-            self._create_node_group_template_and_get_id(
-                client,
-                'dd',
-                'vanilla',
-                '1.1.2',
-                description='test node group template',
-                volumes_per_node=0,
-                volume_size=0,
-                node_processes=['datanode'],
-                node_configs={
-                    #'MapReduce': hc.TT_CONFIG
-                }
-            )
-        LOG.debug(node_group_template_tt_id)
-        return node_group_template_tt_id
-
-    def _delete_node_group_template(self, client, id):
-        LOG.debug('id - %s' % id)
-        client.node_group_templates.delete(id)
-
-    def _list_cluster_templates(self, client):
-        cluster_templates = client.cluster_templates.list()
-        return cluster_templates
-
-    def _create_cluster_templates(self, client):
-        cluster_templates = client.cluster_templates.create('name', 'vanilla',
-                                                            '1.1.2', 'descr',
-                                                            cluster_configs,
-                                                            node_groups,
-                                                            anti_affinity)
-        return cluster_templates
 
 
 class SmokeChecksTest(OfficialClientTest):

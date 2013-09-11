@@ -17,12 +17,12 @@
 import logging
 from nose.plugins.attrib import attr
 
-from fuel_health import nmanager
+from fuel_health import savanna
 
 LOG = logging.getLogger(__name__)
 
 
-class SanitySavannaTests(nmanager.SanityChecksTest):
+class SanitySavannaTests(savanna.SavannaSanityChecksTest):
     """
     TestClass contains tests that check basic Savanna functionality.
     """
