@@ -67,14 +67,66 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
     plugin = 'vanilla'
     plugin_version = '1.1.2'
 
+    @classmethod
+    def setUpClass(cls):
+        super(SavannaSanityChecksTest, cls).setUpClass()
+        cls.flavors = []
+        cls.node_groups = []
+        cls.clusters = []
+
+    @classmethod
+    def tearDownClass(cls):
+        super(SavannaSanityChecksTest, cls).tearDownClass()
+        cls._clean_flavors()
+        cls._clean_node_groups()
+        cls._clean_clusters()
+
+    @classmethod
+    def _clean_flavors(cls):
+        if cls.flavors:
+            for flav in cls.flavors:
+                try:
+                    cls.compute_client.flavors.delete(flav)
+                except Exception as exc:
+                    cls.error_msg.append(exc)
+                    LOG.debug(exc)
+                    pass
+
+    @classmethod
+    def _clean_clusters(cls):
+        if cls.clusters:
+            for cluster in cls.clusters:
+                try:
+                    cls.compute_client.flavors.delete(cluster)
+                except Exception as exc:
+                    cls.error_msg.append(exc)
+                    LOG.debug(exc)
+                    pass
+
+
+    @classmethod
+    def _clean_node_groups(cls):
+        if cls.node_groups:
+            for node_group in cls.node_groups:
+                try:
+                    cls.node_group_templates.delete(node_group)
+                except Exception as exc:
+                    cls.error_msg.append(exc)
+                    LOG.debug(exc)
+                    pass
+
     def _create_node_group_template_and_get_id(
             self, client, name, plugin_name,
             hadoop_version, description,
             volumes_per_node, volume_size,
             node_processes, node_configs):
 
+        if not self.flavors:
+            flavor = self.compute_client.flavors.create('SavannaFlavor',
+                                                        64, 1, 1)
+            self.flavors.append(flavor.id)
         data = client.node_group_templates.create(
-            name, plugin_name, hadoop_version, '42', description,
+            name, plugin_name, hadoop_version, self.flavors[0], description,
             volumes_per_node, volume_size, node_processes, node_configs
         )
         node_group_template_id = str(data.id)
@@ -97,6 +149,7 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
                     #'MapReduce': '515'
                 }
             )
+        self.node_groups.append(node_group_template_tt_dn_id)
         return node_group_template_tt_dn_id
 
     def _create_node_group_template_tt_id(self, client):
@@ -114,6 +167,7 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
                     #'MapReduce': hc.TT_CONFIG
                 }
             )
+        self.node_groups.append(node_group_template_tt_id)
         return node_group_template_tt_id
 
     def _create_node_group_template_dn_id(self, client):
@@ -131,11 +185,12 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
                     #'MapReduce': hc.TT_CONFIG
                 }
             )
-        LOG.debug(node_group_template_tt_id)
+        self.node_groups.append(node_group_template_tt_id)
         return node_group_template_tt_id
 
     def _delete_node_group_template(self, client, id):
         client.node_group_templates.delete(id)
+        self.node_groups.remove(id)
 
     def _list_node_group_template(self, client):
         client.node_group_templates.list()
