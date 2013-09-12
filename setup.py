@@ -28,6 +28,7 @@ requirements = [
     'python-mimeparse==0.1.4',
     'python-novaclient==2.13.0',
     'python-neutronclient>=2.2',
+    'python-muranoclient',
     'requests==1.2.3',
     'setuptools-git==1.0',
     'simplejson==3.3.0',

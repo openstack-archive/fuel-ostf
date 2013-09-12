@@ -273,6 +273,25 @@ def register_object_storage_opts(conf):
         conf.register_opt(opt, group='object-storage')
 
 
+murano_group = cfg.OptGroup(name='murano',
+                            title='Murano API Service Options')
+
+MuranoConfig = [
+    cfg.StrOpt('api_url',
+               default='http://127.0.0.1:8082',
+               help="Murano API Service URL."),
+    cfg.StrOpt('insecure',
+               default=False,
+               help="This parameter allow to enable SSL encription"),
+]
+
+
+def register_murano_opts(conf):
+    conf.register_group(murano_group)
+    for opt in MuranoConfig:
+        conf.register_opt(opt, group='murano')
+
+
 def process_singleton(cls):
     """Wrapper for classes... To be instantiated only one time per process"""
     instances = {}
@@ -333,10 +352,12 @@ class FileConfig(object):
         register_identity_opts(cfg.CONF)
         register_network_opts(cfg.CONF)
         register_volume_opts(cfg.CONF)
+        register_murano_opts(cfg.CONF)
         self.compute = cfg.CONF.compute
         self.identity = cfg.CONF.identity
         self.network = cfg.CONF.network
         self.volume = cfg.CONF.volume
+        self.murano = cfg.CONF.murano
 
 
 class ConfigGroup(object):
@@ -374,6 +395,7 @@ class NailgunConfig(object):
     network = ConfigGroup(NetworkGroup)
     volume = ConfigGroup(VolumeGroup)
     object_storage = ConfigGroup(ObjectStoreConfig)
+    murano = ConfigGroup(MuranoConfig)
 
     def __init__(self, parse=True):
         LOG.info('INITIALIZING NAILGUN CONFIG')
