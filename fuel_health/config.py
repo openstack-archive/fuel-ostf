@@ -418,7 +418,7 @@ class NailgunConfig(object):
         controller_nodes = filter(lambda node: 'controller' in node['roles'],
                                   data)
         cinder_nodes = filter(lambda node: 'cinder' in node['roles'],
-                                  data)
+                              data)
         controller_ips = []
         conntroller_names = []
         public_ips = []

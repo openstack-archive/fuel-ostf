@@ -72,8 +72,9 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
         cmd = 'mysql -e "SHOW SLAVE STATUS\G"'
         LOG.info("Controllers nodes are %s" % self.controllers)
         for controller_ip in self.controllers:
-            ssh_client = SSHClient(controller_ip, self.controller_user,
-                      key_filename=self.controller_key, timeout=100)
+            ssh_client = SSHClient(
+                controller_ip, self.controller_user,
+                key_filename=self.controller_key, timeout=100)
             output = self.verify(
                 20, ssh_client.exec_command, 1, 'Mysql node detection failed',
                 'detect mysql node', cmd)
@@ -107,7 +108,8 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
         # create db, table, insert data on master
         LOG.info('master node ip %s' % master_node_ip[0])
         master_ssh_client = SSHClient(master_node_ip[0], self.controller_user,
-                  key_filename=self.controller_key, timeout=100)
+                                      key_filename=self.controller_key,
+                                      timeout=100)
 
         self.verify(20, master_ssh_client.exec_command, 2,
                     'Database creation failed', 'create database',
@@ -124,9 +126,9 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
         # Verify that data is replicated on other controllers
         for controller in self.controllers:
             if controller not in master_node_ip:
-                LOG.info('Start to verify replication on controller %s' % controller)
                 client = SSHClient(controller,
-                                   self.controller_user, key_filename=self.controller_key)
+                                   self.controller_user,
+                                   key_filename=self.controller_key)
                 result = []
                 output = self.verify(
                     20, client.exec_command, 5,
@@ -211,7 +213,8 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
             LOG.info("Controllers nodes are %s" % self.controllers)
             for controller_ip in self.controllers:
                 ssh_client = SSHClient(controller_ip, self.controller_user,
-                      key_filename=self.controller_key, timeout=100)
+                                       key_filename=self.controller_key,
+                                       timeout=100)
                 output = self.verify(20, ssh_client.exec_command, 1,
                                      'Can not define master node',
                                      'master mode detection', cmd)
@@ -223,8 +226,8 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
             # ssh on master node and check status
             check_master_state_cmd = 'mysql -e "SHOW MASTER STATUS\G"'
             ssh_client = SSHClient(self.master_ip[0], self.controller_user,
-                      key_filename=self.controller_key,
-                      timeout=100)
+                                   key_filename=self.controller_key,
+                                   timeout=100)
             output = self.verify(20, ssh_client.exec_command, 2,
                                  'Can not execute "SHOW MASTER STATUS" '
                                  'command', 'check master status',
@@ -287,11 +290,13 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
             for controller in self.controllers:
                     command = "mysql -e \"SHOW STATUS LIKE 'wsrep_%'\""
                     ssh_client = SSHClient(controller, self.controller_user,
-                      key_filename=self.controller_key, timeout=100)
+                                           key_filename=self.controller_key,
+                                           timeout=100)
                     output = self.verify(
                         20, ssh_client.exec_command, 1,
                         "Verification of galera cluster node status failed",
-                        'get status from galera node', command).splitlines()[3:-2]
+                        'get status from galera node',
+                        command).splitlines()[3:-2]
 
                     LOG.debug('output is %s' % output)
 
@@ -302,13 +307,14 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
                         return result
 
                     self.verify_response_body_content(
-                        result.get('wsrep_cluster_size', 0), str(len(self.controllers)),
+                        result.get('wsrep_cluster_size', 0),
+                        str(len(self.controllers)),
                         msg='Cluster size on %s less '
                             'than controllers count' % controller,
                         failed_step='2')
 
                     self.verify_response_body_content(
-                        result.get(('wsrep_ready', 'OFF')),
+                        result.get(('wsrep_ready', 'OFF')), 'ON',
                         msg='wsrep_ready on %s is not ON' % controller,
                         failed_step='3')
 

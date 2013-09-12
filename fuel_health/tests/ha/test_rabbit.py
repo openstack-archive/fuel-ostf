@@ -105,9 +105,9 @@ class RabbitSmokeTest(BaseTestCase):
                                  'controller.'.format(
                                      ctlr=self.amqp_clients[0].host))
         if not first_list:
-                self.fail('Step 1 failed: Cannot retrieve queues list for '
-                          '{ctlr} controller.'.format(
-                          ctlr=self.amqp_clients[0].host))
+                self.fail(('Step 1 failed: Cannot retrieve queues list for '
+                           '{ctlr} controller.').format(
+                    ctlr=self.amqp_clients[0].host))
         for client in self.amqp_clients[1:]:
             list = self.verify(10, client.list_queues,
                                1,
