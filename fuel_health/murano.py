@@ -45,9 +45,9 @@ class MuranoTest(nmanager.OfficialClientTest):
             self.config.identity.admin_tenant_name).auth_token
 
         " Get Murano API parameters "
-        self.api_host = 'http://172.18.79.82:8082'#self.config.compute.murano_api_url
-        self.insecure = False  #self.config.compute.murano_insecure
-        
+        self.api_host = self.config.murano.api_url
+        self.insecure = self.config.murano.insecure
+
         self.murano_client = self._get_murano_client()
 
         self.environment = self.create_environment("Murano-OSTF-test_env01")
