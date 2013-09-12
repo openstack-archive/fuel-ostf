@@ -71,6 +71,7 @@ class Facts:
         #Custom YAML constructs for ruby objects for puppet files parsing
         def _construct_ruby_object(loader, suffix, node):
                 return loader.construct_yaml_map(node)
+
         def _construct_ruby_sym(loader, suffix, node):
             return loader.construct_yaml_str(node)
 
