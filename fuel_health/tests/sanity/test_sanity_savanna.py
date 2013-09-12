@@ -29,7 +29,7 @@ class SanitySavannaTests(savanna.SavannaSanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_01_create_node_group_template(self):
-        """Test create/list/delete Savanna node group templates
+        """Test create/list/delete Savanna node group and cluster templates
         Target component: Savanna
         Scenario:
             1. Create node group tasktracker and datanode template
