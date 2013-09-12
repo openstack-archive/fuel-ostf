@@ -280,9 +280,9 @@ MuranoConfig = [
     cfg.StrOpt('api_url',
                default='http://127.0.0.1:8082',
                help="Murano API Service URL."),
-    cfg.StrOpt('insecure',
-               default=False,
-               help="This parameter allow to enable SSL encription"),
+    cfg.BoolOpt('insecure',
+                default=False,
+                help="This parameter allow to enable SSL encription"),
 ]
 
 
