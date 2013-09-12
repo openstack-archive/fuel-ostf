@@ -66,13 +66,15 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
     #TBD should be movede to nailgun or config file
     plugin = 'vanilla'
     plugin_version = '1.1.2'
+    TT_CONFIG = {'Task Tracker Heap Size': 515}
+    DN_CONFIG = {'Data Node Heap Size': 513}
 
     @classmethod
     def setUpClass(cls):
         super(SavannaSanityChecksTest, cls).setUpClass()
         cls.flavors = []
         cls.node_groups = []
-        cls.clusters = []
+        cls.cluster_templates = []
 
     @classmethod
     def tearDownClass(cls):
@@ -94,15 +96,14 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
 
     @classmethod
     def _clean_clusters(cls):
-        if cls.clusters:
-            for cluster in cls.clusters:
+        if cls.cluster_templates:
+            for cluster in cls.cluster_templates:
                 try:
                     cls.compute_client.flavors.delete(cluster)
                 except Exception as exc:
                     cls.error_msg.append(exc)
                     LOG.debug(exc)
                     pass
-
 
     @classmethod
     def _clean_node_groups(cls):
@@ -116,10 +117,8 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
                     pass
 
     def _create_node_group_template_and_get_id(
-            self, client, name, plugin_name,
-            hadoop_version, description,
-            volumes_per_node, volume_size,
-            node_processes, node_configs):
+            self, client, name, plugin_name, hadoop_version, description,
+            volumes_per_node, volume_size, node_processes, node_configs):
 
         if not self.flavors:
             flavor = self.compute_client.flavors.create('SavannaFlavor',
@@ -133,6 +132,18 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
 
         return node_group_template_id
 
+    def _create_cluster_template_and_get_id(
+            self, client, name, plugin_name, hadoop_version, description,
+            cluster_configs, node_groups,  anti_affinity):
+
+        data = client.cluster_templates.create(
+            name, plugin_name, hadoop_version, description, cluster_configs,
+            node_groups, anti_affinity
+        )
+        cluster_template_id = data.id
+
+        return cluster_template_id
+
     def _create_node_group_template_tt_dn_id(self, client):
         node_group_template_tt_dn_id = \
             self._create_node_group_template_and_get_id(
@@ -145,8 +156,8 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
                 volume_size=1,
                 node_processes=['tasktracker', 'datanode'],
                 node_configs={
-                    #'HDFS': hc.DN_CONFIG,
-                    #'MapReduce': '515'
+                    'HDFS': self.DN_CONFIG,
+                    'MapReduce': self.TT_CONFIG
                 }
             )
         self.node_groups.append(node_group_template_tt_dn_id)
@@ -164,7 +175,7 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
                 volume_size=0,
                 node_processes=['tasktracker'],
                 node_configs={
-                    #'MapReduce': hc.TT_CONFIG
+                    'MapReduce': self.TT_CONFIG
                 }
             )
         self.node_groups.append(node_group_template_tt_id)
@@ -182,7 +193,7 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
                 volume_size=0,
                 node_processes=['datanode'],
                 node_configs={
-                    #'MapReduce': hc.TT_CONFIG
+                    'MapReduce': self.TT_CONFIG
                 }
             )
         self.node_groups.append(node_group_template_tt_id)
@@ -192,18 +203,68 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         client.node_group_templates.delete(id)
         self.node_groups.remove(id)
 
+    def _delete_cluster_template(self, client, id):
+        client.cluster_templates.delete(id)
+        self.cluster_templates.remove(id)
+
     def _list_node_group_template(self, client):
         client.node_group_templates.list()
 
+    def _create_cluster_template(self, client):
+        CLUSTER_HDFS_CONFIG = {'dfs.replication': 2}
+        CLUSTER_MR_CONFIG = {'mapred.map.tasks.speculative.execution': False,
+                             'mapred.child.java.opts': '-Xmx100m'}
+        CLUSTER_GENERAL_CONFIG = {'Enable Swift': True}
+        SNN_CONFIG = {'Name Node Heap Size': 510}
+        NN_CONFIG = {'Name Node Heap Size': 512}
+        JT_CONFIG = {'Job Tracker Heap Size': 514}
+        cluster_template_id = self._create_cluster_template_and_get_id(
+            client,
+            'test-cluster-template',
+            self.plugin,
+            self.plugin_version,
+            description='test cluster template',
+            cluster_configs={
+                'HDFS': CLUSTER_HDFS_CONFIG,
+                'MapReduce': CLUSTER_MR_CONFIG,
+                'general': CLUSTER_GENERAL_CONFIG
+            },
+            node_groups=[
+                dict(
+                    name='master-node-jt-nn',
+                    flavor_id=self.flavors[0],
+                    node_processes=['namenode', 'jobtracker'],
+                    node_configs={
+                        'HDFS': NN_CONFIG,
+                        'MapReduce': JT_CONFIG
+                    },
+                    count=1),
+                dict(
+                    name='master-node-sec-nn',
+                    flavor_id=self.flavors[0],
+                    node_processes=['secondarynamenode'],
+                    node_configs={
+                        'HDFS': SNN_CONFIG
+                    },
+                    count=1),
+                dict(
+                    name='worker-node-tt-dn',
+                    node_group_template_id=self.node_groups[0],
+                    count=2),
+                dict(
+                    name='worker-node-dn',
+                    node_group_template_id=self.node_groups[1],
+                    count=1),
+                dict(
+                    name='worker-node-tt',
+                    node_group_template_id=self.node_groups[2],
+                    count=1)
+            ],
+            anti_affinity=[]
+        )
+        self.cluster_templates.append(cluster_template_id)
+        return cluster_template_id
+
     def _list_cluster_templates(self, client):
         cluster_templates = client.cluster_templates.list()
-        return cluster_templates
-
-    def _create_cluster_templates(self, client):
-        cluster_templates = client.cluster_templates.create(
-            'name', plugin,
-            self.plugin_version, 'descr',
-            cluster_configs,
-            node_groups,
-            anti_affinity)
         return cluster_templates
