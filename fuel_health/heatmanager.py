@@ -20,17 +20,16 @@ import logging
 
 import heatclient.v1.client
 
-import fuel_health.test
-from fuel_health import config
 from fuel_health.common.utils.data_utils import rand_name
-from nmanager import OfficialClientTest
-from nmanager import OfficialClientManager
+from fuel_health import config
+import fuel_health.nmanager
+import fuel_health.test
 
 
 LOG = logging.getLogger(__name__)
 
 
-class HeatManager(OfficialClientManager):
+class HeatManager(fuel_health.nmanager.OfficialClientManager):
     """
     HeatManager provides access to the official python client of Heat.
     """
@@ -44,8 +43,8 @@ class HeatManager(OfficialClientManager):
         keystone = self._get_identity_client()
         token = keystone.auth_token
         auth_url = self.config.identity.uri
-        endpoint = keystone.service_catalog.url_for(service_type='orchestration',
-                                                    endpoint_type='publicURL')
+        endpoint = keystone.service_catalog.url_for(
+            service_type='orchestration', endpoint_type='publicURL')
         if not username:
             username = self.config.identity.admin_username
         if not password:
@@ -56,7 +55,7 @@ class HeatManager(OfficialClientManager):
                                            username=username, password=password)
 
 
-class HeatBaseTest(OfficialClientTest):
+class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
     """
     Base class for Heat openstack sanity and smoke tests.
     """
