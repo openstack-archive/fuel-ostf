@@ -1,0 +1,2 @@
+recursive-include ostf_adapter *.ini
+recursive-include ostf_adapter *

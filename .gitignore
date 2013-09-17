@@ -1,5 +1,11 @@
 .idea
-*.egg-info
-dist
 *.pyc
+*.log
+nosetests.xml
+*.egg-info
+/*.egg
 .tox
+build
+dist
+*.out
+.coverage
