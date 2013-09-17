@@ -27,8 +27,6 @@ class SavannaClientManager(nmanager.OfficialClientManager):
     Manager that provides access to the Savanna python client for
     calling Savanna API.
     """
-    #TBD should be moved to nailgun or config file
-    savanna_url = 'http://10.20.0.131:8386/v1.0'
 
     def __init__(self):
         """
@@ -44,6 +42,9 @@ class SavannaClientManager(nmanager.OfficialClientManager):
         keystone = self._get_identity_client()
         auth_url = self.config.identity.uri
         tenant_name = self.config.identity.admin_tenant_name
+        savanna_ip = self.config.compute.controller_nodes[0]
+        savanna_url = 'http://%s:8386/v1.0' % savanna_ip
+        LOG.debug(savanna_url)
         if not username:
             username = self.config.identity.admin_username
         if not password:
@@ -52,7 +53,7 @@ class SavannaClientManager(nmanager.OfficialClientManager):
                                                api_key=password,
                                                project_name=tenant_name,
                                                auth_url=auth_url,
-                                               savanna_url=self.savanna_url)
+                                               savanna_url=savanna_url)
 
 
 class SavannaOfficialClientTest(nmanager.OfficialClientTest):
