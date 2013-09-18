@@ -23,12 +23,11 @@ from fuel_health import nmanager
 LOG = logging.getLogger(__name__)
 
 
-class ServicesTestJSON(nmanager.SanityChecksTest):
+class SanityIdentityTest(nmanager.SanityChecksTest):
     """
     TestClass contains tests that check basic authentication functionality.
     Special requirements: OS admin user permissions are needed
     """
-    _interface = 'json'
 
     @attr(type=['sanity', 'fuel'])
     def test_list_services(self):
