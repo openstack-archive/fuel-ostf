@@ -28,6 +28,7 @@ import cinderclient.client
 import glanceclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
+import muranoclient.v1.client
 
 
 from fuel_health import exceptions
@@ -135,6 +136,14 @@ class CleanUpClientManager(fuel_health.manager.Manager):
                                                  tenant_name=tenant_name,
                                                  auth_url=auth_url,
                                                  insecure=dscv)
+
+    def _get_murano_client()
+        token_id = self.manager._get_identity_client().auth_token
+        api_host = self.config.murano.api_url
+        insecure = self.config.murano.insecure
+
+        return muranoclient.v1.client.Client(endpoint=api_host, token=token_id,
+                                             insecure=insecure)
 
     def wait_for_server_termination(self, server, ignore_error=False):
         """Waits for server to reach termination."""
@@ -288,6 +297,15 @@ def cleanup():
                 LOG.debug(exc)
                 pass
 
+    environments = manager._get_murano_client().environments.list()
+    for environment in environments:
+        if environment['name'].startswith('ost1_test-'):
+            try:
+                LOG.info('start environment deletion')
+                manager._get_murano_client().environments.delete(environment['id'])
+            except Exception as exc:
+                LOG.debug(exc)
+                pass
 
 if __name__ == "__main__":
     cleanup()

@@ -15,7 +15,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from muranoclient.v1.client import Client
+import muranoclient.v1.client
 import nmanager
 
 
@@ -72,9 +72,9 @@ class MuranoTest(nmanager.OfficialClientTest):
         """
             This method returns Murano API client
         """
-        return Client(endpoint=self.api_host,
-                      token=self.token_id,
-                      insecure=self.insecure)
+        return muranoclient.v1.client.Client(endpoint=self.api_host,
+                                             token=self.token_id,
+                                             insecure=self.insecure)
 
     def verify_elements_list(self, elements, attrs, msg='', failed_step=''):
         """
@@ -88,7 +88,7 @@ class MuranoTest(nmanager.OfficialClientTest):
         if failed_step:
             msg = ('Step %s failed: ' % str(failed_step)) + msg
 
-        if len(elements) == 0:
+        if not elements:
             self.fail(msg)
 
         for element in elements:
@@ -246,9 +246,9 @@ class MuranoTest(nmanager.OfficialClientTest):
             Returns specific service.
         """
 
-        url = '/' + str(service_id)
-
-        return self.murano_client.services.get(environment_id, url, session_id)
+        return self.murano_client.services.get(environment_id,
+                                               '/{0}'.format(service_id),
+                                               session_id)
 
     def delete_service(self, environment_id, session_id, service_id):
         """
@@ -262,7 +262,6 @@ class MuranoTest(nmanager.OfficialClientTest):
             Returns None.
         """
 
-        url = '/' + str(service_id)
-
-        return self.murano_client.services.delete(environment_id, url,
+        return self.murano_client.services.delete(environment_id,
+                                                  '/{0}'.format(service_id),
                                                   session_id)

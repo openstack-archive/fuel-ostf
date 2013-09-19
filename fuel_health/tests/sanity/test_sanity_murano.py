@@ -33,7 +33,7 @@ class ServicesTestJSON(murano.MuranoTest):
         Duration: 5 s.
         """
 
-        fail_msg = 'User can not get list of environments.'
+        fail_msg = 'Environments list is unavailable.'
         environments = self.verify(5, self.list_environments,
                                    2, fail_msg, "environments listing")
 
