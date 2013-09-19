@@ -1,2 +1,2 @@
-recursive-include ostf_adapter *.ini
-recursive-include ostf_adapter *
+recursive-include fuel_health *
+recursive-include fuel_plugin ostf_adapter bin

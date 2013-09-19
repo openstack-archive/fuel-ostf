@@ -16,56 +16,27 @@ import multiprocessing
 import setuptools
 
 
-requirements = [
-    'argparse==1.2.1',
-    'cliff==1.4',
-    'cmd2==0.6.5.1',
-    'd2to1==0.2.10',
-    'distribute==0.7.3',
-    'extras==0.0.3',
-    'httplib2==0.8',
-    'iso8601==0.1.4',
-    'jsonpatch==1.1',
-    'jsonpointer==1.0',
-    'jsonschema==2.0.0',
-    'netaddr==0.7.10',
-    'nose==1.3.0',
-    'oslo.config==1.1.1',
-    'paramiko==1.10.1',
-    'prettytable==0.7.2',
-    'pyOpenSSL==0.13',
-    'pycrypto==2.6',
-    'pyparsing==1.5.7',
-    'python-cinderclient==1.0.4',
-    'python-glanceclient==0.9.0',
-    'python-keystoneclient==0.3.1',
-    'python-mimeparse==0.1.4',
-    'python-novaclient==2.13.0',
-    'requests==1.2.3',
-    'setuptools-git==1.0',
-    'simplejson==3.3.0',
-    'unittest2',
-    'six==1.3.0',
-    'testresources==0.2.7',
-    'warlock==1.0.1',
-    'wsgiref==0.1.2',
-    'pyyaml==3.10',
-    'Mako==0.8.1',
-    'MarkupSafe==0.18',
-    'SQLAlchemy==0.8.2',
-    'WebOb==1.2.3',
-    'WebTest==2.0.6',
-    'alembic==0.5.0',
-    'beautifulsoup4==4.2.1',
+fuel_health_reqs = [
+    'oslo.config>=1.1.1',
+    'python-cinderclient>=1.0.4',
+    'python-glanceclient>=0.9.0',
+    'python-keystoneclient>=0.3.1',
+    'python-novaclient>=2.13.0',
+    'paramiko>=1.10.1',
+    'requests>=1.2.3',
+    'unittest2>=0.5.1',
+    'pyyaml>=3.10',
+    'testresources>=0.2.7'
+]
+
+fuel_ostf_reqs = [
+    'nose>=1.3.0',
+    'SQLAlchemy>=0.8.2',
+    'alembic>=0.5.0',
     'gevent==0.13.8',
-    'greenlet==0.4.1',
-    'pecan==0.3.0',
-    'psycogreen==1.0',
-    'psycopg2==2.5.1',
-    'simplegeneric==0.8.1',
-    'stevedore==0.10',
-    'waitress==0.8.5',
-    'WSME==0.5b2'
+    'pecan>=0.3.0',
+    'psycopg2>=2.5.1',
+    'stevedore>=0.10'
 ]
 
 test_requires = [
@@ -89,8 +60,6 @@ setuptools.setup(
 
     zip_safe=False,
 
-    test_suite='fuel_plugin/tests',
-
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Framework :: Setuptools Plugin',
@@ -107,9 +76,7 @@ setuptools.setup(
 
     packages=setuptools.find_packages(),
 
-    include_package_data=True,
-
-    install_requires=requirements,
+    install_requires=fuel_health_reqs+fuel_ostf_reqs,
 
     entry_points={
         'plugins': [
