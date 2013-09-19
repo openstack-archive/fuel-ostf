@@ -50,7 +50,7 @@ class MuranoTest(nmanager.OfficialClientTest):
 
         self.murano_client = self._get_murano_client()
 
-        self.environment = self.create_environment("Murano-OSTF-test_env01")
+        self.environment = self.create_environment("ost1_test-Murano_env01")
         if not hasattr(self.environment, 'id'):
             step='1. Send request to create environment. '
             msg = ('Step %s failed: ' % step) + 'Can not create environment.'
