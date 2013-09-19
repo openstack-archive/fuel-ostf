@@ -42,7 +42,7 @@ class ServicesTestJSON(murano.MuranoTest):
                                   msg=fail_msg, failed_step=step)
 
         " Save info for tear down method "
-        self.last_step = '3. Clean up (delete environment).'
+        self.last_step = '3. Clean up (delete environment). '
 
     def test_create_and_delete_service(self):
         """Create And Delete Service
@@ -86,4 +86,4 @@ class ServicesTestJSON(murano.MuranoTest):
                                self.environment.id, session.id, service.id)
 
         " Save info for tear down method "
-        self.last_step = '6. Clean up (delete environment).'
+        self.last_step = '6. Clean up (delete environment). '
