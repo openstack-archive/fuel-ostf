@@ -14,7 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import murano
+from fuel_health import murano
 
 class ServicesTestJSON(murano.MuranoTest):
     """
@@ -22,7 +22,7 @@ class ServicesTestJSON(murano.MuranoTest):
     """
 
     def test_list_environments(self):
-        """List Of Environments
+        """Check Murano API Service: Get List Of Environments
         Test checks that user can get list of environments.
         Target component: Murano
 
@@ -45,7 +45,7 @@ class ServicesTestJSON(murano.MuranoTest):
         self.last_step = '3. Clean up (delete environment). '
 
     def test_create_and_delete_service(self):
-        """Create And Delete Service
+        """Check Murano API Service: Create And Delete Service
         Test checks that user can create service.
         Target component: Murano
 

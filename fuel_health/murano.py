@@ -26,8 +26,8 @@ class MuranoTest(nmanager.OfficialClientTest):
     """
 
     client = None
-    insecure = None
-    api_host = None
+    insecure = False
+    api_host = 'http://127.0.0.1:8082'
 
     def setUp(self):
         """
@@ -37,6 +37,7 @@ class MuranoTest(nmanager.OfficialClientTest):
         """
 
         super(MuranoTest, self).setUp()
+        step='1. Send request to create environment. '
 
         " Get xAuth token from Keystone "
         self.token_id = self.manager._get_identity_client(
@@ -45,15 +46,20 @@ class MuranoTest(nmanager.OfficialClientTest):
             self.config.identity.admin_tenant_name).auth_token
 
         " Get Murano API parameters "
-        self.api_host = self.config.murano.api_url
-        self.insecure = self.config.murano.insecure
+        try:
+            self.api_host = self.config.murano.api_url
+            self.insecure = self.config.murano.insecure
+        except:
+            msg = ' Can not get Murano configuration parameters. '
+            msg = ('Step %s failed: ' % str(step)) + msg
+            self.fail(msg)
 
         self.murano_client = self._get_murano_client()
 
         self.environment = self.create_environment("ost1_test-Murano_env01")
         if not hasattr(self.environment, 'id'):
-            step='1. Send request to create environment. '
             msg = ('Step %s failed: ' % step) + 'Can not create environment.'
+            self.fail(msg)
 
     def tearDown(self):
         """
