@@ -22,14 +22,18 @@ def devlink():
     local('python setup.py develop')
 
 
-def start_server():
+def testdeps():
+    local('pip install -r test-requires')
+
+
+def startserver():
     local(('ostf-server '
         '--dbpath postgresql+psycopg2://ostf:ostf@localhost/ostf'
-        '--debug --debug_tests=fuel_plugin/tests/functional/dummy_tests').format(path))
+        '--debug --debug_tests=fuel_plugin/tests/functional/dummy_tests'))
 
 
-def migrate():
-    path='postgresql+psycopg2://ostf:ostf@localhost/ostf'
+def migrate(database='ostf'):
+    path='postgresql+psycopg2://ostf:ostf@localhost/{0}'.format(database)
     local('ostf-server --after-initialization-environment-hook --dbpath {0}'.format(path))
 
 
@@ -44,7 +48,21 @@ def auth(method='trust'):
     local("sudo service postgresql restart")
 
 
-def remakedb():
-    dropdb()
-    createdb()
-    migrate()
+def remakedb(database='ostf'):
+    dropdb(database=database)
+    createdb(database=database)
+    migrate(database=database)
+
+
+def installapp():
+    deps()
+    devlink()
+    testdeps()
+
+
+def integration():
+    local('nosetests fuel_plugin/tests/functional/tests.py:AdapterTests -v')
+
+
+def unit():
+    local('nosetests fuel_plugin/tests/unit -v')
