@@ -31,7 +31,7 @@ PECAN_DEFAULT = {
     },
     'dbpath': 'postgresql+psycopg2://ostf:ostf@localhost/ostf',
     'debug': False,
-    'debug_tests': 'functional/dummy_tests'
+    'debug_tests': 'fuel_plugin/tests/functional/dummy_tests'
 }
 
 
@@ -42,7 +42,7 @@ def setup_config(pecan_config):
 
 def setup_app(config=None):
     setup_config(config or {})
-    app_hooks = [hooks.SessionHook()]
+    app_hooks = [hooks.SessionHook(), hooks.ExceptionHandling()]
     app = pecan.make_app(
         pecan.conf.app.root,
         debug=pecan.conf.debug,

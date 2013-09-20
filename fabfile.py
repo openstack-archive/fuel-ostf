@@ -60,6 +60,11 @@ def installapp():
     testdeps()
 
 
+def testall():
+    unit()
+    integration()
+
+
 def integration():
     local('nosetests fuel_plugin/tests/functional/tests.py:AdapterTests -v')
 
