@@ -100,35 +100,34 @@ class SanitySavannaTests(savanna.SavannaSanityChecksTest):
             "Create cluster",
             self.savanna_client, cluster_template)
 
+        fail_msg = 'Fail delete cluster template'
+        self.verify(
+            20,
+            self._delete_cluster_template,
+            7, fail_msg,
+            "Delete cluster templates",
+            self.savanna_client, cluster_template)
 
-        #  fail_msg = 'Fail delete cluster template'
-        #  self.verify(
-        #     20,
-        #     self._delete_cluster_template,
-        #     7, fail_msg,
-        #     "Delete cluster templates",
-        #     self.savanna_client, cluster_template)
-        #
-        # fail_msg = 'Fail delete node group tasktracker and datanode template'
-        # self.verify(
-        #     20,
-        #     self._delete_node_group_template,
-        #     8, fail_msg,
-        #     "Delete node group template",
-        #     self.savanna_client, create_nodes_templates_tt_dn_resp)
-        #
-        # fail_msg = 'Fail delete node group tasktracker template'
-        # self.verify(
-        #     20,
-        #     self._delete_node_group_template,
-        #     9, fail_msg,
-        #     "Delete node group tasktracker template",
-        #     self.savanna_client, create_nodes_templates_tt_resp)
-        #
-        # fail_msg = 'Fail delete node group datanode template'
-        # self.verify(
-        #     20,
-        #     self._delete_node_group_template,
-        #     10, fail_msg,
-        #     "Delete node group datanode template",
-        #     self.savanna_client, create_nodes_templates_dn_resp)
+        fail_msg = 'Fail delete node group tasktracker and datanode template'
+        self.verify(
+            20,
+            self._delete_node_group_template,
+            8, fail_msg,
+            "Delete node group template",
+            self.savanna_client, create_nodes_templates_tt_dn_resp)
+
+        fail_msg = 'Fail delete node group tasktracker template'
+        self.verify(
+            20,
+            self._delete_node_group_template,
+            9, fail_msg,
+            "Delete node group tasktracker template",
+            self.savanna_client, create_nodes_templates_tt_resp)
+
+        fail_msg = 'Fail delete node group datanode template'
+        self.verify(
+            20,
+            self._delete_node_group_template,
+            10, fail_msg,
+            "Delete node group datanode template",
+            self.savanna_client, create_nodes_templates_dn_resp)
