@@ -20,6 +20,7 @@ from nose.plugins.attrib import attr
 
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import nmanager
+from fuel_health import test
 
 
 LOG = logging.getLogger(__name__)
@@ -46,6 +47,26 @@ class TestImageAction(nmanager.SmokeChecksTest):
 
     def _wait_for_image_status(self, image_id, status):
         self.status_timeout(self.compute_client.images, image_id, status)
+
+    def _wait_for_server_deletion(self, server):
+        def is_deletion_complete():
+                # Deletion testing is only required for objects whose
+                # existence cannot be checked via retrieval.
+                if isinstance(server, dict):
+                    return True
+                try:
+                    server.get()
+                except Exception as e:
+                    # Clients are expected to return an exception
+                    # called 'NotFound' if retrieval fails.
+                    if e.__class__.__name__ == 'NotFound':
+                        return True
+                    self.error_msg.append(e)
+                    LOG.debug(e)
+                return False
+
+        # Block until resource deletion has completed or timed-out
+        test.call_until_true(is_deletion_complete, 10, 1)
 
     def _boot_image(self, image_id):
         name = rand_name('ost1_test-image')
@@ -87,7 +108,8 @@ class TestImageAction(nmanager.SmokeChecksTest):
             1. Launch an instance using the default image.
             2. Make snapshot of the created instance.
             3. Delete the instance created in step 1.
-            4. Launch another instance from the snapshot created in step 2.
+            4. Wait while instance deleted
+            5. Launch another instance from the snapshot created in step 2.
         Duration: 180 s.
         """
         server = self.verify(180, self._boot_image, 1,
@@ -107,7 +129,12 @@ class TestImageAction(nmanager.SmokeChecksTest):
                     'Instance deletion',
                     server)
 
-        self.verify(180, self._boot_image, 4,
+        self.verify(180, self._wait_for_server_deletion, 4,
+                    "Instance can not be deleted.",
+                    'Wait for instance deletion complete',
+                    server)
+
+        self.verify(180, self._boot_image, 5,
                     "Instance can not be launched from snapshot.",
                     'booting instance from snapshot',
                     snapshot_image_id)
