@@ -27,7 +27,7 @@ LOG = logging.getLogger(__name__)
 
 class NoseDriver(object):
     def __init__(self):
-        LOG.warning('WTF')
+        LOG.warning('Initializing Nose Driver')
         self._named_threads = {}
         session = engine.get_session()
         with session.begin(subtransactions=True):
@@ -37,10 +37,6 @@ class NoseDriver(object):
         return unique_id in self._named_threads
 
     def run(self, test_run, test_set, tests=None):
-        """
-            remove unneceserry arguments
-            spawn processes and send them tasks as to workers
-        """
         tests = tests or test_run.enabled_tests
         if tests:
             argv_add = [nose_utils.modify_test_name_for_nose(test) for test in
@@ -61,7 +57,7 @@ class NoseDriver(object):
                 argv=['ostf_tests'] + argv_add)
             self._named_threads.pop(int(test_run_id), None)
         except Exception, e:
-            LOG.exception('Test run: %s\n', test_run_id)
+            LOG.exception('Test run ID: %s', test_run_id)
         finally:
             models.TestRun.update_test_run(
                 session, test_run_id, status='finished')
@@ -86,19 +82,20 @@ class NoseDriver(object):
             return True
         return False
 
-    def _clean_up(self, test_run_id, external_id, cleanup):
+    def _clean_up(self, test_run_id, cluster_id, cleanup):
         session = engine.get_session()
         try:
             module_obj = __import__(cleanup, -1)
 
             os.environ['NAILGUN_HOST'] = str(conf.nailgun.host)
             os.environ['NAILGUN_PORT'] = str(conf.nailgun.port)
-            os.environ['CLUSTER_ID'] = str(external_id)
+            os.environ['CLUSTER_ID'] = str(cluster_id)
 
             module_obj.cleanup.cleanup()
 
         except Exception:
-            LOG.exception('EXCEPTION IN CLEANUP')
+            LOG.exception('Cleanup errer. Test Run ID %s. Cluster ID %s',
+                test_run_id, cluser_id)
 
         finally:
             models.TestRun.update_test_run(
