@@ -1,0 +1,2 @@
+recursive-include fuel_health *
+recursive-include fuel_plugin ostf_adapter bin
