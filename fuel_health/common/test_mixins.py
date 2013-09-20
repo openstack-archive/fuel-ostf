@@ -28,7 +28,8 @@ class FuelTestAssertMixin(object):
     from unittest assertion methods and provide human
     readable descriptions where possible
     """
-    def verify_response_status(self, status, appl='Application', msg='', failed_step=''):
+    def verify_response_status(self, status,
+                               appl='Application', msg='', failed_step=''):
         """
 
         Method provides human readable message
@@ -86,7 +87,7 @@ class FuelTestAssertMixin(object):
         HTTP response body contains desired keyword
 
         :param body: response body
-        :param content: content type that should be present in the response body
+        :param content: content type that should be present in response body
         :param msg: message to be used instead the default one
         """
         if content in body:
@@ -95,7 +96,8 @@ class FuelTestAssertMixin(object):
             msg = ('Step %s failed: ' % str(failed_step)) + msg
         self.fail(msg)
 
-    def verify_response_body_value(self, body_structure, value='', msg='', failed_step=''):
+    def verify_response_body_value(self, body_structure, value='', msg='',
+                                   failed_step=''):
         """
         Method provides human readable message for verification if
         HTTP response body element contains desired keyword.
@@ -119,7 +121,8 @@ class FuelTestAssertMixin(object):
                       " logs for more details."))
         self.fail(failed_step_msg)
 
-    def verify_response_body_content(self, exp_content, act_content, msg='', failed_step=''):
+    def verify_response_body_content(self, exp_content, act_content, msg='',
+                                     failed_step=''):
         if exp_content == act_content:
             return
         if failed_step:
@@ -128,7 +131,8 @@ class FuelTestAssertMixin(object):
                           'Actual value - {actual_content}'.format(
                               actual_content=act_content), '\n', msg))
 
-    def verify_response_body_not_equal(self, exp_content, act_content, msg='', failed_step=''):
+    def verify_response_body_not_equal(self, exp_content, act_content, msg='',
+                                       failed_step=''):
         if exp_content != act_content:
             return
         if failed_step:
@@ -142,14 +146,14 @@ class FuelTestAssertMixin(object):
             return
         self.fail(msg + " Please refer to OpenStack logs for more details.")
 
-    def verify(self, secs, func, step='', msg ='', action='', *args, **kwargs):
+    def verify(self, secs, func, step='', msg='', action='', *args, **kwargs):
         """
         Arguments:
         :secs: timeout time;
         :func: function to be verified;
         :step: number of test step;
         :msg: message that will be displayed if an exception occurs;
-        :action: action that is performed by the method (e.g. "listing images").
+        :action: action that is performed by the method.
         """
         try:
             with timeout(secs, action):
@@ -158,9 +162,8 @@ class FuelTestAssertMixin(object):
             LOG.debug(exc)
             if type(exc) is AssertionError:
                 msg = str(exc)
-            self.fail("Step %s failed: " % step + msg + " Please"
-                                                        " refer to OpenStack"
-                                                        " logs for more details.")
+            self.fail("Step %s failed: " % step + msg +
+                      " Please refer to OpenStack logs for more details.")
         else:
             return result
 

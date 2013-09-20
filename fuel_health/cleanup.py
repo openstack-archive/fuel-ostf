@@ -178,7 +178,8 @@ def cleanup():
                     if f.instance_id in instances_id:
                         try:
                             LOG.info('Delete floating ip %s' % f.ip)
-                            manager._get_compute_client().floating_ips.delete(f.id)
+                            manager._get_compute_client().floating_ips.delete(
+                                f.id)
                         except Exception as exc:
                             LOG.debug(exc)
                             pass
@@ -200,7 +201,6 @@ def cleanup():
                 pass
 
     keypairs = manager._get_compute_client().keypairs.list()
-
 
     for k in keypairs:
         if k.name.startswith('ost1_test-'):

@@ -1,0 +1,67 @@
+#!/bin/bash
+
+function killapp {
+  netstat -nplt | grep 8989 | grep -o [0-9]*/python | grep -o [0-9]* &> /dev/null || { echo "Not running" && return 1; }
+  while netstat -nplt | grep 8989 &> /dev/null; do
+    declare app_pid=$(netstat -nplt | grep 8989 | grep -o [0-9]*/python | grep -o [0-9]*)
+    echo "Ostf-adapter pid is: $app_pid"
+    kill -9 $app_pid; done
+}
+
+function stopapp {
+  if netstat -nplt | grep 8989 &> /dev/null; then
+    supervisorctl stop ostf && killapp
+  else
+    echo "OSTF-server is not running"
+  fi
+}
+
+function startapp {
+  if netstat -nplt | grep 8989 | grep -o [0-9]*/python | grep -o [0-9]* &> /dev/null; then
+    echo "Server is already running" && return 1; fi
+
+  supervisorctl start ostf
+  touch testing.log
+  sleep 5
+  count=1
+  while ! tail -1 testing.log | grep "serving on" &> /dev/null || ((count != 20)) ; do sleep 3; ((count+=1)) ; done
+  nc -xvw 2 0.0.0.0 8989 &> /dev/null && echo "Working like a charm" || echo "Not working"
+}
+
+function update_tests {
+  if [[ -z $1 && -z $OSTF_TESTS_BRANCH ]] ; then echo "Please specify a branch"; return 1; fi
+  if [[ ! -z $1 ]] ; then
+    git ls-remote --heads git@github.com:Mirantis/fuel-ostf-tests.git $1 | grep $1 &> /dev/null || { echo "No branch" && return 1; }
+    export OSTF_TESTS_BRANCH=$1
+  fi
+  ! pip freeze | grep ostf-tests &> /dev/null || pip uninstall -y ostf-tests
+  pip install -e git+ssh://git@github.com/Mirantis/fuel-ostf-tests.git@"$OSTF_TESTS_BRANCH"#egg=ostf-tests
+}
+
+function update_adapter {
+  if [[ -z $1 && -z $OSTF_ADAPTER_BRANCH ]] ; then echo "Please specify a branch"; return 1; fi
+  if [[ ! -z $1 ]] ; then
+    git ls-remote --heads git@github.com:Mirantis/fuel-ostf-tests.git $1 | grep $1 &> /dev/null || { echo "No branch" && return 1; }
+    export OSTF_ADAPTER_BRANCH=$1
+  fi
+  ! pip freeze | grep testing_adapter &> /dev/null || pip uninstall -y testing_adapter
+  pip install -e git+ssh://git@github.com/Mirantis/fuel-ostf-tests.git@"$OSTF_ADAPTER_BRANCH"#egg=ostf-plugin
+}
+
+function migrate_db {
+  service postgresql restart
+  while ! service postgresql status | grep running &> /dev/null; do sleep 1; done
+  sleep 30
+  export PGPASSWORD='ostf'
+  psql -U postgres -h localhost -c "drop database if exists testing_adapter"
+  psql -U postgres -h localhost -c "drop user adapter"
+  psql -U postgres -h localhost -c "create role adapter with nosuperuser createdb password 'demo' login"
+  psql -U postgres -h localhost -c "create database testing_adapter"
+
+ ostf-server --after-initialization-environment-hook --dbpath=postgresql+psycopg2://adapter:demo@localhost/testing_adapter
+ }
+
+function run_functional_tests {
+  [[ ! -z $WORKSPACE ]] || export WORKSPACE=$(pwd)
+  nosetests -q fuel_plugin/functional/tests.py:AdapterTests --with-xunit --xunit-file=$WORKSPACE/reports/functional.xml
+}
