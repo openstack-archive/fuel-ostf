@@ -17,77 +17,77 @@ import setuptools
 
 
 fuel_health_reqs = [
-        'oslo.config>=1.1.1',
-        'python-cinderclient>=1.0.4',
-        'python-glanceclient>=0.9.0',
-        'python-keystoneclient>=0.3.1',
-        'python-novaclient>=2.13.0',
-        'paramiko>=1.10.1',
-        'requests>=1.1,<1.2.3',
-        'unittest2>=0.5.1',
-        'pyyaml>=3.10',
-        'testresources>=0.2.7'
+    'oslo.config>=1.1.1',
+    'python-cinderclient>=1.0.4',
+    'python-glanceclient>=0.9.0',
+    'python-keystoneclient>=0.3.1',
+    'python-novaclient>=2.13.0',
+    'paramiko>=1.10.1',
+    'requests>=1.1,<1.2.3',
+    'unittest2>=0.5.1',
+    'pyyaml>=3.10',
+    'testresources>=0.2.7'
 ]
 
 fuel_ostf_reqs = [
-        'nose>=1.3.0',
-        'SQLAlchemy>=0.8.2',
-        'alembic>=0.5.0',
-        'gevent==0.13.8',
-        'pecan>=0.3.0',
-        'psycopg2>=2.5.1',
-        'stevedore>=0.10'
+    'nose>=1.3.0',
+    'SQLAlchemy>=0.8.2',
+    'alembic>=0.5.0',
+    'gevent==0.13.8',
+    'pecan>=0.3.0',
+    'psycopg2>=2.5.1',
+    'stevedore>=0.10'
 ]
 
 test_requires = [
-        'mock==1.0.1',
-        'pep8==1.4.6',
-        'py==1.4.15',
-        'six==1.3.0',
-        'tox==1.5.0',
-        'unittest2',
-        'nose',
-        'requests'
+    'mock==1.0.1',
+    'pep8==1.4.6',
+    'py==1.4.15',
+    'six==1.3.0',
+    'tox==1.5.0',
+    'unittest2',
+    'nose',
+    'requests'
 ]
 
 
 setuptools.setup(
 
-        name='fuel_ostf',
-        version='0.1',
+    name='fuel_ostf',
+    version='0.1',
 
-        description='cloud computing testing',
+    description='cloud computing testing',
 
-        zip_safe=False,
+    zip_safe=False,
 
-        classifiers=[
-                    'Development Status :: 3 - Alpha',
-                    'Framework :: Setuptools Plugin',
-                    'Environment :: OpenStack',
-                    'Intended Audience :: Information Technology',
-                    'Intended Audience :: System Administrators',
-                    'License :: OSI Approved :: Apache Software License',
-                    'Operating System :: POSIX :: Linux',
-                    'Programming Language :: Python',
-                    'Programming Language :: Python :: 2',
-                    'Programming Language :: Python :: 2.7',
-                    'Topic :: System :: Testing',
-                ],
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Framework :: Setuptools Plugin',
+        'Environment :: OpenStack',
+        'Intended Audience :: Information Technology',
+        'Intended Audience :: System Administrators',
+        'License :: OSI Approved :: Apache Software License',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Topic :: System :: Testing',
+    ],
 
-        packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(),
 
-        install_requires=fuel_health_reqs+fuel_ostf_reqs,
+    install_requires=fuel_health_reqs+fuel_ostf_reqs,
 
-        entry_points={
-                    'plugins': [
-                                    ('nose = fuel_plugin.ostf_adapter.'
-                                                  'nose_plugin.nose_adapter:NoseDriver')
-                                ],
-                    'console_scripts': [
-                                    'ostf-server = fuel_plugin.bin.adapter_api:main',
-                                    ('update-commands = fuel_plugin.tests.'
-                                                  'test_utils.update_commands:main')
-                                ]
-                },
+    entry_points={
+        'plugins': [
+            ('nose = fuel_plugin.ostf_adapter.'
+             'nose_plugin.nose_adapter:NoseDriver')
+        ],
+        'console_scripts': [
+            'ostf-server = fuel_plugin.bin.adapter_api:main',
+            ('update-commands = fuel_plugin.tests.'
+             'test_utils.update_commands:main')
+        ]
+    },
 
 )
