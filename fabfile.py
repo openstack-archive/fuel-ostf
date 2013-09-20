@@ -57,6 +57,7 @@ def remakedb(database='ostf'):
 def installapp():
     deps()
     devlink()
+    testdeps()
 
 
 def integration():
