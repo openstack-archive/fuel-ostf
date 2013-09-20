@@ -46,10 +46,10 @@ def main():
     log = logging.getLogger(__name__)
 
     root = app.setup_app(config=config)
-    nose_discovery.discovery(cli_args.debug_tests)
+
     if getattr(cli_args, 'after_init_hook'):
         return nailgun_hooks.after_initialization_environment_hook()
-
+    nose_discovery.discovery(cli_args.debug_tests)
     host, port = pecan.conf.server.host, pecan.conf.server.port
     srv = pywsgi.WSGIServer((host, int(port)), root)
 

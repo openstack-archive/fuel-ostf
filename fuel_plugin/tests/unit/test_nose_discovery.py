@@ -23,13 +23,13 @@ from fuel_plugin.ostf_adapter.storage import models
 stopped__profile__ = {
     "id": "stopped_test",
     "driver": "nose",
-    "test_path": "functional/dummy_tests/stopped_test.py",
+    "test_path": "fuel_plugin/tests/functional/dummy_tests/stopped_test.py",
     "description": "Long running 25 secs fake tests"
 }
 general__profile__ = {
     "id": "general_test",
     "driver": "nose",
-    "test_path": "functional/dummy_tests/general_test.py",
+    "test_path": "fuel_plugin/tests/functional/dummy_tests/general_test.py",
     "description": "General fake tests"
 }
 
@@ -45,5 +45,5 @@ class TestNoseDiscovery(unittest2.TestCase):
     def test_discovery(self, engine):
         engine.get_session().merge.return_value = \
             lambda *args, **kwargs: self.fixtures_iter.next()
-        nose_discovery.discovery(path='functional/dummy_tests')
+        nose_discovery.discovery(path='fuel_plugin/tests/functional/dummy_tests')
         self.assertEqual(engine.get_session().merge.call_count, 2)

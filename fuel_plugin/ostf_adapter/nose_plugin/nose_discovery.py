@@ -81,9 +81,9 @@ def discovery(path=None):
         function to automaticly discover any test packages
     """
 
-    tests = [CORE_PATH, path] if path else [CORE_PATH]
+    tests = path if path else CORE_PATH
     LOG.info('Starting discovery for %r.', tests)
     nose_test_runner.SilentTestProgram(
         addplugins=[DiscoveryPlugin()],
         exit=False,
-        argv=['tests_discovery', '--collect-only'] + tests)
+        argv=['tests_discovery', '--collect-only', path] )
