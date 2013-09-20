@@ -156,7 +156,6 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         )
         cluster_template_id = data.id
         return cluster_template_id
-#new ====
 
     def _await_active_workers_for_namenode(self, node_info, plugin_name):
         attempt_count = 100
@@ -295,7 +294,6 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         #except RuntimeError as e:
         #    self.fail('Failure while gating test: ' + str(e))
 
-#==============
     def _create_node_group_template_tt_dn_id(self, client):
         node_group_template_tt_dn_id = \
             self._create_node_group_template_and_get_id(
