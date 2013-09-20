@@ -22,6 +22,7 @@ import heatclient.v1.client
 
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import config
+from fuel_health import exceptions
 import fuel_health.nmanager
 import fuel_health.test
 
@@ -98,11 +99,21 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
     @classmethod
     def setUpClass(cls):
         super(HeatBaseTest, cls).setUpClass()
+        cls.heat_service_available = False
+        for service in cls.identity_client.services.list():
+            if service.name == 'heat':
+                cls.heat_service_available = True
+                break
+
         cls.stacks = []
         cls.flavor = None
-
         cls.wait_interval = cls.config.compute.build_interval
         cls.wait_timeout = cls.config.compute.build_timeout
+
+    def setUp(self):
+        super(HeatBaseTest, self).setUp()
+        if not self.heat_service_available:
+            self.fail('Heat is unavailable.')
 
     @classmethod
     def tearDownClass(cls):

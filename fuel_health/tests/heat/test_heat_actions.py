@@ -23,22 +23,26 @@ from fuel_health import heatmanager
 LOG = logging.getLogger(__name__)
 
 
-class HeatTest(heatmanager.HeatBaseTest):
-    """Test class contains tests that check typical stack-related actions.
+class TestStackAction(heatmanager.HeatBaseTest):
+    """
+    Test class verifies that stack can be created, updated and deleted.
     Special requirements:
         1. Heat component should be installed.
     """
 
     @attr(type=["fuel", "smoke"])
-    def test_manipulate_stack(self):
-        """Check typical stack-related actions
+    def test_stack(self):
+        """Create stack, check its details, then update and delete stack.
         Target component: Heat
 
         Scenario:
             1. Create stack.
-            2. Get details of the created stack by its name.
-            3. Update stack.
-            4. Delete stack.
+            2. Wait for stack status to become 'CREATE_COMPLETE'.
+            3. Get details of the created stack by its name.
+            4. Update stack.
+            5. Wait for stack to be updated.
+            6. Delete stack.
+            7. Wait for stack to be deleted.
         Duration: 60 s.
         """
 
@@ -49,42 +53,50 @@ class HeatTest(heatmanager.HeatBaseTest):
                             "stack creation",
                             self.heat_client)
 
-        self.verify(100, self.wait_for_stack_status, 1,
+        self.verify(100, self.wait_for_stack_status, 2,
                     fail_msg,
                     "stack status becoming 'CREATE_COMPLETE'",
                     stack.id, 'CREATE_COMPLETE')
 
         # get stack details
-        stack_details = self.verify(20, self.heat_client.stacks.get, 2,
-                                    "Cannot retrieve stack details.",
-                                    "retrieving stack details",
-                                    stack.stack_name)
+        details = self.verify(20, self.heat_client.stacks.get, 3,
+                              "Cannot retrieve stack details.",
+                              "retrieving stack details",
+                              stack.stack_name)
+
+        fail_msg = "Stack details contain incorrect values."
+        self.verify_response_body_content(
+            details.id, stack.id,
+            fail_msg, 3)
 
         self.verify_response_body_content(
-            stack_details.id,
-            stack.id,
-            "Stack details contain incorrect values.", 2)
+            self.config.compute.image_name, details.parameters['ImageId'],
+            fail_msg, 3)
+
+        self.verify_response_body_content(
+            details.stack_status, 'CREATE_COMPLETE',
+            fail_msg, 3)
 
         # update stack
         fail_msg = "Cannot update stack."
-        stack = self.verify(20, self.update_stack, 3,
+        stack = self.verify(20, self.update_stack, 4,
                             fail_msg,
                             "updating stack.",
                             self.heat_client, stack.id)
 
-        self.verify(100, self.wait_for_stack_status, 3,
+        self.verify(100, self.wait_for_stack_status, 5,
                     fail_msg,
                     "stack status becoming 'UPDATE_COMPLETE'",
                     stack.id, 'UPDATE_COMPLETE')
 
         # delete stack
         fail_msg = "Cannot delete stack."
-        self.verify(20, self.heat_client.stacks.delete, 4,
+        self.verify(20, self.heat_client.stacks.delete, 6,
                     fail_msg,
                     "volume deletion",
                     stack.id)
 
-        self.verify(100, self.wait_for_stack_deleted, 4,
+        self.verify(100, self.wait_for_stack_deleted, 7,
                     fail_msg,
                     "deleting stack",
                     stack.id)
