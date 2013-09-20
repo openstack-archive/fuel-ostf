@@ -132,6 +132,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
             raise exceptions.InvalidConfiguration(msg)
 
         auth_url = self.config.identity.uri
+        LOG.debug(auth_url)
         dscv = self.config.identity.disable_ssl_certificate_validation
 
         return keystoneclient.v2_0.client.Client(username=username,
