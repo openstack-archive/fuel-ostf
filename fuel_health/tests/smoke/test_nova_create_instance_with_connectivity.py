@@ -16,7 +16,6 @@
 # under the License.
 
 import logging
-import time
 
 from nose.plugins.attrib import attr
 
@@ -346,20 +345,14 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             'server creation',
             self.compute_client, name, security_groups)
         self.servers.append(server)
-        tries = 0
-        while tries < 15:
-            tries += 1
-            try:
-                server = self.compute_client.servers.get(server.id)
-                instance_ip = server.addresses['novanetwork'][0]['addr']
-                break
-            except KeyError as ke:
-                LOG.debug(ke)
-                self.fail("Step 3 failed: cannot get instance details. "
-                          "Please refer to OpenStack logs for more details.")
-            time.sleep(5)
 
-        compute = getattr(server, 'OS-EXT-SRV-ATTR:host', None)
+        try:
+            instance_ip = server.addresses['novanetwork'][0]['addr']
+            compute = getattr(server, 'OS-EXT-SRV-ATTR:host')
+        except Exception as e:
+            LOG.debug(e)
+            self.fail("Step 3 failed: cannot get instance details. "
+                      "Please refer to OpenStack logs for more details.")
 
         self.verify(100, self._check_connectivity_from_vm,
                     3, ("Connectivity to 8.8.8.8 from the VM doesn`t "
