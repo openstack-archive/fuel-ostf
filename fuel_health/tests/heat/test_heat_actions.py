@@ -93,7 +93,7 @@ class TestStackAction(heatmanager.HeatBaseTest):
         fail_msg = "Cannot delete stack."
         self.verify(20, self.heat_client.stacks.delete, 6,
                     fail_msg,
-                    "volume deletion",
+                    "deleting stack",
                     stack.id)
 
         self.verify(100, self.wait_for_stack_deleted, 7,
