@@ -9,3 +9,5 @@ build
 dist
 *.out
 .coverage
+.ropeproject
+*.swp

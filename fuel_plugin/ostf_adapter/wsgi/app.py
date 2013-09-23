@@ -35,9 +35,15 @@ PECAN_DEFAULT = {
 }
 
 
-def setup_config(pecan_config):
-    pecan_config.update(PECAN_DEFAULT)
-    pecan.conf.update(pecan_config)
+def setup_config(custom_pecan_config):
+    '''
+    Updates defaults values for pecan server
+    by those supplied via command line arguments
+    when ostf-server is started
+    '''
+    config_to_use = PECAN_DEFAULT
+    config_to_use.update(custom_pecan_config)
+    pecan.conf.update(config_to_use)
 
 
 def setup_app(config=None):
