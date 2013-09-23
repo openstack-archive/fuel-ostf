@@ -13,3 +13,16 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+
+'''
+Main purpose of following attribute is
+to supply general information about test set.
+This information will be stored in ostf database
+in test_sets table.
+'''
+__profile__ = {
+    "id": "sanity",
+    "driver": "nose",
+    "test_path": "fuel-ostf-tests/fuel_health/tests/sanity",
+    "description": "Sanity tests. Duration 30sec - 2 min"
+}

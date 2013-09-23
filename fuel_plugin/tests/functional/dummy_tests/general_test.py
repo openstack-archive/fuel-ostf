@@ -15,7 +15,7 @@
 __profile__ = {
     "id": "general_test",
     "driver": "nose",
-    "test_path": "fuel_plugin/tests/functional/dummy_tests/general_test.py",
+    "test_path": "fuel-ostf-tests/fuel_plugin/tests/functional/dummy_tests/general_test.py",
     "description": "General fake tests"
 }
 
@@ -56,4 +56,6 @@ class Dummy_test(unittest.TestCase):
         conn.request("GET", "/random.aspx")
 
     def test_fail_with_step(self):
+        """Fast fail with step
+        """
         self.fail('Step 3 Failed: Fake fail message')

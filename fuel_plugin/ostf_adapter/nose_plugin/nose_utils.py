@@ -18,7 +18,11 @@ import json
 import os
 import multiprocessing
 
+import logging
+
 from nose import case
+
+LOG = logging.getLogger(__name__)
 
 
 def parse_json_file(file_path):
@@ -40,12 +44,22 @@ def get_exc_message(exception_value):
 
 
 def get_description(test_obj):
+    '''
+    Parses docstring of test object in order
+    to get necessary data.
+
+    test_obj.test._testMethodDoc is using directly
+    instead of calling test_obj.shortDescription()
+    for the sake of compability with python 2.6 where
+    this method works pretty buggy.
+    '''
     if isinstance(test_obj, case.Test):
-        docstring = test_obj.shortDescription()
+        docstring = test_obj.test._testMethodDoc
 
         if docstring:
             duration_pattern = r'Duration:.?(?P<duration>.+)'
             duration_matcher = re.search(duration_pattern, docstring)
+
             if duration_matcher:
                 duration = duration_matcher.group(1)
                 docstring = docstring[:duration_matcher.start()]
