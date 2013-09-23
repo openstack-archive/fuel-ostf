@@ -83,7 +83,7 @@ class AdapterTests(BaseAdapterTest):
                                      'description': """        This is a simple always pass test
         """,},
                                     {'id': 'long_pass', 'status': 'running'},
-                                    {'id': 'fail_step', 'message': 'MEssaasasas', 'status': 'failure'},
+                                    {'id': 'fail_step', 'message': 'Fake fail message', 'status': 'failure'},
                                     {'id': 'fast_error', 'message': '', 'status': 'error'},
                                     {'id': 'fast_fail', 'message': 'Something goes wroooong', 'status': 'failure'}]}])
 
@@ -215,7 +215,7 @@ class AdapterTests(BaseAdapterTest):
         testset = "general_test"
         tests = ['fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_pass',
                  'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_fail']
-        disabled_test = ['functional.dummy_tests.general_test.Dummy_test.test_fast_error', ]
+        disabled_test = ['fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_error', ]
         cluster_id = 70
 
         self.client.run_with_timeout(testset, tests, cluster_id, 70)
@@ -230,7 +230,6 @@ class AdapterTests(BaseAdapterTest):
             {'status': 'failure', 'id': 'fast_fail'},
             {'status': 'success', 'id': 'fast_pass'},
             {'status': 'disabled', 'id': 'long_pass'}]}])
-        print r
         self.compare(r, assertions)
         time.sleep(5)
 

@@ -23,30 +23,9 @@ from fuel_plugin.ostf_adapter.storage import engine
 LOG = logging.getLogger(__name__)
 
 
-class ExceptionHandlingHook(hooks.PecanHook):
+class ExceptionHandling(hooks.PecanHook):
     def on_error(self, state, e):
-        LOG.exception('Pecan state %s', state)
-
-
-# class StorageHook(hooks.PecanHook):
-#     def __init__(self):
-#         super(StorageHook, self).__init__()
-#         self.storage = storage.get_storage()
-#
-#     def before(self, state):
-#         state.request.storage = self.storage
-
-
-class PluginsHook(hooks.PecanHook):
-    PLUGINS_NAMESPACE = 'plugins'
-
-    def __init__(self):
-        super(PluginsHook, self).__init__()
-        self.plugin_manager = extension.ExtensionManager(
-            self.PLUGINS_NAMESPACE, invoke_on_load=True)
-
-    def before(self, state):
-        state.request.plugin_manager = self.plugin_manager
+        LOG.exception('Pecan state %r', state)
 
 
 class SessionHook(hooks.PecanHook):

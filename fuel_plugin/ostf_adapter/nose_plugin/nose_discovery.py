@@ -76,14 +76,11 @@ class DiscoveryPlugin(plugins.Plugin):
                         session.add(test_obj)
 
 
-def discovery(path=None):
+def discovery(path=CORE_PATH):
+    """Will discover all tests on provided path and save info in db
     """
-        function to automaticly discover any test packages
-    """
-
-    tests = [CORE_PATH, path] if path else [CORE_PATH]
-    LOG.info('Starting discovery for %r.', tests)
+    LOG.info('Starting discovery for %r.', path)
     nose_test_runner.SilentTestProgram(
         addplugins=[DiscoveryPlugin()],
         exit=False,
-        argv=['tests_discovery', '--collect-only'] + tests)
+        argv=['tests_discovery', '--collect-only', path] )
