@@ -15,7 +15,7 @@
 __profile__ = {
     "id": "general_test",
     "driver": "nose",
-    "test_path": "fuel-ostf-tests/fuel_plugin/tests/functional/dummy_tests/general_test.py",
+    "test_path": "fuel_plugin/tests/functional/dummy_tests/general_test.py",
     "description": "General fake tests"
 }
 

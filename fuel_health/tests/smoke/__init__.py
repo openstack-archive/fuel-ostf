@@ -23,6 +23,6 @@ in test_sets table.
 __profile__ = {
     "id": "smoke",
     "driver": "nose",
-    "test_path": "fuel-ostf-tests/fuel_health/tests/smoke",
+    "test_path": "fuel_health/tests/smoke",
     "description": "Smoke tests. Duration 3 min - 14 min"
 }
