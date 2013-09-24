@@ -22,7 +22,6 @@ import heatclient.v1.client
 
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import config
-from fuel_health import exceptions
 import fuel_health.nmanager
 import fuel_health.test
 
@@ -44,6 +43,10 @@ class HeatManager(fuel_health.nmanager.OfficialClientManager):
         keystone = self._get_identity_client()
         token = keystone.auth_token
         auth_url = self.config.identity.uri
+
+        if 'orchestration' not in [s.type for s in keystone.services.list()]:
+            return None
+
         endpoint = keystone.service_catalog.url_for(
             service_type='orchestration', endpoint_type='publicURL')
         if not username:
@@ -99,12 +102,6 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
     @classmethod
     def setUpClass(cls):
         super(HeatBaseTest, cls).setUpClass()
-        cls.heat_service_available = False
-        for service in cls.identity_client.services.list():
-            if service.name == 'heat':
-                cls.heat_service_available = True
-                break
-
         cls.stacks = []
         cls.flavor = None
         cls.wait_interval = cls.config.compute.build_interval
@@ -112,12 +109,13 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
 
     def setUp(self):
         super(HeatBaseTest, self).setUp()
-        if not self.heat_service_available:
+        if self.heat_client is None:
             self.fail('Heat is unavailable.')
 
     @classmethod
     def tearDownClass(cls):
-        cls.clean_stacks()
+        if cls.heat_client is not None:
+            cls.clean_stacks()
         super(HeatBaseTest, cls).tearDownClass()
 
     @classmethod
