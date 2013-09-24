@@ -56,7 +56,8 @@ class HeatManager(fuel_health.nmanager.OfficialClientManager):
 
         return heatclient.v1.client.Client(endpoint,
                                            auth_url=auth_url, token=token,
-                                           username=username, password=password)
+                                           username=username,
+                                           password=password)
 
 
 class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
@@ -91,8 +92,8 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
             "Outputs": {
                 "InstanceIp": {
                     "Value": {"Fn::Join": ["", ["ssh ec2-user@",
-                                                {"Fn::GetAtt": ["MyInstance",
-                                                                "PublicIp"]}]]},
+                                                {"Fn::GetAtt":["MyInstance",
+                                                               "PublicIp"]}]]},
                     "Description": "My ssh command"
                 }
             }
