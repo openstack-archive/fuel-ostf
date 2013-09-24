@@ -57,16 +57,18 @@ class CleanUpClientManager(fuel_health.heatmanager.HeatManager):
 def cleanup():
     manager = CleanUpClientManager()
 
-    stacks = manager._get_heat_client().stacks.list()
-    for s in stacks:
-        if s.stack_name.startswith('ost1_test-'):
-            if s.stack_status in ('CREATE_COMPLETE', 'ERROR'):
-                try:
-                    LOG.info('Start stacks deletion.')
-                    manager._get_heat_client().stacks.delete(s.id)
-                except Exception as exc:
-                    LOG.debug(exc)
-                    pass
+    heat_client = manager._get_heat_client()
+    if heat_client is not None:
+        stacks = heat_client.stacks.list()
+        for s in stacks:
+            if s.stack_name.startswith('ost1_test-'):
+                if s.stack_status in ('CREATE_COMPLETE', 'ERROR'):
+                    try:
+                        LOG.info('Start stacks deletion.')
+                        heat_client.stacks.delete(s.id)
+                    except Exception as exc:
+                        LOG.debug(exc)
+                        pass
 
     instances_id = []
     servers = manager._get_compute_client().servers.list()
