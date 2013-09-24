@@ -33,8 +33,6 @@ class BaseTestCase(unittest2.TestCase,
                    testresources.ResourcedTestCase,
                    FuelTestAssertMixin):
 
-    config = config.FuelConfig()
-
     def __init__(self, *args, **kwargs):
         super(BaseTestCase, self).__init__(*args, **kwargs)
 
@@ -42,6 +40,7 @@ class BaseTestCase(unittest2.TestCase,
     def setUpClass(cls):
         if hasattr(super(BaseTestCase, cls), 'setUpClass'):
             super(BaseTestCase, cls).setUpClass()
+        cls.config = config.FuelConfig()
 
 
 def call_until_true(func, duration, sleep_for):
@@ -77,6 +76,7 @@ class TestCase(BaseTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super(TestCase, cls).setUpClass()
         cls.manager = cls.manager_class()
         for attr_name in cls.manager.client_attr_names:
             # Ensure that pre-existing class attributes won't be
