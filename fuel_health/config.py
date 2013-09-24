@@ -486,4 +486,7 @@ class NailgunConfig(object):
 
 
 def FuelConfig():
-    return NailgunConfig()
+    if 'CUSTOM_FUEL_CONFIG' in os.environ:
+        return FileConfig()
+    else:
+        return NailgunConfig()
