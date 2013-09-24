@@ -713,8 +713,20 @@ class SmokeChecksTest(OfficialClientTest):
         # The instance retrieved on creation is missing network
         # details, necessitating retrieval after it becomes active to
         # ensure correct details.
-        server = client.servers.get(server.id)
+        server = self._wait_server_param(client, server, 'addresses', 5, 1)
         #self.set_resource(name, server)
+        return server
+
+    def _wait_server_param(self, client, server, param_name,
+                           tries=1, timeout=1, expected_value=None):
+        while tries:
+            val = getattr(server, param_name, None)
+            if val:
+                if (not expected_value) or (expected_value == val):
+                    return server
+            time.sleep(timeout)
+            server = client.servers.get(server.id)
+            tries -= 1
         return server
 
     def _attach_volume_to_instance(self, volume, instance):

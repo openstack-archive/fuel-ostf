@@ -56,4 +56,6 @@ class Dummy_test(unittest.TestCase):
         conn.request("GET", "/random.aspx")
 
     def test_fail_with_step(self):
+        """Fast fail with step
+        """
         self.fail('Step 3 Failed: Fake fail message')

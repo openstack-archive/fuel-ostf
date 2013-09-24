@@ -35,6 +35,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
     @classmethod
     def setUpClass(cls):
+        super(SanityInfrastructureTest, cls).setUpClass()
         cls.controllers = cls.config.compute.controller_nodes
         cls.computes = cls.config.compute.compute_nodes
         cls.usr = cls.config.compute.controller_node_ssh_user
