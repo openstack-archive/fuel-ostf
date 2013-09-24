@@ -410,56 +410,32 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
 
     @classmethod
     def _clean_flavors(cls):
-        if cls.flavors:
-            for flav in cls.flavors:
-                try:
-                    cls.compute_client.flavors.delete(flav)
-                    cls.flavors.remove(flav)
-                except RuntimeError as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
+        cls._clean(cls.flavors, cls.compute_client.flavors)
 
     @classmethod
     def _clean_keys(cls):
-        if cls.keys:
-            for key in cls.keys:
-                try:
-                    cls.compute_client.keypairs.delete(key)
-                    cls.keys.remove(key)
-                except RuntimeError as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
+        cls._clean(cls.keys, cls.compute_client.keypairs)
 
     @classmethod
     def _clean_cluster_templates(cls):
-        if cls.cluster_templates:
-            for cluster_templates in cls.cluster_templates:
-                try:
-                    cls.savanna_client.cluster_templates.delete(
-                        cluster_templates)
-                    cls.cluster_templates.remove(cluster_templates)
-                except RuntimeError as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
+        cls._clean(
+            cls.cluster_templates, cls.savanna_client.cluster_templates)
 
     @classmethod
     def _clean_clusters(cls):
-        if cls.clusters:
-            for cluster in cls.clusters:
-                try:
-                    cls.savanna_client.clusters.delete(cluster)
-                    cls.clusters.remove(cluster)
-                except RuntimeError as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
+        cls._clean(cls.clusters, cls.savanna_client.clusters)
 
     @classmethod
     def _clean_node_groups_templates(cls):
-        if cls.node_groups:
-            for node_group in cls.node_groups:
+        cls._clean(cls.node_groups, cls.savanna_client.node_group_templates)
+
+    @classmethod
+    def _clean(cls, items, client):
+        if items:
+            for item in items:
                 try:
-                    cls.savanna_client.node_group_templates.delete(node_group)
-                    cls.node_groups.remove(node_group)
+                    client.delete(item)
+                    items.remove(item)
                 except RuntimeError as exc:
                     cls.error_msg.append(exc)
                     LOG.debug(exc)
