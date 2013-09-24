@@ -71,7 +71,7 @@ class SanitySavannaTests(savanna.SavannaSanityChecksTest):
         fail_msg = 'Fail create cluster template'
         cluster_template = self.verify(
             20,
-            self._create_cluster_template,
+            self._create_tiny_cluster_template,
             4, fail_msg,
             "Create cluster templates",
             self.savanna_client)
@@ -94,7 +94,7 @@ class SanitySavannaTests(savanna.SavannaSanityChecksTest):
 
         fail_msg = 'Fail create cluster'
         self.verify(
-            20,
+            600,
             self._create_cluster,
             7, fail_msg,
             "Create cluster",

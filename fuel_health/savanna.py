@@ -71,6 +71,8 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         cls.flavors = []
         cls.node_groups = []
         cls.cluster_templates = []
+        cls.clusters = []
+        cls.keys = []
         cls.plugin = 'vanilla'
         cls.plugin_version = '1.1.2'
         cls.TT_CONFIG = {'Task Tracker Heap Size': 515}
@@ -88,47 +90,11 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         cls.HDP_HADOOP_USER = 'hdfs'
         cls.HDP_NODE_USERNAME = 'cloud-user'
         cls.CLUSTER_CREATION_TIMEOUT = '45'
-        cls.USER_KEYPAIR_ID = 'jenkins'
+        cls.USER_KEYPAIR_ID = 'savanna'
         cls.PLUGIN_NAME = 'vanilla'
         cls.HADOOP_VERSION = '1.1.2'
-        cls.IMAGE_ID = '5ea141c3-893e-4b5c-b138-910adc09b281'
-
-    @classmethod
-    def tearDownClass(cls):
-        super(SavannaSanityChecksTest, cls).tearDownClass()
-        cls._clean_flavors()
-        cls._clean_node_groups()
-        cls._clean_clusters()
-
-    @classmethod
-    def _clean_flavors(cls):
-        if cls.flavors:
-            for flav in cls.flavors:
-                try:
-                    cls.compute_client.flavors.delete(flav)
-                except RuntimeError as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
-
-    @classmethod
-    def _clean_clusters(cls):
-        if cls.cluster_templates:
-            for cluster in cls.cluster_templates:
-                try:
-                    cls.compute_client.flavors.delete(cluster)
-                except RuntimeError as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
-
-    @classmethod
-    def _clean_node_groups(cls):
-        if cls.node_groups:
-            for node_group in cls.node_groups:
-                try:
-                    cls.node_group_templates.delete(node_group)
-                except RuntimeError as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
+        cls.IMAGE_ID = '1afad0af-8aad-4af7-b62a-1f6171d64a84'
+        cls.CLUSTER_NAME = 'savanna-cluster'
 
     def _create_node_group_template_and_get_id(
             self, client, name, plugin_name, hadoop_version, description,
@@ -136,7 +102,7 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
 
         if not self.flavors:
             flavor = self.compute_client.flavors.create('SavannaFlavor',
-                                                        64, 1, 1)
+                                                        512, 1, 700)
             self.flavors.append(flavor.id)
         data = client.node_group_templates.create(
             name, plugin_name, hadoop_version, self.flavors[0], description,
@@ -210,13 +176,14 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         i = 1
         while str(data.status) != 'Active':
             print('CLUSTER STATUS: ' + str(data.status))
+            #sys.exit("Error message")
             if str(data.status) == 'Error':
                 print('\n' + str(data) + '\n')
                 return 'Error'
             if i > self.CLUSTER_CREATION_TIMEOUT * 6:
                 print('\n' + str(data) + '\n')
                 return str(data.status)
-            data = self.savanna.clusters.get(cluster_id)
+            data = client.clusters.get(cluster_id)
             time.sleep(10)
             i += 1
         return str(data.status)
@@ -245,34 +212,38 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         return node_ip_list_with_node_processes
 
     def _create_cluster_and_get_info(
-            self, client, cluster_name, cluster_template_id, plugin_name,
-            hadoop_version, image_id, description, cluster_configs,
-            node_groups, anti_affinity):
+            self, client, plugin_name, hadoop_version, cluster_template_id,
+            image_id, description, cluster_configs, node_groups,
+            anti_affinity):
+        self.keys.append(
+            self.compute_client.keypairs.create(self.USER_KEYPAIR_ID))
         data = client.clusters.create(
-            cluster_name, plugin_name, hadoop_version,
+            self.CLUSTER_NAME, plugin_name, hadoop_version,
             cluster_template_id, image_id, description, cluster_configs,
             node_groups, self.USER_KEYPAIR_ID, anti_affinity
         )
-        cluster_id = data.cluster['id']
-        cluster_state = self.get_cluster_state(cluster_id)
-        self.check_cluster_state(cluster_state, cluster_id)
+        cluster_id = data.id
+        self.clusters.append(cluster_id)
+        cluster_state = self._get_cluster_state(client, cluster_id)
+        self._check_cluster_state(client, cluster_state, cluster_id)
 
-        node_ip_list_with_node_processes = \
-            self.get_cluster_node_ip_list_with_node_processes(cluster_id)
+        #node_ip_list_with_node_processes = \
+        #    self._get_cluster_node_ip_list_with_node_processes(cluster_id)
+#
+        #node_info = self.get_node_info(
+        #    node_ip_list_with_node_processes, plugin_name
+        #)
 
-        node_info = self.get_node_info(
-            node_ip_list_with_node_processes, plugin_name
-        )
-
-        self.await_active_workers_for_namenode(node_info, plugin_name)
-        return {
-            'cluster_id': cluster_id,
-            'node_ip_list': node_ip_list_with_node_processes,
-            'node_info': node_info
-        }
+        #self._await_active_workers_for_namenode(node_info, plugin_name)
+        #return {
+        #    'cluster_id': cluster_id,
+        #    'node_ip_list': node_ip_list_with_node_processes,
+        #    'node_info': node_info
+        #}
 
     def _create_cluster(self, client, cluster_template_id):
-        self.create_cluster_and_get_info(
+        self._create_cluster_and_get_info(
+            client,
             self.PLUGIN_NAME,
             self.HADOOP_VERSION,
             cluster_template_id,
@@ -349,18 +320,6 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         self.node_groups.append(node_group_template_tt_id)
         return node_group_template_tt_id
 
-    def _delete_node_group_template(self, client, group_id):
-        client.node_group_templates.delete(group_id)
-        self.node_groups.remove(group_id)
-
-    def _delete_cluster_template(self, client, cluster_id):
-        client.cluster_templates.delete(cluster_id)
-        self.cluster_templates.remove(cluster_id)
-
-    @classmethod
-    def _list_node_group_template(cls, client):
-        client.node_group_templates.list()
-
     def _create_cluster_template(self, client):
         cluster_template_id = self._create_cluster_template_and_get_id(
             client,
@@ -409,7 +368,102 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         self.cluster_templates.append(cluster_template_id)
         return cluster_template_id
 
+    def _create_tiny_cluster_template(self, client):
+        cluster_template_id = self._create_cluster_template_and_get_id(
+            client,
+            'test-cluster-template',
+            self.plugin,
+            self.plugin_version,
+            description='test cluster template',
+            cluster_configs={
+                'HDFS': self.CLUSTER_HDFS_CONFIG,
+                'MapReduce': self.CLUSTER_MR_CONFIG,
+                'general': self.CLUSTER_GENERAL_CONFIG
+            },
+            node_groups=[
+                dict(
+                    name='master-node-jt-nn',
+                    flavor_id=self.flavors[0],
+                    node_processes=['namenode', 'jobtracker'],
+                    node_configs={
+                        'HDFS': self.NN_CONFIG,
+                        'MapReduce': self.JT_CONFIG
+                    },
+                    count=1),
+                dict(
+                    name='worker-node-tt-dn',
+                    node_group_template_id=self.node_groups[0],
+                    count=1),
+            ],
+            anti_affinity=[]
+        )
+        self.cluster_templates.append(cluster_template_id)
+        return cluster_template_id
+
+    @classmethod
+    def _list_node_group_template(cls, client):
+        return(client.node_group_templates.list())
+
     @classmethod
     def _list_cluster_templates(cls, client):
-        cluster_templates = client.cluster_templates.list()
-        return cluster_templates
+        return(client.cluster_templates.list())
+
+    @classmethod
+    def _clean_flavors(cls):
+        if cls.flavors:
+            for flav in cls.flavors:
+                try:
+                    cls.compute_client.flavors.delete(flav)
+                except RuntimeError as exc:
+                    cls.error_msg.append(exc)
+                    LOG.debug(exc)
+
+    @classmethod
+    def _clean_keys(cls):
+        if cls.keys:
+            for key in cls.keys:
+                try:
+                    cls.compute_client.keypairs.delete(key)
+                except RuntimeError as exc:
+                    cls.error_msg.append(exc)
+                    LOG.debug(exc)
+
+    @classmethod
+    def _clean_cluster_templates(cls):
+        if cls.cluster_templates:
+            for cluster_templates in cls.cluster_templates:
+                try:
+                    cls.savanna_client.cluster_templates.delete(
+                        cluster_templates)
+                except RuntimeError as exc:
+                    cls.error_msg.append(exc)
+                    LOG.debug(exc)
+
+    @classmethod
+    def _clean_clusters(cls):
+        if cls.clusters:
+            for cluster in cls.clusters:
+                try:
+                    cls.savanna_client.clusters.delete(cluster)
+                except RuntimeError as exc:
+                    cls.error_msg.append(exc)
+                    LOG.debug(exc)
+
+    @classmethod
+    def _clean_node_groups(cls):
+        if cls.node_groups:
+            for node_group in cls.node_groups:
+                try:
+                    cls.savanna_client.node_group_templates.delete(node_group)
+                except RuntimeError as exc:
+                    cls.error_msg.append(exc)
+                    LOG.debug(exc)
+
+    @classmethod
+    def tearDownClass(cls):
+        super(SavannaSanityChecksTest, cls).tearDownClass()
+        #cls._clean_clusters()
+        #cls._clean_cluster_templates()
+        #cls._clean_node_groups()
+        #cls._clean_flavors()
+        #cls._clean_keys()

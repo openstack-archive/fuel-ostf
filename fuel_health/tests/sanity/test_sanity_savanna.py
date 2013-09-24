@@ -39,9 +39,7 @@ class SanitySavannaTests(savanna.SavannaSanityChecksTest):
             5. List node group templates
             6. List cluster templates
             7. Delete cluster template
-            8. Delete node group tasktracker and datanode template
-            9. Delete node group tasktracker template
-            10. Delete node group datanode template
+            8. Delete node templates
         Duration: 20 s.
         """
         fail_msg = 'Fail create node group tasktracker and datanode template'
@@ -95,31 +93,13 @@ class SanitySavannaTests(savanna.SavannaSanityChecksTest):
         fail_msg = 'Fail delete cluster template'
         self.verify(
             20,
-            self._delete_cluster_template,
+            self._clean_cluster_templates,
             7, fail_msg,
-            "Delete cluster templates",
-            self.savanna_client, cluster_template)
+            "Delete cluster templates")
 
-        fail_msg = 'Fail delete node group tasktracker and datanode template'
+        fail_msg = 'Fail delete node group templates'
         self.verify(
             20,
-            self._delete_node_group_template,
+            self._clean_node_groups_,
             8, fail_msg,
-            "Delete node group template",
-            self.savanna_client, create_nodes_templates_tt_dn_resp)
-
-        fail_msg = 'Fail delete node group tasktracker template'
-        self.verify(
-            20,
-            self._delete_node_group_template,
-            9, fail_msg,
-            "Delete node group tasktracker template",
-            self.savanna_client, create_nodes_templates_tt_resp)
-
-        fail_msg = 'Fail delete node group datanode template'
-        self.verify(
-            20,
-            self._delete_node_group_template,
-            10, fail_msg,
-            "Delete node group datanode template",
-            self.savanna_client, create_nodes_templates_dn_resp)
+            "Delete node group templates"),
