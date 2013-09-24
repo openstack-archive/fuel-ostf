@@ -511,7 +511,7 @@ class NailgunConfig(object):
         else:
             endpoint = public_vip or self.compute.public_ips[0]
             self.identity.url = 'http://{0}/{1}/'.format(endpoint, 'dashboard')
-            self.identity.uri = 'http://{0}:{1}/{2}/'.format(
+            self.identity.uri = 'http://10.20.0.131:{1}/{2}/'.format(
                 endpoint, 5000, 'v2.0')
 
 

@@ -100,6 +100,6 @@ class SanitySavannaTests(savanna.SavannaSanityChecksTest):
         fail_msg = 'Fail delete node group templates'
         self.verify(
             20,
-            self._clean_node_groups_,
+            self._clean_node_groups_templates,
             8, fail_msg,
             "Delete node group templates"),

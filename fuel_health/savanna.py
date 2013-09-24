@@ -414,6 +414,7 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
             for flav in cls.flavors:
                 try:
                     cls.compute_client.flavors.delete(flav)
+                    cls.flavors.remove(flav)
                 except RuntimeError as exc:
                     cls.error_msg.append(exc)
                     LOG.debug(exc)
@@ -424,6 +425,7 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
             for key in cls.keys:
                 try:
                     cls.compute_client.keypairs.delete(key)
+                    cls.keys.remove(key)
                 except RuntimeError as exc:
                     cls.error_msg.append(exc)
                     LOG.debug(exc)
@@ -435,6 +437,7 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
                 try:
                     cls.savanna_client.cluster_templates.delete(
                         cluster_templates)
+                    cls.cluster_templates.remove(cluster_templates)
                 except RuntimeError as exc:
                     cls.error_msg.append(exc)
                     LOG.debug(exc)
@@ -445,16 +448,18 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
             for cluster in cls.clusters:
                 try:
                     cls.savanna_client.clusters.delete(cluster)
+                    cls.clusters.remove(cluster)
                 except RuntimeError as exc:
                     cls.error_msg.append(exc)
                     LOG.debug(exc)
 
     @classmethod
-    def _clean_node_groups(cls):
+    def _clean_node_groups_templates(cls):
         if cls.node_groups:
             for node_group in cls.node_groups:
                 try:
                     cls.savanna_client.node_group_templates.delete(node_group)
+                    cls.node_groups.remove(node_group)
                 except RuntimeError as exc:
                     cls.error_msg.append(exc)
                     LOG.debug(exc)
@@ -462,8 +467,8 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
     @classmethod
     def tearDownClass(cls):
         super(SavannaSanityChecksTest, cls).tearDownClass()
-        #cls._clean_clusters()
-        #cls._clean_cluster_templates()
-        #cls._clean_node_groups()
-        #cls._clean_flavors()
-        #cls._clean_keys()
+        cls._clean_clusters()
+        cls._clean_cluster_templates()
+        cls._clean_node_groups_templates()
+        cls._clean_flavors()
+        cls._clean_keys()
