@@ -171,11 +171,11 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 LOG.debug(flavor.id)
                 if '42' in flavor.id:
                     LOG.info('42 flavor id already exists')
-                    return flavor.id
+                    return flavor
 
             flavor = cls.compute_client.flavors.create(
                 name, 64, 1, 1, flavorid)
-            return flavor.id
+            return flavor
 
     @classmethod
     def tearDownClass(cls):
@@ -704,7 +704,7 @@ class SmokeChecksTest(OfficialClientTest):
     def _create_server(self, client):
         name = rand_name('ost1_test-volume-instance')
         base_image_id = get_image_from_name()
-        flavor_id = self._create_nano_flavor()
+        flavor_id = self._create_nano_flavor().id
         server = client.servers.create(name, base_image_id, flavor_id)
         self.set_resource(name, server)
         self.verify_response_body_content(server.name,
