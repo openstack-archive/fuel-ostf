@@ -22,7 +22,7 @@ class MuranoSanityTests(murano.MuranoTest):
     """
 
     def test_list_environments(self):
-        """Check Murano API Service: Get List Of Environments
+        """Murano environments list availability
         Test checks that user can get list of environments.
         Target component: Murano
 
@@ -45,8 +45,8 @@ class MuranoSanityTests(murano.MuranoTest):
         self.last_step = '3. Clean up (delete environment). '
 
     def test_create_and_delete_service(self):
-        """Check Murano API Service: Create And Delete Service
-        Test checks that user can create service.
+        """Murano services creation and deletion access
+        Test checks that user can create and delete service.
         Target component: Murano
 
         Scenario:

@@ -27,7 +27,7 @@ class MuranoTest(nmanager.OfficialClientTest):
 
     client = None
     insecure = False
-    api_host = 'http://127.0.0.1:8082'
+    api_host = None
 
     def setUp(self):
         """
@@ -50,6 +50,11 @@ class MuranoTest(nmanager.OfficialClientTest):
             self.api_host = self.config.murano.api_url
             self.insecure = self.config.murano.insecure
         except:
+            msg = ' Can not get Murano configuration parameters. '
+            msg = ('Step %s failed: ' % str(step)) + msg
+            self.fail(msg)
+
+        if not self.api_host:
             msg = ' Can not get Murano configuration parameters. '
             msg = ('Step %s failed: ' % str(step)) + msg
             self.fail(msg)
