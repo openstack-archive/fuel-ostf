@@ -37,7 +37,7 @@ class MuranoSanityTests(murano.MuranoTest):
             5. Request the list of services.
             6. Send request to delete service.
             7. Send request to delete environment.
-        Duration: 20 s.
+        Duration: 35 s.
         """
 
         fail_msg = 'Cannot create environment.'
