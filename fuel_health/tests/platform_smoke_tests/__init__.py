@@ -21,8 +21,8 @@ This information will be stored in ostf database
 in test_sets table.
 '''
 __profile__ = {
-    "id": "smoke",
+    "id": "platform_smoke_tests",
     "driver": "nose",
-    "test_path": "fuel_health/tests/smoke",
-    "description": "Functional tests. Duration 3 min - 14 min"
+    "test_path": "fuel_health/tests/platform_smoke_tests",
+    "description": "Platform services functional tests. Duration 3 min - 60 min"
 }
