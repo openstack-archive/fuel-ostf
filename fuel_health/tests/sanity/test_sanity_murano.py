@@ -16,7 +16,7 @@
 
 from fuel_health import murano
 
-class ServicesTestJSON(murano.MuranoTest):
+class MuranoSanityTests(murano.MuranoTest):
     """
     TestClass contains tests that check basic Murano functionality.
     """
