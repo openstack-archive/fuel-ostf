@@ -79,7 +79,7 @@ class DiscoveryPlugin(plugins.Plugin):
 def discovery(path=CORE_PATH):
     """Will discover all tests on provided path and save info in db
     """
-    LOG.info('Starting discovery for %r.', tests)
+    LOG.info('Starting discovery for %r.', path)
     nose_test_runner.SilentTestProgram(
         addplugins=[DiscoveryPlugin()],
         exit=False,

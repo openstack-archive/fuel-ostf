@@ -15,7 +15,7 @@
 __profile__ = {
     "id": "stopped_test",
     "driver": "nose",
-    "test_path": "fuel_plugin.tests.functional.dummy_tests.stopped_test.py",
+    "test_path": "fuel_plugin/tests/functional/dummy_tests/stopped_test.py",
     "description": "Long running 25 secs fake tests"
 }
 

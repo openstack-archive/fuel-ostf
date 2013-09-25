@@ -137,9 +137,9 @@ class FuelTestAssertMixin(object):
             return
         if failed_step:
             failed_step_msg = ('Step %s failed: ' % str(failed_step))
-        self.fail(''.join(failed_step_msg +
-                          'Actual value - {actual_content}'.format(
-                              actual_content=act_content), '\n', msg))
+        self.fail(''.join((failed_step_msg +
+                           'Actual value - {actual_content}'.format(
+                               actual_content=act_content), '\n', msg)))
 
     def verify_response_true(self, resp, msg):
         if resp:

@@ -170,11 +170,11 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 LOG.debug(flavor.id)
                 if '42' in flavor.id:
                     LOG.info('42 flavor id already exists')
-                    return flavor.id
+                    return flavor
 
             flavor = cls.compute_client.flavors.create(
                 name, 64, 1, 1, flavorid)
-            return flavor.id
+            return flavor
 
     @classmethod
     def tearDownClass(cls):
@@ -703,7 +703,7 @@ class SmokeChecksTest(OfficialClientTest):
     def _create_server(self, client):
         name = rand_name('ost1_test-volume-instance')
         base_image_id = get_image_from_name()
-        flavor_id = self._create_nano_flavor()
+        flavor_id = self._create_nano_flavor().id
         server = client.servers.create(name, base_image_id, flavor_id)
         self.set_resource(name, server)
         self.verify_response_body_content(server.name,
@@ -712,8 +712,20 @@ class SmokeChecksTest(OfficialClientTest):
         # The instance retrieved on creation is missing network
         # details, necessitating retrieval after it becomes active to
         # ensure correct details.
-        server = client.servers.get(server.id)
+        server = self._wait_server_param(client, server, 'addresses', 5, 1)
         #self.set_resource(name, server)
+        return server
+
+    def _wait_server_param(self, client, server, param_name,
+                           tries=1, timeout=1, expected_value=None):
+        while tries:
+            val = getattr(server, param_name, None)
+            if val:
+                if (not expected_value) or (expected_value == val):
+                    return server
+            time.sleep(timeout)
+            server = client.servers.get(server.id)
+            tries -= 1
         return server
 
     def _attach_volume_to_instance(self, volume, instance):

@@ -22,128 +22,18 @@ sys.path.append(path)
 
 import logging
 
-
-# Default client libs
-import cinderclient.client
-import glanceclient.client
-import keystoneclient.v2_0.client
-import novaclient.client
-import muranoclient.v1.client
-
-
 from fuel_health import exceptions
-import fuel_health.manager
-import fuel_health.test
+import fuel_health.heatmanager
 
 
 LOG = logging.getLogger(__name__)
 
 
-class CleanUpClientManager(fuel_health.manager.Manager):
+class CleanUpClientManager(fuel_health.heatmanager.HeatManager):
     """
     Manager that provides access to the official python clients for
     calling various OpenStack APIs.
     """
-
-    NOVACLIENT_VERSION = '2'
-    CINDERCLIENT_VERSION = '1'
-
-    def __init__(self):
-        super(CleanUpClientManager, self).__init__()
-        self.compute_client = self._get_compute_client()
-        self.image_client = self._get_image_client()
-        self.identity_client = self._get_identity_client()
-        self.volume_client = self._get_volume_client()
-        self.client_attr_names = [
-            'compute_client',
-            'image_client',
-            'identity_client',
-            'volume_client'
-        ]
-
-    def _get_compute_client(self, username=None, password=None,
-                            tenant_name=None):
-        if not username:
-            username = self.config.identity.admin_username
-        if not password:
-            password = self.config.identity.admin_password
-        if not tenant_name:
-            tenant_name = self.config.identity.admin_tenant_name
-
-        if None in (username, password, tenant_name):
-            msg = ("Missing required credentials for compute client. "
-                   "username: %(username)s, password: %(password)s, "
-                   "tenant_name: %(tenant_name)s") % locals()
-            raise exceptions.InvalidConfiguration(msg)
-
-        auth_url = self.config.identity.uri
-        dscv = self.config.identity.disable_ssl_certificate_validation
-
-        client_args = (username, password, tenant_name, auth_url)
-
-        service_type = self.config.compute.catalog_type
-        return novaclient.client.Client(self.NOVACLIENT_VERSION,
-                                        *client_args,
-                                        service_type=service_type,
-                                        no_cache=True,
-                                        insecure=dscv)
-
-    def _get_image_client(self):
-        keystone = self._get_identity_client()
-        token = keystone.auth_token
-        endpoint = keystone.service_catalog.url_for(service_type='image',
-                                                    endpoint_type='publicURL')
-        dscv = self.config.identity.disable_ssl_certificate_validation
-        return glanceclient.Client('1', endpoint=endpoint, token=token,
-                                   insecure=dscv)
-
-    def _get_volume_client(self, username=None, password=None,
-                           tenant_name=None):
-        if not username:
-            username = self.config.identity.admin_username
-        if not password:
-            password = self.config.identity.admin_password
-        if not tenant_name:
-            tenant_name = self.config.identity.admin_tenant_name
-
-        auth_url = self.config.identity.uri
-        return cinderclient.client.Client(self.CINDERCLIENT_VERSION,
-                                          username,
-                                          password,
-                                          tenant_name,
-                                          auth_url)
-
-    def _get_identity_client(self, username=None, password=None,
-                             tenant_name=None):
-        if not username:
-            username = self.config.identity.admin_username
-        if not password:
-            password = self.config.identity.admin_password
-        if not tenant_name:
-            tenant_name = self.config.identity.admin_tenant_name
-
-        if None in (username, password, tenant_name):
-            msg = ("Missing required credentials for identity client. "
-                   "username: %(username)s, password: %(password)s, "
-                   "tenant_name: %(tenant_name)s") % locals()
-            raise exceptions.InvalidConfiguration(msg)
-
-        auth_url = self.config.identity.uri
-        dscv = self.config.identity.disable_ssl_certificate_validation
-
-        return keystoneclient.v2_0.client.Client(username=username,
-                                                 password=password,
-                                                 tenant_name=tenant_name,
-                                                 auth_url=auth_url,
-                                                 insecure=dscv)
-
-    def _get_murano_client()
-        token_id = self.manager._get_identity_client().auth_token
-        api_host = self.config.murano.api_url
-        insecure = self.config.murano.insecure
-
-        return muranoclient.v1.client.Client(endpoint=api_host, token=token_id,
-                                             insecure=insecure)
 
     def wait_for_server_termination(self, server, ignore_error=False):
         """Waits for server to reach termination."""
@@ -166,6 +56,20 @@ class CleanUpClientManager(fuel_health.manager.Manager):
 
 def cleanup():
     manager = CleanUpClientManager()
+
+    heat_client = manager._get_heat_client()
+    if heat_client is not None:
+        stacks = heat_client.stacks.list()
+        for s in stacks:
+            if s.stack_name.startswith('ost1_test-'):
+                if s.stack_status in ('CREATE_COMPLETE', 'ERROR'):
+                    try:
+                        LOG.info('Start stacks deletion.')
+                        heat_client.stacks.delete(s.id)
+                    except Exception as exc:
+                        LOG.debug(exc)
+                        pass
+
     instances_id = []
     servers = manager._get_compute_client().servers.list()
     floating_ips = manager._get_compute_client().floating_ips.list()
@@ -297,15 +201,6 @@ def cleanup():
                 LOG.debug(exc)
                 pass
 
-    environments = manager._get_murano_client().environments.list()
-    for environment in environments:
-        if environment['name'].startswith('ost1_test-'):
-            try:
-                LOG.info('start environment deletion')
-                manager._get_murano_client().environments.delete(environment['id'])
-            except Exception as exc:
-                LOG.debug(exc)
-                pass
 
 if __name__ == "__main__":
     cleanup()
