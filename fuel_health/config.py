@@ -278,7 +278,7 @@ murano_group = cfg.OptGroup(name='murano',
 
 MuranoConfig = [
     cfg.StrOpt('api_url',
-               default='http://127.0.0.1:8082',
+               default=None,
                help="Murano API Service URL."),
     cfg.BoolOpt('insecure',
                 default=False,
