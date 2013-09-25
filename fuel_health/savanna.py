@@ -93,7 +93,8 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         cls.USER_KEYPAIR_ID = 'savanna'
         cls.PLUGIN_NAME = 'vanilla'
         cls.HADOOP_VERSION = '1.1.2'
-        cls.IMAGE_ID = '1afad0af-8aad-4af7-b62a-1f6171d64a84'
+        cls.IMAGE_ID = '6a76a5b2-ee3e-4be2-b343-c08f965c8e2c'
+        cls.IMAGE_NAME = 'savanna'
         cls.CLUSTER_NAME = 'savanna-cluster'
 
     def _create_node_group_template_and_get_id(
