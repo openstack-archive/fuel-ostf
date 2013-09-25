@@ -13,100 +13,196 @@
 #    under the License.
 
 import unittest2
-from mock import patch
+from mock import patch, Mock
+from sqlalchemy.orm import sessionmaker
+
 from fuel_plugin.ostf_adapter.nose_plugin import nose_discovery
-
-
 from fuel_plugin.ostf_adapter.storage import models
+from fuel_plugin.ostf_adapter.storage import engine
 
 
-stopped__profile__ = {
-    "id": "stopped_test",
-    "driver": "nose",
-    "test_path": "fuel_plugin/tests/functional/dummy_tests/stopped_test.py",
-    "description": "Long running 25 secs fake tests"
-}
-general__profile__ = {
-    "id": "general_test",
-    "driver": "nose",
-    "test_path": "fuel_plugin/tests/functional/dummy_tests/general_test.py",
-    "description": "General fake tests"
-}
+class BaseTestNoseDiscovery(unittest2.TestCase):
+    '''
+    All test writing to database is wrapped in
+    non-ORM transaction which is created in
+    test_case setUp method and rollbacked in
+    tearDown, so that keep prodaction base clean
+    '''
 
+    @classmethod
+    def setUpClass(cls):
+        cls._mocked_pecan_conf = Mock()
+        cls._mocked_pecan_conf.dbpath = \
+            'postgresql+psycopg2://ostf:ostf@localhost/ostf'
 
-@patch('fuel_plugin.ostf_adapter.nose_plugin.nose_discovery.engine')
-class TestNoseDiscovery(unittest2.TestCase):
+        cls.Session = sessionmaker()
+
+        with patch(
+            'fuel_plugin.ostf_adapter.storage.engine.conf',
+            cls._mocked_pecan_conf
+        ):
+            cls.engine = engine.get_engine()
 
     def setUp(self):
-        self.fixtures = [models.TestSet(**general__profile__),
-                         models.TestSet(**stopped__profile__)]
+        #database transaction wrapping
+        connection = self.engine.connect()
+        self.trans = connection.begin()
 
-        self.fixtures_iter = iter(self.fixtures)
+        self.Session.configure(bind=connection)
+        self.session = self.Session(bind=connection)
 
-    def test_discovery(self, engine):
-        engine.get_session().merge.side_effect = \
-            lambda *args, **kwargs: self.fixtures_iter.next()
+        #test_case level patching
+        self.mocked_get_session = lambda *args: self.session
 
-        nose_discovery.discovery(
-            path='fuel_plugin/tests/functional/dummy_tests'
+        self.session_patcher = patch(
+            'fuel_plugin.ostf_adapter.nose_plugin.nose_discovery.engine.get_session',
+            self.mocked_get_session
         )
+        self.session_patcher.start()
 
-        self.assertEqual(engine.get_session().merge.call_count, 2)
-
-    def test_get_proper_description(self, engine):
-        '''
-        Checks whether retrived docsctrings from tests
-        are correct (in this occasion -- full).
-
-        Magic that is used here is based on using
-        data that is stored deeply in passed to test
-        method mock object.
-        '''
-        #etalon data is list of docstrings of tests
-        #of particular test set
-        expected = {
-            'title': 'fast pass test',
-            'name':
-                'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_pass',
-            'duration': '1sec',
-            'description':
-                '        This is a simple always pass test\n        '
+        self.fixtures = {
+            'ha_deployment_test': {
+                'cluster_id': 1,
+                'deployment_tags': {
+                    'ha',
+                    'rhel'
+                }
+            },
+            'multinode_deployment_test': {
+                'cluster_id': 2,
+                'deployment_tags': {
+                    'multinode',
+                    'ubuntu'
+                }
+            }
         }
 
-        #mocking behaviour of afterImport hook from DiscoveryPlugin
-        #so that another hook -- addSuccess could process data properly
-        engine.get_session().merge = lambda arg: arg
+    def tearDown(self):
+        #end patching
+        self.session_patcher.stop()
 
-        #following code provide mocking logic for
-        #addSuccess hook from DiscoveryPlugin that
-        #(mentioned logic) in turn allows us to
-        #capture data about test object that are processed
-        engine.get_session()\
-              .query()\
-              .filter_by()\
-              .update\
-              .return_value = None
+        #unwrapping
+        self.trans.rollback()
+        self.session.close()
+
+
+class TestNoseDiscovery(BaseTestNoseDiscovery):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestNoseDiscovery, cls).setUpClass()
+
+    def setUp(self):
+        super(TestNoseDiscovery, self).setUp()
+
+    def tearDown(self):
+        super(TestNoseDiscovery, self).tearDown()
+
+    def test_discovery_testsets(self):
+        expected = {
+            'id': 'ha_deployment_test',
+            'cluster_id': 1,
+            'deployment_tags': ['ha']
+        }
 
         nose_discovery.discovery(
-            path='fuel_plugin/tests/functional/dummy_tests'
+            path='fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test',
+            deployment_info=self.fixtures['ha_deployment_test']
         )
 
-        #now we can refer to captured test objects (not test_sets) in order to
-        #make test comparison against etalon
-        test_obj_to_compare = [
-            call[0][0] for call in engine.get_session().add.call_args_list
-            if (
-                isinstance(call[0][0], models.Test)
-                and
-                call[0][0].name.rsplit('.')[-1] == 'test_fast_pass'
+        test_set = self.session.query(models.TestSet)\
+            .filter_by(id=expected['id'])\
+            .filter_by(cluster_id=expected['cluster_id'])\
+            .one()
+
+        self.assertEqual(
+            test_set.deployment_tags,
+            expected['deployment_tags']
+        )
+
+    def test_discovery_tests(self):
+        expected = {
+            'test_set_id': 'ha_deployment_test',
+            'cluster_id': 1,
+            'results_count': 2,
+            'results_data': {
+                'names': [
+                    'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_rhel_depl',
+                    'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_depl'
+                ]
+            }
+        }
+        nose_discovery.discovery(
+            path='fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test',
+            deployment_info=self.fixtures['ha_deployment_test']
+        )
+
+        tests = self.session.query(models.Test)\
+            .filter_by(test_set_id=expected['test_set_id'])\
+            .filter_by(cluster_id=expected['cluster_id'])\
+            .all()
+
+        self.assertTrue(len(tests) == expected['results_count'])
+
+        for test in tests:
+            self.assertTrue(test.name in expected['results_data']['names'])
+            self.assertTrue(
+                set(test.deployment_tags)
+                .issubset(self.fixtures['ha_deployment_test']['deployment_tags'])
             )
-        ][0]
+
+    def test_get_proper_description(self):
+        expected = {
+            'title': 'fake empty test',
+            'name':
+                'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_rhel_depl',
+            'duration': '0sec',
+            'test_set_id': 'ha_deployment_test',
+            'cluster_id': self.fixtures['ha_deployment_test']['cluster_id'],
+            'deployment_tags': ['ha', 'rhel']
+
+        }
+
+        nose_discovery.discovery(
+            path='fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test',
+            deployment_info=self.fixtures['ha_deployment_test']
+        )
+
+        test = self.session.query(models.Test)\
+            .filter_by(name=expected['name'])\
+            .filter_by(cluster_id=expected['cluster_id'])\
+            .filter_by(test_set_id=expected['test_set_id'])\
+            .one()
 
         self.assertTrue(
             all(
                 [
-                    expected[key] == test_obj_to_compare.__dict__[key]
+                    expected[key] == getattr(test, key)
                     for key in expected.keys()
                 ]
             )
         )
+
+
+@unittest2.skip("Not needed here")
+class TestNoseDiscoveryRedeployedCluster(BaseTestNoseDiscovery):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestNoseDiscoveryRedeployedCluster, cls).setUpClass()
+
+    def setUp(self):
+        super(TestNoseDiscoveryRedeployedCluster, self).setUp()
+
+        #make fixture writing to db by calling
+        #discovery for cluster
+        nose_discovery.discovery(
+            path='fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test',
+            deployment_info=self.fixtures['ha_deployment_test']
+        )
+
+    def tearDown(self):
+        super(TestNoseDiscoveryRedeployedCluster, self).tearDown()
+
+    def test_rediscover_testset(self):
+        pass

@@ -94,8 +94,11 @@ class NoseDriver(object):
             module_obj.cleanup.cleanup()
 
         except Exception:
-            LOG.exception('Cleanup errer. Test Run ID %s. Cluster ID %s',
-                test_run_id, cluser_id)
+            LOG.exception(
+                'Cleanup error. Test Run ID %s. Cluster ID %s',
+                test_run_id,
+                cluster_id
+            )
 
         finally:
             models.TestRun.update_test_run(

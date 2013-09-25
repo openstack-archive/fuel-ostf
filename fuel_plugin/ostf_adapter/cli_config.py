@@ -29,6 +29,7 @@ def parse_cli():
     parser.add_argument('--port', default='8989')
     parser.add_argument('--log_file', default=None, metavar='PATH')
     parser.add_argument('--nailgun-host', default='127.0.0.1')
-    parser.add_argument('--nailgun-port', default='3232')
+    parser.add_argument('--nailgun-port', default='8000')
     parser.add_argument('--debug_tests', default=None)
+
     return parser.parse_args(sys.argv[1:])

@@ -7,7 +7,10 @@ def createrole(user='ostf', password='ostf'):
 
 
 def createdb(user='ostf', database='ostf'):
-    local('psql -U postgres -c "CREATE DATABASE {0} WITH OWNER={1};"'.format(database, user))
+    local(
+        'psql -U postgres -c "CREATE DATABASE {0} WITH OWNER={1};"'
+        .format(database, user)
+    )
 
 
 def dropdb(database='ostf'):
@@ -28,12 +31,28 @@ def testdeps():
 
 def startserver():
     local(('ostf-server '
-        '--dbpath postgresql+psycopg2://ostf:ostf@localhost/ostf '
-        '--debug --debug_tests=fuel_plugin/tests/functional/dummy_tests'))
+        '--dbpath postgresql+psycopg2://ostf:ostf@localhost/ostf '))
+
+
+def startnailgunmimic():
+    path = 'fuel_plugin/tests/test_utils/nailgun_mimic.py'
+    local('python {}'.format(path))
+
+
+def createmigration(comment):
+    '''
+    Supply comment for new alembic revision as a value
+    for comment argument
+    '''
+    config_path = 'fuel_plugin/ostf_adapter/storage/alembic.ini'
+    local(
+        'alembic --config {0} revision --autogenerate -m \"{1}\"'
+        .format(config_path, comment)
+    )
 
 
 def migrate(database='ostf'):
-    path='postgresql+psycopg2://ostf:ostf@localhost/{0}'.format(database)
+    path = 'postgresql+psycopg2://ostf:ostf@localhost/{0}'.format(database)
     local('ostf-server --after-initialization-environment-hook --dbpath {0}'.format(path))
 
 

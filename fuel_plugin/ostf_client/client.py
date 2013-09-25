@@ -24,19 +24,46 @@ class TestingAdapterClient(object):
     def _request(self, method, url, data=None):
         headers = {'content-type': 'application/json'}
 
-        r = requests.request(method, url, data=data, headers=headers, timeout=30.0)
-        if 2 != r.status_code/100:
-            raise AssertionError('{method} "{url}" responded with '
-                                 '"{code}" status code'.format(
-                method=method.upper(),
-                url=url, code=r.status_code))
+        r = requests.request(
+            method,
+            url,
+            data=data,
+            headers=headers,
+            timeout=30.0
+        )
+
+        if 2 != r.status_code / 100:
+            raise AssertionError(
+                '{method} "{url}" responded with '
+                '"{code}" status code'.format(
+                    method=method.upper(),
+                    url=url, code=r.status_code)
+            )
         return r
 
-    def __getattr__(self, item):
-        getters = ['testsets', 'tests', 'testruns']
-        if item in getters:
-            url = ''.join([self.url, '/', item])
-            return lambda: self._request('GET', url)
+    #def __getattr__(self, item):
+    #    getters = ['testsets', 'tests', 'testruns']
+    #    if item in getters:
+    #        url = ''.join([self.url, '/', item])
+    #        return lambda: self._request('GET', url)
+
+    def testsets(self, cluster_id):
+        url = ''.join(
+            [self.url, '/testsets/', str(cluster_id)]
+        )
+        return self._request('GET', url)
+
+    def tests(self, cluster_id):
+        url = ''.join(
+            [self.url, '/tests/', str(cluster_id)]
+        )
+        return self._request('GET', url)
+
+    def testruns(self):
+        url = ''.join(
+            [self.url, '/testruns/']
+        )
+        return self._request('GET', url)
 
     def testruns_last(self, cluster_id):
         url = ''.join([self.url, '/testruns/last/',
@@ -48,34 +75,50 @@ class TestingAdapterClient(object):
 
     def start_testrun_tests(self, testset, tests, cluster_id):
         url = ''.join([self.url, '/testruns'])
-        data = [{'testset': testset,
-                 'tests': tests,
-                 'metadata': {'cluster_id': str(cluster_id)}}]
+        data = [
+            {
+                'testset': testset,
+                'tests': tests,
+                'metadata': {'cluster_id': str(cluster_id)}
+            }
+        ]
         return self._request('POST', url, data=dumps(data))
 
     def stop_testrun(self, testrun_id):
         url = ''.join([self.url, '/testruns'])
-        data = [{"id": testrun_id,
-                 "status": "stopped"}]
+        data = [
+            {
+                "id": testrun_id,
+                "status": "stopped"
+            }
+        ]
         return self._request("PUT", url, data=dumps(data))
 
     def stop_testrun_last(self, testset, cluster_id):
         latest = self.testruns_last(cluster_id).json()
-        testrun_id = [item['id'] for item in latest
-                      if item['testset'] == testset][0]
+        testrun_id = [
+            item['id'] for item in latest
+            if item['testset'] == testset
+        ][0]
         return self.stop_testrun(testrun_id)
 
     def restart_tests(self, tests, testrun_id):
         url = ''.join([self.url, '/testruns'])
-        body = [{'id': str(testrun_id),
-                 'tests': tests,
-                 'status': 'restarted'}]
+        body = [
+            {
+                'id': str(testrun_id),
+                'tests': tests,
+                'status': 'restarted'
+            }
+        ]
         return self._request('PUT', url, data=dumps(body))
 
     def restart_tests_last(self, testset, tests, cluster_id):
         latest = self.testruns_last(cluster_id).json()
-        testrun_id = [item['id'] for item in latest
-                      if item['testset'] == testset][0]
+        testrun_id = [
+            item['id'] for item in latest
+            if item['testset'] == testset
+        ][0]
         return self.restart_tests(tests, testrun_id)
 
     def _with_timeout(self, action, testset, cluster_id,
@@ -105,14 +148,22 @@ class TestingAdapterClient(object):
             if polling_hook:
                 polling_hook(stopped_response)
             stopped_response = self.testruns_last(cluster_id)
-            stopped_status = [item['status'] for item in stopped_response.json()
-                              if item['testset'] == testset][0]
+            stopped_status = [
+                item['status'] for item in stopped_response.json()
+                if item['testset'] == testset
+            ][0]
 
             msg = '{0} is still in {1} state. Now the state is {2}'.format(
                 testset, current_status, stopped_status)
-            msg_tests = '\n'.join(['{0} -> {1}, {2}'.format(
-                item['id'], item['status'], item['taken'])
-                                   for item in current_tests])
+            msg_tests = '\n'.join(
+                [
+                    '{0} -> {1}, {2}'.format(
+                        item['id'], item['status'], item['taken']
+                    )
+                    for item in current_tests
+                ]
+            )
+
             raise AssertionError('\n'.join([msg, msg_tests]))
         return current_response
 

@@ -18,6 +18,8 @@ import sqlalchemy as sa
 from sqlalchemy import desc
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import joinedload, relationship, object_mapper
+from sqlalchemy.dialects.postgres import ARRAY
+
 from fuel_plugin.ostf_adapter import nose_plugin
 from fuel_plugin.ostf_adapter.storage import fields, engine
 
@@ -41,10 +43,26 @@ class TestRun(BASE):
     meta = sa.Column(fields.JsonField())
     started_at = sa.Column(sa.DateTime, default=datetime.utcnow)
     ended_at = sa.Column(sa.DateTime)
-    test_set_id = sa.Column(sa.String(128), sa.ForeignKey('test_sets.id'))
+    test_set_id = sa.Column(sa.String(128))
 
     test_set = relationship('TestSet', backref='test_runs')
-    tests = relationship('Test', backref='test_run', order_by='Test.name')
+    tests = relationship(
+        'Test',
+        backref='test_run',
+        order_by='Test.name',
+        cascade='delete'
+    )
+
+    #following code defines proper foreign key
+    #contstraint for composite primary key
+    __table_args__ = (
+        sa.ForeignKeyConstraint(
+            ['test_set_id', 'cluster_id'],
+            ['test_sets.id', 'test_sets.cluster_id'],
+            ondelete='CASCADE'
+        ),
+        {}
+    )
 
     def update(self, session, status):
         self.status = status
@@ -78,9 +96,18 @@ class TestRun(BASE):
     @classmethod
     def add_test_run(cls, session, test_set, cluster_id, status='running',
                      tests=None):
+        '''
+        Creates new test_run object with given data
+        and makes copy of tests that will be bound
+        with this test_run. Copying is performed by
+        copy_test method of Test class.
+        '''
         predefined_tests = tests or []
-        tests = session.query(Test).filter_by(
-            test_set_id=test_set, test_run_id=None)
+        tests = session.query(Test)\
+            .filter_by(test_set_id=test_set,
+                       cluster_id=cluster_id,
+                       test_run_id=None)
+
         test_run = cls(test_set_id=test_set, cluster_id=cluster_id,
                        status=status)
         session.add(test_run)
@@ -123,17 +150,36 @@ class TestRun(BASE):
             updated_data['status'] = status
         if status in ['finished']:
             updated_data['ended_at'] = datetime.utcnow()
+
         session.query(cls). \
             filter(cls.id == test_run_id). \
             update(updated_data, synchronize_session=False)
 
     @classmethod
     def is_last_running(cls, session, test_set, cluster_id):
+        '''
+        Checks whether there one can perform creation of new
+        test_run by testing of existing of test_run object
+        with given data or test_run with 'finished' status.
+        '''
         test_run = cls.get_last_test_run(session, test_set, cluster_id)
         return not bool(test_run) or test_run.is_finished()
 
     @classmethod
     def start(cls, session, test_set, metadata, tests):
+        '''
+        Checks whether system must create new test_run or
+        not by calling is_last_running.
+
+        Creates new test_run if needed via
+        add_test_run function. Creation of new
+        test_run assumes not only adding test_run obj
+        but also copying of tests which is in relation
+        with test_set of created test_run.
+
+        Run tests from newly created test_run
+        via neded testing plugin.
+        '''
         plugin = nose_plugin.get_plugin(test_set.driver)
         if cls.is_last_running(session, test_set.id,
                                metadata['cluster_id']):
@@ -178,23 +224,32 @@ class TestSet(BASE):
     __tablename__ = 'test_sets'
 
     id = sa.Column(sa.String(128), primary_key=True)
+    cluster_id = sa.Column(sa.Integer(), primary_key=True, autoincrement=False)
     description = sa.Column(sa.String(256))
     test_path = sa.Column(sa.String(256))
     driver = sa.Column(sa.String(128))
     additional_arguments = sa.Column(fields.ListField())
     cleanup_path = sa.Column(sa.String(128))
     meta = sa.Column(fields.JsonField())
+    deployment_tags = sa.Column(ARRAY(sa.String(64)))
 
-    tests = relationship('Test',
-                         backref='test_set', order_by='Test.name')
+    tests = relationship(
+        'Test',
+        backref='test_set',
+        order_by='Test.name',
+        cascade='delete'
+    )
 
     @property
     def frontend(self):
         return {'id': self.id, 'name': self.description}
 
     @classmethod
-    def get_test_set(cls, session, test_set):
-        return session.query(cls).filter_by(id=test_set).first()
+    def get_test_set(cls, session, test_set, metadata):
+        return session.query(cls)\
+            .filter_by(id=test_set)\
+            .filter_by(cluster_id=metadata['cluster_id'])\
+            .first()
 
 
 class Test(BASE):
@@ -207,7 +262,8 @@ class Test(BASE):
         'failure',
         'success',
         'error',
-        'stopped'
+        'stopped',
+        'disabled'
     )
 
     id = sa.Column(sa.Integer(), primary_key=True)
@@ -221,9 +277,28 @@ class Test(BASE):
     step = sa.Column(sa.Integer())
     time_taken = sa.Column(sa.Float())
     meta = sa.Column(fields.JsonField())
+    deployment_tags = sa.Column(ARRAY(sa.String(64)))
+    cluster_id = sa.Column(sa.Integer(), nullable=False)
+    test_set_id = sa.Column(sa.String(128))
 
-    test_set_id = sa.Column(sa.String(128), sa.ForeignKey('test_sets.id'))
-    test_run_id = sa.Column(sa.Integer(), sa.ForeignKey('test_runs.id'))
+    test_run_id = sa.Column(
+        sa.Integer(),
+        sa.ForeignKey(
+            'test_runs.id',
+            ondelete='CASCADE'
+        )
+    )
+
+    #following code defines proper foreign key
+    #contstraint for composite primary key
+    __table_args__ = (
+        sa.ForeignKeyConstraint(
+            ['test_set_id', 'cluster_id'],
+            ['test_sets.id', 'test_sets.cluster_id'],
+            ondelete='CASCADE'
+        ),
+        {}
+    )
 
     @property
     def frontend(self):
@@ -261,6 +336,10 @@ class Test(BASE):
             update({'status': status}, synchronize_session=False)
 
     def copy_test(self, test_run, predefined_tests):
+        '''
+        Performs copying of tests for newly created
+        test_run.
+        '''
         new_test = self.__class__()
         mapper = object_mapper(self)
         primary_keys = set([col.key for col in mapper.primary_key])

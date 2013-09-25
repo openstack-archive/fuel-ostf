@@ -38,5 +38,5 @@ class ListField(JsonField):
         super(ListField, self).process_bind_param(value, dialect)
 
     def process_result_value(self, value, dialect):
-        value = super(ListField, self).process_bind_param(value, dialect)
+        value = super(ListField, self).process_result_value(value, dialect)
         return list(value) if value else []

@@ -43,6 +43,18 @@ def get_exc_message(exception_value):
     return u""
 
 
+def _process_docstring(docstring, pattern):
+    pattern_matcher = re.search(pattern, docstring)
+
+    if pattern_matcher:
+        value = pattern_matcher.group(1)
+        docstring = docstring[:pattern_matcher.start()]
+    else:
+        value = None
+
+    return docstring, value
+
+
 def get_description(test_obj):
     '''
     Parses docstring of test object in order
@@ -57,20 +69,34 @@ def get_description(test_obj):
         docstring = test_obj.test._testMethodDoc
 
         if docstring:
-            duration_pattern = r'Duration:.?(?P<duration>.+)'
-            duration_matcher = re.search(duration_pattern, docstring)
+            deployment_tags_pattern = r'Deployment tags:.?(?P<tags>.+)?'
+            docstring, deployment_tags = _process_docstring(
+                docstring,
+                deployment_tags_pattern
+            )
 
-            if duration_matcher:
-                duration = duration_matcher.group(1)
-                docstring = docstring[:duration_matcher.start()]
+            #if deployment tags is empty or absent
+            #_process_docstring returns None so we
+            #we must check this and prevent
+            if deployment_tags:
+                deployment_tags = [
+                    tag.strip() for tag in deployment_tags.split(',')
+                ]
             else:
-                duration = None
+                deployment_tags = []
+
+            duration_pattern = r'Duration:.?(?P<duration>.+)'
+            docstring, duration = _process_docstring(
+                docstring,
+                duration_pattern
+            )
+
             docstring = docstring.split('\n')
             name = docstring.pop(0)
             description = u'\n'.join(docstring) if docstring else u""
 
-            return name, description, duration
-    return u"", u"", u""
+            return name, description, duration, deployment_tags
+    return u"", u"", u"", []
 
 
 def modify_test_name_for_nose(test_path):

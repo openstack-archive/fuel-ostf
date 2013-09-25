@@ -16,110 +16,487 @@ import json
 from mock import patch, MagicMock
 import unittest2
 
+from sqlalchemy.orm import sessionmaker
+
 from fuel_plugin.ostf_adapter.wsgi import controllers
-from fuel_plugin.ostf_adapter.storage import models
+from fuel_plugin.ostf_adapter.storage import models, engine
+from fuel_plugin.ostf_adapter.nose_plugin.nose_discovery import discovery
 
 
-@patch('fuel_plugin.ostf_adapter.wsgi.controllers.request')
-class TestTestsController(unittest2.TestCase):
+TEST_PATH = \
+    'fuel_plugin/tests/functional/dummy_tests/deployment_types_tests'
+
+
+class BaseTestController(unittest2.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls._mocked_pecan_conf = MagicMock()
+        cls._mocked_pecan_conf.dbpath = \
+            'postgresql+psycopg2://ostf:ostf@localhost/ostf'
+
+        cls.Session = sessionmaker()
+
+        with patch(
+            'fuel_plugin.ostf_adapter.storage.engine.conf',
+            cls._mocked_pecan_conf
+        ):
+            cls.engine = engine.get_engine()
 
     def setUp(self):
-        self.fixtures = [models.Test(), models.Test()]
+        #orm session wrapping
+        connection = self.engine.connect()
+        self.trans = connection.begin()
+
+        self.Session.configure(bind=connection)
+        self.session = self.Session()
+
+        #test case level patching
+
+        #mocking
+        #request mocking
+        self.request_mock = MagicMock()
+
+        self.request_patcher = patch(
+            'fuel_plugin.ostf_adapter.wsgi.controllers.request',
+            self.request_mock
+        )
+        self.request_patcher.start()
+
+        #pecan conf mocking
+        self.pecan_conf_mock = MagicMock()
+        self.pecan_conf_mock.nailgun.host = '127.0.0.1'
+        self.pecan_conf_mock.nailgun.port = 8888
+
+        #engine.get_session mocking
+        self.request_mock.session = self.session
+        self.session_getter_patcher = patch(
+            'fuel_plugin.ostf_adapter.storage.engine.get_session',
+            lambda *args: self.session
+        )
+        self.session_getter_patcher.start()
+
+    def tearDown(self):
+        #rollback changes to database
+        #made by tests
+        self.trans.rollback()
+        self.session.close()
+
+        #end of test_case patching
+        self.request_patcher.stop()
+        self.session_getter_patcher.stop()
+
+
+class TestTestsController(BaseTestController):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestTestsController, cls).setUpClass()
+
+    def setUp(self):
+        super(TestTestsController, self).setUp()
         self.controller = controllers.TestsController()
 
     def test_get_all(self, request):
-        request.session.query().filter_by().all.return_value = self.fixtures
+        request.session.query().all.return_value = self.fixtures
         res = self.controller.get_all()
         self.assertEqual(res, [f.frontend for f in self.fixtures])
 
+    def test_get(self):
+        expected = {
+            'cluster_id': 1,
+            'frontend': [
+                {
+                    'status': None,
+                    'taken': None,
+                    'step': None,
+                    'testset': u'ha_deployment_test',
+                    'name': u'fake empty test',
+                    'duration': None,
+                    'message': None,
+                    'id': u'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_depl',
+                    'description': u'        This is empty test for any\n        ha deployment\n        Deployment tags:\n        ',
+                },
+                {
+                    'status': None,
+                    'taken': None,
+                    'step': None,
+                    'testset': u'ha_deployment_test',
+                    'name': u'fake empty test',
+                    'duration': u'0sec',
+                    'message': None,
+                    'id': u'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_rhel_depl',
+                    'description': u'        This is fake tests for ha\n        rhel deployment\n        '
+                }
+            ]
+        }
 
-@patch('fuel_plugin.ostf_adapter.wsgi.controllers.request')
-class TestTestSetsController(unittest2.TestCase):
+        #patch CORE_PATH from nose_discovery in order
+        #to process only testing data
+
+        #haven't found more beautiful way to mock
+        #discovery function in wsgi_utils
+        def discovery_mock(**kwargs):
+            kwargs['path'] = TEST_PATH
+            return discovery(**kwargs)
+
+        with patch(
+            'fuel_plugin.ostf_adapter.wsgi.wsgi_utils.nose_discovery.discovery',
+            discovery_mock
+        ):
+            with patch(
+                'fuel_plugin.ostf_adapter.wsgi.wsgi_utils.conf',
+                self.pecan_conf_mock
+            ):
+                res = self.controller.get(expected['cluster_id'])
+
+        self.assertEqual(res, expected['frontend'])
+
+
+class TestTestSetsController(BaseTestController):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestTestSetsController, cls).setUpClass()
 
     def setUp(self):
-        self.fixtures = [models.TestSet(), models.TestSet()]
+        super(TestTestSetsController, self).setUp()
         self.controller = controllers.TestsetsController()
 
-    def test_get_all(self, request):
-        request.session.query().all.return_value = self.fixtures
-        res = self.controller.get_all()
-        self.assertEqual(res, [f.frontend for f in self.fixtures])
+    def tearDown(self):
+        super(TestTestSetsController, self).tearDown()
+
+    def test_get(self):
+        expected = {
+            'cluster_id': 1,
+            'frontend': [
+                {
+                    'id': 'ha_deployment_test',
+                    'name': 'Fake tests for HA deployment'
+                }
+            ]
+        }
+
+        #patch CORE_PATH from nose_discovery in order
+        #to process only testing data
+
+        #haven't found more beautiful way to mock
+        #discovery function in wsgi_utils
+        def discovery_mock(**kwargs):
+            kwargs['path'] = TEST_PATH
+            return discovery(**kwargs)
+
+        with patch(
+            'fuel_plugin.ostf_adapter.wsgi.wsgi_utils.nose_discovery.discovery',
+            discovery_mock
+        ):
+            with patch(
+                'fuel_plugin.ostf_adapter.wsgi.wsgi_utils.conf',
+                self.pecan_conf_mock
+            ):
+                res = self.controller.get(expected['cluster_id'])
+
+        self.assertEqual(res, expected['frontend'])
 
 
-@patch('fuel_plugin.ostf_adapter.wsgi.controllers.request')
-class TestTestRunsController(unittest2.TestCase):
+class TestTestRunsController(BaseTestController):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestTestRunsController, cls).setUpClass()
 
     def setUp(self):
-        self.fixtures = [models.TestRun(status='finished'),
-                         models.TestRun(status='running')]
-        self.fixtures[0].test_set = models.TestSet(driver='nose')
-        self.storage = MagicMock()
-        self.plugin = MagicMock()
-        self.session = MagicMock()
+        super(TestTestRunsController, self).setUp()
+
+        #test_runs depends on tests and test_sets data
+        #in database so we must execute discovery function
+        #in setUp in order to provide this data
+        depl_info = {
+            'cluster_id': 1,
+            'deployment_tags': {
+                'ha',
+                'rhel'
+            }
+        }
+
+        discovery(deployment_info=depl_info, path=TEST_PATH)
+
+        self.testruns = [
+            {
+                'testset': 'ha_deployment_test',
+                'metadata': {'cluster_id': 1}
+            }
+        ]
+
         self.controller = controllers.TestrunsController()
 
-    def test_get_all(self, request):
-        request.session.query().all.return_value = self.fixtures
-        res = self.controller.get_all()
-        self.assertEqual(res, [f.frontend for f in self.fixtures])
+    def tearDown(self):
+        super(TestTestRunsController, self).tearDown()
 
-    def test_get_one(self, request):
-        request.session.query().filter_by().first.return_value = \
-            self.fixtures[0]
-        res = self.controller.get_one(1)
-        self.assertEqual(res, self.fixtures[0].frontend)
 
-    @patch('fuel_plugin.ostf_adapter.wsgi.controllers.models')
-    def test_post(self, models, request):
-        request.storage = self.storage
-        testruns = [
-            {'testset': 'test_simple',
-             'metadata': {'cluster_id': 3}
-            },
-            {'testset': 'test_simple',
-             'metadata': {'cluster_id': 4}
-            }]
-        request.body = json.dumps(testruns)
-        fixtures_iterable = (f.frontend for f in self.fixtures)
+class TestTestRunsPostController(TestTestRunsController):
 
-        models.TestRun.start.side_effect = \
-            lambda *args, **kwargs: fixtures_iterable.next()
-        res = self.controller.post()
-        self.assertEqual(res, [f.frontend for f in self.fixtures])
+    @classmethod
+    def setUpClass(cls):
+        super(TestTestRunsController, cls).setUpClass()
 
-    @patch('fuel_plugin.ostf_adapter.wsgi.controllers.models')
-    def test_put_stopped(self, models, request):
-        request.storage = self.storage
-        testruns = [
-            {'id': 1,
-             'metadata': {'cluster_id': 4},
-             'status': 'stopped'
-            }]
-        request.body = json.dumps(testruns)
+    def setUp(self):
+        super(TestTestRunsPostController, self).setUp()
 
-        models.TestRun.get_test_run().stop.side_effect = \
-            lambda *args, **kwargs: self.fixtures[0].frontend
-        res = self.controller.put()
-        self.assertEqual(res, [self.fixtures[0].frontend])
+    def tearDown(self):
+        super(TestTestRunsPostController, self).tearDown()
 
-    @patch('fuel_plugin.ostf_adapter.wsgi.controllers.models')
-    def test_put_restarted(self, models, request):
-        request.storage = self.storage
-        testruns = [
-            {'id': 1,
-             'metadata': {'cluster_id': 4},
-             'status': 'restarted'
-            }]
-        request.body = json.dumps(testruns)
+    def test_post(self):
+        expected = {
+            'testset': 'ha_deployment_test',
+            'status': 'running',
+            'cluster_id': 1,
+            'tests': {
+                'names': [
+                    u'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_depl',
+                    u'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_rhel_depl'
+                ]
+            }
+        }
 
-        models.TestRun.get_test_run().restart.side_effect = \
-            lambda *args, **kwargs: self.fixtures[0].frontend
-        res = self.controller.put()
-        self.assertEqual(res, [self.fixtures[0].frontend])
+        with patch(
+            'fuel_plugin.ostf_adapter.wsgi.controllers.request.body',
+            json.dumps(self.testruns)
+        ):
+            res = self.controller.post()[0]
 
-    def test_get_last(self, request):
-        cluster_id = 1
-        request.session.query().group_by().filter_by.return_value = [10, 11]
-        request.session.query().options().filter.return_value = self.fixtures
-        res = self.controller.get_last(cluster_id)
-        self.assertEqual(res, [f.frontend for f in self.fixtures])
+        #checking wheter controller is working properly
+        #by testing its blackbox behaviour
+        for key in expected.keys():
+            if key == 'tests':
+                self.assertTrue(
+                    set(expected[key]['names']) ==
+                    set([test['id'] for test in res[key]])
+                )
+            else:
+                self.assertTrue(expected[key] == res[key])
+
+        #checking wheter all necessary writing to database
+        #has been performed
+        test_run = self.session.query(models.TestRun)\
+            .filter_by(test_set_id=expected['testset'])\
+            .filter_by(cluster_id=expected['cluster_id'])\
+            .first()
+
+        self.assertTrue(test_run)
+
+        testrun_tests = self.session.query(models.Test)\
+            .filter(models.Test.test_run_id != None)\
+            .all()
+
+        tests_names = [
+            test.name for test in testrun_tests
+        ]
+        self.assertTrue(set(tests_names) == set(expected['tests']['names']))
+
+        self.assertTrue(
+            all(
+                [test.status == 'wait_running' for test in testrun_tests]
+            )
+        )
+
+
+#TODO: fix this test
+class TestTestRunsPutController(TestTestRunsController):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestTestRunsPutController, cls).setUpClass()
+
+    def setUp(self):
+        super(TestTestRunsPutController, self).setUp()
+
+        self.nose_adapter_session_patcher = patch(
+            'fuel_plugin.ostf_adapter.nose_plugin.nose_adapter.engine.get_session',
+            lambda *args: self.session
+        )
+        self.nose_adapter_session_patcher.start()
+
+        #this test_case needs data on particular test_run
+        #already present in database. That is suppotred by
+        #following code
+
+        with patch(
+            'fuel_plugin.ostf_adapter.wsgi.controllers.request.body',
+            json.dumps(self.testruns)
+        ):
+            self.stored_test_run = self.controller.post()[0]
+
+    def tearDown(self):
+        self.nose_adapter_session_patcher.stop()
+        super(TestTestRunsPutController, self).tearDown()
+
+    def test_put_stopped(self):
+        expected = {
+            'id': int(self.stored_test_run['id']),
+            'testset': self.stored_test_run['testset'],
+            'status': 'running',  # seems like incorrect !!!!!!!!!
+            'cluster_id': 1,
+            'tests': {
+                'names': [
+                    u'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_depl',
+                    u'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_rhel_depl'
+                ]
+            }
+        }
+
+        testruns_to_stop = [
+            {
+                'id': int(self.stored_test_run['id']),
+                'metadata': {'cluster_id': int(self.stored_test_run['cluster_id'])},
+                'status': 'stopped'
+            }
+        ]
+
+        with patch(
+            'fuel_plugin.ostf_adapter.wsgi.controllers.request.body',
+            json.dumps(testruns_to_stop)
+        ):
+            res = self.controller.put()[0]
+
+        #checking wheter controller is working properly
+        #by testing its blackbox behaviour
+        for key in expected.keys():
+            if key == 'tests':
+                self.assertTrue(
+                    set(expected[key]['names']) ==
+                    set([test['id'] for test in res[key]])
+                )
+            else:
+                self.assertTrue(expected[key] == res[key])
+
+        testrun_tests = self.session.query(models.Test)\
+            .filter(models.Test.test_run_id == expected['id'])\
+            .all()
+
+        tests_names = [
+            test.name for test in testrun_tests
+        ]
+        self.assertTrue(set(tests_names) == set(expected['tests']['names']))
+
+        self.assertTrue(
+            all(
+                [test.status == 'stopped' for test in testrun_tests]
+            )
+        )
+
+
+class TestClusterRedployment(BaseTestController):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestClusterRedployment, cls).setUpClass()
+
+    def setUp(self):
+        super(TestClusterRedployment, self).setUp()
+        self.controller = controllers.TestsetsController()
+
+    def tearDown(self):
+        super(TestClusterRedployment, self).tearDown()
+
+    def test_cluster_redeployment_with_different_tags(self):
+        expected = {
+            'cluster_id': 1,
+            'old_test_set_id': 'ha_deployment_test',
+            'new_test_set_id': 'multinode_deployment_test',
+            'old_depl_tags': ['ha', 'rhel'],
+            'new_depl_tags': ['multinode', 'ubuntu']
+        }
+
+        def discovery_mock(**kwargs):
+            kwargs['path'] = TEST_PATH
+            return discovery(**kwargs)
+
+        #start discoverying for testsets and tests for given cluster info
+        with patch(
+            'fuel_plugin.ostf_adapter.wsgi.wsgi_utils.nose_discovery.discovery',
+            discovery_mock
+        ):
+            with patch(
+                'fuel_plugin.ostf_adapter.wsgi.wsgi_utils.conf',
+                self.pecan_conf_mock
+            ):
+                self.controller.get(expected['cluster_id'])
+
+        test_set = self.session.query(models.TestSet)\
+            .filter_by(id=expected['old_test_set_id'])\
+            .filter_by(cluster_id=expected['cluster_id'])\
+            .first()
+
+        deployment_tags = test_set.deployment_tags if test_set.deployment_tags else []
+        self.assertTrue(
+            set(deployment_tags).issubset(expected['old_depl_tags'])
+        )
+
+        #patch request_to_nailgun function in orded to emulate
+        #redeployment of cluster
+        cluster_data = {
+            'mode': 'multinode',
+            'release': {
+                'operating_system': 'ubuntu'
+            }
+        }
+
+        with patch(
+            'fuel_plugin.ostf_adapter.wsgi.wsgi_utils._request_to_nailgun',
+            lambda *args: cluster_data
+        ):
+            with patch(
+                'fuel_plugin.ostf_adapter.wsgi.wsgi_utils.nose_discovery.discovery',
+                discovery_mock
+            ):
+                with patch(
+                    'fuel_plugin.ostf_adapter.wsgi.wsgi_utils.conf',
+                    self.pecan_conf_mock
+                ):
+                    res = self.controller.get(expected['cluster_id'])
+
+        #check wheter testset and bound with it test have been deleted from db
+        old_test_set = self.session.query(models.TestSet)\
+            .filter_by(id=expected['old_test_set_id'])\
+            .filter_by(cluster_id=expected['cluster_id'])\
+            .first()
+
+        if old_test_set:
+            raise AssertionError(
+                "There must not be test_set for old deployment in db"
+            )
+
+        old_tests = self.session.query(models.Test)\
+            .filter_by(test_set_id=expected['old_test_set_id'])\
+            .filter_by(cluster_id=expected['cluster_id'])\
+            .all()
+
+        if old_test_set:
+            raise AssertionError(
+                "There must not be tests for old deployment in db"
+            )
+
+        #check whether new test set and tests are present in db
+        #after 'redeployment' of cluster
+        new_test_set = self.session.query(models.TestSet)\
+            .filter_by(id=expected['new_test_set_id'])\
+            .filter_by(cluster_id=expected['cluster_id'])\
+            .first()
+        self.assertTrue(new_test_set)
+        deployment_tags = new_test_set.deployment_tags if new_test_set.deployment_tags else []
+        self.assertTrue(
+            set(deployment_tags).issubset(expected['new_depl_tags'])
+        )
+
+        new_tests = self.session.query(models.Test)\
+            .filter_by(test_set_id=expected['new_test_set_id'])\
+            .filter_by(cluster_id=expected['cluster_id'])\
+            .all()
+
+        self.assertTrue(new_tests)
+        for test in new_tests:
+            deployment_tags = test.deployment_tags if test.deployment_tags else []
+            self.assertTrue(
+                set(deployment_tags).issubset(expected['new_depl_tags'])
+            )

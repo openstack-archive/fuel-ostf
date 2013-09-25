@@ -54,7 +54,7 @@ class StoragePlugin(plugins.Plugin):
             'status': status,
             'time_taken': self.taken
         }
-        data['title'], data['description'], data['duration'] = \
+        data['title'], data['description'], data['duration'], data['deployment_tags'] = \
             nose_utils.get_description(test)
         if err:
             exc_type, exc_value, exc_traceback = err

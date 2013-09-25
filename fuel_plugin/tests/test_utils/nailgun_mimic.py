@@ -11,3 +11,29 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
+from pecan import conf
+from bottle import route, run
+
+
+cluster_fixture = {
+    1: {
+        'mode': 'ha',
+        'release': {
+            'operating_system': 'rhel'
+        }
+    },
+    2: {
+        'mode': 'multinode',
+        'release': {
+            'operating_system': 'ubuntu'
+        }
+    }
+}
+
+
+@route('/api/clusters/<id:int>')
+def serve_cluster_meta(id):
+    return cluster_fixture[id]
+
+run(host='localhost', port=8888, debug=True)

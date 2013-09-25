@@ -34,22 +34,20 @@ class Response(object):
         else:
             self._parse_json(response.json())
             self.request = '{0} {1} \n with {2}'\
-                .format(response.request.method, response.request.url, response.request.body)
+                .format(
+                    response.request.method,
+                    response.request.url,
+                    response.request.body
+                )
 
     def __getattr__(self, item):
-        if item in self.test_sets or item in self._tests:
-            return self.test_sets.get(item) or self._tests.get(item)
-        else:
-            return super(type(self), self).__delattr__(item)
+        if item in self.test_sets:
+            return self.test_sets.get(item)
 
     def __str__(self):
         if self.is_empty:
             return "Empty"
         return self.test_sets.__str__()
-
-    @classmethod
-    def set_test_name_mapping(cls, mapping):
-        cls.test_name_mapping = mapping
 
     def _parse_json(self, json):
         if json == [{}]:
@@ -60,12 +58,9 @@ class Response(object):
 
         self.test_sets = {}
         self._tests = {}
+
         for testset in json:
             self.test_sets[testset.pop('testset')] = testset
-            self._tests = dict((self._friendly_name(item.get('id')), item) for item in testset['tests'])
-
-    def _friendly_name(self, name):
-        return self.test_name_mapping.get(name, name)
 
 
 class AdapterClientProxy(object):
@@ -77,8 +72,6 @@ class AdapterClientProxy(object):
         if item in TestingAdapterClient.__dict__:
             call = getattr(self.client, item)
             return self._decorate_call(call)
-    def _friendly_map(self, mapping):
-        Response.set_test_name_mapping(mapping)
 
     def _decorate_call(self, call):
         @wraps(call)
@@ -86,8 +79,6 @@ class AdapterClientProxy(object):
             r = call(*args, **kwargs)
             return Response(r)
         return inner
-
-
 
 
 class SubsetException(Exception):
@@ -101,34 +92,47 @@ class BaseAdapterTest(TestCase):
             raise AssertionError(msg)
         if not isinstance(comparable, Response):
             comparable = Response(comparable)
-        test_set = comparable.test_sets.keys()[0]
-        test_set_data = comparable.test_sets[test_set]
-        tests = comparable._tests
-        diff = []
 
-        for item in test_set_data:
-            if item == 'tests':
-                continue
-            if response.test_sets[test_set][item] != test_set_data[item]:
-                msg = 'Actual "{0}" !=  expected "{1}" in {2}.{3}'.format(response.test_sets[test_set][item],
-                                                                          test_set_data[item], test_set, item)
-                diff.append(msg)
+        for test_set in comparable.test_sets.keys():
+            test_set_data = comparable.test_sets[test_set]
+            tests = test_set_data['tests']
+            diff = []
 
-        for test_name, test in tests.iteritems():
-            for t in test:
-                if t == 'id':
+            for item in test_set_data:
+                if item == 'tests':
                     continue
-                if response._tests[test_name][t] != test[t]:
-                    msg = 'Actual "{0}" !=  expected"{1}" in {2}.{3}.{4}'.format(response._tests[test_name][t],
-                                                                                 test[t], test_set, test_name, t)
+                if response.test_sets[test_set][item] != test_set_data[item]:
+                    msg = 'Actual "{0}" !=  expected "{1}" in {2}.{3}'.format(
+                        response.test_sets[test_set][item],
+                        test_set_data[item],
+                        test_set,
+                        item
+                    )
                     diff.append(msg)
-        if diff:
-            raise AssertionError(diff)
+
+            tests = dict([(test['id'], test) for test in tests])
+            response_tests = dict(
+                [
+                    (test['id'], test) for test in
+                    response.test_sets[test_set]['tests']
+                ]
+            )
+
+            for test_id, test_data in tests.iteritems():
+                for data_key, data_value in test_data.iteritems():
+                    if not response_tests[test_id][data_key] == data_value:
+                        raise AssertionError(('excpected: test_set {0}, test_id {1} data_key {2}, data_value {3}...'
+                            'got: {4}')
+                            .format(
+                                test_set,
+                                test_id,
+                                data_key,
+                                data_value,
+                                response_tests[test_id][data_key]
+                                )
+                        )
 
     @staticmethod
-    def init_client(url, mapping):
+    def init_client(url):
         ac = AdapterClientProxy(url)
-        ac._friendly_map(mapping)
         return ac
-
-
