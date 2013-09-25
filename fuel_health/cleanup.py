@@ -23,13 +23,13 @@ sys.path.append(path)
 import logging
 
 from fuel_health import exceptions
-import fuel_health.heatmanager
+import fuel_health.nmanager
 
 
 LOG = logging.getLogger(__name__)
 
 
-class CleanUpClientManager(fuel_health.heatmanager.HeatManager):
+class CleanUpClientManager(fuel_health.nmanager.OfficialClientManager):
     """
     Manager that provides access to the official python clients for
     calling various OpenStack APIs.
@@ -56,6 +56,18 @@ class CleanUpClientManager(fuel_health.heatmanager.HeatManager):
 
 def cleanup():
     manager = CleanUpClientManager()
+
+    murano_client = manager._get_murano_client()
+    if murano_client is not None:
+        environments = murano_client.list_environments()
+        for e in environments:
+            if e.name.startswith('ost1_test-'):
+                try:
+                    LOG.info('Start environment deletion.')
+                    murano_client.stacks.delete(e.id)
+                except Exception as exc:
+                    LOG.debug(exc)
+                    pass
 
     heat_client = manager._get_heat_client()
     if heat_client is not None:

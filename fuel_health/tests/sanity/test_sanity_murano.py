@@ -16,74 +16,70 @@
 
 from fuel_health import murano
 
+
 class MuranoSanityTests(murano.MuranoTest):
     """
-    TestClass contains tests that check basic Murano functionality.
+    TestClass contains verifications of basic Murano functionality.
+    Special requirements:
+        1. Murano component should be installed.
     """
 
-    def test_list_environments(self):
-        """Murano environments list availability
-        Test checks that user can get list of environments.
+    def test_create_and_delete_service(self):
+        """Murano environment and service creation, listing and deletion
+        Test checks if it's possible to create and delete service.
         Target component: Murano
 
         Scenario:
             1. Send request to create environment.
             2. Request the list of environments.
-            3. Clean up (delete environment).
-        Duration: 5 s.
+            3. Send request to create session for environment.
+            4. Send request to create service.
+            5. Request the list of services.
+            6. Send request to delete service.
+            7. Send request to delete environment.
+        Duration: 20 s.
         """
+
+        fail_msg = 'Cannot create environment.'
+        self.environment = self.verify(5, self.create_environment,
+                                       1, fail_msg, 'creating environment',
+                                       "ost1_test-Murano_env01")
 
         fail_msg = 'Environments list is unavailable.'
         environments = self.verify(5, self.list_environments,
-                                   2, fail_msg, "environments listing")
+                                   2, fail_msg, "listing environments")
 
         step = '2. Request the list of environments.'
         self.verify_elements_list(environments, ['id', 'name'],
                                   msg=fail_msg, failed_step=step)
 
-        " Save info for tear down method "
-        self.last_step = '3. Clean up (delete environment). '
-
-    def test_create_and_delete_service(self):
-        """Murano services creation and deletion access
-        Test checks that user can create and delete service.
-        Target component: Murano
-
-        Scenario:
-            1. Send request to create environment.
-            2. Send request to create session for environment.
-            3. Send request to create service.
-            4. Request the list of services.
-            5. Send request to delete service.
-            6. Clean up (delete environment).
-        Duration: 20 s.
-        """
-
-        fail_msg = 'User can not create session for environment.'
+        fail_msg = 'Cannot create session for environment.'
         session = self.verify(5, self.create_session,
-                              2, fail_msg, "session creating",
+                              3, fail_msg, "creating session",
                               self.environment.id)
 
         srv = {"name": "new_service", "type": "test", "units": [{},]}
-        fail_msg = 'User can not create service.'
+        fail_msg = 'Cannot create service.'
         service = self.verify(5, self.create_service,
-                              3, fail_msg, "service creating",
+                              4, fail_msg, "creating service",
                               self.environment.id, session.id, srv)
 
         step = '4. Request the list of services.'
-        fail_msg = 'User can not get list of services.'
+        fail_msg = 'Cannot get list of services.'
         services = self.verify(5, self.list_services,
-                               4, fail_msg, "services listing",
+                               5, fail_msg, "listing services",
                                self.environment.id, session.id)
 
         self.verify_elements_list(services, ['id', 'name'],
-                                  msg='User can not get list of services',
+                                  msg='Cannot get list of services',
                                   failed_step=step)
 
-        fail_msg = 'User can not delete service.'
-        response = self.verify(5, self.delete_service,
-                               5, fail_msg, "service deleting",
-                               self.environment.id, session.id, service.id)
+        fail_msg = 'Cannot delete service.'
+        self.verify(5, self.delete_service,
+                    6, fail_msg, "deleting service",
+                    self.environment.id, session.id, service.id)
 
-        " Save info for tear down method "
-        self.last_step = '6. Clean up (delete environment). '
+        fail_msg = 'Cannot delete environment.'
+        self.verify(5, self.delete_environment,
+                    7, fail_msg, "deleting environment",
+                    self.environment.id)

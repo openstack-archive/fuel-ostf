@@ -15,19 +15,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import muranoclient.v1.client
-import nmanager
+import fuel_health.nmanager
 
 
-class MuranoTest(nmanager.OfficialClientTest):
+class MuranoTest(fuel_health.nmanager.OfficialClientTest):
     """
     Manager that provides access to the Murano python client for
     calling Murano API.
     """
-
-    client = None
-    insecure = False
-    api_host = None
 
     def setUp(self):
         """
@@ -37,55 +32,9 @@ class MuranoTest(nmanager.OfficialClientTest):
         """
 
         super(MuranoTest, self).setUp()
-        step='1. Send request to create environment. '
 
-        " Get xAuth token from Keystone "
-        self.token_id = self.manager._get_identity_client(
-            self.config.identity.admin_username,
-            self.config.identity.admin_password,
-            self.config.identity.admin_tenant_name).auth_token
-
-        " Get Murano API parameters "
-        try:
-            self.api_host = self.config.murano.api_url
-            self.insecure = self.config.murano.insecure
-        except:
-            msg = ' Can not get Murano configuration parameters. '
-            msg = ('Step %s failed: ' % str(step)) + msg
-            self.fail(msg)
-
-        if not self.api_host:
-            msg = ' Can not get Murano configuration parameters. '
-            msg = ('Step %s failed: ' % str(step)) + msg
-            self.fail(msg)
-
-        self.murano_client = self._get_murano_client()
-
-        self.environment = self.create_environment("ost1_test-Murano_env01")
-        if not hasattr(self.environment, 'id'):
-            msg = ('Step %s failed: ' % step) + 'Can not create environment.'
-            self.fail(msg)
-
-    def tearDown(self):
-        """
-            This method alows to clean up after each test.
-            The main task for this method - delete environment after
-            PASSED and FAILED tests.
-        """
-
-        result = self.delete_environment(self.environment.id)
-        if result:
-            msg = ' Can not delete environment. '
-            msg = ('Step %s failed: ' % str(self.last_step)) + msg
-            self.fail(msg)
-
-    def _get_murano_client(self):
-        """
-            This method returns Murano API client
-        """
-        return muranoclient.v1.client.Client(endpoint=self.api_host,
-                                             token=self.token_id,
-                                             insecure=self.insecure)
+        if self.murano_client is None:
+            self.fail('Murano is unavailable.')
 
     def verify_elements_list(self, elements, attrs, msg='', failed_step=''):
         """
