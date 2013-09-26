@@ -283,6 +283,12 @@ MuranoConfig = [
     cfg.BoolOpt('insecure',
                 default=False,
                 help="This parameter allow to enable SSL encription"),
+    cfg.StrOpt('agListnerIP',
+               default='10.100.0.155',
+               help="Murano SQL Cluster AG IP."),
+    cfg.StrOpt('clusterIP',
+               default='10.100.0.150',
+               help="Murano SQL Cluster IP."),
 ]
 
 

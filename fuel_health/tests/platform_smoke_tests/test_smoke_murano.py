@@ -163,13 +163,13 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         creds = {'username': 'Administrator',
                  'password': 'P@ssw0rd'}
         post_body = {"type": "webServer", "domain": "",
-                      "availabilityZone": "nova", "name": "someIIS",
-                      "adminPassword": "P@ssw0rd", "unitNamingPattern": "",
-                       "osImage": {"type": "ws-2012-std",
-                                   "name": "ws-2012-std",
-                                   "title": "Windows Server 2012 Standard"},
-                      "units": [{}], "credentials": creds,
-                      "flavor": "m1.medium"}
+                     "availabilityZone": "nova", "name": "someIIS",
+                     "adminPassword": "P@ssw0rd", "unitNamingPattern": "",
+                     "osImage": {"type": "ws-2012-std",
+                                 "name": "ws-2012-std",
+                                 "title": "Windows Server 2012 Standard"},
+                     "units": [{}], "credentials": creds,
+                     "flavor": "m1.medium"}
 
         fail_msg = 'User can not create service.'
         service = self.verify(5, self.create_service,
@@ -366,14 +366,14 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                  'password': 'P@ssw0rd'}
         asp_repository = "git://github.com/Mirantis/murano-mvc-demo.git"
         post_body = {"type": "aspNetAppFarm", "domain": "",
-                 "availabilityZone": "nova", "name": "SomeApsFarm",
-                 "repository": asp_repository,
-                 "adminPassword": "P@ssw0rd", "loadBalancerPort": 80,
-                 "unitNamingPattern": "",
-                 "osImage": {"type": "ws-2012-std", "name": "ws-2012-std",
-                 "title": "Windows Server 2012 Standard"},
-                 "units": [{}, {}],
-                 "credentials": creds, "flavor": "m1.medium"}
+                     "availabilityZone": "nova", "name": "SomeApsFarm",
+                     "repository": asp_repository,
+                     "adminPassword": "P@ssw0rd", "loadBalancerPort": 80,
+                     "unitNamingPattern": "",
+                     "osImage": {"type": "ws-2012-std", "name": "ws-2012-std",
+                     "title": "Windows Server 2012 Standard"},
+                     "units": [{}, {}],
+                     "credentials": creds, "flavor": "m1.medium"}
 
         fail_msg = 'User can not create service.'
         service = self.verify(5, self.create_service,
@@ -496,14 +496,14 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                               self.environment.id)
 
         post_body = {"type": "activeDirectory","name": "ad.local",
-                    "adminPassword": "P@ssw0rd", "domain": "ad.local",
-                    "availabilityZone": "nova", "unitNamingPattern": "",
-                    "flavor": "m1.medium", "osImage":
-                    {"type": "ws-2012-std", "name": "ws-2012-std", "title":
-                    "Windows Server 2012 Standard"},"configuration":
-                    "standalone", "units": [{"isMaster": True,
-                    "recoveryPassword": "P@ssw0rd",
-                    "location": "west-dc"}]}
+                     "adminPassword": "P@ssw0rd", "domain": "ad.local",
+                     "availabilityZone": "nova", "unitNamingPattern": "",
+                     "flavor": "m1.medium", "osImage":
+                     {"type": "ws-2012-std", "name": "ws-2012-std", "title":
+                     "Windows Server 2012 Standard"},"configuration":
+                     "standalone", "units": [{"isMaster": True,
+                     "recoveryPassword": "P@ssw0rd",
+                     "location": "west-dc"}]}
 
         fail_msg = 'User can not create service.'
         service = self.verify(5, self.create_service,
@@ -531,8 +531,8 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                               self.environment.id)
 
         # it is just 'any unused IP addresses'
-        AG = self.config.murano.agListnerIP or '10.100.0.155'
-        clIP = self.config.murano.clusterIP or '10.100.0.150'
+        AG = self.config.murano.agListnerIP
+        clIP = self.config.murano.clusterIP
 
         post_body = {"domain": "ad.local", "domainAdminPassword": "P@ssw0rd",
                      "externalAD": False,
