@@ -18,10 +18,14 @@
 import logging
 import time
 
-import savannaclient.api.client
 import fuel_health.nmanager as nmanager
 
 LOG = logging.getLogger(__name__)
+
+try:
+    import savannaclient.api.client
+except:
+    LOG.warning('Savanna client could not be imported.')
 
 
 class SavannaClientManager(nmanager.OfficialClientManager):
