@@ -22,7 +22,12 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
     TestClass contains verifications of full Murano functionality.
     Special requirements:
         1. Murano component should be installed.
-        2. Windows image with metadata should be imported.
+        2. Key Pair 'murano-lb-key'
+        3. Internet access for virtual machines in OpenStack
+        4. Windows image with metadata should be imported.
+             Correct Metadata for Windows image in Glance:
+             murano_image_info = {"type":"ws-2012-std",
+                                  "title":"Windows Server 2012"}
     """
 
     def test_check_default_key_pair(self):
@@ -68,7 +73,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     exp_key, exp_value)
 
     def test_deploy_ad(self):
-        """Check Murano API Service: Deploy AD
+        """Check deploy of AD service
         Test checks that user can deploy AD.
         Target component: Murano
 
@@ -130,7 +135,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     self.environment.id)
 
     def test_deploy_iis(self):
-        """Check Murano API Service: Deploy IIS
+        """Check deploy of IIS service
         Test checks that user can deploy IIS.
         Target component: Murano
 
@@ -193,9 +198,12 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     self.environment.id)
 
     def test_deploy_aspnet(self):
-        """Check Murano API Service: Deploy ASPNet
+        """Check deploy of ASP.NET application service
         Test checks that user can deploy ASPNet.
         Target component: Murano
+
+        Special requirements:
+            1. Internet access for virtual machines in OpenStack
 
         Scenario:
             1. Send request to create environment.
@@ -240,7 +248,8 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                                   4, fail_msg, "session send on deploy",
                                   self.environment.id, session.id)
 
-        fail_msg = 'Deploy did not complete correctly'
+        fail_msg = 'Deploy did not complete correctly, '
+        fail_msg += 'please check that virtual machines have Internet access'
         status_env = self.verify(1800, self.deploy_check,
                                     5, fail_msg, 'deploy is going',
                                     self.environment.id)
@@ -257,9 +266,12 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     self.environment.id)
 
     def test_deploy_iis_farm(self):
-        """Check Murano API Service: Deploy IIS farm
+        """Check deploy of IIS Servers Farm service
         Test checks that user can deploy IIS farm.
         Target component: Murano
+
+        Special requirements:
+            1. Key Pair 'murano-lb-key'
 
         Scenario:
             1. Send request to create environment.
@@ -303,7 +315,8 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                                   4, fail_msg, "session send on deploy",
                                   self.environment.id, session.id)
 
-        fail_msg = 'Deploy did not complete correctly'
+        fail_msg = 'Deploy did not complete correctly, '
+        fail_msg += 'please check that Key Pair "murano-lb-key" exists'
         status_env = self.verify(1800, self.deploy_check,
                                     5, fail_msg, 'deploy is going',
                                     self.environment.id)
@@ -320,9 +333,13 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     self.environment.id)
 
     def test_deploy_aspnet_farm(self):
-        """Check Murano API Service: Deploy ASPNet farm
+        """Check deploy of ASP.NET application servers farm service
         Test checks that user can deploy ASPNet farm.
         Target component: Murano
+
+        Special requirements:
+            1. Key Pair 'murano-lb-key'
+            2. Internet access for virtual machines in OpenStack
 
         Scenario:
             1. Send request to create environment.
@@ -368,7 +385,9 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                                   4, fail_msg, "session send on deploy",
                                   self.environment.id, session.id)
 
-        fail_msg = 'Deploy did not complete correctly'
+        fail_msg = 'Deploy did not complete correctly, '
+        fail_msg += 'please check, that Key Pair "murano-lb-key" exists '
+        fail_msg += 'and virtual machines have Internet access'
         status_env = self.verify(1800, self.deploy_check,
                                     5, fail_msg, 'deploy is going',
                                     self.environment.id)
@@ -385,7 +404,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     self.environment.id)
 
     def test_deploy_sql(self):
-        """Check Murano API Service: Deploy SQL
+        """Check deploy of SQL service
         Test checks that user can deploy SQL.
         Target component: Murano
 
@@ -446,8 +465,8 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     self.environment.id)
 
     def test_deploy_sql_cluster(self):
-        """Check Murano API Service: Deploy SQL
-        Test checks that user can deploy SQL.
+        """Check deploy of SQL Cluster service
+        Test checks that user can deploy SQL Cluster.
         Target component: Murano
 
         Scenario:
@@ -534,7 +553,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                      "name": "node1", "isSync": True}, {"isMaster": False,
                      "name": "node2", "isSync": True}],
                      "name": "Sqlname", "saPassword": "P@ssw0rd",
-                     "databases": []}
+                     "databases": ['murano', 'test']}
 
         fail_msg = 'User can not create service.'
         service = self.verify(5, self.create_service,
