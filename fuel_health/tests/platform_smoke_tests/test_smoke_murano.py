@@ -15,12 +15,14 @@
 # under the License.
 
 from fuel_health import murano
-from fuel_health import heatmanager
 
 
-class MuranoBaseSmokeTests(heatmanager.HeatBaseTest):
+class MuranoDeploymentSmokeTests(murano.MuranoTest):
     """
-    TestClass contains tests that check core Murano functionality.
+    TestClass contains verifications of full Murano functionality.
+    Special requirements:
+        1. Murano component should be installed.
+        2. Windows image with metadata should be imported.
     """
 
     def test_check_default_key_pair(self):
@@ -64,15 +66,6 @@ class MuranoBaseSmokeTests(heatmanager.HeatBaseTest):
         self.verify(5, find_image, 1, fail_msg,
                     "checking if Windows image with Murano tag is available",
                     exp_key, exp_value)
-
-
-class MuranoDeploymentSmokeTests(murano.MuranoTest):
-    """
-    TestClass contains verifications of full Murano functionality.
-    Special requirements:
-        1. Murano component should be installed.
-        2. Windows image with metadata should be imported.
-    """
 
     def test_deploy_ad(self):
         """Check Murano API Service: Deploy AD

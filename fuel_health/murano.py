@@ -56,6 +56,9 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
                 if not hasattr(element, attribute):
                     self.fail(msg)
 
+    def is_keypair_available(self, keyname):
+        return keyname in [k.id for k in self.compute_client.keypairs.list()]
+
     def list_environments(self):
         """
             This method allows to get the list of environments.
