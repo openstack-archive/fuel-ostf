@@ -89,18 +89,16 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         cls.V_NODE_USERNAME = 'ubuntu'
         cls.HDP_HADOOP_USER = 'hdfs'
         cls.HDP_NODE_USERNAME = 'cloud-user'
-        cls.CLUSTER_CREATION_TIMEOUT = '45'
+        cls.CLUSTER_CREATION_TIMEOUT = '20'
         cls.USER_KEYPAIR_ID = 'savanna'
         cls.PLUGIN_NAME = 'vanilla'
         cls.HADOOP_VERSION = '1.1.2'
-        cls.IMAGE_ID = '6a76a5b2-ee3e-4be2-b343-c08f965c8e2c'
         cls.IMAGE_NAME = 'savanna'
         cls.CLUSTER_NAME = 'savanna-cluster'
 
     def _create_node_group_template_and_get_id(
             self, client, name, plugin_name, hadoop_version, description,
             volumes_per_node, volume_size, node_processes, node_configs):
-
         if not self.flavors:
             flavor = self.compute_client.flavors.create('SavannaFlavor',
                                                         512, 1, 700)
@@ -214,10 +212,11 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
 
     def _create_cluster_and_get_info(
             self, client, plugin_name, hadoop_version, cluster_template_id,
-            image_id, description, cluster_configs, node_groups,
+            image_name, description, cluster_configs, node_groups,
             anti_affinity):
         self.keys.append(
             self.compute_client.keypairs.create(self.USER_KEYPAIR_ID))
+        image_id = str(self.compute_client.images.find(name=image_name).id)
         data = client.clusters.create(
             self.CLUSTER_NAME, plugin_name, hadoop_version,
             cluster_template_id, image_id, description, cluster_configs,
@@ -248,7 +247,7 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
             self.PLUGIN_NAME,
             self.HADOOP_VERSION,
             cluster_template_id,
-            self.IMAGE_ID,
+            self.IMAGE_NAME,
             description='test cluster',
             cluster_configs={},
             node_groups=None,
