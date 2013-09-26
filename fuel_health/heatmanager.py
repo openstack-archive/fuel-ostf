@@ -18,19 +18,56 @@
 
 import logging
 
+LOG = logging.getLogger(__name__)
+
+
+try:
+    import heatclient.v1.client
+except:
+    LOG.warning('Heatclient could not be imported.')
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import config
 import fuel_health.nmanager
 import fuel_health.test
 
 
-LOG = logging.getLogger(__name__)
+class HeatManager(fuel_health.nmanager.OfficialClientManager):
+    """
+    HeatManager provides access to the official python client of Heat.
+    """
+
+    def __init__(self):
+        super(HeatManager, self).__init__()
+        self.heat_client = self._get_heat_client()
+        self.client_attr_names.append('heat_client')
+
+    def _get_heat_client(self, username=None, password=None):
+        keystone = self._get_identity_client()
+        token = keystone.auth_token
+        auth_url = self.config.identity.uri
+
+        if 'orchestration' not in [s.type for s in keystone.services.list()]:
+            return None
+
+        endpoint = keystone.service_catalog.url_for(
+            service_type='orchestration', endpoint_type='publicURL')
+        if not username:
+            username = self.config.identity.admin_username
+        if not password:
+            password = self.config.identity.admin_password
+
+        return heatclient.v1.client.Client(endpoint,
+                                           auth_url=auth_url, token=token,
+                                           username=username,
+                                           password=password)
 
 
 class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
     """
     Base class for Heat openstack sanity and smoke tests.
     """
+
+    manager_class = HeatManager
 
     simple_template = """
         {
