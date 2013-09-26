@@ -13,9 +13,7 @@
 #    under the License.
 
 import logging
-from fuel_plugin.ostf_adapter.nose_plugin import nose_discovery
 from fuel_plugin.ostf_adapter.storage import alembic_cli
-from pecan import conf
 
 LOG = logging.getLogger(__name__)
 
@@ -25,5 +23,4 @@ def after_initialization_environment_hook():
     Exception is good enough signal that something goes wrong
     """
     alembic_cli.do_apply_migrations()
-    nose_discovery.discovery(conf.debug_tests)
     return 0
