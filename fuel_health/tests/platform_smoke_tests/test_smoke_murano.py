@@ -152,7 +152,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         fail_msg = 'User can not create session for environment.'
         session = self.verify(5, self.create_session,
-                              3, fail_msg, "session creating",
+                              2, fail_msg, "session creating",
                               self.environment.id)
 
         creds = {'username': 'Administrator',
@@ -168,17 +168,17 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         fail_msg = 'User can not create service.'
         service = self.verify(5, self.create_service,
-                              4, fail_msg, "service creating",
+                              3, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = 'User can not deploy session'
         deploy_sess = self.verify(10, self.deploy_session,
-                                  5, fail_msg, "session send on deploy",
+                                  4, fail_msg, "session send on deploy",
                                   self.environment.id, session.id)
 
         fail_msg = 'Deploy did not complete correctly'
         status_env = self.verify(1800, self.deploy_check,
-                                    6, fail_msg, 'deploy is going',
+                                    5, fail_msg, 'deploy is going',
                                     self.environment.id)
 
         step = '6. Checking deployments status'
@@ -215,7 +215,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         fail_msg = 'User can not create session for environment.'
         session = self.verify(5, self.create_session,
-                              3, fail_msg, "session creating",
+                              2, fail_msg, "session creating",
                               self.environment.id)
 
         creds = {'username': 'Administrator',
@@ -232,17 +232,17 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         fail_msg = 'User can not create service.'
         service = self.verify(5, self.create_service,
-                              4, fail_msg, "service creating",
+                              3, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = 'User can not deploy session'
         deploy_sess = self.verify(10, self.deploy_session,
-                                  5, fail_msg, "session send on deploy",
+                                  4, fail_msg, "session send on deploy",
                                   self.environment.id, session.id)
 
         fail_msg = 'Deploy did not complete correctly'
         status_env = self.verify(1800, self.deploy_check,
-                                    6, fail_msg, 'deploy is going',
+                                    5, fail_msg, 'deploy is going',
                                     self.environment.id)
 
         step = '6. Checking deployments status'
@@ -279,7 +279,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         fail_msg = 'User can not create session for environment.'
         session = self.verify(5, self.create_session,
-                              3, fail_msg, "session creating",
+                              2, fail_msg, "session creating",
                               self.environment.id)
 
         creds = {'username': 'Administrator',
@@ -295,17 +295,17 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         fail_msg = 'User can not create service.'
         service = self.verify(5, self.create_service,
-                              4, fail_msg, "service creating",
+                              3, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = 'User can not deploy session'
         deploy_sess = self.verify(10, self.deploy_session,
-                                  5, fail_msg, "session send on deploy",
+                                  4, fail_msg, "session send on deploy",
                                   self.environment.id, session.id)
 
         fail_msg = 'Deploy did not complete correctly'
         status_env = self.verify(1800, self.deploy_check,
-                                    6, fail_msg, 'deploy is going',
+                                    5, fail_msg, 'deploy is going',
                                     self.environment.id)
 
         step = '6. Checking deployments status'
@@ -342,7 +342,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         fail_msg = 'User can not create session for environment.'
         session = self.verify(5, self.create_session,
-                              3, fail_msg, "session creating",
+                              2, fail_msg, "session creating",
                               self.environment.id)
 
         creds = {'username': 'Administrator',
@@ -360,17 +360,17 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         fail_msg = 'User can not create service.'
         service = self.verify(5, self.create_service,
-                              4, fail_msg, "service creating",
+                              3, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = 'User can not deploy session'
         deploy_sess = self.verify(10, self.deploy_session,
-                                  5, fail_msg, "session send on deploy",
+                                  4, fail_msg, "session send on deploy",
                                   self.environment.id, session.id)
 
         fail_msg = 'Deploy did not complete correctly'
         status_env = self.verify(1800, self.deploy_check,
-                                    6, fail_msg, 'deploy is going',
+                                    5, fail_msg, 'deploy is going',
                                     self.environment.id)
 
         step = '6. Checking deployments status'
@@ -407,7 +407,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         fail_msg = 'User can not create session for environment.'
         session = self.verify(5, self.create_session,
-                              3, fail_msg, "session creating",
+                              2, fail_msg, "session creating",
                               self.environment.id)
 
         post_body = {"type": "msSqlServer", "domain": "",
@@ -421,17 +421,17 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         fail_msg = 'User can not create service.'
         service = self.verify(5, self.create_service,
-                              4, fail_msg, "service creating",
+                              3, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = 'User can not deploy session'
         deploy_sess = self.verify(10, self.deploy_session,
-                                  5, fail_msg, "session send on deploy",
+                                  4, fail_msg, "session send on deploy",
                                   self.environment.id, session.id)
 
         fail_msg = 'Deploy did not complete correctly'
         status_env = self.verify(1800, self.deploy_check,
-                                    6, fail_msg, 'deploy is going',
+                                    5, fail_msg, 'deploy is going',
                                     self.environment.id)
 
         step = '6. Checking deployments status'
@@ -473,7 +473,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         fail_msg = 'User can not create session for environment.'
         session = self.verify(5, self.create_session,
-                              3, fail_msg, "session creating",
+                              2, fail_msg, "session creating",
                               self.environment.id)
 
         post_body = {"type": "activeDirectory","name": "ad.local",
@@ -488,27 +488,27 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         fail_msg = 'User can not create service.'
         service = self.verify(5, self.create_service,
-                              4, fail_msg, "service creating",
+                              3, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = 'User can not deploy session'
         deploy_sess = self.verify(10, self.deploy_session,
-                                  5, fail_msg, "session send on deploy",
+                                  4, fail_msg, "session send on deploy",
                                   self.environment.id, session.id)
 
         fail_msg = 'Deploy did not complete correctly'
         status_env = self.verify(1800, self.deploy_check,
-                                    6, fail_msg, 'deploy is going',
+                                    5, fail_msg, 'deploy is going',
                                     self.environment.id)
 
         deployment_status = self.verify(40, self.deployments_status_check,
-                                        7, fail_msg,
+                                        6, fail_msg,
                                         'Check deployments status',
                                         self.environment.id)
 
         fail_msg = 'User can not create session for environment.'
         session = self.verify(5, self.create_session,
-                              8, fail_msg, "session creating",
+                              7, fail_msg, "session creating",
                               self.environment.id)
 
         # it is just 'any unused IP addresses'
@@ -538,17 +538,17 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         fail_msg = 'User can not create service.'
         service = self.verify(5, self.create_service,
-                              9, fail_msg, "service creating",
+                              8, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = 'User can not deploy session'
         deploy_sess = self.verify(10, self.deploy_session,
-                                  10, fail_msg, "session send on deploy",
+                                  9, fail_msg, "session send on deploy",
                                   self.environment.id, session.id)
 
         fail_msg = 'Deploy did not complete correctly'
         status_env = self.verify(1800, self.deploy_check,
-                                    11, fail_msg, 'deploy is going',
+                                    10, fail_msg, 'deploy is going',
                                     self.environment.id)
 
         step = '11. Checking deployments status'
