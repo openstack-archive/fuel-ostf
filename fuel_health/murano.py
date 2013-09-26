@@ -225,3 +225,34 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         return self.murano_client.services.delete(environment_id,
                                                   '/{0}'.format(service_id),
                                                   session_id)
+
+    def deploy_check(self, environment_id):
+        """
+            This method allows to wait for deployment of Murano evironments.
+
+            Input parameters:
+              environment_id - ID of environment
+
+            Returns 'OK'.
+        """
+
+        infa = self.get_environment(environment_id)
+        while infa.status != 'ready':
+            time.sleep(15)
+            infa = self.get_environment(environment_id)
+        return 'OK'
+
+    def deployments_status_check(self, environment_id):
+        """
+            This method allows to check that deployment status is 'success'.
+
+            Input parameters:
+              environment_id - ID of environment
+
+            Returns 'OK'.
+        """
+
+        deployments = self.murano_client.deployments.list(environment_id)
+        for depl in deployments:
+            assert depl.state == 'success'
+        return 'OK'

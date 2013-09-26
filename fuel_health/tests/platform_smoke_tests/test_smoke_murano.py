@@ -18,7 +18,7 @@ from fuel_health import murano
 from fuel_health import heatmanager
 
 
-class MuranoSmokeTests(heatmanager.HeatBaseTest):
+class MuranoBaseSmokeTests(heatmanager.HeatBaseTest):
     """
     TestClass contains tests that check core Murano functionality.
     """
@@ -65,6 +65,15 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
                     "checking if Windows image with Murano tag is available",
                     exp_key, exp_value)
 
+
+class MuranoDeploymentSmokeTests(murano.MuranoTest):
+    """
+    TestClass contains verifications of full Murano functionality.
+    Special requirements:
+        1. Murano component should be installed.
+        2. Windows image with metadata should be imported.
+    """
+
     def test_deploy_ad(self):
         """Check Murano API Service: Deploy AD
         Test checks that user can deploy AD.
@@ -77,13 +86,18 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
             4. Request to deploy session.
             5. Checking environment status.
             6. Checking deployments status
-            7. Clean up (delete environment).
+            7. Send request to delete environment.
         Duration: 120 - 1830 s.
         """
 
+        fail_msg = 'Cannot create environment.'
+        self.environment = self.verify(5, self.create_environment,
+                                       1, fail_msg, 'creating environment',
+                                       "ost1_test-Murano_env01")
+
         fail_msg = 'User can not create session for environment.'
         session = self.verify(5, self.create_session,
-                              3, fail_msg, "session creating",
+                              2, fail_msg, "session creating",
                               self.environment.id)
 
         post_body = {"type": "activeDirectory","name": "ad.local",
@@ -98,17 +112,17 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
 
         fail_msg = 'User can not create service.'
         service = self.verify(5, self.create_service,
-                              4, fail_msg, "service creating",
+                              3, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = 'User can not deploy session'
         deploy_sess = self.verify(10, self.deploy_session,
-                                  5, fail_msg, "session send on deploy",
+                                  4, fail_msg, "session send on deploy",
                                   self.environment.id, session.id)
 
         fail_msg = 'Deploy did not complete correctly'
         status_env = self.verify(1800, self.deploy_check,
-                                    6, fail_msg, 'deploy is going',
+                                    5, fail_msg, 'deploy is going',
                                     self.environment.id)
 
         step = '6. Checking deployments status'
@@ -117,8 +131,10 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
                                         'Check deployments status',
                                         self.environment.id)
 
-        " Save info for tear down method "
-        self.last_step = '7. Clean up (delete environment). '
+        fail_msg = 'Cannot delete environment.'
+        self.verify(5, self.delete_environment,
+                    7, fail_msg, "deleting environment",
+                    self.environment.id)
 
     def test_deploy_iis(self):
         """Check Murano API Service: Deploy IIS
@@ -132,9 +148,14 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
             4. Request to deploy session.
             5. Checking environment status.
             6. Checking deployments status
-            7. Clean up (delete environment).
+            7. Send request to delete environment.
         Duration: 120 - 1830 s.
         """
+
+        fail_msg = 'Cannot create environment.'
+        self.environment = self.verify(5, self.create_environment,
+                                       1, fail_msg, 'creating environment',
+                                       "ost1_test-Murano_env01")
 
         fail_msg = 'User can not create session for environment.'
         session = self.verify(5, self.create_session,
@@ -173,8 +194,10 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
                                         'Check deployments status',
                                         self.environment.id)
 
-        " Save info for tear down method "
-        self.last_step = '7. Clean up (delete environment). '
+        fail_msg = 'Cannot delete environment.'
+        self.verify(5, self.delete_environment,
+                    7, fail_msg, "deleting environment",
+                    self.environment.id)
 
     def test_deploy_aspnet(self):
         """Check Murano API Service: Deploy ASPNet
@@ -188,9 +211,15 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
             4. Request to deploy session.
             5. Checking environment status.
             6. Checking deployments status
-            7. Clean up (delete environment).
+            7. Send request to delete environment.
         Duration: 120 - 1830 s.
         """
+
+        fail_msg = 'Cannot create environment.'
+        self.environment = self.verify(5, self.create_environment,
+                                       1, fail_msg, 'creating environment',
+                                       "ost1_test-Murano_env01")
+
         fail_msg = 'User can not create session for environment.'
         session = self.verify(5, self.create_session,
                               3, fail_msg, "session creating",
@@ -229,8 +258,10 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
                                         'Check deployments status',
                                         self.environment.id)
 
-        " Save info for tear down method "
-        self.last_step = '7. Clean up (delete environment). '
+        fail_msg = 'Cannot delete environment.'
+        self.verify(5, self.delete_environment,
+                    7, fail_msg, "deleting environment",
+                    self.environment.id)
 
     def test_deploy_iis_farm(self):
         """Check Murano API Service: Deploy IIS farm
@@ -244,9 +275,14 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
             4. Request to deploy session.
             5. Checking environment status.
             6. Checking deployments status
-            7. Clean up (delete environment).
+            7. Send request to delete environment.
         Duration: 120 - 1830 s.
         """
+
+        fail_msg = 'Cannot create environment.'
+        self.environment = self.verify(5, self.create_environment,
+                                       1, fail_msg, 'creating environment',
+                                       "ost1_test-Murano_env01")
 
         fail_msg = 'User can not create session for environment.'
         session = self.verify(5, self.create_session,
@@ -285,8 +321,10 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
                                         'Check deployments status',
                                         self.environment.id)
 
-        " Save info for tear down method "
-        self.last_step = '7. Clean up (delete environment). '
+        fail_msg = 'Cannot delete environment.'
+        self.verify(5, self.delete_environment,
+                    7, fail_msg, "deleting environment",
+                    self.environment.id)
 
     def test_deploy_aspnet_farm(self):
         """Check Murano API Service: Deploy ASPNet farm
@@ -300,9 +338,14 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
             4. Request to deploy session.
             5. Checking environment status.
             6. Checking deployments status
-            7. Clean up (delete environment).
+            7. Send request to delete environment.
         Duration: 120 - 1830 s.
         """
+
+        fail_msg = 'Cannot create environment.'
+        self.environment = self.verify(5, self.create_environment,
+                                       1, fail_msg, 'creating environment',
+                                       "ost1_test-Murano_env01")
 
         fail_msg = 'User can not create session for environment.'
         session = self.verify(5, self.create_session,
@@ -311,9 +354,10 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
 
         creds = {'username': 'Administrator',
                  'password': 'P@ssw0rd'}
+        asp_repository = "git://github.com/Mirantis/murano-mvc-demo.git"
         post_body = {"type": "aspNetAppFarm", "domain": "",
                  "availabilityZone": "nova", "name": "SomeApsFarm",
-                 "repository": "git://github.com/Mirantis/murano-mvc-demo.git",
+                 "repository": asp_repository,
                  "adminPassword": "P@ssw0rd", "loadBalancerPort": 80,
                  "unitNamingPattern": "",
                  "osImage": {"type": "ws-2012-std", "name": "ws-2012-std",
@@ -342,8 +386,10 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
                                         'Check deployments status',
                                         self.environment.id)
 
-        " Save info for tear down method "
-        self.last_step = '7. Clean up (delete environment). '
+        fail_msg = 'Cannot delete environment.'
+        self.verify(5, self.delete_environment,
+                    7, fail_msg, "deleting environment",
+                    self.environment.id)
 
     def test_deploy_sql(self):
         """Check Murano API Service: Deploy SQL
@@ -357,9 +403,14 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
             4. Request to deploy session.
             5. Checking environment status.
             6. Checking deployments status
-            7. Clean up (delete environment).
+            7. Send request to delete environment.
         Duration: 120 - 1830 s.
         """
+
+        fail_msg = 'Cannot create environment.'
+        self.environment = self.verify(5, self.create_environment,
+                                       1, fail_msg, 'creating environment',
+                                       "ost1_test-Murano_env01")
 
         fail_msg = 'User can not create session for environment.'
         session = self.verify(5, self.create_session,
@@ -396,8 +447,10 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
                                         'Check deployments status',
                                         self.environment.id)
 
-        " Save info for tear down method "
-        self.last_step = '7. Clean up (delete environment). '
+        fail_msg = 'Cannot delete environment.'
+        self.verify(5, self.delete_environment,
+                    7, fail_msg, "deleting environment",
+                    self.environment.id)
 
     def test_deploy_sql_cluster(self):
         """Check Murano API Service: Deploy SQL
@@ -416,9 +469,14 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
             9. Request to deploy session..
             10. Checking environment status.
             11. Checking deployments status.
-            12. Clean up (delete environment).
+            12. Send request to delete environment.
         Duration: 200 - 2200 s.
         """
+
+        fail_msg = 'Cannot create environment.'
+        self.environment = self.verify(5, self.create_environment,
+                                       1, fail_msg, 'creating environment',
+                                       "ost1_test-Murano_env01")
 
         fail_msg = 'User can not create session for environment.'
         session = self.verify(5, self.create_session,
@@ -506,5 +564,7 @@ class MuranoSmokeTests(heatmanager.HeatBaseTest):
                                         'Check deployments status',
                                         self.environment.id)
 
-        " Save info for tear down method "
-        self.last_step = '12. Clean up (delete environment). '
+        fail_msg = 'Cannot delete environment.'
+        self.verify(5, self.delete_environment,
+                    12, fail_msg, "deleting environment",
+                    self.environment.id)
