@@ -18,15 +18,17 @@
 
 import logging
 
-import heatclient.v1.client
+LOG = logging.getLogger(__name__)
 
+
+try:
+    import heatclient.v1.client
+except:
+    LOG.warning('Heatclient could not be imported.')
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import config
 import fuel_health.nmanager
 import fuel_health.test
-
-
-LOG = logging.getLogger(__name__)
 
 
 class HeatManager(fuel_health.nmanager.OfficialClientManager):
