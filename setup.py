@@ -18,11 +18,11 @@ import setuptools
 
 fuel_health_reqs = [
     'oslo.config>=1.1.1',
-    'python-cinderclient>=1.0.4',
-    'python-glanceclient>=0.9.0',
-    'python-keystoneclient>=0.2.4',
-    'python-novaclient>=2.13.0',
-    # 'python-heatclient==0.2.2',
+    'python-cinderclient==1.0.4',
+    'python-glanceclient==0.9.0',
+    'python-keystoneclient==0.3.1',
+    'python-novaclient==2.13.0',
+    'python-heatclient==0.2.4',
     'paramiko>=1.10.1',
     'requests>=1.1,<1.2.3',
     'unittest2>=0.5.1',
