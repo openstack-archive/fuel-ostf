@@ -17,16 +17,23 @@
 #    under the License.
 
 import logging
+import time
+
+LOG = logging.getLogger(__name__)
 
 # Default client libs
+try:
+    import heatclient.v1.client
+except:
+    LOG.warning('Heatclient could not be imported.')
+try:
+    import muranoclient.v1.client
+except:
+    LOG.warning('Muranoclient could not be imported.')
 import cinderclient.client
 import glanceclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
-import heatclient.v1.client
-import muranoclient.v1.client
-
-import time
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.exceptions import SSHExecCommandFailed
@@ -36,9 +43,6 @@ from fuel_health import exceptions
 import fuel_health.manager
 import fuel_health.test
 from fuel_health import config
-
-
-LOG = logging.getLogger(__name__)
 
 
 class OfficialClientManager(fuel_health.manager.Manager):

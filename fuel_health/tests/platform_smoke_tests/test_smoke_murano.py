@@ -318,8 +318,8 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         fail_msg = 'Deploy did not complete correctly, '
         fail_msg += 'please check that Key Pair "murano-lb-key" exists'
         status_env = self.verify(1800, self.deploy_check,
-                                    5, fail_msg, 'deploy is going',
-                                    self.environment.id)
+                                 5, fail_msg, 'deploy is going',
+                                 self.environment.id)
 
         step = '6. Checking deployments status'
         deployment_status = self.verify(40, self.deployments_status_check,

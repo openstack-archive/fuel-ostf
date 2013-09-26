@@ -16,6 +16,7 @@
 #    under the License.
 
 import time
+
 import fuel_health.nmanager
 
 
