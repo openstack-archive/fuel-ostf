@@ -18,7 +18,9 @@
 import logging
 import time
 
+from fuel_health.common.ssh import Client as SSHClient
 import fuel_health.nmanager as nmanager
+
 
 LOG = logging.getLogger(__name__)
 
@@ -26,7 +28,6 @@ try:
     import savannaclient.api.client
 except:
     LOG.warning('Savanna client could not be imported.')
-
 
 class SavannaClientManager(nmanager.OfficialClientManager):
     """
@@ -65,13 +66,13 @@ class SavannaOfficialClientTest(nmanager.OfficialClientTest):
     manager_class = SavannaClientManager
 
 
-class SavannaSanityChecksTest(SavannaOfficialClientTest):
+class SavannaTest(SavannaOfficialClientTest):
     """
     Base class for openstack sanity tests for Savanna
     """
     @classmethod
     def setUpClass(cls):
-        super(SavannaSanityChecksTest, cls).setUpClass()
+        super(SavannaTest, cls).setUpClass()
         cls.flavors = []
         cls.node_groups = []
         cls.cluster_templates = []
@@ -94,11 +95,11 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         cls.HDP_HADOOP_USER = 'hdfs'
         cls.HDP_NODE_USERNAME = 'cloud-user'
         cls.CLUSTER_CREATION_TIMEOUT = '20'
-        cls.USER_KEYPAIR_ID = 'savanna'
+        cls.USER_KEYPAIR_ID = 'ostf-savanna'
         cls.PLUGIN_NAME = 'vanilla'
         cls.HADOOP_VERSION = '1.1.2'
         cls.IMAGE_NAME = 'savanna'
-        cls.CLUSTER_NAME = 'savanna-cluster'
+        cls.CLUSTER_NAME = 'ostf-savanna-cluster'
 
     def _create_node_group_template_and_get_id(
             self, client, name, plugin_name, hadoop_version, description,
@@ -125,44 +126,6 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         )
         cluster_template_id = data.id
         return cluster_template_id
-
-    def _await_active_workers_for_namenode(self, node_info, plugin_name):
-        attempt_count = 100
-        if plugin_name == 'vanilla':
-            hadoop_user = self.V_HADOOP_USER
-            node_username = self.V_NODE_USERNAME
-        elif plugin_name == 'hdp':
-            hadoop_user = self.HDP_HADOOP_USER
-            node_username = self.HDP_NODE_USERNAME
-        while True:
-            active_tasktracker_count = self.execute_command(
-                node_info['namenode_ip'], 'sudo su -c "hadoop job \
-                            -list-active-trackers" %s' % hadoop_user,
-                node_username)[1]
-            active_datanode_count = int(
-                self.execute_command(node_info['namenode_ip'],
-                                     'sudo su -c "hadoop dfsadmin -report" %s \
-                                     | grep "Datanodes available:.*" | awk \
-                                     \'{print $3}\'' % hadoop_user,
-                                     node_username)[1]
-            )
-            if not active_tasktracker_count:
-                active_tasktracker_count = 0
-            else:
-                active_tasktracker_count = len(
-                    active_tasktracker_count[:-1].split('\n')
-                )
-            if (
-                    active_tasktracker_count == node_info['tasktracker_count']
-            ) and (
-                    active_datanode_count == node_info['datanode_count']
-            ):
-                break
-            if attempt_count == 0:
-                self.fail('Tasktracker or datanode cannot be started '
-                          'within 5 minutes.')
-            time.sleep(3)
-            attempt_count -= 1
 
     def _check_cluster_state(self, client, cluster_state, cluster_id):
         if cluster_state == 'Error':
@@ -203,15 +166,6 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
                 node_ip = instance['management_ip']
                 node_ip_list_with_node_processes[node_ip] = node_group[
                     'node_processes']
-        # For example:
-        # node_ip_list_with_node_processes = {
-        #       '172.18.168.181': ['tasktracker'],
-        #       '172.18.168.94': ['secondarynamenode'],
-        #       '172.18.168.208': ['namenode', 'jobtracker'],
-        #       '172.18.168.93': ['tasktracker', 'datanode'],
-        #       '172.18.168.44': ['tasktracker', 'datanode'],
-        #       '172.18.168.233': ['datanode']
-        # }
         return node_ip_list_with_node_processes
 
     def _create_cluster_and_get_info(
@@ -231,19 +185,6 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         cluster_state = self._get_cluster_state(client, cluster_id)
         self._check_cluster_state(client, cluster_state, cluster_id)
 
-        #node_ip_list_with_node_processes = \
-        #    self._get_cluster_node_ip_list_with_node_processes(cluster_id)
-#
-        #node_info = self.get_node_info(
-        #    node_ip_list_with_node_processes, plugin_name
-        #)
-
-        #self._await_active_workers_for_namenode(node_info, plugin_name)
-        #return {
-        #    'cluster_id': cluster_id,
-        #    'node_ip_list': node_ip_list_with_node_processes,
-        #    'node_info': node_info
-        #}
 
     def _create_cluster(self, client, cluster_template_id):
         self._create_cluster_and_get_info(
@@ -256,24 +197,13 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
             cluster_configs={},
             node_groups=None,
             anti_affinity=[])
-        #try:
-        #    self._cluster_config_testing(cluster_info)
-        #    self._map_reduce_testing(cluster_info,
-        #                             self.PLUGIN_NAME,
-        #                             self.HADOOP_VERSION,
-        #                             self.HADOOP_USER,
-        #                             self.HADOOP_DIRECTORY,
-        #                             self.HADOOP_LOG_DIRECTORY,
-        #                             self.NODE_USERNAME)
-        #    self._check_swift_availability(cluster_info)
-        #except RuntimeError as e:
-        #    self.fail('Failure while gating test: ' + str(e))
+
 
     def _create_node_group_template_tt_dn_id(self, client):
         node_group_template_tt_dn_id = \
             self._create_node_group_template_and_get_id(
                 client,
-                'tt-dn',
+                'ostf-savanna-tt-dn',
                 self.plugin,
                 self.plugin_version,
                 description='test node group template',
@@ -292,7 +222,7 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         node_group_template_tt_id = \
             self._create_node_group_template_and_get_id(
                 client,
-                'tt',
+                'ostf-savanna-tt',
                 self.plugin,
                 self.plugin_version,
                 description='test node group template',
@@ -310,7 +240,7 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
         node_group_template_tt_id = \
             self._create_node_group_template_and_get_id(
                 client,
-                'dd',
+                'ostf-savanna-dd',
                 self.plugin,
                 self.plugin_version,
                 description='test node group template',
@@ -327,7 +257,7 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
     def _create_cluster_template(self, client):
         cluster_template_id = self._create_cluster_template_and_get_id(
             client,
-            'test-cluster-template',
+            'ostf-savanna-test-cluster-template',
             self.plugin,
             self.plugin_version,
             description='test cluster template',
@@ -375,7 +305,7 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
     def _create_tiny_cluster_template(self, client):
         cluster_template_id = self._create_cluster_template_and_get_id(
             client,
-            'test-cluster-template',
+            'ostf-savanna-test-cluster-template',
             self.plugin,
             self.plugin_version,
             description='test cluster template',
@@ -446,9 +376,10 @@ class SavannaSanityChecksTest(SavannaOfficialClientTest):
 
     @classmethod
     def tearDownClass(cls):
-        super(SavannaSanityChecksTest, cls).tearDownClass()
+        super(SavannaTest, cls).tearDownClass()
         cls._clean_clusters()
         cls._clean_cluster_templates()
         cls._clean_node_groups_templates()
         cls._clean_flavors()
         cls._clean_keys()
+

@@ -23,6 +23,7 @@ sys.path.append(path)
 import logging
 
 from fuel_health import exceptions
+import fuel_health.savanna
 import fuel_health.heatmanager
 
 
@@ -200,6 +201,7 @@ def cleanup():
             except Exception as exc:
                 LOG.debug(exc)
                 pass
+
 
 
 if __name__ == "__main__":

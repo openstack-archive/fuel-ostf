@@ -22,7 +22,7 @@ from fuel_health import savanna
 LOG = logging.getLogger(__name__)
 
 
-class SanitySavannaTests(savanna.SavannaSanityChecksTest):
+class SanitySavannaTests(savanna.SavannaTest):
     """
     TestClass contains tests that check basic Savanna functionality.
     """
