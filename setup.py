@@ -75,6 +75,8 @@ setuptools.setup(
         'Topic :: System :: Testing',
     ],
 
+    include_package_data=True,
+
     packages=setuptools.find_packages(),
 
     install_requires=fuel_health_reqs+fuel_ostf_reqs,
