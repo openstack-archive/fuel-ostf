@@ -258,7 +258,6 @@ class SavannaTest(SavannaOfficialClientTest):
         LOG.debug(node_ip_list_with_node_processes)
         return node_ip_list_with_node_processes
 
-
     def _create_cluster(self, client, cluster_template_id):
         self._create_cluster_and_get_info(
             client,
@@ -270,7 +269,6 @@ class SavannaTest(SavannaOfficialClientTest):
             cluster_configs={},
             node_groups=None,
             anti_affinity=[])
-
 
     def _create_node_group_template_tt_dn_id(self, client):
         node_group_template_tt_dn_id = \
