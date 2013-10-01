@@ -19,6 +19,8 @@ import logging
 import time
 
 from fuel_health.common.ssh import Client as SSHClient
+from fuel_health.exceptions import SSHExecCommandFailed
+
 import fuel_health.nmanager as nmanager
 
 
@@ -100,6 +102,11 @@ class SavannaTest(SavannaOfficialClientTest):
         cls.HADOOP_VERSION = '1.1.2'
         cls.IMAGE_NAME = 'savanna'
         cls.CLUSTER_NAME = 'ostf-savanna-cluster'
+        cls.JT_PORT = 50030
+        cls.NN_PORT = 50070
+        cls.TT_PORT = 50060
+        cls.DN_PORT = 50075
+        cls.SEC_NN_PORT = 50090
 
     def _create_node_group_template_and_get_id(
             self, client, name, plugin_name, hadoop_version, description,
@@ -141,13 +148,13 @@ class SavannaTest(SavannaOfficialClientTest):
         data = client.clusters.get(cluster_id)
         i = 1
         while str(data.status) != 'Active':
-            print('CLUSTER STATUS: ' + str(data.status))
-            #sys.exit("Error message")
+            LOG.debug('CLUSTER STATUS:' + str(i * 10) + ' sec:' + str(data.status))
+            print('CLUSTER STATUS:' + str(i * 10) + ' sec:' + str(data.status))
             if str(data.status) == 'Error':
-                print('\n' + str(data) + '\n')
+                LOG.debug('\n' + str(i * 10) + ' sec:' + str(data) + '\n')
                 return 'Error'
             if i > self.CLUSTER_CREATION_TIMEOUT * 6:
-                print('\n' + str(data) + '\n')
+                LOG.debug('\n' + str(i * 10) + ' sec:' + str(data) + '\n')
                 return str(data.status)
             data = client.clusters.get(cluster_id)
             time.sleep(10)
@@ -166,6 +173,7 @@ class SavannaTest(SavannaOfficialClientTest):
                 node_ip = instance['management_ip']
                 node_ip_list_with_node_processes[node_ip] = node_group[
                     'node_processes']
+        LOG.debug('node_ip_list_with_node_processes:\n%s' % node_ip_list_with_node_processes)
         return node_ip_list_with_node_processes
 
     def _create_cluster_and_get_info(
@@ -184,6 +192,72 @@ class SavannaTest(SavannaOfficialClientTest):
         self.clusters.append(cluster_id)
         cluster_state = self._get_cluster_state(client, cluster_id)
         self._check_cluster_state(client, cluster_state, cluster_id)
+        node_ip_list_with_node_processes = \
+            self._get_cluster_node_ip_list_with_node_processes(client, cluster_id)
+        node_info = self._get_node_info(
+            node_ip_list_with_node_processes, plugin_name
+        )
+        self._await_active_workers_for_namenode(node_info, plugin_name)
+        return {
+            'cluster_id': cluster_id,
+            'node_ip_list': node_ip_list_with_node_processes,
+            'node_info': node_info
+        }
+
+    def _get_node_info(self, node_ip_list_with_node_processes, plugin_name):
+        tasktracker_count = 0
+        datanode_count = 0
+        node_count = 0
+        port_map = {
+            'jobtracker': self.JT_PORT,
+            'namenode': self.NN_PORT,
+            'tasktracker': self.TT_PORT,
+            'datanode': self.DN_PORT,
+            'secondary_namenode': self.SEC_NN_PORT
+        }
+        self.tt = 'tasktracker'
+        self.dn = 'datanode'
+        self.nn = 'namenode'
+        if plugin_name == 'hdp':
+            port_map = {
+                'JOBTRACKER': self.JT_PORT,
+                'NAMENODE': self.NN_PORT,
+                'TASKTRACKER': self.TT_PORT,
+                'DATANODE': self.DN_PORT,
+                'SECONDARY_NAMENODE': self.SEC_NN_PORT
+            }
+            self.tt = 'TASKTRACKER'
+            self.dn = 'DATANODE'
+            self.nn = 'NAMENODE'
+        for node_ip, processes in node_ip_list_with_node_processes.items():
+            node_count += 1
+            if self.tt in processes:
+                tasktracker_count += 1
+            if self.dn in processes:
+                datanode_count += 1
+            if self.nn in processes:
+                namenode_ip = node_ip
+        return {
+            'namenode_ip': namenode_ip,
+            'tasktracker_count': tasktracker_count,
+            'datanode_count': datanode_count,
+            'node_count': node_count
+        }
+
+    @classmethod
+    def _get_cluster_node_ip_list_with_node_processes(
+            cls, client, cluster_id):
+        data = client.clusters.get(cluster_id)
+        node_groups = data.node_groups
+        node_ip_list_with_node_processes = {}
+        for node_group in node_groups:
+            instances = node_group['instances']
+            for instance in instances:
+                node_ip = instance['management_ip']
+                node_ip_list_with_node_processes[node_ip] = node_group[
+                    'node_processes']
+        LOG.debug(node_ip_list_with_node_processes)
+        return node_ip_list_with_node_processes
 
 
     def _create_cluster(self, client, cluster_template_id):
@@ -334,6 +408,91 @@ class SavannaTest(SavannaOfficialClientTest):
         self.cluster_templates.append(cluster_template_id)
         return cluster_template_id
 
+    def _await_active_workers_for_namenode(self, node_info, plugin_name):
+        attempt_count = 100
+        if plugin_name == 'vanilla':
+            hadoop_user = self.V_HADOOP_USER
+            node_username = self.V_NODE_USERNAME
+        elif plugin_name == 'hdp':
+            hadoop_user = self.HDP_HADOOP_USER
+        LOG.debug('Starting ssh execute')
+        try:
+            SSHClient(host=self.config.compute.controller_nodes[0],
+                      username=self.config.compute.controller_node_ssh_user,
+                      pkey=self.config.compute.path_to_private_key,
+                      timeout=300
+                      ).exec_command('echo "%s" > /tmp/ostf-savanna.pem' %
+                             self.keys[0].private_key)
+            SSHClient(host=self.config.compute.controller_nodes[0],
+                      username=self.config.compute.controller_node_ssh_user,
+                      pkey=self.config.compute.path_to_private_key,
+                      timeout=300
+                      ).exec_command('chmod 600  /tmp/ostf-savanna.pem')
+        except SSHExecCommandFailed as exc:
+            output_msg = "Command failed."
+            LOG.debug(exc)
+            self.fail(output_msg)
+        while True:
+            try:
+                cmd = ('ssh -i /tmp/ostf-savanna.pem -l %s '
+                       '-oUserKnownHostsFile=/dev/null '
+                       '-oStrictHostKeyChecking=no %s '
+                       'sudo -u %s -i "hadoop job '
+                       '-list-active-trackers"' %
+                       (self.V_NODE_USERNAME, node_info['namenode_ip'], hadoop_user))
+
+                active_tasktracker_count = SSHClient(
+                    host=self.config.compute.controller_nodes[0],
+                    username=self.config.compute.controller_node_ssh_user,
+                    pkey=self.config.compute.path_to_private_key,
+                    timeout=300
+                    ).exec_command(cmd)
+                LOG.debug('active_tasktracker_count:%s' % active_tasktracker_count)
+                print('active_tasktracker_count:%s' % active_tasktracker_count)
+            except SSHExecCommandFailed as exc:
+                output_msg = "Command failed."
+                LOG.debug(exc)
+                self.fail(output_msg)
+            try:
+                cmd = ('ssh -i /tmp/ostf-savanna.pem -l %s '
+                       '-oUserKnownHostsFile=/dev/null '
+                       '-oStrictHostKeyChecking=no %s '
+                       'sudo -u %s -i "hadoop dfsadmin -report" '
+                       '| grep "Datanodes available:.*" | awk '
+                       '\'{print $3}\'' %
+                       (self.V_NODE_USERNAME, node_info['namenode_ip'], hadoop_user))
+                active_datanode_count = int(
+                    SSHClient(
+                    host=self.config.compute.controller_nodes[0],
+                    username=self.config.compute.controller_node_ssh_user,
+                    pkey=self.config.compute.path_to_private_key,
+                    timeout=300
+                    ).exec_command(cmd))
+                LOG.debug('active_datanode_count:%s' % active_datanode_count)
+                print('active_datanode_count:%s' % active_datanode_count)
+            except SSHExecCommandFailed as exc:
+                output_msg = "Command failed."
+                LOG.debug(exc)
+                self.fail(output_msg)
+
+            if not active_tasktracker_count:
+                active_tasktracker_count = 0
+            else:
+                active_tasktracker_count = len(
+                    active_tasktracker_count[:-1].split('\n')
+                )
+            if (
+                    active_tasktracker_count == node_info['tasktracker_count']
+            ) and (
+                    active_datanode_count == node_info['datanode_count']
+            ):
+                break
+            if attempt_count == 0:
+                self.fail('Tasktracker or datanode cannot be started '
+                          'within 5 minutes.')
+            time.sleep(3)
+            attempt_count -= 1
+
     @classmethod
     def _list_node_group_template(cls, client):
         return(client.node_group_templates.list())
@@ -377,9 +536,9 @@ class SavannaTest(SavannaOfficialClientTest):
     @classmethod
     def tearDownClass(cls):
         super(SavannaTest, cls).tearDownClass()
-        cls._clean_clusters()
-        cls._clean_cluster_templates()
-        cls._clean_node_groups_templates()
-        cls._clean_flavors()
-        cls._clean_keys()
+#        cls._clean_clusters()
+#        cls._clean_cluster_templates()
+#        cls._clean_node_groups_templates()
+#        cls._clean_flavors()
+#        cls._clean_keys()
 
