@@ -449,9 +449,9 @@ class SavannaTest(SavannaOfficialClientTest):
     @classmethod
     def tearDownClass(cls):
         super(SavannaTest, cls).tearDownClass()
-#        cls._clean_clusters()
-#        cls._clean_cluster_templates()
-#        cls._clean_node_groups_templates()
-#        cls._clean_flavors()
-#        cls._clean_keys()
+        cls._clean_clusters()
+        cls._clean_cluster_templates()
+        cls._clean_node_groups_templates()
+        cls._clean_flavors()
+        cls._clean_keys()
 
