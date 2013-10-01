@@ -197,7 +197,6 @@ class SavannaTest(SavannaOfficialClientTest):
         node_info = self._get_node_info(
             node_ip_list_with_node_processes, plugin_name
         )
-        self._await_active_workers_for_namenode(node_info, plugin_name)
         return {
             'cluster_id': cluster_id,
             'node_ip_list': node_ip_list_with_node_processes,
@@ -408,90 +407,6 @@ class SavannaTest(SavannaOfficialClientTest):
         self.cluster_templates.append(cluster_template_id)
         return cluster_template_id
 
-    def _await_active_workers_for_namenode(self, node_info, plugin_name):
-        attempt_count = 100
-        if plugin_name == 'vanilla':
-            hadoop_user = self.V_HADOOP_USER
-            node_username = self.V_NODE_USERNAME
-        elif plugin_name == 'hdp':
-            hadoop_user = self.HDP_HADOOP_USER
-        LOG.debug('Starting ssh execute')
-        try:
-            SSHClient(host=self.config.compute.controller_nodes[0],
-                      username=self.config.compute.controller_node_ssh_user,
-                      pkey=self.config.compute.path_to_private_key,
-                      timeout=300
-                      ).exec_command('echo "%s" > /tmp/ostf-savanna.pem' %
-                             self.keys[0].private_key)
-            SSHClient(host=self.config.compute.controller_nodes[0],
-                      username=self.config.compute.controller_node_ssh_user,
-                      pkey=self.config.compute.path_to_private_key,
-                      timeout=300
-                      ).exec_command('chmod 600  /tmp/ostf-savanna.pem')
-        except SSHExecCommandFailed as exc:
-            output_msg = "Command failed."
-            LOG.debug(exc)
-            self.fail(output_msg)
-        while True:
-            try:
-                cmd = ('ssh -i /tmp/ostf-savanna.pem -l %s '
-                       '-oUserKnownHostsFile=/dev/null '
-                       '-oStrictHostKeyChecking=no %s '
-                       'sudo -u %s -i "hadoop job '
-                       '-list-active-trackers"' %
-                       (self.V_NODE_USERNAME, node_info['namenode_ip'], hadoop_user))
-
-                active_tasktracker_count = SSHClient(
-                    host=self.config.compute.controller_nodes[0],
-                    username=self.config.compute.controller_node_ssh_user,
-                    pkey=self.config.compute.path_to_private_key,
-                    timeout=300
-                    ).exec_command(cmd)
-                LOG.debug('active_tasktracker_count:%s' % active_tasktracker_count)
-                print('active_tasktracker_count:%s' % active_tasktracker_count)
-            except SSHExecCommandFailed as exc:
-                output_msg = "Command failed."
-                LOG.debug(exc)
-                self.fail(output_msg)
-            try:
-                cmd = ('ssh -i /tmp/ostf-savanna.pem -l %s '
-                       '-oUserKnownHostsFile=/dev/null '
-                       '-oStrictHostKeyChecking=no %s '
-                       'sudo -u %s -i "hadoop dfsadmin -report" '
-                       '| grep "Datanodes available:.*" | awk '
-                       '\'{print $3}\'' %
-                       (self.V_NODE_USERNAME, node_info['namenode_ip'], hadoop_user))
-                active_datanode_count = int(
-                    SSHClient(
-                    host=self.config.compute.controller_nodes[0],
-                    username=self.config.compute.controller_node_ssh_user,
-                    pkey=self.config.compute.path_to_private_key,
-                    timeout=300
-                    ).exec_command(cmd))
-                LOG.debug('active_datanode_count:%s' % active_datanode_count)
-                print('active_datanode_count:%s' % active_datanode_count)
-            except SSHExecCommandFailed as exc:
-                output_msg = "Command failed."
-                LOG.debug(exc)
-                self.fail(output_msg)
-
-            if not active_tasktracker_count:
-                active_tasktracker_count = 0
-            else:
-                active_tasktracker_count = len(
-                    active_tasktracker_count[:-1].split('\n')
-                )
-            if (
-                    active_tasktracker_count == node_info['tasktracker_count']
-            ) and (
-                    active_datanode_count == node_info['datanode_count']
-            ):
-                break
-            if attempt_count == 0:
-                self.fail('Tasktracker or datanode cannot be started '
-                          'within 5 minutes.')
-            time.sleep(3)
-            attempt_count -= 1
 
     @classmethod
     def _list_node_group_template(cls, client):
