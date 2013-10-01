@@ -28,7 +28,7 @@ class SanitySavannaTests(savanna.SavannaTest):
     """
 
     @attr(type=['sanity', 'fuel'])
-    def test_01_create_node_group_template(self):
+    def test_sanity_savanna(self):
         """Test create/list/delete Savanna node group and cluster templates
         Target component: Savanna
         Scenario:

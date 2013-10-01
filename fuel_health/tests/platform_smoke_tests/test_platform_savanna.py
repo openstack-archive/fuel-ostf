@@ -28,18 +28,18 @@ class SanitySavannaTests(savanna.SavannaTest):
     """
 
     @attr(type=['sanity', 'fuel'])
-    def test_01_create_node_group_template(self):
-        """Test create/list/delete Savanna node group and cluster templates
+    def test_platform_savanna(self):
+        """Test create/list/start/delete Savanna cluster
         Target component: Savanna
         Scenario:
-            1. Create node group tasktracker and datanode template
+            1. Create node group template
             2. Create cluster template
             3. List node group templates
             4. List cluster templates
-            5. Delete cluster template
-            8. Delete node group tasktracker and datanode template
-            9. Delete node group tasktracker template
-            10. Delete node group datanode template
+            5. Create cluster
+            6. Delete cluster
+            7. Delete cluster template
+            8. Delete node group templates
         Duration:  20 m.
         """
         fail_msg = 'Fail create node group tasktracker and datanode template'
@@ -78,27 +78,27 @@ class SanitySavannaTests(savanna.SavannaTest):
         self.verify(
             1200,
             self._create_cluster,
-            7, fail_msg,
+            5, fail_msg,
             "Create cluster",
             self.savanna_client, cluster_template)
 
-#        fail_msg = 'Fail delete cluster'
-#        self.verify(
-#            20,
-#            self._clean_clusters,
-#            7, fail_msg,
-#            "Delete cluster")
-#
-#        fail_msg = 'Fail delete cluster template'
-#        self.verify(
-#            20,
-#            self._clean_cluster_templates,
-#            5, fail_msg,
-#            "Delete cluster template")
-#
-#        fail_msg = 'Fail delete node group tasktracker and datanode template'
-#        self.verify(
-#            20,
-#            self._clean_node_groups_templates,
-#            6, fail_msg,
-#            "Delete node group template")
+        fail_msg = 'Fail delete cluster'
+        self.verify(
+            20,
+            self._clean_clusters,
+            6, fail_msg,
+            "Delete cluster")
+
+        fail_msg = 'Fail delete cluster template'
+        self.verify(
+            20,
+            self._clean_cluster_templates,
+            7, fail_msg,
+            "Delete cluster template")
+
+        fail_msg = 'Fail delete node group tasktracker and datanode template'
+        self.verify(
+            20,
+            self._clean_node_groups_templates,
+            8, fail_msg,
+            "Delete node group template")
