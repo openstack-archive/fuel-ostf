@@ -43,7 +43,7 @@ class SanitySavannaTests(savanna.SavannaTest):
             9. Delete cluster flavors
         Duration: 20 s.
         """
-        fail_msg = 'Fail create node group tasktracker and datanode template'
+        fail_msg = 'Fail create node group tasktracker and datanode template.'
         create_nodes_templates_tt_dn_resp = self.verify(
             20,
             self._create_node_group_template_tt_dn_id,
@@ -51,7 +51,7 @@ class SanitySavannaTests(savanna.SavannaTest):
             "Create node group tasktracker and datanode template",
             self.savanna_client)
 
-        fail_msg = 'Fail create node group tasktracker template'
+        fail_msg = 'Fail create node group tasktracker template.'
         create_nodes_templates_tt_resp = self.verify(
             20,
             self._create_node_group_template_tt_id,
@@ -59,7 +59,7 @@ class SanitySavannaTests(savanna.SavannaTest):
             "Create node group tasktracker template",
             self.savanna_client)
 
-        fail_msg = 'Fail create node group datanode template'
+        fail_msg = 'Fail create node group datanode template.'
         create_nodes_templates_dn_resp = self.verify(
             20,
             self._create_node_group_template_dn_id,
@@ -67,7 +67,7 @@ class SanitySavannaTests(savanna.SavannaTest):
             "Create node group datanode template",
             self.savanna_client)
 
-        fail_msg = 'Fail create cluster template'
+        fail_msg = 'Fail create cluster template.'
         cluster_template = self.verify(
             20,
             self._create_cluster_template,
@@ -75,7 +75,7 @@ class SanitySavannaTests(savanna.SavannaTest):
             "Create cluster templates",
             self.savanna_client)
 
-        fail_msg = 'Fail list group template'
+        fail_msg = 'Fail list group template.'
         self.verify(
             20,
             self._list_node_group_template,
@@ -83,7 +83,7 @@ class SanitySavannaTests(savanna.SavannaTest):
             "List group templates",
             self.savanna_client)
 
-        fail_msg = 'Fail list cluster template'
+        fail_msg = 'Fail list cluster template.'
         self.verify(
             20,
             self._list_cluster_templates,
@@ -91,21 +91,21 @@ class SanitySavannaTests(savanna.SavannaTest):
             "List cluster templates",
             self.savanna_client)
 
-        fail_msg = 'Fail delete cluster template'
+        fail_msg = 'Fail delete cluster template.'
         self.verify(
             20,
             self._clean_cluster_templates,
             7, fail_msg,
             "Delete cluster templates")
 
-        fail_msg = 'Fail delete datanodes template'
+        fail_msg = 'Fail delete datanodes template.'
         self.verify(
             20,
             self._clean_node_groups_templates,
             8, fail_msg,
             "Delete datanodes template")
 
-        fail_msg = 'Fail delete clusters flavors'
+        fail_msg = 'Fail delete clusters flavors.'
         self.verify(
             20,
             self._clean_flavors,
