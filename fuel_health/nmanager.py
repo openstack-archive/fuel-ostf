@@ -30,6 +30,10 @@ try:
     import muranoclient.v1.client
 except:
     LOG.warning('Muranoclient could not be imported.')
+try:
+    import savannaclient.api.client
+except:
+    LOG.warning('Savanna client could not be imported.')
 import cinderclient.client
 import glanceclient.client
 import keystoneclient.v2_0.client
@@ -63,6 +67,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         self.volume_client = self._get_volume_client()
         self.heat_client = self._get_heat_client()
         self.murano_client = self._get_murano_client()
+        self.savanna_client = self._get_savanna_client()
 
         self.client_attr_names = [
             'compute_client',
@@ -71,7 +76,8 @@ class OfficialClientManager(fuel_health.manager.Manager):
             'network_client',
             'volume_client',
             'heat_client',
-            'murano_client'
+            'murano_client',
+            'savanna_client'
         ]
 
     def _get_compute_client(self, username=None, password=None,
@@ -210,6 +216,22 @@ class OfficialClientManager(fuel_health.manager.Manager):
         return muranoclient.v1.client.Client(endpoint=self.api_host,
                                              token=self.token_id,
                                              insecure=self.insecure)
+
+    def _get_savanna_client(self, username=None, password=None):
+        auth_url = self.config.identity.uri
+        tenant_name = self.config.identity.admin_tenant_name
+        savanna_ip = self.config.compute.controller_nodes[0]
+        savanna_url = 'http://%s:8386/v1.0' % savanna_ip
+        LOG.debug(savanna_url)
+        if not username:
+            username = self.config.identity.admin_username
+        if not password:
+            password = self.config.identity.admin_password
+        return savannaclient.api.client.Client(username=username,
+                                               api_key=password,
+                                               project_name=tenant_name,
+                                               auth_url=auth_url,
+                                               savanna_url=savanna_url)
 
 
 class OfficialClientTest(fuel_health.test.TestCase):

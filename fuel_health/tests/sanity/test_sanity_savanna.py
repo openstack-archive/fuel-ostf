@@ -32,15 +32,15 @@ class SanitySavannaTests(savanna.SavannaTest):
         """Test create/list/delete Savanna node group and cluster templates
         Target component: Savanna
         Scenario:
-            1. Create node group tasktracker and datanode template
-            2. Create node group tasktracker template
-            3. Create node group datanode template
-            4. Create cluster template
-            5. List node group templates
-            6. List cluster templates
-            7. Delete cluster template
-            8. Delete node templates
-            9. Delete cluster flavors
+            1. Send request to create node group task tracker and data node template
+            2. Send request to create node group task tracker template
+            3. Send request to create node group data node template
+            4. Send request to create cluster template
+            5. Request the list of node group templates
+            6. Request the list of cluster templates
+            7. Send request to delete cluster template
+            8. Send request to delete node templates
+            9. Send request to delete savanna flavor
         Duration: 20 s.
         """
         fail_msg = 'Fail create node group tasktracker and datanode templates.'
