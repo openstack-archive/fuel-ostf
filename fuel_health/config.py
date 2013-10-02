@@ -272,6 +272,36 @@ def register_object_storage_opts(conf):
     for opt in ObjectStoreConfig:
         conf.register_opt(opt, group='object-storage')
 
+savanna = cfg.OptGroup(name='savanna',
+                       title='Savanna Service Options')
+
+SavannaConfig = [
+    cfg.StrOpt('ip',
+               default='10.20.0.131',
+               help="IP of savanna service."),
+    cfg.StrOpt('port',
+               default=8386,
+               help="Port of savanna service."),
+    cfg.StrOpt('api_version',
+               default='v1.0',
+               help="API version of savanna service."),
+    cfg.StrOpt('plugin',
+               default='vanilla',
+               help="Plugin name of savanna service."),
+    cfg.StrOpt('pligin_version',
+               default='1.1.2',
+               help="Plugin version of savanna service."),
+    cfg.StrOpt('tt_config',
+               default={'Task Tracker Heap Size': 515},
+               help="Task Tracker config  of savanna service."),
+]
+
+
+def register_savanna_opts(conf):
+    conf.register_group(savanna)
+    for opt in SavannaConfig:
+        conf.register_opt(opt, group='savanna')
+
 
 murano_group = cfg.OptGroup(name='murano',
                             title='Murano API Service Options')
