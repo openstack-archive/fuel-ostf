@@ -48,8 +48,11 @@ class TestsController(BaseRestController):
     @expose('json')
     def get_all(self):
         with request.session.begin(subtransactions=True):
-            return [item.frontend for item
-                    in request.session.query(models.Test).all()]
+            tests = request.session.query(models.Test)\
+                .filter_by(test_run_id=None)\
+                .all()
+
+            return [item.frontend for item in tests]
 
 
 class TestsetsController(BaseRestController):
