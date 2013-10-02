@@ -26,49 +26,8 @@ import fuel_health.nmanager as nmanager
 
 LOG = logging.getLogger(__name__)
 
-try:
-    import savannaclient.api.client
-except:
-    LOG.warning('Savanna client could not be imported.')
 
-class SavannaClientManager(nmanager.OfficialClientManager):
-    """
-    Manager that provides access to the Savanna python client for
-    calling Savanna API.
-    """
-
-    def __init__(self):
-        """
-        This method allows to initialize authentication before
-        each test case and define parameters of
-        Savanna API Service
-        """
-        super(SavannaClientManager, self).__init__()
-        self.savanna_client = self._get_savanna_client()
-        self.client_attr_names.append('savanna_client')
-
-    def _get_savanna_client(self, username=None, password=None):
-        auth_url = self.config.identity.uri
-        tenant_name = self.config.identity.admin_tenant_name
-        savanna_ip = self.config.compute.controller_nodes[0]
-        savanna_url = 'http://%s:8386/v1.0' % savanna_ip
-        LOG.debug(savanna_url)
-        if not username:
-            username = self.config.identity.admin_username
-        if not password:
-            password = self.config.identity.admin_password
-        return savannaclient.api.client.Client(username=username,
-                                               api_key=password,
-                                               project_name=tenant_name,
-                                               auth_url=auth_url,
-                                               savanna_url=savanna_url)
-
-
-class SavannaOfficialClientTest(nmanager.OfficialClientTest):
-    manager_class = SavannaClientManager
-
-
-class SavannaTest(SavannaOfficialClientTest):
+class SavannaTest(nmanager.OfficialClientTest):
     """
     Base class for openstack sanity tests for Savanna
     """
@@ -97,11 +56,12 @@ class SavannaTest(SavannaOfficialClientTest):
         cls.HDP_HADOOP_USER = 'hdfs'
         cls.HDP_NODE_USERNAME = 'cloud-user'
         cls.CLUSTER_CREATION_TIMEOUT = '20'
-        cls.USER_KEYPAIR_ID = 'ostf-savanna'
+        cls.USER_KEYPAIR_ID = 'ostf_test-savanna'
         cls.PLUGIN_NAME = 'vanilla'
         cls.HADOOP_VERSION = '1.1.2'
         cls.IMAGE_NAME = 'savanna'
-        cls.CLUSTER_NAME = 'ostf-savanna-cluster'
+        cls.CLUSTER_NAME = 'ostf-test-savanna-cluster'
+        cls.SAVANNA_FLAVOR = 'ostf_test-savanna-flavor'
         cls.JT_PORT = 50030
         cls.NN_PORT = 50070
         cls.TT_PORT = 50060
@@ -112,7 +72,7 @@ class SavannaTest(SavannaOfficialClientTest):
             self, client, name, plugin_name, hadoop_version, description,
             volumes_per_node, volume_size, node_processes, node_configs):
         if not self.flavors:
-            flavor = self.compute_client.flavors.create('SavannaFlavor',
+            flavor = self.compute_client.flavors.create(self.SAVANNA_FLAVOR,
                                                         512, 1, 700)
             self.flavors.append(flavor.id)
         data = client.node_group_templates.create(
@@ -274,7 +234,7 @@ class SavannaTest(SavannaOfficialClientTest):
         node_group_template_tt_dn_id = \
             self._create_node_group_template_and_get_id(
                 client,
-                'ostf-savanna-tt-dn',
+                'ostf_test-savanna-tt-dn',
                 self.plugin,
                 self.plugin_version,
                 description='test node group template',
@@ -293,7 +253,7 @@ class SavannaTest(SavannaOfficialClientTest):
         node_group_template_tt_id = \
             self._create_node_group_template_and_get_id(
                 client,
-                'ostf-savanna-tt',
+                'ostf_test-savanna-tt',
                 self.plugin,
                 self.plugin_version,
                 description='test node group template',
@@ -311,7 +271,7 @@ class SavannaTest(SavannaOfficialClientTest):
         node_group_template_tt_id = \
             self._create_node_group_template_and_get_id(
                 client,
-                'ostf-savanna-dd',
+                'ostf_test-savanna-dd',
                 self.plugin,
                 self.plugin_version,
                 description='test node group template',
@@ -328,7 +288,7 @@ class SavannaTest(SavannaOfficialClientTest):
     def _create_cluster_template(self, client):
         cluster_template_id = self._create_cluster_template_and_get_id(
             client,
-            'ostf-savanna-test-cluster-template',
+            'ostf_test-savanna-cluster-template',
             self.plugin,
             self.plugin_version,
             description='test cluster template',
@@ -339,7 +299,7 @@ class SavannaTest(SavannaOfficialClientTest):
             },
             node_groups=[
                 dict(
-                    name='master-node-jt-nn',
+                    name='ostf_test-master-node-jt-nn',
                     flavor_id=self.flavors[0],
                     node_processes=['namenode', 'jobtracker'],
                     node_configs={
@@ -348,7 +308,7 @@ class SavannaTest(SavannaOfficialClientTest):
                     },
                     count=1),
                 dict(
-                    name='master-node-sec-nn',
+                    name='ostf_test-master-node-sec-nn',
                     flavor_id=self.flavors[0],
                     node_processes=['secondarynamenode'],
                     node_configs={
@@ -356,15 +316,15 @@ class SavannaTest(SavannaOfficialClientTest):
                     },
                     count=1),
                 dict(
-                    name='worker-node-tt-dn',
+                    name='ostf_test-worker-node-tt-dn',
                     node_group_template_id=self.node_groups[0],
                     count=2),
                 dict(
-                    name='worker-node-dn',
+                    name='ostf_test-worker-node-dn',
                     node_group_template_id=self.node_groups[1],
                     count=1),
                 dict(
-                    name='worker-node-tt',
+                    name='ostf_test-worker-node-tt',
                     node_group_template_id=self.node_groups[2],
                     count=1)
             ],
@@ -376,7 +336,7 @@ class SavannaTest(SavannaOfficialClientTest):
     def _create_tiny_cluster_template(self, client):
         cluster_template_id = self._create_cluster_template_and_get_id(
             client,
-            'ostf-savanna-test-cluster-template',
+            'ostf_test-savanna-cluster-template',
             self.plugin,
             self.plugin_version,
             description='test cluster template',
@@ -387,7 +347,7 @@ class SavannaTest(SavannaOfficialClientTest):
             },
             node_groups=[
                 dict(
-                    name='master-node-jt-nn',
+                    name='ostf_test-master-node-jt-nn',
                     flavor_id=self.flavors[0],
                     node_processes=['namenode', 'jobtracker'],
                     node_configs={
@@ -396,7 +356,7 @@ class SavannaTest(SavannaOfficialClientTest):
                     },
                     count=1),
                 dict(
-                    name='worker-node-tt-dn',
+                    name='ostf_test-worker-node-tt-dn',
                     node_group_template_id=self.node_groups[0],
                     count=1),
             ],
@@ -440,8 +400,8 @@ class SavannaTest(SavannaOfficialClientTest):
         if items:
             for item in items:
                 try:
-                    client.delete(item)
                     items.remove(item)
+                    client.delete(item)
                 except RuntimeError as exc:
                     cls.error_msg.append(exc)
                     LOG.debug(exc)

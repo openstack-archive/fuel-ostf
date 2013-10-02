@@ -53,9 +53,38 @@ class CleanUpClientManager(fuel_health.nmanager.OfficialClientManager):
 
             time.sleep(self.build_interval)
 
-
 def cleanup():
     manager = CleanUpClientManager()
+
+    savanna_client = manager._get_savanna_client()
+    if savanna_client is not None:
+        savanna_clusters = savanna_client.clusters.list()
+        for s in savanna_clusters:
+            if s.name.startswith('ostf-test-'):
+                try:
+                    LOG.info('Start savanna cluster deletion.')
+                    savanna_client.clusters.delete(s.id)
+                except Exception as exc:
+                        LOG.debug(exc)
+                        pass
+        savanna_clusters_template = savanna_client.cluster_templates.list()
+        for s in savanna_clusters_template:
+            if s.name.startswith('ostf_test-'):
+                try:
+                    LOG.info('Start savanna cluster template deletion.')
+                    savanna_client.cluster_templates.delete(s.id)
+                except Exception as exc:
+                        LOG.debug(exc)
+                        pass
+        savanna_node_group_template = savanna_client.node_group_templates.list()
+        for s in savanna_node_group_template:
+            if s.name.startswith('ostf_test-'):
+                try:
+                    LOG.info('Start savanna node group template deletion.')
+                    savanna_client.node_group_templates.delete(s.id)
+                except Exception as exc:
+                        LOG.debug(exc)
+                        pass
 
     murano_client = manager._get_murano_client()
     if murano_client is not None:

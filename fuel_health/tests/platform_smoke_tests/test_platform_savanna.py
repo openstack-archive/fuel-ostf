@@ -22,7 +22,7 @@ from fuel_health import savanna
 LOG = logging.getLogger(__name__)
 
 
-class SanitySavannaTests(savanna.SavannaTest):
+class PlatformSavannaTests(savanna.SavannaTest):
     """
     TestClass contains tests that check basic Savanna functionality.
     """
@@ -32,14 +32,14 @@ class SanitySavannaTests(savanna.SavannaTest):
         """Test create/list/start/delete Savanna cluster
         Target component: Savanna
         Scenario:
-            1. Create node group template
-            2. Create cluster template
-            3. List node group templates
-            4. List cluster templates
-            5. Launch cluster
-            6. Delete cluster
-            7. Delete cluster template
-            8. Delete node group templates
+            1. Send request to create node group template
+            2. Send request to create cluster template
+            3. Request the list of node group templates
+            4. Request the list of cluster templates
+            5. Send request to launch cluster
+            6. Send request to delete cluster
+            7. Send request to delete cluster template
+            8. Send request to delete node group templates
         Duration:  20 m.
         """
         fail_msg = 'Fail create node group template.'
