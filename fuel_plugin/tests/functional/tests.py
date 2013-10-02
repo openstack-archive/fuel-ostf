@@ -59,19 +59,9 @@ class AdapterTests(BaseAdapterTest):
 
         self.client.start_testrun(testset, cluster_id)
 
-        r = getattr(self.adapter, 'tests')().json()
+        r = self.adapter.tests().json()
 
-        with mock.patch(
-            'fuel_plugin.ostf_adapter.storage.engine.conf.dbpath',
-            new='postgresql+psycopg2://ostf:ostf@localhost/ostf',
-            create=True
-        ):
-            with engine.get_session().begin(subtransactions=True):
-                tests = engine.get_session().query(models.Test)\
-                    .filter_by(test_run_id=None)\
-                    .all()
-
-        self.assertEqual(len(r), len(tests))
+        self.assertEqual(len(r), len(self.mapping))
 
     def test_list_testsets(self):
         """Verify that self.testsets are in json response
