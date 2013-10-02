@@ -56,7 +56,7 @@ test_requires = [
 
 setuptools.setup(
 
-    name='fuel_ostf',
+    name='fuel-ostf',
     version='0.1',
 
     description='cloud computing testing',
