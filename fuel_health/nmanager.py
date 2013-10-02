@@ -200,14 +200,8 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.config.identity.admin_tenant_name).auth_token
 
         # Get Murano API parameters
-        if hasattr(self.config.murano, 'api_url'):
-            self.api_host = self.config.murano.api_url
-        else:
-            return None
-        if hasattr(self.config.murano, 'insecure'):
-            self.insecure = self.config.murano.insecure
-        else:
-            return None
+        self.api_host = self.config.murano.get('api_url', None)
+        self.insecure = self.config.murano.get('insecure', False)
 
         return muranoclient.v1.client.Client(endpoint=self.api_host,
                                              token=self.token_id,
