@@ -303,6 +303,31 @@ def register_savanna_opts(conf):
         conf.register_opt(opt, group='savanna')
 
 
+murano_group = cfg.OptGroup(name='murano',
+                            title='Murano API Service Options')
+
+MuranoConfig = [
+    cfg.StrOpt('api_url',
+               default=None,
+               help="Murano API Service URL."),
+    cfg.BoolOpt('insecure',
+                default=False,
+                help="This parameter allow to enable SSL encription"),
+    cfg.StrOpt('agListnerIP',
+               default='10.100.0.155',
+               help="Murano SQL Cluster AG IP."),
+    cfg.StrOpt('clusterIP',
+               default='10.100.0.150',
+               help="Murano SQL Cluster IP."),
+]
+
+
+def register_murano_opts(conf):
+    conf.register_group(murano_group)
+    for opt in MuranoConfig:
+        conf.register_opt(opt, group='murano')
+
+
 def process_singleton(cls):
     """Wrapper for classes... To be instantiated only one time per process"""
     instances = {}
@@ -363,10 +388,12 @@ class FileConfig(object):
         register_identity_opts(cfg.CONF)
         register_network_opts(cfg.CONF)
         register_volume_opts(cfg.CONF)
+        register_murano_opts(cfg.CONF)
         self.compute = cfg.CONF.compute
         self.identity = cfg.CONF.identity
         self.network = cfg.CONF.network
         self.volume = cfg.CONF.volume
+        self.murano = cfg.CONF.murano
 
 
 class ConfigGroup(object):
@@ -404,6 +431,7 @@ class NailgunConfig(object):
     network = ConfigGroup(NetworkGroup)
     volume = ConfigGroup(VolumeGroup)
     object_storage = ConfigGroup(ObjectStoreConfig)
+    murano = ConfigGroup(MuranoConfig)
 
     def __init__(self, parse=True):
         LOG.info('INITIALIZING NAILGUN CONFIG')
@@ -425,9 +453,16 @@ class NailgunConfig(object):
             self._parse_networks_configuration()
             self.set_endpoints()
             self.set_proxy()
+            self._parse_murano_configuration()
         except Exception, e:
             LOG.warning('Nailgun config creation failed. '
                         'Something wrong with endpoints')
+
+    def _parse_murano_configuration(self):
+        murano_api_url = self.network.raw_data.get('public_vip', None)
+        if not murano_api_url:
+            murano_api_url = self.compute.controller_nodes[0]
+        self.murano.api_url = 'http://{0}:8082'.format(murano_api_url)
 
     def _parse_cluster_attributes(self):
         api_url = '/api/clusters/%s/attributes' % self.cluster_id

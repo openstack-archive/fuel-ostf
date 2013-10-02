@@ -17,14 +17,23 @@
 #    under the License.
 
 import logging
+import time
+
+LOG = logging.getLogger(__name__)
 
 # Default client libs
+try:
+    import heatclient.v1.client
+except:
+    LOG.warning('Heatclient could not be imported.')
+try:
+    import muranoclient.v1.client
+except:
+    LOG.warning('Muranoclient could not be imported.')
 import cinderclient.client
 import glanceclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
-
-import time
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.exceptions import SSHExecCommandFailed
@@ -34,9 +43,6 @@ from fuel_health import exceptions
 import fuel_health.manager
 import fuel_health.test
 from fuel_health import config
-
-
-LOG = logging.getLogger(__name__)
 
 
 class OfficialClientManager(fuel_health.manager.Manager):
@@ -55,12 +61,17 @@ class OfficialClientManager(fuel_health.manager.Manager):
         self.identity_client = self._get_identity_client()
         self.network_client = self._get_network_client()
         self.volume_client = self._get_volume_client()
+        self.heat_client = self._get_heat_client()
+        self.murano_client = self._get_murano_client()
+
         self.client_attr_names = [
             'compute_client',
             'image_client',
             'identity_client',
             'network_client',
-            'volume_client'
+            'volume_client',
+            'heat_client',
+            'murano_client'
         ]
 
     def _get_compute_client(self, username=None, password=None,
@@ -155,6 +166,50 @@ class OfficialClientManager(fuel_health.manager.Manager):
         dscv = self.config.identity.disable_ssl_certificate_validation
 
         return
+
+    def _get_heat_client(self, username=None, password=None):
+        keystone = self._get_identity_client()
+        token = keystone.auth_token
+        auth_url = self.config.identity.uri
+
+        if 'orchestration' not in [s.type for s in
+                                   keystone.services.list()]:
+            return None
+
+        endpoint = keystone.service_catalog.url_for(
+            service_type='orchestration', endpoint_type='publicURL')
+        if not username:
+            username = self.config.identity.admin_username
+        if not password:
+            password = self.config.identity.admin_password
+
+        return heatclient.v1.client.Client(endpoint,
+                                           auth_url=auth_url, token=token,
+                                           username=username,
+                                           password=password)
+
+    def _get_murano_client(self):
+        """
+        This method returns Murano API client
+        or None if needed configuration parameters are unavailable.
+        """
+        # Get xAuth token from Keystone
+        self.token_id = self._get_identity_client(
+            self.config.identity.admin_username,
+            self.config.identity.admin_password,
+            self.config.identity.admin_tenant_name).auth_token
+
+        # Get Murano API parameters
+        self.api_host = None
+        self.insecure = False
+        if hasattr(self.config.murano, 'api_url'):
+            self.api_host = self.config.murano.api_url
+        if hasattr(self.config.murano, 'insecure'):
+            self.insecure = self.config.murano.insecure
+
+        return muranoclient.v1.client.Client(endpoint=self.api_host,
+                                             token=self.token_id,
+                                             insecure=self.insecure)
 
 
 class OfficialClientTest(fuel_health.test.TestCase):

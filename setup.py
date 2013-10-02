@@ -23,6 +23,7 @@ fuel_health_reqs = [
     'python-keystoneclient==0.3.1',
     'python-novaclient==2.13.0',
     'python-heatclient==0.2.4',
+    'python-muranoclient==0.2',
     'python-savannaclient>=0.2.2',
     'paramiko>=1.10.1',
     'requests>=1.1,<1.2.3',
