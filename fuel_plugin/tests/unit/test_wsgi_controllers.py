@@ -28,7 +28,7 @@ class TestTestsController(unittest2.TestCase):
         self.controller = controllers.TestsController()
 
     def test_get_all(self, request):
-        request.session.query().all.return_value = self.fixtures
+        request.session.query().filter_by().all.return_value = self.fixtures
         res = self.controller.get_all()
         self.assertEqual(res, [f.frontend for f in self.fixtures])
 
