@@ -36,7 +36,7 @@ def startserver():
 
 def startnailgunmimic():
     path = 'fuel_plugin/tests/test_utils/nailgun_mimic.py'
-    local('python {}'.format(path))
+    local('python {0}'.format(path))
 
 
 def createmigration(comment):

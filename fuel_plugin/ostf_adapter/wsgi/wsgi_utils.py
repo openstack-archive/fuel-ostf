@@ -23,7 +23,7 @@ CORE_PATH = conf.debug_tests if conf.get('debug_tests') else 'fuel_health'
 
 
 def discovery_check(cluster):
-    nailgun_api_url = 'api/clusters/{}'.format(cluster)
+    nailgun_api_url = 'api/clusters/{0}'.format(cluster)
     cluster_meta = _request_to_nailgun(nailgun_api_url)
 
     #at this moment we need following deployment
