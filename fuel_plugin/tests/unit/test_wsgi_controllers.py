@@ -431,15 +431,10 @@ class TestClusterRedployment(BaseTestController):
 
         #patch request_to_nailgun function in orded to emulate
         #redeployment of cluster
-        cluster_data = {
-            'mode': 'multinode',
-            'release': {
-                'operating_system': 'ubuntu'
-            }
-        }
+        cluster_data = {'multinode', 'ubuntu'}
 
         with patch(
-            'fuel_plugin.ostf_adapter.wsgi.wsgi_utils._request_to_nailgun',
+            'fuel_plugin.ostf_adapter.wsgi.wsgi_utils._get_cluster_depl_tags',
             lambda *args: cluster_data
         ):
             with patch(

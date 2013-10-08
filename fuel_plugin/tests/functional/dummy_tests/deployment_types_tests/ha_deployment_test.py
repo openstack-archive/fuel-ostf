@@ -17,7 +17,7 @@ __profile__ = {
     "driver": "nose",
     "test_path": "fuel_plugin/tests/functional/deployment_types_tests/ha_deployment.py",
     "description": "Fake tests for HA deployment",
-    "deployment_tags": ["ha"]
+    "deployment_tags": ["Ha"]
 }
 
 import time
@@ -32,7 +32,7 @@ class HATest(unittest.TestCase):
         This is fake tests for ha
         rhel deployment
         Duration: 0sec
-        Deployment tags: ha, rhel
+        Deployment tags: Ha, Rhel
         """
         self.assertTrue(True)
 

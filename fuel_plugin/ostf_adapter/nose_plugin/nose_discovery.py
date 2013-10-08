@@ -49,7 +49,11 @@ class DiscoveryPlugin(plugins.Plugin):
         if hasattr(module, '__profile__'):
             profile = module.__profile__
 
-            if set(profile.get('deployment_tags', []))\
+            profile['deployment_tags'] = [
+                tag.lower() for tag in profile.get('deployment_tags', [])
+            ]
+
+            if set(profile['deployment_tags'])\
                .issubset(self.deployment_info['deployment_tags']):
 
                 profile['cluster_id'] = self.deployment_info['cluster_id']
@@ -110,5 +114,5 @@ def discovery(path, deployment_info={}):
     nose_test_runner.SilentTestProgram(
         addplugins=[DiscoveryPlugin(deployment_info)],
         exit=False,
-        argv=['tests_discovery', '--collect-only', path] 
+        argv=['tests_discovery', '--collect-only', path]
     )

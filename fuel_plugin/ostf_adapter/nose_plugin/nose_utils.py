@@ -80,7 +80,7 @@ def get_description(test_obj):
             #we must check this and prevent
             if deployment_tags:
                 deployment_tags = [
-                    tag.strip() for tag in deployment_tags.split(',')
+                    tag.strip().lower() for tag in deployment_tags.split(',')
                 ]
             else:
                 deployment_tags = []
