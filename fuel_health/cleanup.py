@@ -58,37 +58,17 @@ def cleanup():
 
     savanna_client = manager._get_savanna_client()
     if savanna_client is not None:
-        savanna_clusters = savanna_client.clusters.list()
-        for s in savanna_clusters:
-            if s.name.startswith('ostf-test-'):
-                try:
-                    LOG.info('Start savanna cluster deletion.')
-                    savanna_client.clusters.delete(s.id)
-                except Exception as exc:
-                        LOG.debug(exc)
-                        pass
-        savanna_clusters_template = savanna_client.cluster_templates.list()
-        for s in savanna_clusters_template:
-            if s.name.startswith('ostf_test-'):
-                try:
-                    LOG.info('Start savanna cluster template deletion.')
-                    savanna_client.cluster_templates.delete(s.id)
-                except Exception as exc:
-                        LOG.debug(exc)
-                        pass
-        savanna_node_group_template = savanna_client.node_group_templates.list()
-        for s in savanna_node_group_template:
-            if s.name.startswith('ostf_test-'):
-                try:
-                    LOG.info('Start savanna node group template deletion.')
-                    savanna_client.node_group_templates.delete(s.id)
-                except Exception as exc:
-                        LOG.debug(exc)
-                        pass
+        _delete_it(client=savanna_client.clusters, log_message='Start savanna cluster deletion',
+                   name='ostf-test-', delete_type='id')
+        _delete_it(client=savanna_client.cluster_templates, log_message='Start savanna cluster template deletion',
+                   delete_type='id')
+        _delete_it(client=savanna_client.node_group_templates,
+                   log_message='Start savanna node group template deletion',
+                   delete_type='id')
 
     murano_client = manager._get_murano_client()
     if murano_client is not None:
-        environments = murano_client.list_environments()
+        environments = murano_client.environments.list()
         for e in environments:
             if e.name.startswith('ost1_test-'):
                 try:
@@ -145,102 +125,34 @@ def cleanup():
                 LOG.debug(exc)
                 pass
 
-    keypairs = manager._get_compute_client().keypairs.list()
-
-    for k in keypairs:
-        if k.name.startswith('ost1_test-'):
-            try:
-                LOG.info('Start keypair deletion: %s' % k)
-                manager._get_compute_client().keypairs.delete(k)
-            except Exception as exc:
-                LOG.debug(exc)
-                pass
-
-    users = manager._get_identity_client().users.list()
-    for user in users:
-        if user.name.startswith('ost1_test-'):
-            try:
-                LOG.info('Start deletion of users')
-                manager._get_identity_client().users.delete(user)
-            except exceptions as exc:
-                LOG.debug(exc)
-                pass
-
-    tenants = manager._get_identity_client().tenants.list()
-    for tenant in tenants:
-        if tenant.name.startswith('ost1_test-'):
-            try:
-                LOG.info('Start tenant deletion')
-                manager._get_identity_client().tenants.delete(tenant)
-            except Exception as exc:
-                LOG.debug(exc)
-                pass
-
+    _delete_it(manager._get_compute_client().keypairs, 'Start keypair deletion')
+    _delete_it(manager._get_identity_client().users, 'Start deletion of users')
+    _delete_it(manager._get_identity_client().tenants, 'Start tenant deletion')
     roles = manager._get_identity_client().roles.list()
     if roles:
-        for role in roles:
-            if role.name.startswith('ost1_test-'):
-                try:
-                    LOG.info('Start roles deletion')
-                    manager._get_identity_client().roles.delete(role)
-                except Exception as exc:
-                    LOG.debug(exc)
-                    pass
+        _delete_it(manager._get_identity_client().roles, 'Start roles deletion' )
     else:
         LOG.info('no roles')
+    _delete_it(manager._get_compute_client().images, 'Start images deletion')
+    _delete_it(manager._get_compute_client().security_groups, 'Start deletion of security groups')
+    _delete_it(manager._get_volume_client().volumes, 'Start volumes deletion')
+    _delete_it(manager._get_compute_client().flavors, 'start flavors deletion')
+    _delete_it(manager._get_volume_client().volume_types, 'start deletion of volume types')
 
-    images = manager._get_compute_client().images.list()
-    for image in images:
-        if image.name.startswith('ost1'):
+
+def _delete_it(client, log_message, name='ost1_test-', delete_type='name'):
+    for item in client.list():
+        if item.name.startswith(name):
             try:
-                LOG.info('Start images deletion')
-                manager._get_compute_client().images.delete(image)
+                LOG.info(log_message)
+                if delete_type == 'name':
+                    client.delete(item)
+                else:
+                    client.delete(item.id)
             except Exception as exc:
                 LOG.debug(exc)
                 pass
 
-    sec_groups = manager._get_compute_client().security_groups.list()
-
-    for sgroup in sec_groups:
-        if sgroup.name.startswith('ost1_test-'):
-            try:
-                LOG.info('Start deletion of security groups')
-                manager._get_compute_client().security_groups.delete(sgroup.id)
-            except Exception as exc:
-                LOG.debug(exc)
-                pass
-
-    volumes = manager._get_volume_client().volumes.list()
-
-    for volume in volumes:
-        if volume.display_name.startswith('ost1_test-'):
-            try:
-                LOG.info('Start volumes deletion')
-                manager._get_volume_client().volumes.delete(volume)
-            except Exception as exc:
-                LOG.debug(exc)
-                pass
-
-    flavors = manager._get_compute_client().flavors.list()
-
-    for flavor in flavors:
-        if flavor.name.startswith('ost1_test-'):
-            try:
-                LOG.info('start flavors deletion')
-                manager._get_compute_client().flavors.delete(flavor)
-            except Exception as exc:
-                LOG.debug(exc)
-                pass
-
-    vtypes = manager._get_volume_client().volume_types.list()
-    for vtype in vtypes:
-        if vtype.name.startswith('ost1_test-'):
-            try:
-                LOG.info('start deletion of volume types')
-                manager._get_volume_client().volume_types.delete(vtype)
-            except Exception as exc:
-                LOG.debug(exc)
-                pass
 
 
 if __name__ == "__main__":
