@@ -18,15 +18,49 @@ from bottle import route, run
 
 cluster_fixture = {
     1: {
-        'mode': 'ha',
-        'release': {
-            'operating_system': 'rhel'
+        'cluster_meta': {
+            'mode': 'ha',
+            'release': {
+                'operating_system': 'rhel'
+            }
+        },
+        'cluster_attributes': {
+            'editable': {
+                'additional_components': {}
+            }
         }
     },
     2: {
-        'mode': 'multinode',
-        'release': {
-            'operating_system': 'ubuntu'
+        'cluster_meta': {
+            'mode': 'multinode',
+            'release': {
+                'operating_system': 'ubuntu'
+            }
+        },
+        'cluster_attributes': {
+            'editable': {
+                'additional_components': {}
+            }
+        }
+    },
+    3: {
+        'cluster_meta': {
+            'mode': 'ha',
+            'release': {
+                'operating_system': 'rhel'
+            }
+        },
+        'cluster_attributes': {
+            'editable': {
+                'additional_components': {
+                    'murano': {
+                        'value': True
+                    },
+                    'savanna': {
+                        'value': False
+                    }
+                }
+            }
         }
     }
 }
@@ -34,6 +68,12 @@ cluster_fixture = {
 
 @route('/api/clusters/<id:int>')
 def serve_cluster_meta(id):
-    return cluster_fixture[id]
+    return cluster_fixture[id]['cluster_meta']
+
+
+@route('/api/clusters/<id:int>/attributes')
+def serve_cluster_attributes(id):
+    return cluster_fixture[id]['cluster_attributes']
+
 
 run(host='localhost', port=8888, debug=True)
