@@ -29,24 +29,38 @@ class PlatformSavannaTests(savanna.SavannaTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_platform_savanna(self):
-        """Test create/list/start/delete Savanna cluster
+        """Savanna tests to create, list, start, checks and delete cluster
         Target component: Savanna
         Scenario:
-            1. Send request to create node group template
-            2. Send request to create cluster template
-            3. Request the list of node group templates
-            4. Request the list of cluster templates
-            5. Send request to launch cluster
-            6. Send request to delete cluster
-            7. Send request to delete cluster template
-            8. Send request to delete node group templates
-        Duration:  20 m.
+            1. Savanna image with tags should be imported
+            2. Send request to create node group template
+            3. Send request to create cluster template
+            4. Request the list of node group templates
+            5. Request the list of cluster templates
+            6. Send request to launch cluster
+            7. Send request to delete cluster
+            8. Send request to delete cluster template
+            9. Send request to delete node group templates
+        Duration:  100 m.
+
+        Deployment tags: Savanna
         """
+        fail_msg = "Savanna image with tags wasn't imported into Glance," \
+                   "please check http://docs.mirantis.com/fuel/3.2/ ."
+        self.verify_response_true(
+            self.verify(
+            20,
+            self._test_image,
+            1, fail_msg,
+            "Test images with tags",
+            '1.1.2', 'vanilla'),
+            "Step 1 failed: {msg}".format(msg=fail_msg))
+
         fail_msg = 'Fail create node group template.'
-        create_nodes_templates_tt_dn_resp = self.verify(
+        self.verify(
             20,
             self._create_node_group_template_tt_dn_id,
-            1, fail_msg,
+            2, fail_msg,
             "Create node group templates",
             self.savanna_client)
 
@@ -54,7 +68,7 @@ class PlatformSavannaTests(savanna.SavannaTest):
         cluster_template = self.verify(
             20,
             self._create_tiny_cluster_template,
-            2, fail_msg,
+            3, fail_msg,
             "Create cluster templates",
             self.savanna_client)
 
@@ -62,7 +76,7 @@ class PlatformSavannaTests(savanna.SavannaTest):
         self.verify(
             20,
             self._list_node_group_template,
-            3, fail_msg,
+            4, fail_msg,
             "List group templates",
             self.savanna_client)
 
@@ -70,15 +84,15 @@ class PlatformSavannaTests(savanna.SavannaTest):
         self.verify(
             20,
             self._list_cluster_templates,
-            4, fail_msg,
+            5, fail_msg,
             "List cluster templates",
             self.savanna_client)
 
         fail_msg = 'Fail launch cluster.'
         self.verify(
-            1200,
+            5400,
             self._create_cluster,
-            5, fail_msg,
+            6, fail_msg,
             "Launch cluster",
             self.savanna_client, cluster_template)
 
@@ -86,19 +100,19 @@ class PlatformSavannaTests(savanna.SavannaTest):
         self.verify(
             20,
             self._clean_clusters,
-            6, fail_msg,
+            7, fail_msg,
             "Delete cluster")
 
         fail_msg = 'Fail delete cluster template.'
         self.verify(
             20,
             self._clean_cluster_templates,
-            7, fail_msg,
+            8, fail_msg,
             "Delete cluster template")
 
         fail_msg = 'Fail delete node group  templates.'
         self.verify(
             20,
             self._clean_node_groups_templates,
-            8, fail_msg,
+            9, fail_msg,
             "Delete node group templates")
