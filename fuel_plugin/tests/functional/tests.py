@@ -157,8 +157,8 @@ class AdapterTests(BaseAdapterTest):
                     'tests': [
                         {
                             'status': 'success',
-                            'testset': 'stopped_testu',
-                            'name': 'You know.. for utesting',
+                            'testset': 'stopped_test',
+                            'name': 'You know.. for testing',
                             'duration': '1sec',
                             'message': '',
                             'id': 'fuel_plugin.tests.functional.dummy_tests.stopped_test.dummy_tests_stopped.test_not_long_at_all',
@@ -174,7 +174,7 @@ class AdapterTests(BaseAdapterTest):
                             'description': '        '
                         },
                         {
-                            'status': 'wait_running',
+                            'status': 'running',
                             'testset': 'stopped_test',
                             'name': 'This is long running tests',
                             'duration': '25sec',
@@ -286,6 +286,8 @@ class AdapterTests(BaseAdapterTest):
         }
         cluster_id = 1
 
+        self.adapter.testsets(cluster_id)
+
         for testset in testsets:
             self.client.start_testrun(testset, cluster_id)
         self.client.testruns_last(cluster_id)
@@ -303,6 +305,9 @@ class AdapterTests(BaseAdapterTest):
         testruns in a row with different cluster_id
         """
         testset = "general_test"
+        cluster_id = 1
+
+        self.adapter.testsets(cluster_id)
 
         for cluster_id in range(1, 2):
             r = self.client.start_testrun(testset, cluster_id)

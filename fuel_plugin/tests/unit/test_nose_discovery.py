@@ -182,27 +182,3 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
                 ]
             )
         )
-
-
-@unittest2.skip("Not needed here")
-class TestNoseDiscoveryRedeployedCluster(BaseTestNoseDiscovery):
-
-    @classmethod
-    def setUpClass(cls):
-        super(TestNoseDiscoveryRedeployedCluster, cls).setUpClass()
-
-    def setUp(self):
-        super(TestNoseDiscoveryRedeployedCluster, self).setUp()
-
-        #make fixture writing to db by calling
-        #discovery for cluster
-        nose_discovery.discovery(
-            path='fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test',
-            deployment_info=self.fixtures['ha_deployment_test']
-        )
-
-    def tearDown(self):
-        super(TestNoseDiscoveryRedeployedCluster, self).tearDown()
-
-    def test_rediscover_testset(self):
-        pass

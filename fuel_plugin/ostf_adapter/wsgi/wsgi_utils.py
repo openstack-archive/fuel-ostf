@@ -23,19 +23,12 @@ CORE_PATH = conf.debug_tests if conf.get('debug_tests') else 'fuel_health'
 
 
 def discovery_check(cluster):
-    nailgun_api_url = 'api/clusters/{0}'.format(cluster)
-    cluster_meta = _request_to_nailgun(nailgun_api_url)
-
-    #at this moment we need following deployment
-    #arguments for cluster. The main inconvinience
-    #is that needed data is spreaded in cluster_meta
-    #dict which leads to such hoodoo
-    cluster_deployment_args = set(
-        [
-            cluster_meta['mode'],
-            cluster_meta['release']['operating_system']
-        ]
-    )
+    #get needed information from nailgun via series of
+    #requests to nailgun api. At this time we need
+    #info about deployment type(ha, non-ha), type of network
+    #management (nova-network, quntum) and attributes that
+    #indicate that savanna/murano is installed
+    cluster_deployment_args = _get_cluster_depl_tags(cluster)
 
     cluster_data = {
         'cluster_id': cluster,
@@ -75,16 +68,38 @@ def discovery_check(cluster):
             )
 
 
-def _request_to_nailgun(api_url):
+def _get_cluster_depl_tags(cluster_id):
+    nailgun_api_url = 'api/clusters/{0}'.format(cluster_id)
+
+    deployment_tags = set()
     nailgun_url = 'http://{0}:{1}/{2}'.format(
         conf.nailgun.host,
         conf.nailgun.port,
-        api_url
+        nailgun_api_url
     )
 
     req_ses = requests.Session()
     req_ses.trust_env = False
 
-    response = req_ses.get(nailgun_url)
+    response = req_ses.get(nailgun_url).json()
 
-    return response.json()
+    #info about deployment type and operating system
+    deployment_tags.add(response['mode'])
+    deployment_tags.add(response['release']['operating_system'])
+
+    #info about murano/savanna clients installation
+    nailgun_url += '/' + 'attributes'
+    response = req_ses.get(nailgun_url).json()
+
+    additional_components = \
+        response['editable']['additional_components']
+
+    if additional_components.get('murano')\
+       and additional_components.get('murano')['value'] is True:
+        deployment_tags.add('murano')
+
+    if additional_components.get('savanna')\
+       and additional_components.get('savanna')['value'] is True:
+        deployment_tags.add('savanna')
+
+    return deployment_tags
