@@ -35,6 +35,7 @@ class CleanUpClientManager(fuel_health.nmanager.OfficialClientManager):
     calling various OpenStack APIs.
     """
 
+    #Where this is method is used?
     def wait_for_server_termination(self, server, ignore_error=False):
         """Waits for server to reach termination."""
         start_time = int(time.time())
@@ -58,9 +59,11 @@ def cleanup():
 
     savanna_client = manager._get_savanna_client()
     if savanna_client is not None:
-        _delete_it(client=savanna_client.clusters, log_message='Start savanna cluster deletion',
+        _delete_it(client=savanna_client.clusters,
+                   log_message='Start savanna cluster deletion',
                    name='ostf-test-', delete_type='id')
-        _delete_it(client=savanna_client.cluster_templates, log_message='Start savanna cluster template deletion',
+        _delete_it(client=savanna_client.cluster_templates,
+                   log_message='Start savanna cluster template deletion',
                    delete_type='id')
         _delete_it(client=savanna_client.node_group_templates,
                    log_message='Start savanna node group template deletion',
@@ -125,19 +128,23 @@ def cleanup():
                 LOG.debug(exc)
                 pass
 
-    _delete_it(manager._get_compute_client().keypairs, 'Start keypair deletion')
+    _delete_it(manager._get_compute_client().keypairs,
+               'Start keypair deletion')
     _delete_it(manager._get_identity_client().users, 'Start deletion of users')
     _delete_it(manager._get_identity_client().tenants, 'Start tenant deletion')
     roles = manager._get_identity_client().roles.list()
     if roles:
-        _delete_it(manager._get_identity_client().roles, 'Start roles deletion' )
+        _delete_it(manager._get_identity_client().roles,
+                   'Start roles deletion' )
     else:
         LOG.info('no roles')
     _delete_it(manager._get_compute_client().images, 'Start images deletion')
-    _delete_it(manager._get_compute_client().security_groups, 'Start deletion of security groups')
+    _delete_it(manager._get_compute_client().security_groups,
+               'Start deletion of security groups')
     _delete_it(manager._get_volume_client().volumes, 'Start volumes deletion')
     _delete_it(manager._get_compute_client().flavors, 'start flavors deletion')
-    _delete_it(manager._get_volume_client().volume_types, 'start deletion of volume types')
+    _delete_it(manager._get_volume_client().volume_types,
+               'start deletion of volume types')
 
 
 def _delete_it(client, log_message, name='ost1_test-', delete_type='name'):

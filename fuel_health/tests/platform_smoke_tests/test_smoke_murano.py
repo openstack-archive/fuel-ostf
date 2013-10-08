@@ -30,7 +30,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                                   "title":"Windows Server 2012"}
     """
 
-    def check_image():
+    def check_image(self):
         fail_msg = "Windows image 'ws-2012-std' with Murano tag wasn't" + \
                    " imported into Glance"
         action_msg = "checking if Windows image with Murano tag is available"
@@ -40,7 +40,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                 'ws-2012-std' == i.name and \
                 'ws-2012-std' == i.metadata[tag]['type']:
                 return True
-        return False
+            return False
         
         image = self.verify(4, find_image, 1, fail_msg,
                             action_msg, 'murano_image_info')
