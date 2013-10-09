@@ -39,7 +39,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                 if 'murano_image_info' in i.metadata and \
                 'ws-2012-std' == i.name and \
                 'ws-2012-std' == i.metadata[tag]['type']:
-                return True
+                    return True
             return False
         
         image = self.verify(4, find_image, 1, fail_msg,
