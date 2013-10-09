@@ -54,7 +54,7 @@ class StoragePlugin(plugins.Plugin):
             'status': status,
             'time_taken': self.taken,
             #disable traceback
-            'taceback': u'',
+            'traceback': u'',
             'step': None,
             'message': u''
         }
