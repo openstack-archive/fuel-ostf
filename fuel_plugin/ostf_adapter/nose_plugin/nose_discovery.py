@@ -78,7 +78,8 @@ class DiscoveryPlugin(plugins.Plugin):
                     (data['title'], data['description'],
                      data['duration'], data['deployment_tags']) = \
                         nose_utils.get_description(test)
-
+                    LOG.debug('%s - Cluster tags: %s', data,
+                             self.deployment_info)
                     if set(data['deployment_tags'])\
                        .issubset(self.deployment_info['deployment_tags']):
 
