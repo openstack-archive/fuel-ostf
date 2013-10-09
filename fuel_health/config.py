@@ -78,7 +78,7 @@ compute_group = cfg.OptGroup(name='compute',
 
 ComputeGroup = [
     cfg.BoolOpt('allow_tenant_isolation',
-                default=False,
+                default=True,
                 help="Allows test cases to create/destroy tenants and "
                      "users. This option enables isolated test cases and "
                      "better parallel execution, but also requires that "
@@ -519,6 +519,7 @@ class NailgunConfig(object):
         api_url = '/api/clusters/%s/network_configuration/' % self.cluster_id
         data = self.req_session.get(self.nailgun_url + api_url).json()
         self.network.raw_data = data
+        # self.network.public_router = data.get('router', None)
 
     def _parse_ostf_api(self):
         """
