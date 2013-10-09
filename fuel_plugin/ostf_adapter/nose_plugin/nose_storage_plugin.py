@@ -52,20 +52,17 @@ class StoragePlugin(plugins.Plugin):
             self, test, err=None, status=None):
         data = {
             'status': status,
-            'time_taken': self.taken
+            'time_taken': self.taken,
+            #disable traceback
+            'taceback': u'',
+            'step': None,
+            'message': u''
         }
-        data['title'], data['description'], data['duration'], data['deployment_tags'] = \
-            nose_utils.get_description(test)
         if err:
             exc_type, exc_value, exc_traceback = err
-            data['step'], data['message'] = None, u''
             if not status == 'error':
                 data['step'], data['message'] = \
                     nose_utils.format_failure_message(exc_value)
-            data['traceback'] = u''
-        else:
-            data['step'], data['message'] = None, u''
-            data['traceback'] = u''
 
         session = engine.get_session()
 
@@ -73,8 +70,6 @@ class StoragePlugin(plugins.Plugin):
 
             if isinstance(test, ContextSuite):
                 for sub_test in test._tests:
-                    data['title'], data['description'], data['duration'] = \
-                        nose_utils.get_description(test)
                     models.Test.add_result(
                         session, self.test_run_id, sub_test.id(), data)
             else:

@@ -44,6 +44,8 @@ class TestStackAction(heatmanager.HeatBaseTest):
             6. Delete stack.
             7. Wait for stack to be deleted.
         Duration: 60 s.
+
+        Deployment tags: Heat
         """
 
         fail_msg = "Stack was not created properly."

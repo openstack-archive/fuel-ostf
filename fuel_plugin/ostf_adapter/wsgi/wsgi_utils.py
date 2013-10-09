@@ -84,7 +84,8 @@ def _get_cluster_depl_tags(cluster_id):
     response = req_ses.get(nailgun_url).json()
 
     #info about deployment type and operating system
-    deployment_tags.add(response['mode'])
+    mode = 'ha' if 'ha' in response['mode'] else response['mode']
+    deployment_tags.add(mode)
     deployment_tags.add(response['release']['operating_system'])
 
     #info about murano/savanna clients installation

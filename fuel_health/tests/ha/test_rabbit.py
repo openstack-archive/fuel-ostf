@@ -54,7 +54,6 @@ class RabbitSmokeTest(BaseTestCase):
 
     def test_001_rabbitmqctl_status(self):
         """RabbitMQ cluster availability
-        Deployment: HA
         Scenario:
           1. Retrieve cluster status for each controller.
           2. Check that the number of clusters equals to number of controllers.
@@ -93,7 +92,6 @@ class RabbitSmokeTest(BaseTestCase):
 
     def test_002_rabbit_queues(self):
         """RabbitMQ queues availability
-        Deployment: HA
         Scenario:
           1. Retrieve list of RabbitMQ queues for each controller
           2. Check that the same queue list is present on each node
@@ -128,7 +126,6 @@ class RabbitSmokeTest(BaseTestCase):
 
     def test_003_rabbit_messages(self):
         """RabbitMQ messages availability
-        Deployment: HA
         Scenario:
           1. Create a queue on a controller
           2. Create an exchange on the controller

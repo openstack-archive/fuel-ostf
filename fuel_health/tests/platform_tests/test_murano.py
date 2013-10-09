@@ -81,14 +81,14 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                               self.environment.id)
 
         post_body = {"type": "activeDirectory","name": "ad.local",
-                    "adminPassword": "P@ssw0rd", "domain": "ad.local",
-                    "availabilityZone": "nova", "unitNamingPattern": "",
-                    "flavor": "m1.medium", "osImage":
+                     "adminPassword": "P@ssw0rd", "domain": "ad.local",
+                     "availabilityZone": "nova", "unitNamingPattern": "",
+                     "flavor": "m1.medium", "osImage":
                     {"type": "ws-2012-std", "name": "ws-2012-std", "title":
-                    "Windows Server 2012 Standard"},"configuration":
-                    "standalone", "units": [{"isMaster": True,
-                    "recoveryPassword": "P@ssw0rd",
-                    "location": "west-dc"}]}
+                     "Windows Server 2012 Standard"},"configuration":
+                     "standalone", "units": [{"isMaster": True,
+                     "recoveryPassword": "P@ssw0rd",
+                     "location": "west-dc"}]}
 
         fail_msg = 'User can not create service.'
         service = self.verify(5, self.create_service,

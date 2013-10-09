@@ -106,9 +106,10 @@ class DiscoveryPlugin(plugins.Plugin):
                             session.add(test_obj)
 
 
-def discovery(path, deployment_info={}):
+def discovery(path, deployment_info=None):
     """Will discover all tests on provided path and save info in db
     """
+    deployment_info = deployment_info if deployment_info else {}
     LOG.info('Starting discovery for %r.', path)
 
     nose_test_runner.SilentTestProgram(

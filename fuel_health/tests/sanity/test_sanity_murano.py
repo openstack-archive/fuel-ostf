@@ -63,9 +63,10 @@ class MuranoSanityTests(murano.MuranoTest):
 
         fail_msg = "Image with Murano tag wasn't imported into Glance"
 
-        find_image = lambda k: len(
-            [i for i in self.compute_client.images.list()
-             if k in i.metadata) > 0
+        def find_image(k):
+            image_len = len([i for i in self.compute_client.images.list()
+                             if k in i.metadata])
+            return image_len > 0
 
         self.verify(5, find_image, 1, fail_msg,
                     "checking if image with Murano tag is available", exp_key)

@@ -41,6 +41,7 @@ class SanitySavannaTests(savanna.SavannaTest):
             7. Send request to delete cluster template
             8. Send request to delete node templates
             9. Send request to delete savanna flavor
+
         Duration: 20 s.
         Deployment tags: Savanna
         """

@@ -194,7 +194,6 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
         """Check mysql cluster state
         Test verifies state of mysql cluster
         Target Service: HA mysql
-        Deployment: RHEL
         Scenario:
             1. Detect mysql master node.
             2. Ssh on mysql-master node and request its status
@@ -204,6 +203,7 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
             6. Verify that Slave_IO_Running is in appropriate state
             7. Verify that Slave_SQL_Running is in appropriate state
         Duration: 1-40 s.
+        Deployment tags: RHEL
         """
 
         if 'RHEL' in self.config.compute.deployment_os:
@@ -278,13 +278,14 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
         """Check galera cluster state
         Test verifies state of galera cluster
         Target Service: HA mysql
-        Deployment: CENTOS
+
         Scenario:
             1. Ssh on each controller and request state of galera node
             2. For each node check cluster size
             3. For each node check status is ready
             4. For each node check that node is connected to cluster
         Duration: 1-20 s.
+        Deployment tags: CENTOS
         """
         if 'CentOS' in self.config.compute.deployment_os:
             for controller in self.controllers:
