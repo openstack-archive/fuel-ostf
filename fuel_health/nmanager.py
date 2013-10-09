@@ -34,6 +34,11 @@ try:
     import savannaclient.api.client
 except:
     LOG.warning('Savanna client could not be imported.')
+
+try:
+    import neutronclient
+except:
+    LOG.warning('Savanna client could not be imported.')
 import cinderclient.client
 import glanceclient.client
 import keystoneclient.v2_0.client
@@ -171,7 +176,10 @@ class OfficialClientManager(fuel_health.manager.Manager):
         auth_url = self.config.identity.uri
         dscv = self.config.identity.disable_ssl_certificate_validation
 
-        return
+        return neutronclient.v2_0.client.Client(username=username,
+                                                tenant_name=tenant_name,
+                                                password=password,
+                                                auth_url=auth_url)
 
     def _get_heat_client(self, username=None, password=None):
         keystone = self._get_identity_client()
