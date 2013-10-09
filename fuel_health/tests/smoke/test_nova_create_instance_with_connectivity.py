@@ -25,7 +25,7 @@ from fuel_health import nmanager
 LOG = logging.getLogger(__name__)
 
 
-class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
+class TestNovaNetwork(nmanager.NetworkScenarioTest):
     """
     Test suit verifies:
      - keypairs creation
@@ -37,18 +37,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     """
 
     @classmethod
-    def check_preconditions(cls):
-        super(TestNovaNetwork, cls).check_preconditions()
-        cfg = cls.config.network
-        if not cfg.tenant_networks_reachable:
-            msg = 'Each tenant network must be reachable.'
-            cls.enabled = False
-            raise cls.skipException(msg)
-
-    @classmethod
     def setUpClass(cls):
         super(TestNovaNetwork, cls).setUpClass()
-        cls.check_preconditions()
         cls.tenant_id = cls.manager._get_identity_client(
             cls.config.identity.admin_username,
             cls.config.identity.admin_password,
@@ -59,6 +49,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         cls.network = []
         cls.servers = []
         cls.floating_ips = []
+        cls.tenants = []
 
     def setUp(self):
         super(TestNovaNetwork, self).setUp()
@@ -77,8 +68,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Scenario:
             1. Create a new keypair, check if it was created successfully.
         Duration: 25 s.
-
-        Deployment tags: nova_network
         """
         self.keypairs[self.tenant_id] = self.verify(25,
                                                     self._create_keypair,
@@ -96,8 +85,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Scenario:
             1. Create a security group, check if it was created correctly.
         Duration: 25 s.
-
-        Deployment tags: nova_network
         """
         self.security_groups[self.tenant_id] = self.verify(
             25, self._create_security_group, 1,
@@ -106,7 +93,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.compute_client)
 
     @attr(type=['fuel', 'smoke'])
-    def test_004_check_networks(self):
+    def test_004_nova_check_networks(self):
         """Check network parameters
         Target component: Nova
 
@@ -115,6 +102,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             2. Confirm that networks have expected labels.
             3. Confirm that networks have expected ids.
         Duration: 50 s.
+        
 
         Deployment tags: nova_network
         """
@@ -134,6 +122,74 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                                       ('Network can not be created.'
                                        ' properly '), failed_step=3)
 
+    def test_003_create_networks_neutron(self):
+        """Network creation
+        Target components: Neutron
+
+        Scenario:
+            1. Create a network.
+            2. Create router
+            3. Create subnet for created network.
+            4. Add subnet to the router.
+        Duration: 80 s.
+
+        Deployment tags: neutron
+        """
+        network = self.verify(25, self._create_network_neutron, 1,
+                              "Network can not be created.",
+                              "network creation",
+                              self.tenant_id)
+        router = self.verify(25, self._create_router, 2,
+                              "Network can not be created.",
+                              "network creation",
+                              self.tenant_id)
+
+        subnet = self.verify(25, self._create_subnet, 3,
+                             "Subnet can not be created.",
+                             "subnet creation",
+                             network)
+        self.verify(20, self._add_interface_to_router, 4,
+                    "Subnet can not be added.",
+                    "subnet addition")
+
+        self.networks.append(network)
+        self.subnets.append(subnet)
+        self.routers.append(router)
+
+
+    @attr(type=['fuel', 'smoke'])
+    def test_004_neutron_check_networks(self):
+        """Check network parameters
+        Target component: Neutron
+
+        Scenario:
+            1. Get the list of networks.
+            2. Confirm that networks have expected labels.
+            3. Confirm that networks have expected ids.
+        Duration: 50 s.
+
+        Deployment tags: neutron
+        """
+        net = self._create_network_neutron(self.tenant_id)
+        self.assertEqual('', dir(net))
+
+        seen_nets = self.verify(
+            50,
+            self._list_networks_neutron,
+            1,
+            "List of networks is not available.",
+            'listing networks'
+        )
+        seen_labels, seen_ids = zip(*((n.label, n.id) for n in seen_nets))
+        for mynet in self.network:
+            self.verify_response_body(seen_labels, mynet.label,
+                                      ('Network can not be created.'
+                                       'properly'), failed_step=2)
+            self.verify_response_body(seen_ids, mynet.id,
+                                      ('Network can not be created.'
+                                       ' properly '), failed_step=3)
+
+
     @attr(type=['fuel', 'smoke'])
     def test_005_create_servers(self):
         """Launch instance
@@ -144,7 +200,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             2. Create an instance using the new security group.
         Duration: 200 s.
 
-        Deployment tags: nova_network
+
         """
         if not self.security_groups:
             self.security_groups[self.tenant_id] = self.verify(

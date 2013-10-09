@@ -21,6 +21,7 @@ fuel_health_reqs = [
     'python-cinderclient==1.0.4',
     'python-glanceclient==0.9.0',
     'python-keystoneclient==0.2.4',
+    'python-neutronclient==2.3.1',
     'python-novaclient==2.12.0',
     'python-heatclient==0.2.2',
     'python-muranoclient==0.2',

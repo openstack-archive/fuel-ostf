@@ -17,6 +17,7 @@
 #    under the License.
 
 import logging
+import netaddr
 import time
 
 LOG = logging.getLogger(__name__)
@@ -32,6 +33,11 @@ except:
     LOG.warning('Muranoclient could not be imported.')
 try:
     import savannaclient.api.client
+except:
+    LOG.warning('Savanna client could not be imported.')
+
+try:
+    import neutronclient.v2_0.client
 except:
     LOG.warning('Savanna client could not be imported.')
 import cinderclient.client
@@ -162,16 +168,15 @@ class OfficialClientManager(fuel_health.manager.Manager):
         password = self.config.identity.admin_password
         tenant_name = self.config.identity.admin_tenant_name
 
-        if None in (username, password, tenant_name):
-            msg = ("Missing required credentials for network client. "
-                   "username: %(username)s, password: %(password)s, "
-                   "tenant_name: %(tenant_name)s") % locals()
-            raise exceptions.InvalidConfiguration(msg)
-
         auth_url = self.config.identity.uri
         dscv = self.config.identity.disable_ssl_certificate_validation
 
-        return
+
+
+        return neutronclient.v2_0.client.Client(username=username,
+                                    tenant_name=tenant_name,
+                                    password=password,
+                                    auth_url=auth_url)
 
     def _get_heat_client(self, username=None, password=None):
         keystone = self._get_identity_client()
@@ -292,35 +297,14 @@ class OfficialClientTest(fuel_health.test.TestCase):
             fuel_health.test.call_until_true(is_deletion_complete, 10, 1)
 
 
-class NovaNetworkScenarioTest(OfficialClientTest):
+class NetworkScenarioTest(OfficialClientTest):
     """
     Base class for nova network scenario tests
     """
 
-    _enabled = True
-
-    @classmethod
-    def check_preconditions(cls):
-        cls._create_nano_flavor()
-        cls._enabled = True
-        if cls.config.network.neutron_available:
-            cls._enabled = False
-        else:
-            cls._enabled = True
-            # ensure the config says true
-            try:
-                cls.compute_client.networks.list()
-            except exceptions.EndpointNotFound:
-                cls._enabled = False
-
-    def setUp(self):
-        super(NovaNetworkScenarioTest, self).setUp()
-        if not self._enabled:
-            self.fail('Nova Networking is not available')
-
     @classmethod
     def setUpClass(cls):
-        super(NovaNetworkScenarioTest, cls).setUpClass()
+        super(NetworkScenarioTest, cls).setUpClass()
         cls.host = cls.config.compute.controller_nodes
         cls.usr = cls.config.compute.controller_node_ssh_user
         cls.pwd = cls.config.compute.controller_node_ssh_password
@@ -399,6 +383,79 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                           n_label,
                                           "Network creation failed")
         return networks
+
+    def _list_networks_neutron(self):
+        nets = self.network_client.list_networks()
+        return nets['networks']
+
+    def _list_subnets_neutron(self):
+        subnets = self.network_client.list_subnets()
+        return subnets['subnets']
+
+    def _list_routers_neutron(self):
+        routers = self.network_client.list_routers()
+        return routers['routers']
+
+    def _create_router(self, tenant_id, namestart='ost1_test-create_router-neutron'):
+        name = rand_name(namestart)
+        body = dict(
+            router=dict(
+                name=name,
+                admin_state_up=True,
+                tenant_id=tenant_id,
+            ),
+        )
+        result = self.network_client.create_router(body=body)
+        router = result['router']
+        self.assertEqual(router.name, name)
+        self.set_resource(name, router)
+        return router
+
+    def _add_interface_to_router(self, router, subnet_id):
+        self.network_client.add_interface_router(router,
+                                                 {'subnet_id': subnet_id})
+
+    def _create_network_neutron(self, tenant_id,
+                                namestart='ost1_test-create_net-neutron'):
+        name = rand_name(namestart)
+        body = dict(
+            network=dict(
+                name=name,
+                tenant_id=tenant_id,
+            ),
+        )
+        result = self.network_client.create_network(body=body)
+        return result
+
+    def _create_subnet(self, network, namestart='ost1_test-subnet-'):
+        cfg = self.config.network
+        tenant_cidr = netaddr.IPNetwork(cfg.tenant_network_cidr)
+        result = None
+        # Repeatedly attempt subnet creation with sequential cidr
+        # blocks until an unallocated block is found.
+        for subnet_cidr in tenant_cidr.subnet(cfg.tenant_network_mask_bits):
+            body = dict(
+                subnet=dict(
+                    ip_version=4,
+                    network_id=network.id,
+                    tenant_id=network.tenant_id,
+                    cidr=str(subnet_cidr),
+                ),
+            )
+            try:
+                result = self.network_client.create_subnet(body=body)
+                break
+            except exc.NeutronClientException as e:
+                is_overlapping_cidr = 'overlaps with another subnet' in str(e)
+                if not is_overlapping_cidr:
+                    raise
+        self.assertIsNotNone(result, 'Unable to allocate tenant network')
+        subnet = net_common.DeletableSubnet(client=self.network_client,
+                                            **result['subnet'])
+        self.assertEqual(subnet.cidr, str(subnet_cidr))
+        self.set_resource(rand_name(namestart), subnet)
+        return subnet
+
 
     @classmethod
     def _clear_networks(cls):
@@ -552,7 +609,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     @classmethod
     def tearDownClass(cls):
-        super(NovaNetworkScenarioTest, cls).tearDownClass()
+        super(NetworkScenarioTest, cls).tearDownClass()
         cls._clean_floating_is()
         cls._clear_networks()
         cls._verification_of_exceptions()

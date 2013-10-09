@@ -81,7 +81,7 @@ compute_group = cfg.OptGroup(name='compute',
 
 ComputeGroup = [
     cfg.BoolOpt('allow_tenant_isolation',
-                default=False,
+                default=True,
                 help="Allows test cases to create/destroy tenants and "
                      "users. This option enables isolated test cases and "
                      "better parallel execution, but also requires that "
@@ -202,7 +202,10 @@ NetworkGroup = [
     cfg.StrOpt('catalog_type',
                default='network',
                help='Catalog type of the Network service.'),
-    cfg.StrOpt('tenant_network_cidr',
+    cfg.StrOpt('neutron_cidr',
+               default="10.100.0.0/16",
+               help="The cidr block to allocate tenant networks from"),
+    cfg.StrOpt('neutron_ext_cidr',
                default="10.100.0.0/16",
                help="The cidr block to allocate tenant networks from"),
     cfg.StrOpt('network_provider',
@@ -212,7 +215,7 @@ NetworkGroup = [
                default=29,
                help="The mask bits for tenant networks"),
     cfg.BoolOpt('tenant_networks_reachable',
-                default=True,
+                default=False,
                 help="Whether tenant network connectivity should be "
                      "evaluated directly"),
     cfg.BoolOpt('neutron_available',
@@ -580,6 +583,10 @@ class NailgunConfig(object):
             self.cluster_id, self.network.network_provider)
         data = self.req_session.get(self.nailgun_url + api_url).json()
         self.network.raw_data = data
+        if self.network.network_provider == 'neutron':
+            neutron_data = data['networks']['predefined_networks']
+            self.network.neutron_cidr= neutron_data['net04']['L3']['cidr']
+            self.network.neutron_ext_cidr = neutron_data['net04_ext']['L3']['cidr']
 
     def _parse_cluster_generated_data(self):
         api_url = '/api/clusters/%s/generated' % self.cluster_id
