@@ -87,7 +87,6 @@ class BaseTestController(unittest2.TestCase):
         self.session_getter_patcher.stop()
 
 
-@unittest2.skip('Expected data needs to be fixed')
 class TestTestsController(BaseTestController):
 
     @classmethod
@@ -111,7 +110,7 @@ class TestTestsController(BaseTestController):
                     'duration': None,
                     'message': None,
                     'id': u'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_depl',
-                    'description': u'        This is empty test for any\n        ha deployment\n        Deployment tags:\n        ',
+                    'description': u'        This is empty test for any\n        ha deployment\n        ',
                 },
                 {
                     'status': None,
@@ -209,10 +208,10 @@ class TestTestRunsController(BaseTestController):
         #in setUp in order to provide this data
         depl_info = {
             'cluster_id': 1,
-            'deployment_tags': {
+            'deployment_tags': set([
                 'ha',
                 'rhel'
-            }
+            ])
         }
 
         discovery(deployment_info=depl_info, path=TEST_PATH)
@@ -424,14 +423,16 @@ class TestClusterRedployment(BaseTestController):
             .filter_by(cluster_id=expected['cluster_id'])\
             .first()
 
-        deployment_tags = test_set.deployment_tags if test_set.deployment_tags else []
+        deployment_tags = test_set.deployment_tags \
+            if test_set.deployment_tags else []
+
         self.assertTrue(
             set(deployment_tags).issubset(expected['old_depl_tags'])
         )
 
         #patch request_to_nailgun function in orded to emulate
         #redeployment of cluster
-        cluster_data = {'multinode', 'ubuntu'}
+        cluster_data = {'multinode', 'ubuntu', 'additional_components'}
 
         with patch(
             'fuel_plugin.ostf_adapter.wsgi.wsgi_utils._get_cluster_depl_tags',
@@ -447,7 +448,7 @@ class TestClusterRedployment(BaseTestController):
                 ):
                     res = self.controller.get(expected['cluster_id'])
 
-        #check wheter testset and bound with it test have been deleted from db
+        #check whether testset and bound with it test have been deleted from db
         old_test_set = self.session.query(models.TestSet)\
             .filter_by(id=expected['old_test_set_id'])\
             .filter_by(cluster_id=expected['cluster_id'])\
@@ -475,7 +476,8 @@ class TestClusterRedployment(BaseTestController):
             .filter_by(cluster_id=expected['cluster_id'])\
             .first()
         self.assertTrue(new_test_set)
-        deployment_tags = new_test_set.deployment_tags if new_test_set.deployment_tags else []
+        deployment_tags = new_test_set.deployment_tags \
+            if new_test_set.deployment_tags else []
         self.assertTrue(
             set(deployment_tags).issubset(expected['new_depl_tags'])
         )
@@ -487,7 +489,8 @@ class TestClusterRedployment(BaseTestController):
 
         self.assertTrue(new_tests)
         for test in new_tests:
-            deployment_tags = test.deployment_tags if test.deployment_tags else []
+            deployment_tags = test.deployment_tags \
+                if test.deployment_tags else []
             self.assertTrue(
                 set(deployment_tags).issubset(expected['new_depl_tags'])
             )

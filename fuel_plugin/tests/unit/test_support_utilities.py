@@ -23,7 +23,7 @@ class TestDeplTagsGetter(unittest.TestCase):
     def test_get_cluster_depl_tags(self):
         expected = {
             'cluster_id': 3,
-            'depl_tags': set(['ha', 'rhel', 'murano'])
+            'depl_tags': set(['ha', 'rhel', 'additional_components', 'murano'])
         }
 
         mocked_pecan_conf = mock.Mock()

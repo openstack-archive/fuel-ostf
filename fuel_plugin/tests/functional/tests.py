@@ -104,85 +104,14 @@ class AdapterTests(BaseAdapterTest):
                 {
                     'testset': 'general_test',
                     'status': 'running',
-                    'tests': [
-                        {
-                            'status': 'failure',
-                            'testset': 'general_test',
-                            'name': 'Fast fail with step',
-                            'message': 'Fake fail message',
-                            'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fail_with_step',
-                            'description': '        '
-                        },
-                        {
-                            'status': 'error',
-                            'testset': 'general_test',
-                            'name': 'And fast error',
-                            'message': '',
-                            'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_error',
-                            'description': '        '
-                        },
-                        {
-                            'status': 'failure',
-                            'testset': 'general_test',
-                            'name': 'Fast fail',
-                            'message': 'Something goes wroooong',
-                            'id': u'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_fail',
-                            'description': '        '
-                        },
-                        {
-                            'status': 'success',
-                            'testset': 'general_test',
-                            'name': 'fast pass test',
-                            'duration': '1sec',
-                            'message': '',
-                            'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_pass',
-                            'description': '        This is a simple always pass test\n        '
-                        },
-                        {
-                            'status': 'running',
-                            'testset': 'general_test',
-                            'name': 'Will sleep 5 sec',
-                            'duration': '5sec',
-                            'message': '',
-                            'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_long_pass',
-                            'description': '        This is a simple test\n        it will run for 5 sec\n        '
-                        }
-                    ],
+                    'tests': [],
                     'meta': None,
                     'cluster_id': 1,
                 },
                 {
                     'testset': 'stopped_test',
                     'status': 'running',
-                    'tests': [
-                        {
-                            'status': 'success',
-                            'testset': 'stopped_test',
-                            'name': 'You know.. for testing',
-                            'duration': '1sec',
-                            'message': '',
-                            'id': 'fuel_plugin.tests.functional.dummy_tests.stopped_test.dummy_tests_stopped.test_not_long_at_all',
-                            'description': '            '
-                        },
-                        {
-                            'status': 'running',
-                            'testset': 'stopped_test',
-                            'name': 'What i am doing here? You ask me????',
-                            'duration': None,
-                            'message': '',
-                            'id': 'fuel_plugin.tests.functional.dummy_tests.stopped_test.dummy_tests_stopped.test_one_no_so_long',
-                            'description': '        '
-                        },
-                        {
-                            'status': 'running',
-                            'testset': 'stopped_test',
-                            'name': 'This is long running tests',
-                            'duration': '25sec',
-                            'message': None,
-                            'id': 'fuel_plugin.tests.functional.dummy_tests.stopped_test.dummy_tests_stopped.test_really_long',
-                            'description': '           '
-                        }
-                    ],
+                    'tests': [],
                     'meta': None,
                     'cluster_id': 1,
                 }
@@ -197,17 +126,17 @@ class AdapterTests(BaseAdapterTest):
         assertions.general_test['status'] = 'finished'
         assertions.stopped_test['status'] = 'finished'
 
-        for test in assertions.general_test['tests']:
-            if test['name']  == 'Will sleep 5 sec':
-                test['status'] = 'success'
+        #for test in assertions.general_test['tests']:
+        #    if test['name'] == 'Will sleep 5 sec':
+        #        test['status'] = 'success'
 
-        for test in assertions.stopped_test['tests']:
-            if test['name']  == 'This is long running tests':
-                test['status'] = 'success'
-                test['message'] = ''
+        #for test in assertions.stopped_test['tests']:
+        #    if test['name'] == 'This is long running tests':
+        #        test['status'] = 'success'
+        #        test['message'] = ''
 
-            if test['name'] == 'What i am doing here? You ask me????':
-                test['status'] = 'success'
+        #    if test['name'] == 'What i am doing here? You ask me????':
+        #        test['status'] = 'success'
 
         self.compare(r, assertions)
 
@@ -230,35 +159,7 @@ class AdapterTests(BaseAdapterTest):
             {
                 'testset': 'stopped_test',
                 'status': 'running',
-                'tests': [
-                    {
-                        'status': 'success',
-                        'testset': 'stopped_test',
-                        'name': 'You know.. for testing',
-                        'duration': '1sec',
-                        'message': '',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.stopped_test.dummy_tests_stopped.test_not_long_at_all',
-                        'description': '            '
-                    },
-                    {
-                        'status': 'success',
-                        'testset': 'stopped_test',
-                        'name': 'What i am doing here? You ask me????',
-                        'duration': None,
-                        'message': '',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.stopped_test.dummy_tests_stopped.test_one_no_so_long',
-                        'description': '        '
-                    },
-                    {
-                        'status': 'running',
-                        'testset': 'stopped_test',
-                        'name': 'This is long running tests',
-                        'duration': '25sec',
-                        'message': '',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.stopped_test.dummy_tests_stopped.test_really_long',
-                        'description': '           '
-                    }
-                ],
+                'tests': [],
                 'meta': None,
                 'cluster_id': 1
             }
@@ -270,9 +171,9 @@ class AdapterTests(BaseAdapterTest):
         r = self.client.testruns_last(cluster_id)
 
         assertions.stopped_test['status'] = 'finished'
-        for test in assertions.stopped_test['tests']:
-            if test['name'] == 'This is long running tests':
-                test['status'] = 'stopped'
+        #for test in assertions.stopped_test['tests']:
+        #    if test['name'] == 'This is long running tests':
+        #        test['status'] = 'stopped'
         self.compare(r, assertions)
 
     def test_cant_start_while_running(self):
@@ -364,8 +265,8 @@ class AdapterTests(BaseAdapterTest):
                     }
                 ],
                 'cluster_id': '1',
-                }
-            ])
+            }
+        ])
 
         self.compare(r, assertions)
         time.sleep(2)
@@ -428,8 +329,8 @@ class AdapterTests(BaseAdapterTest):
                     }
                 ],
                 'cluster_id': '1',
-                }
-            ])
+            }
+        ])
 
         self.compare(r, assertions)
         time.sleep(5)
@@ -495,8 +396,8 @@ class AdapterTests(BaseAdapterTest):
                     }
                 ],
                 'cluster_id': '1',
-                }
-            ])
+            }
+        ])
         self.compare(r, assertions)
         time.sleep(5)
 
@@ -526,4 +427,3 @@ class AdapterTests(BaseAdapterTest):
         r = self.client.restart_tests_last(testset, tests, cluster_id)
         msg = 'Response was not empty after trying to restart running testset:\n {0}'.format(r.request)
         self.assertTrue(r.is_empty, msg)
-

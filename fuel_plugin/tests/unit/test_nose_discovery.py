@@ -63,17 +63,17 @@ class BaseTestNoseDiscovery(unittest2.TestCase):
         self.fixtures = {
             'ha_deployment_test': {
                 'cluster_id': 1,
-                'deployment_tags': {
+                'deployment_tags': set([
                     'ha',
                     'rhel'
-                }
+                ])
             },
             'multinode_deployment_test': {
                 'cluster_id': 2,
-                'deployment_tags': {
+                'deployment_tags': set([
                     'multinode',
                     'ubuntu'
-                }
+                ])
             }
         }
 
@@ -154,8 +154,9 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
     def test_get_proper_description(self):
         expected = {
             'title': 'fake empty test',
-            'name':
-                'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_rhel_depl',
+            'name': ('fuel_plugin.tests.functional.'
+                     'dummy_tests.deployment_types_tests.'
+                     'ha_deployment_test.HATest.test_ha_rhel_depl'),
             'duration': '0sec',
             'test_set_id': 'ha_deployment_test',
             'cluster_id': self.fixtures['ha_deployment_test']['cluster_id'],

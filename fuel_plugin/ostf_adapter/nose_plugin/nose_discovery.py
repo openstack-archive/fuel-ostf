@@ -53,7 +53,7 @@ class DiscoveryPlugin(plugins.Plugin):
                 tag.lower() for tag in profile.get('deployment_tags', [])
             ]
 
-            if set(profile['deployment_tags'])\
+            if set(profile['deployment_tags']) \
                .issubset(self.deployment_info['deployment_tags']):
 
                 profile['cluster_id'] = self.deployment_info['cluster_id']
@@ -109,7 +109,7 @@ class DiscoveryPlugin(plugins.Plugin):
 def discovery(path, deployment_info=None):
     """Will discover all tests on provided path and save info in db
     """
-    deployment_info = deployment_info if deployment_info else {}
+    deployment_info = deployment_info if deployment_info else dict()
     LOG.info('Starting discovery for %r.', path)
 
     nose_test_runner.SilentTestProgram(
