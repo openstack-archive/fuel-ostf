@@ -38,7 +38,7 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
 
     def setUp(self):
         super(TestMysqlReplication, self).setUp()
-        if self.config.compute.deployment_mode != 'ha':
+        if 'ha' not in self.config.compute.deployment_mode:
             self.fail('Cluster is not HA mode, skipping tests')
 
     @classmethod
