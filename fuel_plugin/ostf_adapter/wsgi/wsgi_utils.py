@@ -37,35 +37,42 @@ def discovery_check(cluster):
 
     session = engine.get_session()
     with session.begin(subtransactions=True):
-        test_sets = session.query(models.TestSet)\
-            .filter_by(cluster_id=cluster)\
-            .all()
+        cluster_state = session.query(models.ClusterState)\
+            .filter_by(id=cluster_data['cluster_id'])\
+            .first()
 
-        if not test_sets:
+        if not cluster_state:
             nose_discovery.discovery(
                 path=CORE_PATH,
                 deployment_info=cluster_data
             )
-        else:
-            for testset in test_sets:
-                deployment_tags = testset.deployment_tags
-                deployment_tags = deployment_tags if deployment_tags else []
-                if not set(deployment_tags).issubset(
-                    cluster_data['deployment_tags']
-                ):
-                    #perform cascade deletion of testset
-                    #and corresponding to it tests and
-                    #testruns with their tests too
-                    session.query(models.TestSet)\
-                        .filter_by(id=testset.id)\
-                        .filter_by(cluster_id=testset.cluster_id)\
-                        .delete()
 
-            #perform final discovery for tests
-            nose_discovery.discovery(
-                path=CORE_PATH,
-                deployment_info=cluster_data
+            session.add(
+                models.ClusterState(
+                    id=cluster_data['cluster_id'],
+                    deployment_tags=list(cluster_data['deployment_tags'])
+                )
             )
+
+            return
+        old_deployment_tags = cluster_state.deployment_tags
+        if set(old_deployment_tags) != cluster_data['deployment_tags']:
+            #perform cascade deletion of testsets and corresponding to it
+            #tests and tesruns with exired cluster_info within them
+            session.query(models.TestSet)\
+                .filter_by(cluster_id=cluster_state.id)\
+                .delete()
+
+            cluster_state.deployment_tags = \
+                list(cluster_data['deployment_tags'])
+
+            session.merge(cluster_state)
+
+    #perform rediscovery of testsets for current cluster
+    nose_discovery.discovery(
+        path=CORE_PATH,
+        deployment_info=cluster_data
+    )
 
 
 def _get_cluster_depl_tags(cluster_id):
@@ -84,7 +91,7 @@ def _get_cluster_depl_tags(cluster_id):
     response = req_ses.get(nailgun_url).json()
 
     #info about deployment type and operating system
-    mode = 'ha' if 'ha' in response['mode'] else response['mode']
+    mode = 'ha' if 'ha' in response['mode'].lower() else response['mode']
     deployment_tags.add(mode)
     deployment_tags.add(response['release']['operating_system'])
 
@@ -113,4 +120,4 @@ def _get_cluster_depl_tags(cluster_id):
         deployment_tags.add('additional_components')
         deployment_tags.update(additional_depl_tags)
 
-    return deployment_tags
+    return set([tag.lower() for tag in deployment_tags])
