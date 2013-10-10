@@ -95,12 +95,22 @@ def _get_cluster_depl_tags(cluster_id):
     additional_components = \
         response['editable']['additional_components']
 
+    additional_depl_tags = set()
+
     if additional_components.get('murano')\
        and additional_components.get('murano')['value'] is True:
-        deployment_tags.add('murano')
+        additional_depl_tags.add('murano')
 
     if additional_components.get('savanna')\
        and additional_components.get('savanna')['value'] is True:
-        deployment_tags.add('savanna')
+        additional_depl_tags.add('savanna')
+
+    if additional_components.get('heat')\
+       and additional_components.get('heat')['value'] is True:
+        additional_depl_tags.add('heat')
+
+    if additional_depl_tags:
+        deployment_tags.add('additional_components')
+        deployment_tags.update(additional_depl_tags)
 
     return deployment_tags
