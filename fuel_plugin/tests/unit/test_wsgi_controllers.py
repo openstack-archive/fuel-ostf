@@ -418,6 +418,20 @@ class TestClusterRedployment(BaseTestController):
             ):
                 self.controller.get(expected['cluster_id'])
 
+        cluster_state = self.session.query(models.ClusterState)\
+            .filter_by(id=expected['cluster_id'])\
+            .first()
+
+        if not cluster_state:
+            raise AssertionError(
+                'There must be info about current cluster state in db'
+            )
+
+        self.assertEqual(
+            cluster_state.deployment_tags,
+            expected['old_depl_tags']
+        )
+
         test_set = self.session.query(models.TestSet)\
             .filter_by(id=expected['old_test_set_id'])\
             .filter_by(cluster_id=expected['cluster_id'])\
@@ -432,7 +446,7 @@ class TestClusterRedployment(BaseTestController):
 
         #patch request_to_nailgun function in orded to emulate
         #redeployment of cluster
-        cluster_data = {'multinode', 'ubuntu', 'additional_components'}
+        cluster_data = {'multinode', 'ubuntu'}
 
         with patch(
             'fuel_plugin.ostf_adapter.wsgi.wsgi_utils._get_cluster_depl_tags',
@@ -447,6 +461,15 @@ class TestClusterRedployment(BaseTestController):
                     self.pecan_conf_mock
                 ):
                     res = self.controller.get(expected['cluster_id'])
+
+        new_cluster_state = self.session.query(models.ClusterState)\
+            .filter_by(id=expected['cluster_id'])\
+            .first()
+
+        self.assertEqual(
+            new_cluster_state.deployment_tags,
+            expected['new_depl_tags']
+        )
 
         #check whether testset and bound with it test have been deleted from db
         old_test_set = self.session.query(models.TestSet)\

@@ -37,31 +37,37 @@ def discovery_check(cluster):
 
     session = engine.get_session()
     with session.begin(subtransactions=True):
-        test_sets = session.query(models.TestSet)\
-            .filter_by(cluster_id=cluster)\
-            .all()
+        cluster_state = session.query(models.ClusterState)\
+            .filter_by(id=cluster_data['cluster_id'])\
+            .first()
 
-        if not test_sets:
+        if not cluster_state:
             nose_discovery.discovery(
                 path=CORE_PATH,
                 deployment_info=cluster_data
             )
-        else:
-            for testset in test_sets:
-                deployment_tags = testset.deployment_tags
-                deployment_tags = deployment_tags if deployment_tags else []
-                if not set(deployment_tags).issubset(
-                    cluster_data['deployment_tags']
-                ):
-                    #perform cascade deletion of testset
-                    #and corresponding to it tests and
-                    #testruns with their tests too
-                    session.query(models.TestSet)\
-                        .filter_by(id=testset.id)\
-                        .filter_by(cluster_id=testset.cluster_id)\
-                        .delete()
 
-            #perform final discovery for tests
+            session.add(
+                models.ClusterState(
+                    id=cluster_data['cluster_id'],
+                    deployment_tags=list(cluster_data['deployment_tags'])
+                )
+            )
+        else:
+            old_deployment_tags = cluster_state.deployment_tags
+            if set(old_deployment_tags) != cluster_data['deployment_tags']:
+                #perform cascade deletion of testsets and corresponding to it
+                #tests and tesruns with exired cluster_info within them
+                session.query(models.TestSet)\
+                    .filter_by(cluster_id=cluster_state.id)\
+                    .delete()
+
+                cluster_state.deployment_tags = \
+                    list(cluster_data['deployment_tags'])
+
+                session.merge(cluster_state)
+
+            #perform rediscovery of testsets for current cluster
             nose_discovery.discovery(
                 path=CORE_PATH,
                 deployment_info=cluster_data
