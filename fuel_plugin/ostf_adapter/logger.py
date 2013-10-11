@@ -19,7 +19,8 @@ import logging.handlers
 
 def setup(log_file=None):
     formatter = logging.Formatter(
-        '[%(asctime)s] %(levelname)-8s %(message)s')
+        '%(asctime)s %(levelname)s (%(module)s) %(message)s',
+        "%Y-%m-%d %H:%M:%S")
     log = logging.getLogger(None)
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.INFO)
