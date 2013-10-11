@@ -196,6 +196,9 @@ NetworkGroup = [
     cfg.StrOpt('tenant_network_cidr',
                default="10.100.0.0/16",
                help="The cidr block to allocate tenant networks from"),
+    cfg.StrOpt('network_provider',
+               default="nova_network",
+               help="Value of network provider"),
     cfg.IntOpt('tenant_network_mask_bits',
                default=29,
                help="The mask bits for tenant networks"),
@@ -469,11 +472,13 @@ class NailgunConfig(object):
         response = self.req_session.get(self.nailgun_url + api_url)
         LOG.info('RESPONSE %s STATUS %s' % (api_url, response.status_code))
         data = response.json()
+        network_provider = data.get('net_provider', 'nova_network')
         LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
         access_data = data['editable']['access']
         self.identity.admin_tenant_name = access_data['tenant']['value']
         self.identity.admin_username = access_data['user']['value']
         self.identity.admin_password = access_data['password']['value']
+        self.network_provider = network_provider
 
     def _parse_nodes_cluster_id(self):
         api_url = '/api/nodes?cluster_id=%s' % self.cluster_id
@@ -516,7 +521,8 @@ class NailgunConfig(object):
         self.compute.deployment_os = data['release']['operating_system']
 
     def _parse_networks_configuration(self):
-        api_url = '/api/clusters/%s/network_configuration/' % self.cluster_id
+        api_url = '/api/clusters/{0}/network_configuration/{1}'.format(
+            self.cluster_id, self.network_provider)
         data = self.req_session.get(self.nailgun_url + api_url).json()
         self.network.raw_data = data
 
@@ -541,7 +547,7 @@ class NailgunConfig(object):
     def set_endpoints(self):
         public_vip = self.network.raw_data.get('public_vip', None)
         # workaround for api without public_vip for ha mode
-        if not public_vip and self.mode == 'ha':
+        if not public_vip and 'ha' in self.mode:
             self._parse_ostf_api()
         else:
             endpoint = public_vip or self.compute.public_ips[0]
