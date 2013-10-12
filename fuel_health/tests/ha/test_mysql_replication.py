@@ -191,8 +191,8 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
             del temp_set
 
     def test_state_of_mysql_cluster(self):
-        """Check mysql cluster state
-        Test verifies state of mysql cluster
+        """Check mysql environment state
+        Test verifies state of mysql environment
         Target Service: HA mysql
         Scenario:
             1. Detect mysql master node.
@@ -275,8 +275,8 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
             self.fail("There is no RHEL deployment")
 
     def test_state_of_galera_cluster(self):
-        """Check galera cluster state
-        Test verifies state of galera cluster
+        """Check galera environment state
+        Test verifies state of galera environment
         Target Service: HA mysql
 
         Scenario:
