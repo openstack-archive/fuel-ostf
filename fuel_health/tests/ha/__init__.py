@@ -24,6 +24,6 @@ __profile__ = {
     "id": "ha",
     "driver": "nose",
     "test_path": "fuel_health/tests/ha",
-    "description": "HA tests. Duration sec - min",
+    "description": "HA tests. Duration 30 sec - 8 min",
     "deployment_tags": ["ha"]
 }

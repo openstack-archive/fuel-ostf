@@ -24,5 +24,5 @@ __profile__ = {
     "id": "sanity",
     "driver": "nose",
     "test_path": "fuel_health/tests/sanity",
-    "description": "Sanity tests. Duration 30sec - 2 min"
+    "description": "Sanity tests. Duration 30 sec - 2 min"
 }
