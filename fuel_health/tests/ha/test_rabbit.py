@@ -53,7 +53,7 @@ class RabbitSmokeTest(BaseTestCase):
             self.fail('Cannot create AMQP clients for controllers')
 
     def test_001_rabbitmqctl_status(self):
-        """RabbitMQ cluster availability
+        """RabbitMQ availability
         Scenario:
           1. Retrieve cluster status for each controller.
           2. Check that the number of clusters equals to number of controllers.
