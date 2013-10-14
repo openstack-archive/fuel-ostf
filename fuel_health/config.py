@@ -140,6 +140,9 @@ ComputeGroup = [
     cfg.StrOpt('controller_node_ssh_user',
                default='root',
                help="ssh user of one of the controller nodes"),
+    cfg.StrOpt('amqp_pwd',
+               default='root',
+               help="amqp_pwd"),
     cfg.StrOpt('controller_node_ssh_password',
                default='r00tme',
                help="ssh user pass of one of the controller nodes"),
@@ -457,6 +460,7 @@ class NailgunConfig(object):
             self.set_endpoints()
             self.set_proxy()
             self._parse_murano_configuration()
+            self._parse_cluster_generated_data()
         except Exception, e:
             LOG.warning('Nailgun config creation failed. '
                         'Something wrong with endpoints')
@@ -525,6 +529,17 @@ class NailgunConfig(object):
             self.cluster_id, self.network_provider)
         data = self.req_session.get(self.nailgun_url + api_url).json()
         self.network.raw_data = data
+
+    def _parse_cluster_generated_data(self):
+        api_url = '/api/clusters/%s/generated' % self.cluster_id
+        data = self.req_session.get(self.nailgun_url + api_url).json()
+        self.generated_data = data
+        if 'RHEL' not in self.compute.deployment_os:
+            amqp_data = data['rabbit']
+            self.amqp_pwd = amqp_data['password']
+        else:
+            amqp_data = data['qpid']
+            self.amqp_pwd = amqp_data['password']
 
     def _parse_ostf_api(self):
         """

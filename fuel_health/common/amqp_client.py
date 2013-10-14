@@ -17,7 +17,6 @@
 import logging
 import time
 
-import fuel_health.common.facts
 import fuel_health.common.ssh
 
 LOG = logging.getLogger(__name__)
@@ -25,18 +24,14 @@ LOG = logging.getLogger(__name__)
 
 class RabbitClient(object):
     def __init__(self, host, username, key, timeout,
-                 rabbit_username=None, rabbit_password=None):
+                 rabbit_username='nova', rabbit_password=None):
         self.host = host
         self.username = username
         self.key_file = key
         self.timeout = timeout
-        if rabbit_username and rabbit_password:
-            self.rabbit_user = rabbit_username
-            self.rabbit_password = rabbit_password
-        else:
-            _config = fuel_health.common.facts.Facts()
-            self.rabbit_user = _config.amqp_user
-            self.rabbit_password = _config.amqp_password
+        self.rabbit_user = rabbit_username
+        self.rabbit_password = rabbit_password
+
         self.ssh = fuel_health.common.ssh.Client(
             host=self.host,
             username=self.username,
@@ -44,8 +39,8 @@ class RabbitClient(object):
             timeout=self.timeout)
 
     def list_nodes(self):
-        query = self._query('nodes?"columns=name&sort=name"', header=False)
-        return self._execute(query)
+        output = self.ssh.exec_command('rabbitmqctl cluster_status')
+        return output.split('\r\n')[1:-2]
 
     def list_queues(self):
         query = self._query('queues?"columns=name&sort=name"', header=False)
