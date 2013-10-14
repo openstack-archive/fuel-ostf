@@ -137,6 +137,9 @@ ComputeGroup = [
     cfg.ListOpt('compute_nodes',
                 default=[],
                 help="IP addresses of compute nodes"),
+    cfg.ListOpt('ceph_nodes',
+                default=[],
+                help="IP addresses of nodes with ceph-osd role"),
     cfg.StrOpt('controller_node_ssh_user',
                default='root',
                help="ssh user of one of the controller nodes"),
@@ -234,6 +237,9 @@ VolumeGroup = [
     cfg.BoolOpt('cinder_node_exist',
                 default=True,
                 help="Allow to run tests if cinder exist"),
+    cfg.BoolOpt('ceph_exist',
+                default=True,
+                help="Allow to run tests if ceph exist"),
     cfg.BoolOpt('multi_backend_enabled',
                 default=False,
                 help="Runs Cinder multi-backend test (requires 2 backends)"),
@@ -475,6 +481,8 @@ class NailgunConfig(object):
         network_provider = data.get('net_provider', 'nova_network')
         LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
         access_data = data['editable']['access']
+        storage = data['storage']['volumes_ceph']
+        self.volume.ceph_exist = storage
         self.identity.admin_tenant_name = access_data['tenant']['value']
         self.identity.admin_username = access_data['user']['value']
         self.identity.admin_password = access_data['password']['value']
@@ -512,6 +520,8 @@ class NailgunConfig(object):
             compute_ips.append(node['ip'])
         LOG.info("COMPUTES IPS %s" % compute_ips)
         self.compute.compute_nodes = compute_ips
+        ceph_nodes = filter(lambda node: 'ceph-osd' in node['roles'],
+                               data)
 
     def _parse_meta(self):
         api_url = '/api/clusters/%s' % self.cluster_id
