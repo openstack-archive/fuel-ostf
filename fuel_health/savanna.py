@@ -73,10 +73,10 @@ class SavannaTest(nmanager.OfficialClientTest):
         tag_version = '_savanna_tag_%s' % version
         tag_plugin = '_savanna_tag_%s' % plugin
         for image in self.compute_client.images.list():
-            if image.metadata[tag_version] == 'True'\
-                and image.metadata[tag_plugin] == 'True'\
-                and image.name == 'savanna':
-                return True
+            if image.name == 'savanna':
+                if image.metadata[tag_version] == 'True'\
+                   and image.metadata[tag_plugin] == 'True':
+                    return True
         return False
 
     def _create_node_group_template_and_get_id(
