@@ -68,13 +68,15 @@ class StoragePlugin(plugins.Plugin):
 
         with session.begin(subtransactions=True):
 
-            if isinstance(test, ContextSuite):
-                for sub_test in test._tests:
-                    models.Test.add_result(
-                        session, self.test_run_id, sub_test.id(), data)
-            else:
+            tests_to_update = nose_utils.get_tests_ids_to_update(test)
+
+            for test_id in tests_to_update:
                 models.Test.add_result(
-                    session, self.test_run_id, test.id(), data)
+                    session,
+                    self.test_run_id,
+                    test_id,
+                    data
+                )
 
     def addSuccess(self, test, capt=None):
         self._add_message(test, status='success')
