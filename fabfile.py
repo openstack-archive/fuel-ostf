@@ -3,7 +3,7 @@ from fabric.api import local
 
 def createrole(user='ostf', password='ostf'):
     local(('psql -U postgres -c "CREATE ROLE {0} WITH PASSWORD'
-        '\'{1}\' SUPERUSER CREATEDB LOGIN;"').format(user, password))
+           '\'{1}\' SUPERUSER CREATEDB LOGIN;"').format(user, password))
 
 
 def createdb(user='ostf', database='ostf'):
@@ -31,7 +31,13 @@ def testdeps():
 
 def startserver():
     local(('ostf-server '
-        '--dbpath postgresql+psycopg2://ostf:ostf@localhost/ostf '))
+           '--dbpath postgresql+psycopg2://ostf:ostf@localhost/ostf '))
+
+
+def startdebugserver():
+    local(('ostf-server '
+           '--nailgun-port=8888 '
+           '--debug_tests=fuel_plugin/tests/functional/dummy_tests'))
 
 
 def startnailgunmimic():
@@ -56,11 +62,15 @@ def migrate(database='ostf'):
     local('ostf-server --after-initialization-environment-hook --dbpath {0}'.format(path))
 
 
-def auth(method='trust'):
+def auth(method='trust', os='ubuntu'):
     """By default postgres doesnot allow auth withour password
     development without password is more fun
     """
-    path = '/etc/postgresql/9.1/main/pg_hba.conf'
+    if os == 'centos':
+        path = '/var/lib/pgsql/data/pg_hba.conf'
+    elif os == 'ubuntu':
+        path = '/etc/postgresql/9.1/main/pg_hba.conf'
+
     wrong = '^local.*all.*postgres.*'
     right = 'local all postgres {0}'.format(method)
     local("sudo sed -i 's/{0}/{1}/' {2}".format(wrong, right, path))

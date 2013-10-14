@@ -21,6 +21,7 @@ import multiprocessing
 import logging
 
 from nose import case
+from nose.suite import ContextSuite
 
 LOG = logging.getLogger(__name__)
 
@@ -140,3 +141,24 @@ def run_proc(func, *args):
 
 def get_module(module_path):
     pass
+
+
+def get_tests_ids_to_update(test):
+    '''
+    Sometimes (e.g. unhandles exception is occured in
+    setUpClass of test case) tests can be packed in
+    separate ContextSuite each. At the moment of following code
+    creation depth of this packaging was unknown so
+    current function is implemented with recursion
+    (which is not good by any means and you are free to
+    modify that if you can)
+    '''
+    tests_ids = []
+
+    if isinstance(test, case.Test):
+        tests_ids.append(test.id())
+    elif isinstance(test, ContextSuite):
+        for sub_test in test._tests:
+            tests_ids.extend(get_tests_ids_to_update(sub_test))
+
+    return tests_ids

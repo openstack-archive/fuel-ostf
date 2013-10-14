@@ -38,8 +38,6 @@ class AdapterTests(BaseAdapterTest):
             'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_rhel_depl': 'ha_rhel_depl'
         }
         cls.testsets = {
-            # "fuel_smoke": None,
-            # "fuel_sanity": None,
             "ha_deployment_test": [],
             "general_test": [
                 'fast_pass',
@@ -126,18 +124,6 @@ class AdapterTests(BaseAdapterTest):
         assertions.general_test['status'] = 'finished'
         assertions.stopped_test['status'] = 'finished'
 
-        #for test in assertions.general_test['tests']:
-        #    if test['name'] == 'Will sleep 5 sec':
-        #        test['status'] = 'success'
-
-        #for test in assertions.stopped_test['tests']:
-        #    if test['name'] == 'This is long running tests':
-        #        test['status'] = 'success'
-        #        test['message'] = ''
-
-        #    if test['name'] == 'What i am doing here? You ask me????':
-        #        test['status'] = 'success'
-
         self.compare(r, assertions)
 
     def test_stop_testset(self):
@@ -171,9 +157,6 @@ class AdapterTests(BaseAdapterTest):
         r = self.client.testruns_last(cluster_id)
 
         assertions.stopped_test['status'] = 'finished'
-        #for test in assertions.stopped_test['tests']:
-        #    if test['name'] == 'This is long running tests':
-        #        test['status'] = 'stopped'
         self.compare(r, assertions)
 
     def test_cant_start_while_running(self):
@@ -427,3 +410,44 @@ class AdapterTests(BaseAdapterTest):
         r = self.client.restart_tests_last(testset, tests, cluster_id)
         msg = 'Response was not empty after trying to restart running testset:\n {0}'.format(r.request)
         self.assertTrue(r.is_empty, msg)
+
+    def test_nose_adapter_error_while_running_tests(self):
+        testset = 'test_with_error'
+        cluster_id = 4
+
+        #make sure we have all needed data in db
+        self.adapter.testsets(cluster_id)
+
+        self.client.start_testrun(testset, cluster_id)
+        time.sleep(5)
+
+        r = self.client.testruns_last(cluster_id)
+
+        assertions = Response([
+            {
+                'testset': 'test_with_error',
+                'status': 'finished',
+                'cluster_id': 4,
+                'tests': [
+                    {
+                        'id': (
+                            'fuel_plugin.tests.functional.'
+                            'dummy_tests.test_with_error.WithErrorTest.'
+                            'test_supposed_to_be_fail'
+                        ),
+                        'status': 'error'
+                    },
+                    {
+                        'id': (
+                            'fuel_plugin.tests.functional.'
+                            'dummy_tests.test_with_error.WithErrorTest.'
+                            'test_supposed_to_be_success'
+                        ),
+                        'status': 'error'
+                    }
+                ]
+
+            }
+        ])
+
+        self.compare(r, assertions)

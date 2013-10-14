@@ -62,6 +62,19 @@ cluster_fixture = {
                 }
             }
         }
+    },
+    4: {
+        'cluster_meta': {
+            'mode': 'test_error',
+            'release': {
+                'operating_system': 'none'
+            }
+        },
+        'cluster_attributes': {
+            'editable': {
+                'additional_components': {}
+            }
+        }
     }
 }
 

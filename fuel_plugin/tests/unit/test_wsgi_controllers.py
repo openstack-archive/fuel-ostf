@@ -446,7 +446,9 @@ class TestClusterRedployment(BaseTestController):
 
         #patch request_to_nailgun function in orded to emulate
         #redeployment of cluster
-        cluster_data = {'multinode', 'ubuntu'}
+        cluster_data = set(
+            ['multinode', 'ubuntu']
+        )
 
         with patch(
             'fuel_plugin.ostf_adapter.wsgi.wsgi_utils._get_cluster_depl_tags',
