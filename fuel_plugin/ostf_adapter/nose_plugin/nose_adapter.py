@@ -84,6 +84,13 @@ class NoseDriver(object):
 
     def _clean_up(self, test_run_id, cluster_id, cleanup):
         session = engine.get_session()
+
+        #need for performing proper cleaning up for current cluster
+        cluster_deployment_info = \
+            session.query(models.ClusterState.deployment_tags)\
+            .filter_by(id=cluster_id)\
+            .scalar()
+
         try:
             module_obj = __import__(cleanup, -1)
 
@@ -91,7 +98,7 @@ class NoseDriver(object):
             os.environ['NAILGUN_PORT'] = str(conf.nailgun.port)
             os.environ['CLUSTER_ID'] = str(cluster_id)
 
-            module_obj.cleanup.cleanup()
+            module_obj.cleanup.cleanup(cluster_deployment_info)
 
         except Exception:
             LOG.exception(

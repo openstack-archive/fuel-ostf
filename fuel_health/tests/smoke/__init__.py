@@ -24,5 +24,6 @@ __profile__ = {
     "id": "smoke",
     "driver": "nose",
     "test_path": "fuel_health/tests/smoke",
+    "cleanup_path": "fuel_health.cleanup",
     "description": "Functional tests. Duration 3 min - 14 min"
 }
