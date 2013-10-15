@@ -43,6 +43,9 @@ IdentityGroup = [
     cfg.StrOpt('url',
                default='http://localhost:5000/v2.0/',
                help="Dashboard Openstack url, v2"),
+    cfg.StrOpt('ubuntu_url',
+               default='http://localhost:5000/v2.0/',
+               help="Dashboard Openstack url, v2"),
     cfg.StrOpt('uri_v3',
                help='Full URI of the OpenStack Identity API (Keystone), v3'),
     cfg.StrOpt('strategy',
@@ -552,6 +555,7 @@ class NailgunConfig(object):
         else:
             endpoint = public_vip or self.compute.public_ips[0]
             self.identity.url = 'http://{0}/{1}/'.format(endpoint, 'dashboard')
+            self.identity.ubuntu_url = 'http://{0}/'.format(endpoint)
             self.identity.uri = 'http://{0}:{1}/{2}/'.format(
                 endpoint, 5000, 'v2.0')
 
