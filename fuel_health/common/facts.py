@@ -41,7 +41,7 @@ class Facts:
 
     @property
     def amqp_password(self):
-        return eval(self.amqp)['password']
+        return self.amqp['password']
 
     def _read_config(self, path):
         _file = None

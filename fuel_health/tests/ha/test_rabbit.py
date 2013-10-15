@@ -37,15 +37,18 @@ class RabbitSmokeTest(BaseTestCase):
         cls._pwd = cls.config.compute.controller_node_ssh_password
         cls._key = cls.config.compute.path_to_private_key
         cls._ssh_timeout = cls.config.compute.ssh_timeout
+        cls.amqp_pwd = cls.config.compute.amqp_pwd
         cls.amqp_clients = [fuel_health.common.amqp_client.RabbitClient(
             cnt,
             cls._usr,
             cls._key,
-            cls._ssh_timeout) for cnt in cls._controllers]
+            cls._ssh_timeout,
+            rabbit_username='nova',
+            rabbit_password=cls.amqp_pwd) for cnt in cls._controllers]
 
     def setUp(self):
         super(RabbitSmokeTest, self).setUp()
-        if 'ha' not in  self.config.mode:
+        if 'ha' not in self.config.mode:
             self.fail("It is not HA configuration")
         if not self._controllers:
             self.fail('There are no controller nodes')
@@ -56,39 +59,17 @@ class RabbitSmokeTest(BaseTestCase):
         """RabbitMQ availability
         Scenario:
           1. Retrieve cluster status for each controller.
-          2. Check that the number of clusters equals to number of controllers.
-          3. Check that the cluster list is the same for each controller.
+          2. Check that numbers of rabbit nodes is the same as controllers.
         Duration: 100 s.
         """
         first_list = self.verify(10, self.amqp_clients[0].list_nodes, 1,
                                  'Cannot retrieve cluster nodes'
                                  ' list for {ctlr} controller.'.format(
                                      ctlr=self.amqp_clients[0].host))
-        if not first_list:
-            self.fail('Step 1 failed: Cannot retrieve cluster nodes list for '
-                      '{ctlr} controller.'.
-                      format(ctlr=self.amqp_clients[0].host))
-        if len(self._controllers) != len(eval(first_list)):
+
+        if len(self._controllers) != len(first_list[-1].split(',')[1:]):
             self.fail('Step 2 failed: Number of controllers is not equal to '
                       'number of cluster nodes.')
-
-        for client in self.amqp_clients[1:]:
-            list = self.verify(10, client.list_nodes, 1,
-                               'Cannot retrieve cluster nodes'
-                               ' list for {ctlr} controller.'.format(
-                                   ctlr=client.host))
-            if not list:
-                self.fail('Step 1 failed: Cannot retrieve cluster nodes list '
-                          'for {ctlr} controller.'.format(ctlr=client.host))
-            self.verify_response_body_content(list,
-                                              first_list,
-                                              'Cluster nodes lists for '
-                                              'controllers {ctlr1} and {ctlr2}'
-                                              ' are different.'.format(
-                                                  ctlr1=client.host,
-                                                  ctlr2=
-                                                  self.amqp_clients[0].host),
-                                              3)
 
     def test_002_rabbit_queues(self):
         """RabbitMQ queues availability
@@ -97,6 +78,9 @@ class RabbitSmokeTest(BaseTestCase):
           2. Check that the same queue list is present on each node
         Duration: 100 s.
         """
+
+
+
         first_list = self.verify(10, self.amqp_clients[0].list_queues,
                                  1,
                                  'Cannot retrieve queues list for {ctlr} '
