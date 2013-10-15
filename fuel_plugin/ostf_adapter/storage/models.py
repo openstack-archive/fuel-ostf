@@ -352,3 +352,16 @@ class Test(BASE):
         else:
             new_test.status = 'wait_running'
         return new_test
+
+
+class ClusterState(BASE):
+    '''
+    Holds deployment_tags for current
+    cluster. Is used in rediscoverying
+    after cluster redeploying
+    '''
+
+    __tablename__ = 'cluster_state'
+
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=False)
+    deployment_tags = sa.Column(ARRAY(sa.String(64)))
