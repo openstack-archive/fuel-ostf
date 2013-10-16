@@ -463,13 +463,21 @@ class NailgunConfig(object):
     def prepare_config(self, *args, **kwargs):
         try:
             self._parse_meta()
+            LOG.info('parse meta successful')
             self._parse_cluster_attributes()
+            LOG.info('parse cluster attr successful')
             self._parse_nodes_cluster_id()
+            LOG.info('parse node cluster successful')
             self._parse_networks_configuration()
+            LOG.info('parse network configuration successful')
             self.set_endpoints()
+            LOG.info('set endpoints successful')
             self.set_proxy()
+            LOG.info('set proxy successful')
             self._parse_murano_configuration()
+            LOG.info('parse murano configuration successful')
             self._parse_cluster_generated_data()
+            LOG.info('parse generated successful')
         except Exception, e:
             LOG.warning('Nailgun config creation failed. '
                         'Something wrong with endpoints')
@@ -491,9 +499,12 @@ class NailgunConfig(object):
         self.identity.admin_tenant_name = access_data['tenant']['value']
         self.identity.admin_username = access_data['user']['value']
         self.identity.admin_password = access_data['password']['value']
-        self.network_provider = network_provider
-        if self.compute.deployment_os != 'RHEL':
-            storage  = data['storage']['volumes_ceph']
+        self.network.network_provider = network_provider
+        api_url = '/api/clusters/%s' % self.cluster_id
+        cluster_data = self.req_session.get(self.nailgun_url + api_url).json()
+        deployment_os = cluster_data['release']['operating_system']
+        if deployment_os != 'RHEL':
+            storage = data['editable']['storage']['volumes_ceph']
             self.volume.ceph_exist = storage
 
     def _parse_nodes_cluster_id(self):
@@ -541,7 +552,7 @@ class NailgunConfig(object):
 
     def _parse_networks_configuration(self):
         api_url = '/api/clusters/{0}/network_configuration/{1}'.format(
-            self.cluster_id, self.network_provider)
+            self.cluster_id, self.network.network_provider)
         data = self.req_session.get(self.nailgun_url + api_url).json()
         self.network.raw_data = data
 
