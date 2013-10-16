@@ -178,7 +178,7 @@ class SavannaTest(nmanager.OfficialClientTest):
     def _try_port(self, host, port):
         i = 0
         while True:
-            cmd = ('nc -z -w 60 %s %s | grep succeeded' % (host, port))
+            cmd = ('nc -v -z -w 60 %s %s | grep succeeded' % (host, port))
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             try:
