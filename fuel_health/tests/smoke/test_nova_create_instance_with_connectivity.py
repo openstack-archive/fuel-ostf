@@ -77,6 +77,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Scenario:
             1. Create a new keypair, check if it was created successfully.
         Duration: 25 s.
+
+        Deployment tags: nova_network
         """
         self.keypairs[self.tenant_id] = self.verify(25,
                                                     self._create_keypair,
@@ -94,6 +96,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Scenario:
             1. Create a security group, check if it was created correctly.
         Duration: 25 s.
+
+        Deployment tags: nova_network
         """
         self.security_groups[self.tenant_id] = self.verify(
             25, self._create_security_group, 1,
@@ -111,6 +115,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             2. Confirm that networks have expected labels.
             3. Confirm that networks have expected ids.
         Duration: 50 s.
+
+        Deployment tags: nova_network
         """
         seen_nets = self.verify(
             50,
@@ -137,6 +143,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             1. Create a new security group (if it doesn`t exist yet).
             2. Create an instance using the new security group.
         Duration: 200 s.
+
+        Deployment tags: nova_network
         """
         if not self.security_groups:
             self.security_groups[self.tenant_id] = self.verify(
@@ -172,6 +180,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             3. Create a new floating IP.
             4. Assign the new floating IP to the instance.
         Duration: 200 s.
+
+        Deployment tags: nova_network
         """
         if not self.servers:
             if not self.security_groups:
@@ -225,6 +235,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             4. Assign the new floating IP to the instance.
             5. Check connectivity to the floating IP using ping command.
         Duration: 200 s.
+
+        Deployment tags: nova_network
         """
         if not self.floating_ips:
             if not self.servers:
@@ -276,6 +288,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             4. Assign the new floating IP to the instance.
             5. Check that public IP 8.8.8.8 can be pinged from instance.
         Duration: 200 s.
+
+        Deployment tags: nova_network
         """
         if not self.floating_ips:
             if not self.servers:
@@ -329,6 +343,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             (if it doesn`t exist yet).
             3. Check that public IP 8.8.8.8 can be pinged from instance.
         Duration: 200 s.
+
+        Deployment tags: nova_network
         """
         if not self.security_groups:
             self.security_groups[self.tenant_id] = self.verify(
