@@ -154,7 +154,6 @@ class SavannaTest(nmanager.OfficialClientTest):
         self.keys.append(
             self.compute_client.keypairs.create(self.USER_KEYPAIR_ID))
         image_id = str(self.compute_client.images.find(name=image_name).id)
-        time.sleep(30)
         data = client.clusters.create(
             self.CLUSTER_NAME, plugin_name, hadoop_version,
             cluster_template_id, image_id, description, cluster_configs,
@@ -189,10 +188,12 @@ class SavannaTest(nmanager.OfficialClientTest):
                     timeout=300)
                 stdin, stdout, stderr = ssh.exec_command(cmd)
                 output = stdout.read()
+                output_err = stderr.read()
                 ssh.close()
                 print('NC output after %s seconds is "%s"' % (i*10, output))
+                LOG.debug('Remote command: %s' % cmd)
                 LOG.debug('NC output after %s seconds is "%s"' % (i*10, output))
-                if output:
+                if output or str(output_err).find(' succeeded!') > 0:
                     break
                 if not output and i > 600:
                     self.fail('On host %s port %s is not opened more then 10 minutes' % (host, port))
