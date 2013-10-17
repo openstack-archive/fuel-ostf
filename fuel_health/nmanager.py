@@ -178,12 +178,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         token = keystone.auth_token
         auth_url = self.config.identity.uri
 
-        if 'orchestration' not in [s.type for s in
-                                   keystone.services.list()]:
-            return None
-
-        endpoint = keystone.service_catalog.url_for(
-            service_type='orchestration', endpoint_type='publicURL')
+        endpoint = self.config.heat.endpoint
         if not username:
             username = self.config.identity.admin_username
         if not password:
@@ -197,7 +192,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
     def _get_murano_client(self):
         """
         This method returns Murano API client
-        or None if needed configuration parameters are unavailable.
         """
         # Get xAuth token from Keystone
         self.token_id = self._get_identity_client(
