@@ -74,42 +74,57 @@ def cleanup(cluster_deployment_info):
     manager = CleanUpClientManager()
 
     if 'savanna' in cluster_deployment_info:
-        savanna_client = manager._get_savanna_client()
-        if savanna_client is not None:
-            _delete_it(client=savanna_client.clusters,
-                       log_message='Start savanna cluster deletion',
-                       name='ostf-test-', delete_type='id')
-            _delete_it(client=savanna_client.cluster_templates,
-                       log_message='Start savanna cluster template deletion',
-                       delete_type='id')
-            _delete_it(client=savanna_client.node_group_templates,
-                       log_message='Start savanna node group template deletion',
-                       delete_type='id')
+        try:
+            savanna_client = manager._get_savanna_client()
+            if savanna_client is not None:
+                _delete_it(client=savanna_client.clusters,
+                           log_message='Start savanna cluster deletion',
+                           name='ostf-test-', delete_type='id')
+                _delete_it(client=savanna_client.cluster_templates,
+                           log_message='Start savanna cluster template deletion',
+                           delete_type='id')
+                _delete_it(client=savanna_client.node_group_templates,
+                           log_message='Start savanna node group template deletion',
+                           delete_type='id')
+        except Exception as exc:
+            LOG.warning(
+                'Something wrong with savanna client. Esception: %s', exc
+            )
 
     if 'murano' in cluster_deployment_info:
-        murano_client = manager._get_murano_client()
-        if murano_client is not None:
-            environments = murano_client.environments.list()
-            for e in environments:
-                if e.name.startswith('ost1_test-'):
-                    try:
-                        LOG.info('Start environment deletion.')
-                        murano_client.stacks.delete(e.id)
-                    except Exception as exc:
-                        LOG.debug(exc)
-
-    if 'heat' in cluster_deployment_info:
-        heat_client = manager._get_heat_client()
-        if heat_client is not None:
-            stacks = heat_client.stacks.list()
-            for s in stacks:
-                if s.stack_name.startswith('ost1_test-'):
-                    if s.stack_status in ('CREATE_COMPLETE', 'ERROR'):
+        try:
+            murano_client = manager._get_murano_client()
+            if murano_client is not None:
+                environments = murano_client.environments.list()
+                for e in environments:
+                    if e.name.startswith('ost1_test-'):
                         try:
-                            LOG.info('Start stacks deletion.')
-                            heat_client.stacks.delete(s.id)
+                            LOG.info('Start environment deletion.')
+                            murano_client.stacks.delete(e.id)
                         except Exception as exc:
                             LOG.debug(exc)
+        except Exception as exc:
+            LOG.warning(
+                'Something wrong with murano client. Esception: %s', exc
+            )
+
+    if 'heat' in cluster_deployment_info:
+        try:
+            heat_client = manager._get_heat_client()
+            if heat_client is not None:
+                stacks = heat_client.stacks.list()
+                for s in stacks:
+                    if s.stack_name.startswith('ost1_test-'):
+                        if s.stack_status in ('CREATE_COMPLETE', 'ERROR'):
+                            try:
+                                LOG.info('Start stacks deletion.')
+                                heat_client.stacks.delete(s.id)
+                            except Exception as exc:
+                                LOG.debug(exc)
+        except Exception as exc:
+            LOG.warning(
+                'Something wrong with heat client. Esception: %s', exc
+            )
 
     instances_id = []
     servers = manager._get_compute_client().servers.list()
@@ -162,16 +177,21 @@ def cleanup(cluster_deployment_info):
 
 
 def _delete_it(client, log_message, name='ost1_test-', delete_type='name'):
-    for item in client.list():
-        if item.name.startswith(name):
-            try:
-                LOG.info(log_message)
-                if delete_type == 'name':
-                    client.delete(item)
-                else:
-                    client.delete(item.id)
-            except Exception as exc:
-                LOG.debug(exc)
+    try:
+        for item in client.list():
+            if item.name.startswith(name):
+                try:
+                    LOG.info(log_message)
+                    if delete_type == 'name':
+                        client.delete(item)
+                    else:
+                        client.delete(item.id)
+                except Exception as exc:
+                    LOG.debug(exc)
+    except Exception as exc:
+        LOG.warning(
+            'Deletion is ommited due to error. Exception: %s', exc
+        )
 
 
 if __name__ == "__main__":
