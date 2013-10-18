@@ -95,6 +95,10 @@ def _get_cluster_depl_tags(cluster_id):
     deployment_tags.add(mode)
     deployment_tags.add(response['release']['operating_system'])
 
+    #networks manager
+    network_type = response.get('net_provider', 'nova_network')
+    deployment_tags.add(network_type)
+
     #info about murano/savanna clients installation
     nailgun_url += '/' + 'attributes'
     response = req_ses.get(nailgun_url).json()
