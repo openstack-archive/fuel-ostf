@@ -56,7 +56,7 @@ class NoseDriver(object):
                 exit=False,
                 argv=['ostf_tests'] + argv_add)
             self._named_threads.pop(int(test_run_id), None)
-        except Exception, e:
+        except Exception:
             LOG.exception('Test run ID: %s', test_run_id)
         finally:
             models.TestRun.update_test_run(

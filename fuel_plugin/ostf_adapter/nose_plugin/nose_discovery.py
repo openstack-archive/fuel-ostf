@@ -14,7 +14,6 @@
 
 import logging
 import os
-import pecan
 
 from nose import plugins
 

@@ -55,7 +55,8 @@ class BaseTestNoseDiscovery(unittest2.TestCase):
         self.mocked_get_session = lambda *args: self.session
 
         self.session_patcher = patch(
-            'fuel_plugin.ostf_adapter.nose_plugin.nose_discovery.engine.get_session',
+            ('fuel_plugin.ostf_adapter.nose_plugin.'
+             'nose_discovery.engine.get_session'),
             self.mocked_get_session
         )
         self.session_patcher.start()
@@ -106,7 +107,8 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
         }
 
         nose_discovery.discovery(
-            path='fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test',
+            path=('fuel_plugin.tests.functional.dummy_tests.'
+                  'deployment_types_tests.ha_deployment_test'),
             deployment_info=self.fixtures['ha_deployment_test']
         )
 
@@ -127,13 +129,18 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
             'results_count': 2,
             'results_data': {
                 'names': [
-                    'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_rhel_depl',
-                    'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_depl'
+                    ('fuel_plugin.tests.functional.dummy_tests.'
+                     'deployment_types_tests.ha_deployment_test.'
+                     'HATest.test_ha_rhel_depl'),
+                    ('fuel_plugin.tests.functional.dummy_tests.'
+                     'deployment_types_tests.ha_deployment_test.'
+                     'HATest.test_ha_depl')
                 ]
             }
         }
         nose_discovery.discovery(
-            path='fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test',
+            path=('fuel_plugin.tests.functional.dummy_tests.'
+                  'deployment_types_tests.ha_deployment_test'),
             deployment_info=self.fixtures['ha_deployment_test']
         )
 
@@ -148,7 +155,9 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
             self.assertTrue(test.name in expected['results_data']['names'])
             self.assertTrue(
                 set(test.deployment_tags)
-                .issubset(self.fixtures['ha_deployment_test']['deployment_tags'])
+                .issubset(
+                    self.fixtures['ha_deployment_test']['deployment_tags']
+                )
             )
 
     def test_get_proper_description(self):
@@ -165,7 +174,8 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
         }
 
         nose_discovery.discovery(
-            path='fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test',
+            path=('fuel_plugin.tests.functional.dummy_tests.'
+                  'deployment_types_tests.ha_deployment_test'),
             deployment_info=self.fixtures['ha_deployment_test']
         )
 

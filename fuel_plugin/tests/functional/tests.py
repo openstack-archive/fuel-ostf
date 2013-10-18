@@ -179,8 +179,10 @@ class AdapterTests(BaseAdapterTest):
         for testset in testsets:
             r = self.client.start_testrun(testset, cluster_id)
 
-            msg = "Response {0} is not empty when you try to start testrun" \
-                " with testset and cluster_id that are already running".format(r)
+            msg = (
+                "Response {0} is not empty when you try to start testrun"
+                " with testset and cluster_id that are already running"
+            ).format(r)
 
             self.assertTrue(r.is_empty, msg)
 
@@ -206,8 +208,10 @@ class AdapterTests(BaseAdapterTest):
         """Verify that you can run individual tests from given testset"""
         testset = "general_test"
         tests = [
-            'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_pass',
-            'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_fail'
+            ('fuel_plugin.tests.functional.dummy_tests.'
+             'general_test.Dummy_test.test_fast_pass'),
+            ('fuel_plugin.tests.functional.dummy_tests.'
+             'general_test.Dummy_test.test_fast_fail')
         ]
         cluster_id = 1
 
@@ -224,27 +228,32 @@ class AdapterTests(BaseAdapterTest):
                     {
                         'status': 'disabled',
                         'name': 'Fast fail with step',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fail_with_step',
+                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                               'general_test.Dummy_test.test_fail_with_step'),
                     },
                     {
                         'status': 'disabled',
                         'name': 'And fast error',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_error',
+                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                               'general_test.Dummy_test.test_fast_error'),
                     },
                     {
                         'status': 'wait_running',
                         'name': 'Fast fail',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_fail',
+                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                               'general_test.Dummy_test.test_fast_fail'),
                     },
                     {
                         'status': 'wait_running',
                         'name': 'fast pass test',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_pass',
+                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                               'general_test.Dummy_test.test_fast_pass'),
                     },
                     {
                         'status': 'disabled',
                         'name': 'Will sleep 5 sec',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_long_pass',
+                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                               'general_test.Dummy_test.test_long_pass'),
                     }
                 ],
                 'cluster_id': '1',
@@ -268,8 +277,10 @@ class AdapterTests(BaseAdapterTest):
         """Verify that you restart individual tests for given testrun"""
         testset = "general_test"
         tests = [
-            'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_pass',
-            'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_fail'
+            ('fuel_plugin.tests.functional.dummy_tests.'
+             'general_test.Dummy_test.test_fast_pass'),
+            ('fuel_plugin.tests.functional.dummy_tests.general_test.'
+             'Dummy_test.test_fast_fail')
         ]
         cluster_id = 1
 
@@ -288,27 +299,32 @@ class AdapterTests(BaseAdapterTest):
                     {
                         'status': 'failure',
                         'name': 'Fast fail with step',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fail_with_step',
+                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                               'general_test.Dummy_test.test_fail_with_step'),
                     },
                     {
                         'status': 'error',
                         'name': 'And fast error',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_error',
+                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                               'general_test.Dummy_test.test_fast_error'),
                     },
                     {
                         'status': 'wait_running',
                         'name': 'Fast fail',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_fail',
+                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                               'general_test.Dummy_test.test_fast_fail'),
                     },
                     {
                         'status': 'wait_running',
                         'name': 'fast pass test',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_pass',
+                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                               'general_test.Dummy_test.test_fast_pass'),
                     },
                     {
                         'status': 'success',
                         'name': 'Will sleep 5 sec',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_long_pass',
+                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                               'general_test.Dummy_test.test_long_pass'),
                     }
                 ],
                 'cluster_id': '1',
@@ -333,10 +349,15 @@ class AdapterTests(BaseAdapterTest):
         ran and did not run during single test start"""
         testset = "general_test"
         tests = [
-            'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_pass',
-            'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_fail'
+            ('fuel_plugin.tests.functional.dummy_tests.'
+             'general_test.Dummy_test.test_fast_pass'),
+            ('fuel_plugin.tests.functional.dummy_tests.'
+             'general_test.Dummy_test.test_fast_fail')
         ]
-        disabled_test = ['fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_error', ]
+        disabled_test = [
+            ('fuel_plugin.tests.functional.dummy_tests.'
+             'general_test.Dummy_test.test_fast_error')
+        ]
         cluster_id = 1
 
         #make sure we have all needed data in db
@@ -355,27 +376,32 @@ class AdapterTests(BaseAdapterTest):
                     {
                         'status': 'disabled',
                         'name': 'Fast fail with step',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fail_with_step',
+                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                               'general_test.Dummy_test.test_fail_with_step'),
                     },
                     {
                         'status': 'wait_running',
                         'name': 'And fast error',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_error',
+                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                               'general_test.Dummy_test.test_fast_error'),
                     },
                     {
                         'status': 'failure',
                         'name': 'Fast fail',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_fail',
+                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                               'general_test.Dummy_test.test_fast_fail'),
                     },
                     {
                         'status': 'success',
                         'name': 'fast pass test',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_pass',
+                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                               'general_test.Dummy_test.test_fast_pass'),
                     },
                     {
                         'status': 'disabled',
                         'name': 'Will sleep 5 sec',
-                        'id': 'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_long_pass',
+                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                               'general_test.Dummy_test.test_long_pass'),
                     }
                 ],
                 'cluster_id': '1',
@@ -395,9 +421,12 @@ class AdapterTests(BaseAdapterTest):
     def test_cant_restart_during_run(self):
         testset = 'general_test'
         tests = [
-            'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_pass',
-            'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_fail',
-            'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_pass'
+            ('fuel_plugin.tests.functional.dummy_tests.'
+             'general_test.Dummy_test.test_fast_pass'),
+            ('fuel_plugin.tests.functional.dummy_tests.'
+             'general_test.Dummy_test.test_fast_fail'),
+            ('fuel_plugin.tests.functional.dummy_tests.'
+             'general_test.Dummy_test.test_fast_pass')
         ]
         cluster_id = 1
 
@@ -408,7 +437,8 @@ class AdapterTests(BaseAdapterTest):
         time.sleep(2)
 
         r = self.client.restart_tests_last(testset, tests, cluster_id)
-        msg = 'Response was not empty after trying to restart running testset:\n {0}'.format(r.request)
+        msg = ('Response was not empty after trying'
+               ' to restart running testset:\n {0}').format(r.request)
         self.assertTrue(r.is_empty, msg)
 
     def test_nose_adapter_error_while_running_tests(self):

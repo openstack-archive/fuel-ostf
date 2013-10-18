@@ -14,8 +14,6 @@
 
 import logging
 
-from stevedore import extension
-
 from pecan import hooks
 from fuel_plugin.ostf_adapter.storage import engine
 

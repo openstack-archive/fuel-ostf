@@ -18,7 +18,7 @@ import sys
 from requests import get
 
 from docopt import docopt
-from clint.textui import puts, colored, columns, indent
+from clint.textui import puts, colored, columns
 from blessings import Terminal
 from fuel_plugin.ostf_client.client import TestingAdapterClient
 
@@ -36,7 +36,8 @@ def main():
     args = docopt(__doc__, version='0.1')
     test_set = args['<test_set>']
     cluster_id = args['--id'] or os.environ.get('OSTF_CLUSTER_ID') \
-                     or get_cluster_id() or '1'
+        or get_cluster_id() or '1'
+
     tests = args['--tests'] or []
     timeout = args['--timeout']
     quite = args['-q']
@@ -95,10 +96,12 @@ def main():
 
             finished_statuses = ['success', 'failure', 'stopped', 'error']
 
-            finished_tests = [item for item in current_tests
+            finished_tests = [
+                item for item in current_tests
                 if item['status'] in finished_statuses
                 and item
-                not in quite_polling_hook.__dict__['published_tests']]
+                not in quite_polling_hook.__dict__['published_tests']
+            ]
 
             for test in finished_tests:
                 print_results(test)
@@ -117,9 +120,9 @@ def main():
         try:
             r = client.run_testset_with_timeout(test_set, cluster_id,
                                                 timeout, 2, polling_hook)
-        except AssertionError as e:
+        except AssertionError:
             return 1
-        except KeyboardInterrupt as e:
+        except KeyboardInterrupt:
             r = client.stop_testrun_last(test_set, cluster_id)
             print t.move_left + t.move_left,
             polling_hook(r)

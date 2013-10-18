@@ -105,23 +105,29 @@ class TestTestsController(BaseTestController):
                     'status': None,
                     'taken': None,
                     'step': None,
-                    'testset': u'ha_deployment_test',
-                    'name': u'fake empty test',
+                    'testset': 'ha_deployment_test',
+                    'name': 'fake empty test',
                     'duration': None,
                     'message': None,
-                    'id': u'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_depl',
-                    'description': u'        This is empty test for any\n        ha deployment\n        ',
+                    'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                           'deployment_types_tests.ha_deployment_test.'
+                           'HATest.test_ha_depl'),
+                    'description': (u'        This is empty test for any\n'
+                                    '        ha deployment\n        '),
                 },
                 {
                     'status': None,
                     'taken': None,
                     'step': None,
-                    'testset': u'ha_deployment_test',
-                    'name': u'fake empty test',
-                    'duration': u'0sec',
+                    'testset': 'ha_deployment_test',
+                    'name': 'fake empty test',
+                    'duration': '0sec',
                     'message': None,
-                    'id': u'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_rhel_depl',
-                    'description': u'        This is fake tests for ha\n        rhel deployment\n        '
+                    'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                           'deployment_types_tests.ha_deployment_test.'
+                           'HATest.test_ha_rhel_depl'),
+                    'description': ('        This is fake tests for ha\n'
+                                    '        rhel deployment\n        ')
                 }
             ]
         }
@@ -136,7 +142,8 @@ class TestTestsController(BaseTestController):
             return discovery(**kwargs)
 
         with patch(
-            'fuel_plugin.ostf_adapter.wsgi.wsgi_utils.nose_discovery.discovery',
+            ('fuel_plugin.ostf_adapter.wsgi.wsgi_utils.'
+             'nose_discovery.discovery'),
             discovery_mock
         ):
             with patch(
@@ -182,7 +189,8 @@ class TestTestSetsController(BaseTestController):
             return discovery(**kwargs)
 
         with patch(
-            'fuel_plugin.ostf_adapter.wsgi.wsgi_utils.nose_discovery.discovery',
+            ('fuel_plugin.ostf_adapter.wsgi.wsgi_utils.'
+             'nose_discovery.discovery'),
             discovery_mock
         ):
             with patch(
@@ -248,8 +256,12 @@ class TestTestRunsPostController(TestTestRunsController):
             'cluster_id': 1,
             'tests': {
                 'names': [
-                    u'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_depl',
-                    u'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_rhel_depl'
+                    ('fuel_plugin.tests.functional.dummy_tests.'
+                     'deployment_types_tests.ha_deployment_test.'
+                     'HATest.test_ha_depl'),
+                    ('fuel_plugin.tests.functional.dummy_tests.'
+                     'deployment_types_tests.ha_deployment_test.'
+                     'HATest.test_ha_rhel_depl')
                 ]
             }
         }
@@ -281,7 +293,7 @@ class TestTestRunsPostController(TestTestRunsController):
         self.assertTrue(test_run)
 
         testrun_tests = self.session.query(models.Test)\
-            .filter(models.Test.test_run_id != None)\
+            .filter(models.Test.test_run_id != (None))\
             .all()
 
         tests_names = [
@@ -307,7 +319,8 @@ class TestTestRunsPutController(TestTestRunsController):
         super(TestTestRunsPutController, self).setUp()
 
         self.nose_adapter_session_patcher = patch(
-            'fuel_plugin.ostf_adapter.nose_plugin.nose_adapter.engine.get_session',
+            ('fuel_plugin.ostf_adapter.nose_plugin.'
+             'nose_adapter.engine.get_session'),
             lambda *args: self.session
         )
         self.nose_adapter_session_patcher.start()
@@ -334,8 +347,12 @@ class TestTestRunsPutController(TestTestRunsController):
             'cluster_id': 1,
             'tests': {
                 'names': [
-                    u'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_depl',
-                    u'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_rhel_depl'
+                    ('fuel_plugin.tests.functional.dummy_tests.'
+                     'deployment_types_tests.ha_deployment_test.'
+                     'HATest.test_ha_depl'),
+                    ('fuel_plugin.tests.functional.dummy_tests.'
+                     'deployment_types_tests.ha_deployment_test.'
+                     'HATest.test_ha_rhel_depl')
                 ]
             }
         }
@@ -343,7 +360,9 @@ class TestTestRunsPutController(TestTestRunsController):
         testruns_to_stop = [
             {
                 'id': int(self.stored_test_run['id']),
-                'metadata': {'cluster_id': int(self.stored_test_run['cluster_id'])},
+                'metadata': {
+                    'cluster_id': int(self.stored_test_run['cluster_id'])
+                },
                 'status': 'stopped'
             }
         ]
@@ -409,7 +428,8 @@ class TestClusterRedployment(BaseTestController):
 
         #start discoverying for testsets and tests for given cluster info
         with patch(
-            'fuel_plugin.ostf_adapter.wsgi.wsgi_utils.nose_discovery.discovery',
+            ('fuel_plugin.ostf_adapter.wsgi.'
+             'wsgi_utils.nose_discovery.discovery'),
             discovery_mock
         ):
             with patch(
@@ -451,18 +471,20 @@ class TestClusterRedployment(BaseTestController):
         )
 
         with patch(
-            'fuel_plugin.ostf_adapter.wsgi.wsgi_utils._get_cluster_depl_tags',
+            ('fuel_plugin.ostf_adapter.wsgi.'
+             'wsgi_utils._get_cluster_depl_tags'),
             lambda *args: cluster_data
         ):
             with patch(
-                'fuel_plugin.ostf_adapter.wsgi.wsgi_utils.nose_discovery.discovery',
+                ('fuel_plugin.ostf_adapter.wsgi.'
+                 'wsgi_utils.nose_discovery.discovery'),
                 discovery_mock
             ):
                 with patch(
                     'fuel_plugin.ostf_adapter.wsgi.wsgi_utils.conf',
                     self.pecan_conf_mock
                 ):
-                    res = self.controller.get(expected['cluster_id'])
+                    self.controller.get(expected['cluster_id'])
 
         new_cluster_state = self.session.query(models.ClusterState)\
             .filter_by(id=expected['cluster_id'])\
@@ -473,7 +495,8 @@ class TestClusterRedployment(BaseTestController):
             expected['new_depl_tags']
         )
 
-        #check whether testset and bound with it test have been deleted from db
+        #check whether testset and bound with
+        #it test have been deleted from db
         old_test_set = self.session.query(models.TestSet)\
             .filter_by(id=expected['old_test_set_id'])\
             .filter_by(cluster_id=expected['cluster_id'])\
@@ -489,7 +512,7 @@ class TestClusterRedployment(BaseTestController):
             .filter_by(cluster_id=expected['cluster_id'])\
             .all()
 
-        if old_test_set:
+        if old_tests:
             raise AssertionError(
                 "There must not be tests for old deployment in db"
             )
