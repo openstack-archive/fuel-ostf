@@ -168,13 +168,12 @@ def cleanup(cluster_deployment_info):
     else:
         LOG.info('no roles')
     _delete_it(manager._get_compute_client().images, 'Start images deletion')
-    _delete_it(manager._get_compute_client().security_groups,
-               'Start deletion of security groups')
     _delete_it(manager._get_volume_client().volumes, 'Start volumes deletion')
     _delete_it(manager._get_compute_client().flavors, 'start flavors deletion')
     _delete_it(manager._get_volume_client().volume_types,
                'start deletion of volume types')
-
+    _delete_it(manager._get_compute_client().security_groups,
+               'Start deletion of security groups', delete_type='id')
 
 def _delete_it(client, log_message, name='ost1_test-', delete_type='name'):
     try:
