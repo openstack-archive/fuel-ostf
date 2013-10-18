@@ -42,6 +42,7 @@ class SavannaTest(nmanager.OfficialClientTest):
         cls.keys = []
         cls.plugin = 'vanilla'
         cls.plugin_version = '1.1.2'
+        cls.floating_ip_pool = 'nova'
         cls.TT_CONFIG = {'Task Tracker Heap Size': 515}
         cls.DN_CONFIG = {'Data Node Heap Size': 513}
         cls.CLUSTER_HDFS_CONFIG = {'dfs.replication': 2}
@@ -81,15 +82,23 @@ class SavannaTest(nmanager.OfficialClientTest):
 
     def _create_node_group_template_and_get_id(
             self, client, name, plugin_name, hadoop_version, description,
-            volumes_per_node, volume_size, node_processes, node_configs):
+            volumes_per_node, volume_size, node_processes, node_configs,
+            floating_ip_pool=None):
         if not self.flavors:
             flavor = self.compute_client.flavors.create(self.SAVANNA_FLAVOR,
                                                         700, 1, 700)
             self.flavors.append(flavor.id)
-        data = client.node_group_templates.create(
-            name, plugin_name, hadoop_version, self.flavors[0], description,
-            volumes_per_node, volume_size, node_processes, node_configs
-        )
+        if floating_ip_pool:
+            data = client.node_group_templates.create(
+                name, plugin_name, hadoop_version, self.flavors[0], description,
+                volumes_per_node, volume_size, node_processes, node_configs,
+                floating_ip_pool
+            )
+        else:
+            data = client.node_group_templates.create(
+                name, plugin_name, hadoop_version, self.flavors[0], description,
+                volumes_per_node, volume_size, node_processes, node_configs
+            )
         node_group_template_id = str(data.id)
         return node_group_template_id
 
@@ -204,6 +213,33 @@ class SavannaTest(nmanager.OfficialClientTest):
                 LOG.debug(exc)
                 self.fail(output_msg)
 
+    def _check_auto_assign_floating_ip(self):
+        cmd = ('grep auto_assign_floating_ip /etc/nova/nova.conf | grep True')
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            ssh.connect(
+                hostname=self.config.compute.controller_nodes[0],
+                username=self.config.compute.controller_node_ssh_user,
+                key_filename=self.config.compute.path_to_private_key,
+                timeout=300)
+            stdin, stdout, stderr = ssh.exec_command(cmd)
+            output = stdout.read()
+            output_err = stderr.read()
+            ssh.close()
+            LOG.debug('Remote command: %s' % cmd)
+            LOG.debug('Output is "%s%s"' % (output, output_err))
+            if output or str(output_err).find(' True') > 0:
+                LOG.debug('auto_assign_floating_ip is found')
+                return True
+            else:
+                LOG.debug('auto_assign_floating_ip is not found')
+                return False
+        except SSHExecCommandFailed as exc:
+            output_msg = "Command failed."
+            LOG.debug(exc)
+            self.fail(output_msg)
+
     def _get_node_info(self, node_ip_list_with_node_processes, plugin_name):
         tasktracker_count = 0
         datanode_count = 0
@@ -277,21 +313,39 @@ class SavannaTest(nmanager.OfficialClientTest):
             anti_affinity=[])
 
     def _create_node_group_template_tt_dn_id(self, client):
-        node_group_template_tt_dn_id = \
-            self._create_node_group_template_and_get_id(
-                client,
-                'ostf-test-savanna-tt-dn',
-                self.plugin,
-                self.plugin_version,
-                description='test node group template',
-                volumes_per_node=0,
-                volume_size=1,
-                node_processes=['tasktracker', 'datanode'],
-                node_configs={
-                    'HDFS': self.DN_CONFIG,
-                    'MapReduce': self.TT_CONFIG
-                }
-            )
+        if self._check_auto_assign_floating_ip():
+            node_group_template_tt_dn_id = \
+                self._create_node_group_template_and_get_id(
+                    client,
+                    'ostf-test-savanna-tt-dn',
+                    self.plugin,
+                    self.plugin_version,
+                    description='test node group template',
+                    volumes_per_node=0,
+                    volume_size=1,
+                    node_processes=['tasktracker', 'datanode'],
+                    node_configs={
+                        'HDFS': self.DN_CONFIG,
+                        'MapReduce': self.TT_CONFIG
+                    }
+                )
+        else:
+            node_group_template_tt_dn_id = \
+                self._create_node_group_template_and_get_id(
+                    client,
+                    'ostf-test-savanna-tt-dn',
+                    self.plugin,
+                    self.plugin_version,
+                    description='test node group template',
+                    volumes_per_node=0,
+                    volume_size=1,
+                    node_processes=['tasktracker', 'datanode'],
+                    node_configs={
+                        'HDFS': self.DN_CONFIG,
+                        'MapReduce': self.TT_CONFIG
+                    },
+                    floating_ip_pool=self.floating_ip_pool
+                )
         self.node_groups.append(node_group_template_tt_dn_id)
         return node_group_template_tt_dn_id
 
@@ -380,34 +434,65 @@ class SavannaTest(nmanager.OfficialClientTest):
         return cluster_template_id
 
     def _create_tiny_cluster_template(self, client):
-        cluster_template_id = self._create_cluster_template_and_get_id(
-            client,
-            'ostf-test-savanna-cluster-template',
-            self.plugin,
-            self.plugin_version,
-            description='test cluster template',
-            cluster_configs={
-                'HDFS': self.CLUSTER_HDFS_CONFIG,
-                'MapReduce': self.CLUSTER_MR_CONFIG,
-                'general': self.CLUSTER_GENERAL_CONFIG
-            },
-            node_groups=[
-                dict(
-                    name='ostf-test-master-node-jt-nn',
-                    flavor_id=self.flavors[0],
-                    node_processes=['namenode', 'jobtracker'],
-                    node_configs={
-                        'HDFS': self.NN_CONFIG,
-                        'MapReduce': self.JT_CONFIG
-                    },
-                    count=1),
-                dict(
-                    name='ostf-test-worker-node-tt-dn',
-                    node_group_template_id=self.node_groups[0],
-                    count=1),
-            ],
-            anti_affinity=[]
-        )
+        if self._check_auto_assign_floating_ip():
+            cluster_template_id = self._create_cluster_template_and_get_id(
+                client,
+                'ostf-test-savanna-cluster-template',
+                self.plugin,
+                self.plugin_version,
+                description='test cluster template',
+                cluster_configs={
+                    'HDFS': self.CLUSTER_HDFS_CONFIG,
+                    'MapReduce': self.CLUSTER_MR_CONFIG,
+                    'general': self.CLUSTER_GENERAL_CONFIG
+                },
+                node_groups=[
+                    dict(
+                        name='ostf-test-master-node-jt-nn',
+                        flavor_id=self.flavors[0],
+                        node_processes=['namenode', 'jobtracker'],
+                        node_configs={
+                            'HDFS': self.NN_CONFIG,
+                            'MapReduce': self.JT_CONFIG
+                        },
+                        count=1),
+                    dict(
+                        name='ostf-test-worker-node-tt-dn',
+                        node_group_template_id=self.node_groups[0],
+                        count=1),
+                ],
+                anti_affinity=[]
+            )
+        else:
+            cluster_template_id = self._create_cluster_template_and_get_id(
+                client,
+                'ostf-test-savanna-cluster-template',
+                self.plugin,
+                self.plugin_version,
+                description='test cluster template',
+                cluster_configs={
+                    'HDFS': self.CLUSTER_HDFS_CONFIG,
+                    'MapReduce': self.CLUSTER_MR_CONFIG,
+                    'general': self.CLUSTER_GENERAL_CONFIG
+                },
+                node_groups=[
+                    dict(
+                        name='ostf-test-master-node-jt-nn',
+                        flavor_id=self.flavors[0],
+                        node_processes=['namenode', 'jobtracker'],
+                        node_configs={
+                            'HDFS': self.NN_CONFIG,
+                            'MapReduce': self.JT_CONFIG
+                        },
+                        floating_ip_pool=self.floating_ip_pool,
+                        count=1),
+                    dict(
+                        name='ostf-test-worker-node-tt-dn',
+                        node_group_template_id=self.node_groups[0],
+                        count=1),
+                ],
+                anti_affinity=[]
+            )
         self.cluster_templates.append(cluster_template_id)
         return cluster_template_id
 
