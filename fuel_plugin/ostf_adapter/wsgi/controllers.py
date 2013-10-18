@@ -49,6 +49,7 @@ class TestsController(BaseRestController):
             tests = request.session.query(models.Test)\
                 .filter_by(cluster_id=cluster)\
                 .filter_by(test_run_id=None)\
+                .order_by(models.Test.name)\
                 .all()
 
             if tests:
