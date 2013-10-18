@@ -15,12 +15,12 @@
 __profile__ = {
     "id": "multinode_deployment_test",
     "driver": "nose",
-    "test_path": "fuel_plugin/tests/functional/deployment_types_tests/multinode_deployment.py",
+    "test_path": ("fuel_plugin/tests/functional/deployment_types_tests/"
+                  "multinode_deployment.py"),
     "description": "Fake tests for multinode deployment on ubuntu",
     "deployment_tags": ["multinode", "ubuntu"]
 }
 
-import time
 import unittest
 
 

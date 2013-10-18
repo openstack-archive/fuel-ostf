@@ -121,15 +121,16 @@ class BaseAdapterTest(TestCase):
             for test_id, test_data in tests.iteritems():
                 for data_key, data_value in test_data.iteritems():
                     if not response_tests[test_id][data_key] == data_value:
-                        raise AssertionError(('excpected: test_set {0}, test_id {1} data_key {2}, data_value {3}...'
-                            'got: {4}')
+                        raise AssertionError(
+                            ('excpected: test_set {0}, test_id {1} '
+                             'data_key {2}, data_value {3}...got: {4}')
                             .format(
                                 test_set,
                                 test_id,
                                 data_key,
                                 data_value,
                                 response_tests[test_id][data_key]
-                                )
+                            )
                         )
 
     @staticmethod

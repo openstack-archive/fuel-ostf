@@ -17,7 +17,6 @@ import logging
 import os
 
 from nose import plugins
-from nose.suite import ContextSuite
 from pecan import conf
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
 

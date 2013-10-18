@@ -15,7 +15,8 @@
 __profile__ = {
     "id": "ha_deployment_test",
     "driver": "nose",
-    "test_path": "fuel_plugin/tests/functional/deployment_types_tests/ha_deployment_test.py",
+    "test_path": ("fuel_plugin/tests/functional/deployment_types_tests/"
+                  "ha_deployment_test.py"),
     "description": "Fake tests for HA deployment",
     "deployment_tags": ["Ha"]
 }

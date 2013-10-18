@@ -20,6 +20,7 @@ opts = [
     cfg.StrOpt('quantum', default='fake')
 ]
 
+
 class Config(TestCase):
     def test_config(self):
         file_path = env['OSTF_CONF_PATH']
