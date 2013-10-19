@@ -13,6 +13,8 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import logging
+LOG = logging.getLogger(__name__)
 
 
 def create_cluster(self, name, plugin_name, hadoop_version,
@@ -25,7 +27,7 @@ def create_cluster(self, name, plugin_name, hadoop_version,
         'plugin_name': plugin_name,
         'hadoop_version': hadoop_version
     }
-
+    LOG.debug("Network id is '%s'" % net_id)
     if cluster_template_id is None:
         self._assert_variables(default_image_id=default_image_id,
                                cluster_configs=cluster_configs,
