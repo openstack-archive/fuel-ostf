@@ -214,51 +214,44 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Scenario:
             1. Create a new security group (if it doesn`t exist yet).
             2. Create an instance using the new security group
-            (if it doesn`t exist yet).
-            3. Create a new floating IP (if doesn`t exist yet).
+            3. Create a new floating IP
             4. Assign the new floating IP to the instance.
             5. Check connectivity to the floating IP using ping command.
         Duration: 200 s.
 
-        Deployment tags: nova_network
         """
-        if not self.floating_ips:
-            if not self.servers:
-                if not self.security_groups:
-                    self.security_groups[self.tenant_id] = self.verify(
-                        25, self._create_security_group, 1,
-                        "Security group can not be created.",
-                        'security group creation', self.compute_client)
+        if not self.security_groups:
+                self.security_groups[self.tenant_id] = self.verify(
+                    25, self._create_security_group, 1,
+                    "Security group can not be created.",
+                    'security group creation',
+                    self.compute_client)
 
-                name = rand_name('ost1_test-server-smoke-')
-                security_groups = [self.security_groups[self.tenant_id].name]
+        name = rand_name('ost1_test-server-smoke-')
+        security_groups = [self.security_groups[self.tenant_id].name]
 
-                server = self.verify(
-                    200, self._create_server, 2,
-                    "Server can not be created.",
-                    'server creation',
-                    self.compute_client, name, security_groups)
+        server = self.verify(200, self._create_server, 2,
+                             "Server can not be created.",
+                             "server creation",
+                             self.compute_client, name, security_groups)
 
-                self.servers.append(server)
+        floating_ip = self.verify(
+            20,
+            self._create_floating_ip,
+            3,
+            "Floating IP can not be created.",
+            'floating IP creation')
 
-            floating_ip = self.verify(20, self._create_floating_ip, 3,
-                                      "Floating IP can not be created.",
-                                      'floating IP creation')
-            self.floating_ips.append(floating_ip)
+        self.verify(10, self._assign_floating_ip_to_instance,
+                    4, "Floating IP can not be assigned.",
+                    'floating IP assignment',
+                    self.compute_client, server, floating_ip)
 
-        if self.servers and self.floating_ips:
-            self.verify(10, self._assign_floating_ip_to_instance, 4,
-                        "Floating IP can not be assigned.",
-                        "floating IP assignment",
-                        self.compute_client,
-                        self.servers[0],
-                        self.floating_ips[0])
+        self.floating_ips.append(floating_ip)
 
-        if self.floating_ips:
-            ip_address = self.floating_ips[0].ip
-            self.verify(100, self._check_vm_connectivity, 5,
-                        "VM connectivity doesn`t function properly.",
-                        'VM connectivity checking', ip_address)
+        self.verify(100, self._check_vm_connectivity, 5,
+                    "VM connectivity doesn`t function properly.",
+                    'VM connectivity checking', floating_ip.ip)
 
     @attr(type=['fuel', 'smoke'])
     def test_008_check_public_instance_connectivity_from_instance(self):
@@ -267,55 +260,48 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Scenario:
             1. Create a new security group (if it doesn`t exist yet).
             2. Create an instance using the new security group.
-            (if it doesn`t exist yet).
-            3. Create a new floating IP (if it doesn`t exist yet).
+            3. Create a new floating IP
             4. Assign the new floating IP to the instance.
             5. Check that public IP 8.8.8.8 can be pinged from instance.
         Duration: 200 s.
 
-        Deployment tags: nova_network
         """
-        if not self.floating_ips:
-            if not self.servers:
-                if not self.security_groups:
-                    self.security_groups[self.tenant_id] = self.verify(
-                        25, self._create_security_group, 1,
-                        "Security group can not be created.",
-                        'security group creation', self.compute_client)
+        if not self.security_groups:
+                self.security_groups[self.tenant_id] = self.verify(
+                    25, self._create_security_group, 1,
+                    "Security group can not be created.",
+                    'security group creation',
+                    self.compute_client)
 
-                name = rand_name('ost1_test-server-smoke-')
-                security_groups = [self.security_groups[self.tenant_id].name]
+        name = rand_name('ost1_test-server-smoke-')
+        security_groups = [self.security_groups[self.tenant_id].name]
 
-                server = self.verify(
-                    200, self._create_server, 2,
-                    "Server can not be created.",
-                    'server creation',
-                    self.compute_client, name, security_groups)
+        server = self.verify(200, self._create_server, 2,
+                             "Server can not be created.",
+                             "server creation",
+                             self.compute_client, name, security_groups)
 
-                self.servers.append(server)
+        floating_ip = self.verify(
+            20,
+            self._create_floating_ip,
+            3,
+            "Floating IP can not be created.",
+            'floating IP creation')
 
-            floating_ip = self.verify(
-                20, self._create_floating_ip, 3,
-                "Floating IP can not be created.",
-                'floating IP creation')
+        self.verify(10, self._assign_floating_ip_to_instance,
+                    4, "Floating IP can not be assigned.",
+                    'floating IP assignment',
+                    self.compute_client, server, floating_ip)
 
-            self.floating_ips.append(floating_ip)
+        self.floating_ips.append(floating_ip)
 
-        if self.servers and self.floating_ips:
-            self.verify(10, self._assign_floating_ip_to_instance, 4,
-                        "Floating IP can not be assigned.",
-                        "floating IP assignment",
-                        self.compute_client,
-                        self.servers[0],
-                        self.floating_ips[0])
-
-        if self.floating_ips:
-            ip_address = self.floating_ips[0].ip
-            LOG.debug(ip_address)
-            self.verify(100, self._check_connectivity_from_vm,
-                        5, ("Connectivity to 8.8.8.8 from the VM doesn`t "
-                            "function properly."),
-                        'public connectivity checking from VM', ip_address)
+        ip_address = floating_ip.ip
+        LOG.info('is address is %s' % ip_address)
+        LOG.debug(ip_address)
+        self.verify(100, self._check_connectivity_from_vm,
+                    5, ("Connectivity to 8.8.8.8 from the VM doesn`t "
+                    "function properly."),
+                    'public connectivity checking from VM', ip_address)
 
     @attr(type=['fuel', 'smoke'])
     def test_009_check_internet_connectivity_instance_without_floatingIP(self):
