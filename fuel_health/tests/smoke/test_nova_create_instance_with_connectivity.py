@@ -35,20 +35,9 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
      - Floating ip creation
      - Instance connectivity by floating IP
     """
-
-    @classmethod
-    def check_preconditions(cls):
-        super(TestNovaNetwork, cls).check_preconditions()
-        cfg = cls.config.network
-        if not cfg.tenant_networks_reachable:
-            msg = 'Each tenant network must be reachable.'
-            cls.enabled = False
-            raise cls.skipException(msg)
-
     @classmethod
     def setUpClass(cls):
         super(TestNovaNetwork, cls).setUpClass()
-        cls.check_preconditions()
         cls.tenant_id = cls.manager._get_identity_client(
             cls.config.identity.admin_username,
             cls.config.identity.admin_password,
@@ -78,7 +67,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             1. Create a new keypair, check if it was created successfully.
         Duration: 25 s.
 
-        Deployment tags: nova_network
         """
         self.keypairs[self.tenant_id] = self.verify(25,
                                                     self._create_keypair,
@@ -97,7 +85,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             1. Create a security group, check if it was created correctly.
         Duration: 25 s.
 
-        Deployment tags: nova_network
         """
         self.security_groups[self.tenant_id] = self.verify(
             25, self._create_security_group, 1,
@@ -116,7 +103,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             3. Confirm that networks have expected ids.
         Duration: 50 s.
 
-        Deployment tags: nova_network
         """
         seen_nets = self.verify(
             50,
@@ -144,7 +130,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             2. Create an instance using the new security group.
         Duration: 200 s.
 
-        Deployment tags: nova_network
         """
         if not self.security_groups:
             self.security_groups[self.tenant_id] = self.verify(
@@ -181,7 +166,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             4. Assign the new floating IP to the instance.
         Duration: 200 s.
 
-        Deployment tags: nova_network
         """
         if not self.servers:
             if not self.security_groups:
