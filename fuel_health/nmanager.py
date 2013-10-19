@@ -300,27 +300,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     Base class for nova network scenario tests
     """
 
-    _enabled = True
-
-    @classmethod
-    def check_preconditions(cls):
-        cls._create_nano_flavor()
-        cls._enabled = True
-        if cls.config.network.neutron_available:
-            cls._enabled = False
-        else:
-            cls._enabled = True
-            # ensure the config says true
-            try:
-                cls.compute_client.networks.list()
-            except exceptions.EndpointNotFound:
-                cls._enabled = False
-
-    def setUp(self):
-        super(NovaNetworkScenarioTest, self).setUp()
-        if not self._enabled:
-            self.fail('Nova Networking is not available')
-
     @classmethod
     def setUpClass(cls):
         super(NovaNetworkScenarioTest, cls).setUpClass()
@@ -558,7 +537,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         super(NovaNetworkScenarioTest, cls).tearDownClass()
         cls._clean_floating_is()
         cls._clear_networks()
-        cls._verification_of_exceptions()
+      #  cls._verification_of_exceptions()
 
 
 def get_image_from_name():
@@ -656,14 +635,6 @@ class SmokeChecksTest(OfficialClientTest):
     """
     Base class for openstack smoke tests
     """
-
-    _enabled = True
-
-    def setUp(self):
-        super(SmokeChecksTest, self).setUp()
-        if not self._enabled:
-            self.fail('Nova Networking is not available')
-
     @classmethod
     def setUpClass(cls):
         super(SmokeChecksTest, cls).setUpClass()
@@ -840,4 +811,4 @@ class SmokeChecksTest(OfficialClientTest):
         cls._clean_users()
         cls._clean_roles()
         cls._clean_volumes()
-        cls._verification_of_exceptions()
+      #  cls._verification_of_exceptions()
