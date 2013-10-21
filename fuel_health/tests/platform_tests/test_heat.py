@@ -43,14 +43,14 @@ class TestStackAction(heatmanager.HeatBaseTest):
             5. Wait for stack to be updated.
             6. Delete stack.
             7. Wait for stack to be deleted.
-        Duration: 60 s.
+        Duration: 600 s.
 
         Deployment tags: Heat
         """
 
         fail_msg = "Stack was not created properly."
         # create stack
-        stack = self.verify(20, self.create_stack, 1,
+        stack = self.verify(100, self.create_stack, 1,
                             fail_msg,
                             "stack creation",
                             self.heat_client)
@@ -61,7 +61,7 @@ class TestStackAction(heatmanager.HeatBaseTest):
                     stack.id, 'CREATE_COMPLETE')
 
         # get stack details
-        details = self.verify(20, self.heat_client.stacks.get, 3,
+        details = self.verify(100, self.heat_client.stacks.get, 3,
                               "Cannot retrieve stack details.",
                               "retrieving stack details",
                               stack.stack_name)
@@ -81,7 +81,7 @@ class TestStackAction(heatmanager.HeatBaseTest):
 
         # update stack
         fail_msg = "Cannot update stack."
-        stack = self.verify(20, self.update_stack, 4,
+        stack = self.verify(100, self.update_stack, 4,
                             fail_msg,
                             "updating stack.",
                             self.heat_client, stack.id)
@@ -93,7 +93,7 @@ class TestStackAction(heatmanager.HeatBaseTest):
 
         # delete stack
         fail_msg = "Cannot delete stack."
-        self.verify(20, self.heat_client.stacks.delete, 6,
+        self.verify(100, self.heat_client.stacks.delete, 6,
                     fail_msg,
                     "deleting stack",
                     stack.id)
