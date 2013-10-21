@@ -78,7 +78,7 @@ class SavannaTest(nmanager.OfficialClientTest):
                 LOG.debug('Savanna image metadata is %s', image.metadata)
                 if image.metadata[tag_version] == 'True'\
                     and image.metadata[tag_plugin] == 'True'\
-                        and image.metadata[_savanna_username] is not None:
+                        and image.metadata['_savanna_username'] is not None:
                             LOG.debug('Correct image for savanna found')
                             return True
         LOG.debug('Correct image for savanna not found')
