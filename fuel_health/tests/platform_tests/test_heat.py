@@ -32,7 +32,7 @@ class TestStackAction(heatmanager.HeatBaseTest):
 
     @attr(type=["fuel", "smoke"])
     def test_stack(self):
-        """Create stack, check its details, then update and delete stack
+        """Create stack, check its details, then update and delete Heat stack
         Target component: Heat
 
         Scenario:

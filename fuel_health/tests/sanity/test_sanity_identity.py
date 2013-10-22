@@ -31,8 +31,7 @@ class SanityIdentityTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_list_services(self):
-        """Services list availability
-        Test checks that active services can be listed.
+        """Request active services list
         Target component: Nova
 
         Scenario:
@@ -50,8 +49,7 @@ class SanityIdentityTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_list_users(self):
-        """User list availability
-        Test checks that existing users can be listed.
+        """Request user list
         Target component: Keystone
 
         Scenario:

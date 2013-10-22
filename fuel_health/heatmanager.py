@@ -92,7 +92,8 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
                              template=self.simple_template,
                              parameters={
                                  'ImageId': self.config.compute.image_name,
-                                 'InstanceType': self._create_nano_flavor().name
+                                 'Instance'
+                                 'Type': self._create_nano_flavor().name
                              })
         # heat client doesn't return stack details after creation
         # so need to request them:
@@ -106,7 +107,8 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
                              template=template,
                              parameters={
                                  'ImageId': self.config.compute.image_name,
-                                 'InstanceType': self._create_nano_flavor().name
+                                 'Instance'
+                                 'Type': self._create_nano_flavor().name
                              })
         return self.find_stack(client, 'id', stack_id)
 

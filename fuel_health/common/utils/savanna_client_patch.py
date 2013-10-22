@@ -89,8 +89,7 @@ def create_nodegroup_template(self, name, plugin_name, hadoop_version,
         data.update({"volumes_per_node": volumes_per_node,
                     "volumes_size": volumes_size})
 
-    return self._create(
-                        '/node-group-templates', data, 'node_group_template')
+    return self._create('/node-group-templates', data, 'node_group_template')
 
 
 def patch_client():

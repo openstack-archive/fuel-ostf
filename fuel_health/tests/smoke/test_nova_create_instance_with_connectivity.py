@@ -60,7 +60,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_001_create_keypairs(self):
-        """Keypair creation
+        """Create keypair
         Target component: Nova.
 
         Scenario:
@@ -78,7 +78,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_002_create_security_groups(self):
-        """Security group creation
+        """Create security group
         Target component: Nova
 
         Scenario:
@@ -156,7 +156,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     @attr(type=['fuel', 'smoke'])
     def test_006_assign_floating_ips(self):
-        """Assign floating IP
+        """Create and assign floating IP
         Target component: Nova
 
         Scenario:
@@ -256,6 +256,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     def test_008_check_public_instance_connectivity_from_instance(self):
         """Check network connectivity from instance via floating IP
+        Target component: Nova
 
         Scenario:
             1. Create a new security group (if it doesn`t exist yet).
@@ -306,6 +307,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @attr(type=['fuel', 'smoke'])
     def test_009_check_internet_connectivity_instance_without_floatingIP(self):
         """Check network connectivity from instance without floating IP
+        Target component: Nova
 
         Scenario:
             1. Create a new security group (if it doesn`t exist yet).

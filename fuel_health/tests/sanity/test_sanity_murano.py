@@ -25,8 +25,7 @@ class MuranoSanityTests(murano.MuranoTest):
     """
 
     def test_check_default_key_pair(self):
-        """Check Default Key Pair 'murano-lb-key' For Server Farms
-        Test checks that user has Key Pair 'murano-lb-key'.
+        """Check Murano Server Farms Default Key Pair 'murano-lb-key'
         Please, see more detailed information in Murano Administrator Guide.
         Target component: Murano
 
@@ -39,8 +38,8 @@ class MuranoSanityTests(murano.MuranoTest):
         """
 
         fail_msg = ("Key Pair 'murano-lb-key' does not exist. Need to create "
-                   " Key Pair manually. Please refer to the "
-                   "Fuel Web user documentation")
+                    "Key Pair manually. Please refer to the "
+                    "Fuel Web user documentation")
 
         result = self.verify(10, self.is_keypair_available, 1, fail_msg,
                              "checking if 'murano-lb-key' is available",
@@ -49,8 +48,7 @@ class MuranoSanityTests(murano.MuranoTest):
             self.fail(fail_msg)
 
     def test_check_windows_image_with_murano_tag(self):
-        """Check Windows Image With Murano Tag
-        Test checks that user has windows image with murano tag.
+        """Check Windows Image with Murano Tag availability
         Please, see more detailed information in Murano Administrator Guide.
         Target component: Murano
 
@@ -63,9 +61,10 @@ class MuranoSanityTests(murano.MuranoTest):
         """
 
         fail_msg = ("Windows image 'ws-2012-std' with Murano tag wasn't"
-                   " imported into Glance. Please refer to the "
-                   "Fuel Web user documentation")
+                    " imported into Glance. Please refer to the "
+                    "Fuel Web user documentation")
         action_msg = "checking if Windows image with Murano tag is available"
+
         def find_image(tag):
             for i in self.compute_client.images.list():
                 if 'murano_image_info' in i.metadata:
@@ -79,8 +78,7 @@ class MuranoSanityTests(murano.MuranoTest):
             self.fail(fail_msg)
 
     def test_create_and_delete_service(self):
-        """Murano environment and service creation, listing and deletion
-        Test checks if it's possible to create and delete service.
+        """Create, list and delete Murano environment and service
         Target component: Murano
 
         Scenario:
@@ -115,7 +113,7 @@ class MuranoSanityTests(murano.MuranoTest):
                               3, fail_msg, "creating session",
                               self.environment.id)
 
-        srv = {"name": "new_service", "type": "test", "units": [{},]}
+        srv = {"name": "new_service", "type": "test", "units": [{}, ]}
         fail_msg = "Can't create service. "
         service = self.verify(20, self.create_service,
                               4, fail_msg, "creating service",
