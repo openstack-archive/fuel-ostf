@@ -26,10 +26,10 @@ LOG = logging.getLogger(__name__)
 class SanityInfrastructureTest(nmanager.SanityChecksTest):
     """TestClass contains tests that check the whole OpenStack availability.
     Special requirements:
-            1. A controller's IP address should be specified.
-            2. A compute's IP address should be specified.
-            3. SSH user credentials for the controller and the compute
-               should be specified in the controller_node_ssh_user parameter
+        1. A controller's IP address should be specified.
+        2. A compute's IP address should be specified.
+        3. SSH user credentials for the controller and the compute
+           should be specified in the controller_node_ssh_user parameter
     """
     _interface = 'json'
 
@@ -49,8 +49,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_001_services_state(self):
-        """Check all the services execute normally
-        Confirm that all required services are running.
+        """Check that required services are running
         Target component: OpenStack
 
         Scenario:
@@ -77,8 +76,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_002_internet_connectivity_from_compute(self):
-        """Check Internet connectivity from a compute
-        Test internet connections on compute nodes.
+        """Check internet connectivity from a compute
         Target component: OpenStack
 
         Scenario:
@@ -102,8 +100,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_003_dns_resolution(self):
-        """Check DNS resolution on a compute
-        Test DNS resolution on compute nodes.
+        """Check DNS resolution on compute node
         Target component: OpenStack
 
         Scenario:

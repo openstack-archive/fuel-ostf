@@ -36,7 +36,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
 
     @attr(type=["fuel", "smoke"])
     def test_create_user(self):
-        """User creation and authentication in Horizon
+        """Create user and authenticate with it to Horizon
         Target components: Nova, Keystone
 
         Scenario:

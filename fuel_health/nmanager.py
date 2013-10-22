@@ -182,7 +182,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         auth_url = self.config.identity.uri
         tenant_id = keystone.service_catalog.get_token()['tenant_id']
 
-        endpoint_public = self.config.heat.endpoint  + '/' + tenant_id
+        endpoint_public = self.config.heat.endpoint + '/' + tenant_id
         endpoint_management = self.config.heat.endpoint_management
         endpoint_management += '/' + tenant_id
         if not username:

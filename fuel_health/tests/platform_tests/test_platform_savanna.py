@@ -31,6 +31,7 @@ class PlatformSavannaTests(savanna.SavannaTest):
     def test_platform_savanna(self):
         """Savanna tests to create, list, start, checks and delete cluster
         Target component: Savanna
+
         Scenario:
             1. Savanna image with tags should be imported
             2. Send request to create node group template
@@ -47,14 +48,15 @@ class PlatformSavannaTests(savanna.SavannaTest):
         """
         fail_msg = "Savanna image with tags wasn't imported into Glance, " \
                    "please check " \
-                   "http://docs.mirantis.com/fuel/fuel-3.2/installation-fuel-ui.html#post-deployment-check. "
+                   "http://docs.mirantis.com/fuel/fuel-3.2/installation" \
+                   "-fuel-ui.html#post-deployment-check. "
         self.verify_response_true(
             self.verify(
-            20,
-            self._test_image,
-            1, fail_msg,
-            "Test images with tags",
-            '1.1.2', 'vanilla'),
+                20,
+                self._test_image,
+                1, fail_msg,
+                "Test images with tags",
+                '1.1.2', 'vanilla'),
             "Step 1 failed: {msg}".format(msg=fail_msg))
 
         fail_msg = 'Fail create node group template.'

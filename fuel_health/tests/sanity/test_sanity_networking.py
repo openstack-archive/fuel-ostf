@@ -29,8 +29,7 @@ class NetworksTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_list_networks(self):
-        """Networks availability
-        Test checks that available networks can be listed.
+        """Request list of networks
         Target component: Nova Networking.
 
         Scenario:

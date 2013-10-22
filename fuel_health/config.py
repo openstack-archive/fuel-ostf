@@ -358,11 +358,11 @@ HeatConfig = [
                help="Heat API Service management URL."),
 ]
 
+
 def register_heat_opts(conf):
     conf.register_group(heat_group)
     for opt in HeatConfig:
         conf.register_opt(opt, group='heat')
-
 
 
 def process_singleton(cls):
@@ -575,7 +575,7 @@ class NailgunConfig(object):
         LOG.info("COMPUTES IPS %s" % compute_ips)
         self.compute.compute_nodes = compute_ips
         ceph_nodes = filter(lambda node: 'ceph-osd' in node['roles'],
-                               data)
+                            data)
         self.compute.ceph_nodes = ceph_nodes
 
     def _parse_meta(self):
