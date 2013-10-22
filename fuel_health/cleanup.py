@@ -81,10 +81,12 @@ def cleanup(cluster_deployment_info):
                            log_message='Start savanna cluster deletion',
                            name='ostf-test-', delete_type='id')
                 _delete_it(client=savanna_client.cluster_templates,
-                           log_message='Start savanna cluster template deletion',
+                           log_message='Start savanna cluster'
+                                       ' template deletion',
                            delete_type='id')
                 _delete_it(client=savanna_client.node_group_templates,
-                           log_message='Start savanna node group template deletion',
+                           log_message='Start savanna node'
+                                       ' group template deletion',
                            delete_type='id')
         except Exception as exc:
             LOG.warning(
@@ -174,6 +176,7 @@ def cleanup(cluster_deployment_info):
                'start deletion of volume types')
     _delete_it(manager._get_compute_client().security_groups,
                'Start deletion of security groups', delete_type='id')
+
 
 def _delete_it(client, log_message, name='ost1_test-', delete_type='name'):
     try:

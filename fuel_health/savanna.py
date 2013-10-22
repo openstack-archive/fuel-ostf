@@ -72,7 +72,8 @@ class SavannaTest(nmanager.OfficialClientTest):
     def _test_image(self, version, plugin):
         tag_version = '_savanna_tag_%s' % version
         tag_plugin = '_savanna_tag_%s' % plugin
-        LOG.debug('Testing image - plugin - %s version - %s', tag_plugin, tag_version)
+        LOG.debug('Testing image - plugin - %s version - %s',
+                  tag_plugin, tag_version)
         for image in self.compute_client.images.list():
             if image.name == 'savanna':
                 LOG.debug('Savanna image metadata is %s', image.metadata)

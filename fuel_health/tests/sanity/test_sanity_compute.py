@@ -29,9 +29,9 @@ class SanityComputeTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_list_instances(self):
-        """Instance list availability
-        Test checks that the list of instances is available.
+        """Request instance list
         Target component: Nova
+
         Scenario:
             1. Request the list of instances.
         Duration: 20 s.
@@ -43,9 +43,9 @@ class SanityComputeTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_list_images(self):
-        """Images list availability
-        Test checks that the list of images is available.
+        """Request image list
         Target component: Glance
+
         Scenario:
             1. Request the list of images.
             2. Confirm that a response is received.
@@ -61,8 +61,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_list_volumes(self):
-        """Volume list availability
-        Test checks that the list of volumes is available.
+        """Request volume list
         Target component: Cinder
 
         Scenario:
@@ -76,8 +75,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_list_snapshots(self):
-        """Snapshots list availability
-        Test checks that the list of snapshots is available.
+        """Request snapshot list
         Target component: Glance
 
         Scenario:
@@ -91,8 +89,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_list_flavors(self):
-        """Flavor list availability
-        Test checks that the list of flavors is available.
+        """Request flavor list
         Target component: Nova
 
         Scenario:
@@ -110,8 +107,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_list_rate_limits(self):
-        """Limits list availability
-        Test checks that the list of absolute limits is available.
+        """Request absolute limits list
         Target component: Nova
 
         Scenario:

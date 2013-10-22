@@ -49,7 +49,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
 
     @attr(type=["fuel", "smoke"])
     def test_volume_create(self):
-        """Create instance volume
+        """Create volume and attach it to instance
         Target component: Compute
 
         Scenario:

@@ -31,8 +31,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
     """
 
     def test_deploy_ad(self):
-        """Murano environment with AD service deployment
-        Test checks that user can deploy AD.
+        """Check that user can deploy AD service in Murano environment
         Target component: Murano
 
         Scenario:
@@ -67,12 +66,12 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                               3, fail_msg, "session creating",
                               self.environment.id)
 
-        post_body = {"type": "activeDirectory","name": "ad.local",
+        post_body = {"type": "activeDirectory", "name": "ad.local",
                      "adminPassword": "P@ssw0rd", "domain": "ad.local",
                      "availabilityZone": "nova", "unitNamingPattern": "",
                      "flavor": "m1.medium", "osImage":
                     {"type": "ws-2012-std", "name": "ws-2012-std", "title":
-                     "Windows Server 2012 Standard"},"configuration":
+                     "Windows Server 2012 Standard"}, "configuration":
                      "standalone", "units": [{"isMaster": True,
                      "recoveryPassword": "P@ssw0rd",
                      "location": "west-dc"}]}
@@ -103,8 +102,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     self.environment.id)
 
     def test_deploy_iis(self):
-        """Murano environment with IIS service deployment
-        Test checks that user can deploy IIS.
+        """Check that user can deploy IIS in Murano environment
         Target component: Murano
 
         Scenario:
@@ -176,8 +174,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     self.environment.id)
 
     def test_deploy_aspnet(self):
-        """Murano environment with ASP.NET application service deployment
-        Test checks that user can deploy ASPNet.
+        """Check that user can deploy ASP.NET in Murano environment
         Target component: Murano
 
         Special requirements:
@@ -254,8 +251,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     self.environment.id)
 
     def test_deploy_iis_farm(self):
-        """Murano environment with IIS Servers Farm service deployment
-        Test checks that user can deploy IIS farm.
+        """Check user can deploy IIS farm in Murano environment
         Target component: Murano
 
         Special requirements:
@@ -340,8 +336,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     self.environment.id)
 
     def test_deploy_aspnet_farm(self):
-        """Murano environment with ASP.NET application service deployment
-        Test checks that user can deploy ASPNet farm.
+        """Check that user can deploy ASP.NET farm in Murano environment
         Target component: Murano
 
         Special requirements:
@@ -430,8 +425,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     self.environment.id)
 
     def test_deploy_sql(self):
-        """Murano environment with SQL service deployment
-        Test checks that user can deploy SQL.
+        """Check that user can deploy SQL in Murano environment
         Target component: Murano
 
         Scenario:
@@ -471,7 +465,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                      "adminPassword": "P@ssw0rd", "unitNamingPattern": "",
                      "saPassword": "P@ssw0rd", "mixedModeAuth": "true",
                      "osImage": {"type": "ws-2012-std", "name": "ws-2012-std",
-                     "title": "Windows Server 2012 Standard"},"units": [{}],
+                     "title": "Windows Server 2012 Standard"}, "units": [{}],
                      "credentials": {"username": "Administrator",
                      "password": "P@ssw0rd"}, "flavor": "m1.medium"}
 
@@ -501,8 +495,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     self.environment.id)
 
     def test_deploy_sql_cluster(self):
-        """Murano environment with SQL Cluster service deployment
-        Test checks that user can deploy SQL Cluster.
+        """Check that user can deploy SQL Cluster in Murano environment
         Target component: Murano
 
         Scenario:
@@ -542,12 +535,12 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                               3, fail_msg, "session creating",
                               self.environment.id)
 
-        post_body = {"type": "activeDirectory","name": "ad.local",
+        post_body = {"type": "activeDirectory", "name": "ad.local",
                      "adminPassword": "P@ssw0rd", "domain": "ad.local",
                      "availabilityZone": "nova", "unitNamingPattern": "",
                      "flavor": "m1.medium", "osImage":
                      {"type": "ws-2012-std", "name": "ws-2012-std", "title":
-                     "Windows Server 2012 Standard"},"configuration":
+                     "Windows Server 2012 Standard"}, "configuration":
                      "standalone", "units": [{"isMaster": True,
                      "recoveryPassword": "P@ssw0rd",
                      "location": "west-dc"}]}

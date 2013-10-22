@@ -55,8 +55,8 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
 
     def test_mysql_replication(self):
         """Check data replication over mysql
-        Test checks that data replication happens in HA mode.
         Target Service: HA mysql
+
         Scenario:
             1. Detect mysql node.
             2. Create database on detected node
@@ -156,8 +156,8 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
 
     def test_os_databases(self):
         """Check amount of tables in os databases is the same on each node
-        Test checks amount of os databases and tables on each node
         Target Service: HA mysql
+
         Scenario:
             1. Request list of tables for os databases on each node.
             2. Check that amount of tables for each database is the same
@@ -192,8 +192,8 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
 
     def test_state_of_mysql_cluster(self):
         """Check mysql environment state
-        Test verifies state of mysql environment
         Target Service: HA mysql
+
         Scenario:
             1. Detect mysql master node.
             2. Ssh on mysql-master node and request its status
@@ -276,7 +276,6 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
 
     def test_state_of_galera_cluster(self):
         """Check galera environment state
-        Test verifies state of galera environment
         Target Service: HA mysql
 
         Scenario:

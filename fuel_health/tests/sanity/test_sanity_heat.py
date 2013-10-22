@@ -31,15 +31,13 @@ class SanityHeatTest(heatmanager.HeatBaseTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_list_stacks(self):
-        """Stack list availability
-        Test checks that the list of stacks is available.
+        """Request stack list
         Target component: Heat
 
         Scenario:
             1. Request the list of stacks.
 
         Duration: 10 s.
-
         Deployment tags: Heat
         """
         list_stack_resp = self.verify(20, self.list_stacks, 1,

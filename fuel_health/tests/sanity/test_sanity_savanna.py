@@ -29,10 +29,12 @@ class SanitySavannaTests(savanna.SavannaTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_sanity_savanna(self):
-        """Savanna tests to create, list and delete node groups templates and cluster templates
+        """Create, list and delete node group and cluster templates
         Target component: Savanna
+
         Scenario:
-            1. Send request to create node group task tracker and data node template
+            1. Send request to create node group task tracker and
+               data node template
             2. Send request to create node group task tracker template
             3. Send request to create node group data node template
             4. Send request to create cluster template
