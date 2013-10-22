@@ -123,23 +123,25 @@ class FuelTestAssertMixin(object):
 
     def verify_response_body_content(self, exp_content, act_content, msg='',
                                      failed_step=''):
+        failed_step_msg = ''
         if exp_content == act_content:
             return
         if failed_step:
             failed_step_msg = ('Step %s failed: ' % str(failed_step))
         self.fail(''.join(failed_step_msg +
                           'Actual value - {actual_content}'.format(
-                              actual_content=act_content), '\n', msg))
+                  actual_content=act_content), '\n', msg))
 
     def verify_response_body_not_equal(self, exp_content, act_content, msg='',
                                        failed_step=''):
+        failed_step_msg = ''
         if exp_content != act_content:
             return
         if failed_step:
             failed_step_msg = ('Step %s failed: ' % str(failed_step))
-        self.fail(''.join((failed_step_msg +
-                           'Actual value - {actual_content}'.format(
-                               actual_content=act_content), '\n', msg)))
+        self.fail(''.join(failed_step_msg +
+                          'Actual value - {actual_content}'.format(
+                  actual_content=act_content), '\n', msg))
 
     def verify_response_true(self, resp, msg):
         if resp:

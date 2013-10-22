@@ -129,22 +129,15 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
                 client = SSHClient(controller,
                                    self.controller_user,
                                    key_filename=self.controller_key)
-                result = []
+
                 output = self.verify(
                     20, client.exec_command, 5,
                     'Can not get data from controller %s' % controller,
                     'get_record', get_record)
 
-                result.append(output)
-                try:
-                    res = result[0].splitlines()[-1]
-
-                except IndexError:
-                    res = ''
-
-                self.verify_response_body_content(
-                    record_data, res, msg='Expected data missing',
-                    failed_step='6')
+                self.verify_response_body(output, record_data,
+                                          msg='Expected data missing',
+                                          failed_step='6')
 
         # Drop created db
         cmd = "mysql -e 'DROP DATABASE %s'" % self.database
