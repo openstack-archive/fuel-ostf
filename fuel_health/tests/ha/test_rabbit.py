@@ -61,7 +61,7 @@ class RabbitSmokeTest(BaseTestCase):
           1. Retrieve cluster status for each controller.
           2. Check that numbers of rabbit nodes is the same as controllers.
         Duration: 100 s.
-        Deployment tags: CENTOS
+        Deployment tags: CENTOS, Ubuntu
         """
         first_list = self.verify(10, self.amqp_clients[0].list_nodes, 1,
                                  'Cannot retrieve cluster nodes'

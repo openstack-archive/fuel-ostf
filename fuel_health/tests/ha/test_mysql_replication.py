@@ -285,7 +285,7 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
             3. For each node check status is ready
             4. For each node check that node is connected to cluster
         Duration: 1-20 s.
-        Deployment tags: CENTOS
+        Deployment tags: CENTOS, Ubuntu
         """
         if 'CentOS' in self.config.compute.deployment_os:
             for controller in self.controllers:
