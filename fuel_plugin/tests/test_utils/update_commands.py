@@ -22,11 +22,27 @@ def main():
         for item in data:
             if 'argv' in data[item] and item in ['fuel_sanity', 'fuel_smoke']:
                 if "--with-xunit" not in data[item]['argv']:
-                    data[item]['argv'].extend(["--with-xunit", '--xunit-file={0}.xml'.format(item)])
+                    data[item]['argv'].extend(
+                        ["--with-xunit",
+                         '--xunit-file={0}.xml'.format(item)]
+                    )
+
             elif item in ['fuel_sanity', 'fuel_smoke']:
                 data[item]['argv'] = ["--with-xunit", ]
-        test_apps = {"plugin_general": {"test_path": "fuel_plugin/tests/functional/dummy_tests/general_test.py", "driver": "nose"},
-                     "plugin_stopped": {"test_path": "fuel_plugin/tests/functional/dummy_tests/stopped_test.py", "driver": "nose"}}
+
+        test_apps = {
+            "plugin_general": {
+                "test_path": ("fuel_plugin/tests/functional/"
+                              "dummy_tests/general_test.py"),
+                "driver": "nose"
+            },
+            "plugin_stopped": {
+                "test_path": ("fuel_plugin/tests/functional/"
+                              "dummy_tests/stopped_test.py"),
+                "driver": "nose"
+            }
+        }
+
         if 'plugin_general' not in data or 'plugin_stopped' not in data:
             data.update(test_apps)
         commands.seek(0)

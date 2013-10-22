@@ -59,7 +59,10 @@ def createmigration(comment):
 
 def migrate(database='ostf'):
     path = 'postgresql+psycopg2://ostf:ostf@localhost/{0}'.format(database)
-    local('ostf-server --after-initialization-environment-hook --dbpath {0}'.format(path))
+    local(
+        'ostf-server --after-initialization-environment-hook --dbpath {0}'
+        .format(path)
+    )
 
 
 def auth(method='trust', os='ubuntu'):
