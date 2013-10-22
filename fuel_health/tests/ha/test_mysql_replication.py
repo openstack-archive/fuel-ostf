@@ -129,22 +129,15 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
                 client = SSHClient(controller,
                                    self.controller_user,
                                    key_filename=self.controller_key)
-                result = []
+
                 output = self.verify(
                     20, client.exec_command, 5,
                     'Can not get data from controller %s' % controller,
                     'get_record', get_record)
 
-                result.append(output)
-                try:
-                    res = result[0].splitlines()[-1]
-
-                except IndexError:
-                    res = ''
-
-                self.verify_response_body_content(
-                    record_data, res, msg='Expected data missing',
-                    failed_step='6')
+                self.verify_response_body(output, record_data,
+                                          msg='Expected data missing',
+                                          failed_step='6')
 
         # Drop created db
         cmd = "mysql -e 'DROP DATABASE %s'" % self.database
@@ -325,3 +318,56 @@ class TestMysqlReplication(nmanager.OfficialClientTest):
                         failed_step='3')
         else:
             self.fail('There is no CentOs deployment')
+
+    def test_state_of_galera_cluster_ubunta(self):
+        """Check galera environment state
+        Test verifies state of galera environment
+        Target Service: HA mysql
+
+        Scenario:
+            1. Ssh on each controller and request state of galera node
+            2. For each node check cluster size
+            3. For each node check status is ready
+            4. For each node check that node is connected to cluster
+        Duration: 1-20 s.
+        Deployment tags: Ubuntu
+        """
+        if 'Ubuntu' in self.config.compute.deployment_os:
+            for controller in self.controllers:
+                    command = "mysql -e \"SHOW STATUS LIKE 'wsrep_%'\""
+                    ssh_client = SSHClient(controller, self.controller_user,
+                                           key_filename=self.controller_key,
+                                           timeout=100)
+                    output = self.verify(
+                        20, ssh_client.exec_command, 1,
+                        "Verification of galera cluster node status failed",
+                        'get status from galera node',
+                        command).splitlines()[3:-2]
+
+                    LOG.debug('output is %s' % output)
+
+                    result = {}
+                    for i in output:
+                        key, value = i.split('|')[0:-2]
+                        result.update({key: value})
+                        return result
+
+                    self.verify_response_body_content(
+                        result.get('wsrep_cluster_size', 0),
+                        str(len(self.controllers)),
+                        msg='Cluster size on %s less '
+                            'than controllers count' % controller,
+                        failed_step='2')
+
+                    self.verify_response_body_content(
+                        result.get(('wsrep_ready', 'OFF')), 'ON',
+                        msg='wsrep_ready on %s is not ON' % controller,
+                        failed_step='3')
+
+                    self.verify_response_body_content(
+                        result.get(('wsrep_connected', 'OFF')), 'ON',
+                        msg='wsrep_connected on %s is not ON' % controller,
+                        failed_step='3')
+        else:
+            self.fail('There is no Ubuntu deployment')
+

@@ -71,3 +71,20 @@ class RabbitSmokeTest(BaseTestCase):
         if len(self._controllers) != len(first_list[-1].split(',')[1:]):
             self.fail('Step 2 failed: Number of controllers is not equal to '
                       'number of cluster nodes.')
+
+    def test_002_rabbitmqctl_status_ubuntu(self):
+        """RabbitMQ availability
+        Scenario:
+          1. Retrieve cluster status for each controller.
+          2. Check that numbers of rabbit nodes is the same as controllers.
+        Duration: 100 s.
+        Deployment tags: Ubuntu
+        """
+        first_list = self.verify(10, self.amqp_clients[0].list_nodes, 1,
+                                 'Cannot retrieve cluster nodes'
+                                 ' list for {ctlr} controller.'.format(
+                                     ctlr=self.amqp_clients[0].host))
+
+        if len(self._controllers) != len(first_list[-1].split(',')[1:]):
+            self.fail('Step 2 failed: Number of controllers is not equal to '
+                      'number of cluster nodes.')

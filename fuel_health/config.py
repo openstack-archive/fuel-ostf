@@ -500,8 +500,8 @@ class NailgunConfig(object):
             self._parse_cluster_generated_data()
             LOG.info('parse generated successful')
         except Exception, e:
-            LOG.warning('Nailgun config creation failed. '
-                        'Something wrong with endpoints')
+            LOG.info('Something wrong with endpoints')
+            LOG.debug(e)
 
     def _parse_murano_configuration(self):
         murano_url = self.network.raw_data.get('public_vip',
@@ -589,7 +589,7 @@ class NailgunConfig(object):
             amqp_data = data['rabbit']
             self.amqp_pwd = amqp_data['password']
         else:
-            amqp_data = data['qpid']
+            amqp_data = data.get('rabbit', '')
             self.amqp_pwd = amqp_data['password']
             storage = data['storage']['volumes_ceph']
             self.volume.ceph_exist = storage
