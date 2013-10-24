@@ -33,10 +33,9 @@ class DiscoveryPlugin(plugins.Plugin):
     name = 'discovery'
     score = 15000
 
-    def __init__(self, session, deployment_info):
-        self.test_sets = {}
+    def __init__(self, session):
         self.session = session
-        self.deployment_info = deployment_info
+        self.test_sets = {}
         super(DiscoveryPlugin, self).__init__()
 
     def options(self, parser, env=os.environ):
@@ -55,21 +54,11 @@ class DiscoveryPlugin(plugins.Plugin):
                 tag.lower() for tag in profile.get('deployment_tags', [])
             ]
 
-            if process_deployment_tags(
-                self.deployment_info['deployment_tags'],
-                profile['deployment_tags']
-            ):
-
-                if profile['id'] == "alternative_depl_tags_test":
-                    LOG.info(profile)
-                profile['cluster_id'] = self.deployment_info['cluster_id']
-
-                with self.session.begin(subtransactions=True):
-                    LOG.info('%s discovered.', module.__name__)
-                    test_set = models.TestSet(**profile)
-                    test_set = self.session.merge(test_set)
-                    self.session.add(test_set)
-                    self.test_sets[test_set.id] = test_set
+            with self.session.begin(subtransactions=True):
+                LOG.info('%s discovered.', module.__name__)
+                test_set = models.TestSet(**profile)
+                self.session.merge(test_set)
+                self.test_sets[test_set.id] = test_set
 
     def addSuccess(self, test):
         test_id = test.id()
@@ -78,49 +67,30 @@ class DiscoveryPlugin(plugins.Plugin):
                 with self.session.begin(subtransactions=True):
 
                     data = dict()
-                    data['cluster_id'] = self.deployment_info['cluster_id']
+
                     (data['title'], data['description'],
                      data['duration'], data['deployment_tags']) = \
                         nose_utils.get_description(test)
 
-                    if process_deployment_tags(
-                        self.deployment_info['deployment_tags'],
-                        data['deployment_tags']
-                    ):
+                    data.update(
+                        {
+                            'test_set_id': test_set_id,
+                            'name': test_id
+                        }
+                    )
 
-                        data.update(
-                            {
-                                'test_set_id': test_set_id,
-                                'name': test_id
-                            }
-                        )
-
-                        #merge doesn't work here so we must check
-                        #tests existing with such test_set_id and cluster_id
-                        #so we won't ended up with dublicating data upon tests
-                        #in db.
-                        _cluster_id = self.test_sets[test_set_id].cluster_id
-                        tests = self.session.query(models.Test)\
-                            .filter_by(cluster_id=_cluster_id)\
-                            .filter_by(test_set_id=test_set_id)\
-                            .filter_by(test_run_id=None)\
-                            .filter_by(name=data['name'])\
-                            .first()
-
-                        if not tests:
-                            LOG.info('%s added for %s', test_id, test_set_id)
-                            test_obj = models.Test(**data)
-                            self.session.add(test_obj)
+                    LOG.info('%s added for %s', test_id, test_set_id)
+                    test_obj = models.Test(**data)
+                    self.session.merge(test_obj)
 
 
-def discovery(session, path, deployment_info=None):
+def discovery(path, session):
     """Will discover all tests on provided path and save info in db
     """
-    deployment_info = deployment_info if deployment_info else dict()
     LOG.info('Starting discovery for %r.', path)
 
     nose_test_runner.SilentTestProgram(
-        addplugins=[DiscoveryPlugin(session, deployment_info)],
+        addplugins=[DiscoveryPlugin(session)],
         exit=False,
         argv=['tests_discovery', '--collect-only', path]
     )

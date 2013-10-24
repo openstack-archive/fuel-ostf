@@ -13,13 +13,13 @@
 #    under the License.
 
 import itertools
-import json
-import logging
-import multiprocessing
-import os
-import re
 import traceback
+import re
+import json
+import os
+import multiprocessing
 
+import logging
 
 from nose import case
 from nose.suite import ContextSuite
@@ -79,7 +79,7 @@ def get_description(test_obj):
 
             #if deployment tags is empty or absent
             #_process_docstring returns None so we
-            #we must check this and prevent
+            #must check this and prevent
             if deployment_tags:
                 deployment_tags = [
                     tag.strip().lower() for tag in deployment_tags.split(',')

@@ -54,6 +54,12 @@ class BaseWSGITest(unittest2.TestCase):
         self.pecan_conf_mock.nailgun.host = '127.0.0.1'
         self.pecan_conf_mock.nailgun.port = 8888
 
+        self.pecan_conf_patcher = patch(
+            'fuel_plugin.ostf_adapter.wsgi.wsgi_utils.conf',
+            self.pecan_conf_mock
+        )
+        self.pecan_conf_patcher.start()
+
         #engine.get_session mocking
         self.request_mock.session = self.session
 
@@ -65,3 +71,4 @@ class BaseWSGITest(unittest2.TestCase):
 
         #end of test_case patching
         self.request_patcher.stop()
+        self.pecan_conf_patcher.stop()
