@@ -17,13 +17,16 @@
 import os
 import logging
 import signal
+import pecan
+from gevent import pywsgi
 
 from fuel_plugin.ostf_adapter import cli_config
 from fuel_plugin.ostf_adapter import nailgun_hooks
 from fuel_plugin.ostf_adapter import logger
-from gevent import pywsgi
 from fuel_plugin.ostf_adapter.wsgi import app
-import pecan
+from fuel_plugin.ostf_adapter.nose_plugin.nose_discovery import discovery
+from fuel_plugin.utils.utils import clean_db, cache_data
+from fuel_plugin.ostf_adapter.storage import engine
 
 
 def main():
@@ -52,6 +55,18 @@ def main():
 
     if getattr(cli_args, 'after_init_hook'):
         return nailgun_hooks.after_initialization_environment_hook()
+
+    #performing cleaning of expired data (if any) in db
+    clean_db()
+
+    #discover testsets and their tests
+    CORE_PATH = pecan.conf.debug_tests if \
+        pecan.conf.get('debug_tests') else 'fuel_health'
+
+    discovery(path=CORE_PATH, session=engine.get_session())
+
+    #cache needed data from test repository
+    cache_data()
 
     host, port = pecan.conf.server.host, pecan.conf.server.port
     srv = pywsgi.WSGIServer((host, int(port)), root)

@@ -17,6 +17,7 @@ from datetime import datetime
 import sqlalchemy as sa
 from sqlalchemy import desc
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import joinedload, relationship, object_mapper
 from sqlalchemy.dialects.postgres import ARRAY
 
@@ -25,6 +26,176 @@ from fuel_plugin.ostf_adapter.storage import fields, engine
 
 
 BASE = declarative_base()
+
+
+class ClusterState(BASE):
+    '''
+    Represents clusters currently
+    present in the system. Holds info
+    about deployment type which is using in
+    redeployment process.
+
+    Is linked with TestSetToCluster entity
+    that implements many-to-many relationship with
+    TestSet.
+    '''
+
+    __tablename__ = 'cluster_state'
+
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=False)
+    deployment_tags = sa.Column(ARRAY(sa.String(64)))
+
+
+class ClusterTestingPattern(BASE):
+    '''
+    Stores cluster's pattern for testsets and tests
+    '''
+
+    __tablename__ = 'cluster_testing_pattern'
+
+    cluster_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey('cluster_state.id'),
+        primary_key=True
+    )
+
+    test_set_id = sa.Column(
+        sa.String(128),
+        sa.ForeignKey('test_sets.id'),
+        primary_key=True
+    )
+
+    tests = sa.Column(ARRAY(sa.String(512)))
+
+    test_set = relationship('TestSet')
+
+
+class TestSet(BASE):
+
+    __tablename__ = 'test_sets'
+
+    id = sa.Column(sa.String(128), primary_key=True)
+    description = sa.Column(sa.String(256))
+    test_path = sa.Column(sa.String(256))
+    driver = sa.Column(sa.String(128))
+    additional_arguments = sa.Column(fields.ListField())
+    cleanup_path = sa.Column(sa.String(128))
+    meta = sa.Column(fields.JsonField())
+    deployment_tags = sa.Column(ARRAY(sa.String(64)))
+
+    tests = relationship(
+        'Test',
+        backref='test_set',
+        order_by='Test.name',
+        cascade='delete'
+    )
+
+    @property
+    def frontend(self):
+        return {'id': self.id, 'name': self.description}
+
+    @classmethod
+    def get_test_set(cls, session, test_set):
+        return session.query(cls)\
+            .filter_by(id=test_set)\
+            .first()
+
+
+class Test(BASE):
+
+    __tablename__ = 'tests'
+
+    STATES = (
+        'wait_running',
+        'running',
+        'failure',
+        'success',
+        'error',
+        'stopped',
+        'disabled'
+    )
+
+    id = sa.Column(sa.Integer(), primary_key=True)
+    name = sa.Column(sa.String(512))
+    title = sa.Column(sa.String(512))
+    description = sa.Column(sa.Text())
+    duration = sa.Column(sa.String(512))
+    message = sa.Column(sa.Text())
+    traceback = sa.Column(sa.Text())
+    status = sa.Column(sa.Enum(*STATES, name='test_states'))
+    step = sa.Column(sa.Integer())
+    time_taken = sa.Column(sa.Float())
+    meta = sa.Column(fields.JsonField())
+    deployment_tags = sa.Column(ARRAY(sa.String(64)))
+
+    test_run_id = sa.Column(
+        sa.Integer(),
+        sa.ForeignKey(
+            'test_runs.id',
+            ondelete='CASCADE'
+        )
+    )
+
+    test_set_id = sa.Column(
+        sa.String(length=128),
+        sa.ForeignKey(
+            'test_sets.id',
+            ondelete='CASCADE'
+        )
+    )
+
+    @property
+    def frontend(self):
+        return {
+            'id': self.name,
+            'testset': self.test_set_id,
+            'name': self.title,
+            'description': self.description,
+            'duration': self.duration,
+            'message': self.message,
+            'step': self.step,
+            'status': self.status,
+            'taken': self.time_taken
+        }
+
+    @classmethod
+    def add_result(cls, session, test_run_id, test_name, data):
+        session.query(cls).\
+            filter_by(name=test_name, test_run_id=test_run_id).\
+            update(data, synchronize_session=False)
+
+    @classmethod
+    def update_running_tests(cls, session, test_run_id, status='stopped'):
+        session.query(cls). \
+            filter(cls.test_run_id == test_run_id,
+                   cls.status.in_(('running', 'wait_running'))). \
+            update({'status': status}, synchronize_session=False)
+
+    @classmethod
+    def update_test_run_tests(cls, session, test_run_id,
+                              tests_names, status='wait_running'):
+        session.query(cls). \
+            filter(cls.name.in_(tests_names),
+                   cls.test_run_id == test_run_id). \
+            update({'status': status}, synchronize_session=False)
+
+    def copy_test(self, test_run, predefined_tests):
+        '''
+        Performs copying of tests for newly created
+        test_run.
+        '''
+        new_test = self.__class__()
+        mapper = object_mapper(self)
+        primary_keys = set([col.key for col in mapper.primary_key])
+        for column in mapper.iterate_properties:
+            if column.key not in primary_keys:
+                setattr(new_test, column.key, getattr(self, column.key))
+        new_test.test_run_id = test_run.id
+        if predefined_tests and new_test.name not in predefined_tests:
+            new_test.status = 'disabled'
+        else:
+            new_test.status = 'wait_running'
+        return new_test
 
 
 class TestRun(BASE):
@@ -43,25 +214,30 @@ class TestRun(BASE):
     meta = sa.Column(fields.JsonField())
     started_at = sa.Column(sa.DateTime, default=datetime.utcnow)
     ended_at = sa.Column(sa.DateTime)
-    test_set_id = sa.Column(sa.String(128))
 
-    test_set = relationship('TestSet', backref='test_runs')
+    test_set_id = sa.Column(sa.String(128))
+    cluster_id = sa.Column(sa.Integer)
+
+    __table_args__ = (
+        sa.ForeignKeyConstraint(
+            ['test_set_id', 'cluster_id'],
+            ['cluster_testing_pattern.test_set_id',
+             'cluster_testing_pattern.cluster_id'],
+            ondelete='CASCADE'
+        ),
+        {}
+    )
+
+    cluster_testing_pattern = relationship('ClusterTestingPattern')
+    test_set = association_proxy(
+        'cluster_testing_pattern', 'test_set'
+    )
+
     tests = relationship(
         'Test',
         backref='test_run',
         order_by='Test.name',
         cascade='delete'
-    )
-
-    #following code defines proper foreign key
-    #contstraint for composite primary key
-    __table_args__ = (
-        sa.ForeignKeyConstraint(
-            ['test_set_id', 'cluster_id'],
-            ['test_sets.id', 'test_sets.cluster_id'],
-            ondelete='CASCADE'
-        ),
-        {}
     )
 
     def update(self, session, status):
@@ -103,10 +279,12 @@ class TestRun(BASE):
         copy_test method of Test class.
         '''
         predefined_tests = tests or []
+        tests_names = session.query(ClusterTestingPattern.tests)\
+            .filter_by(test_set_id=test_set, cluster_id=cluster_id)\
+            .scalar()
+
         tests = session.query(Test)\
-            .filter_by(test_set_id=test_set,
-                       cluster_id=cluster_id,
-                       test_run_id=None)
+            .filter(Test.name.in_(tests_names))
 
         test_run = cls(test_set_id=test_set, cluster_id=cluster_id,
                        status=status)
@@ -194,6 +372,7 @@ class TestRun(BASE):
         """Restart test run with
             if tests given they will be enabled
         """
+        #test_set = self.get_test_set(session)
         if TestRun.is_last_running(session,
                                    self.test_set_id,
                                    self.cluster_id):
@@ -217,151 +396,3 @@ class TestRun(BASE):
             Test.update_running_tests(
                 session, self.id, status='stopped')
         return self.frontend
-
-
-class TestSet(BASE):
-
-    __tablename__ = 'test_sets'
-
-    id = sa.Column(sa.String(128), primary_key=True)
-    cluster_id = sa.Column(sa.Integer(), primary_key=True, autoincrement=False)
-    description = sa.Column(sa.String(256))
-    test_path = sa.Column(sa.String(256))
-    driver = sa.Column(sa.String(128))
-    additional_arguments = sa.Column(fields.ListField())
-    cleanup_path = sa.Column(sa.String(128))
-    meta = sa.Column(fields.JsonField())
-    deployment_tags = sa.Column(ARRAY(sa.String(64)))
-
-    tests = relationship(
-        'Test',
-        backref='test_set',
-        order_by='Test.name',
-        cascade='delete'
-    )
-
-    @property
-    def frontend(self):
-        return {'id': self.id, 'name': self.description}
-
-    @classmethod
-    def get_test_set(cls, session, test_set, metadata):
-        return session.query(cls)\
-            .filter_by(id=test_set)\
-            .filter_by(cluster_id=metadata['cluster_id'])\
-            .first()
-
-
-class Test(BASE):
-
-    __tablename__ = 'tests'
-
-    STATES = (
-        'wait_running',
-        'running',
-        'failure',
-        'success',
-        'error',
-        'stopped',
-        'disabled'
-    )
-
-    id = sa.Column(sa.Integer(), primary_key=True)
-    name = sa.Column(sa.String(512))
-    title = sa.Column(sa.String(512))
-    description = sa.Column(sa.Text())
-    duration = sa.Column(sa.String(512))
-    message = sa.Column(sa.Text())
-    traceback = sa.Column(sa.Text())
-    status = sa.Column(sa.Enum(*STATES, name='test_states'))
-    step = sa.Column(sa.Integer())
-    time_taken = sa.Column(sa.Float())
-    meta = sa.Column(fields.JsonField())
-    deployment_tags = sa.Column(ARRAY(sa.String(64)))
-    cluster_id = sa.Column(sa.Integer(), nullable=False)
-    test_set_id = sa.Column(sa.String(128))
-
-    test_run_id = sa.Column(
-        sa.Integer(),
-        sa.ForeignKey(
-            'test_runs.id',
-            ondelete='CASCADE'
-        )
-    )
-
-    #following code defines proper foreign key
-    #contstraint for composite primary key
-    __table_args__ = (
-        sa.ForeignKeyConstraint(
-            ['test_set_id', 'cluster_id'],
-            ['test_sets.id', 'test_sets.cluster_id'],
-            ondelete='CASCADE'
-        ),
-        {}
-    )
-
-    @property
-    def frontend(self):
-        return {
-            'id': self.name,
-            'testset': self.test_set_id,
-            'name': self.title,
-            'description': self.description,
-            'duration': self.duration,
-            'message': self.message,
-            'step': self.step,
-            'status': self.status,
-            'taken': self.time_taken
-        }
-
-    @classmethod
-    def add_result(cls, session, test_run_id, test_name, data):
-        session.query(cls).\
-            filter_by(name=test_name, test_run_id=test_run_id).\
-            update(data, synchronize_session=False)
-
-    @classmethod
-    def update_running_tests(cls, session, test_run_id, status='stopped'):
-        session.query(cls). \
-            filter(cls.test_run_id == test_run_id,
-                   cls.status.in_(('running', 'wait_running'))). \
-            update({'status': status}, synchronize_session=False)
-
-    @classmethod
-    def update_test_run_tests(cls, session, test_run_id,
-                              tests_names, status='wait_running'):
-        session.query(cls). \
-            filter(cls.name.in_(tests_names),
-                   cls.test_run_id == test_run_id). \
-            update({'status': status}, synchronize_session=False)
-
-    def copy_test(self, test_run, predefined_tests):
-        '''
-        Performs copying of tests for newly created
-        test_run.
-        '''
-        new_test = self.__class__()
-        mapper = object_mapper(self)
-        primary_keys = set([col.key for col in mapper.primary_key])
-        for column in mapper.iterate_properties:
-            if column.key not in primary_keys:
-                setattr(new_test, column.key, getattr(self, column.key))
-        new_test.test_run_id = test_run.id
-        if predefined_tests and new_test.name not in predefined_tests:
-            new_test.status = 'disabled'
-        else:
-            new_test.status = 'wait_running'
-        return new_test
-
-
-class ClusterState(BASE):
-    '''
-    Holds deployment_tags for current
-    cluster. Is used in rediscoverying
-    after cluster redeploying
-    '''
-
-    __tablename__ = 'cluster_state'
-
-    id = sa.Column(sa.Integer, primary_key=True, autoincrement=False)
-    deployment_tags = sa.Column(ARRAY(sa.String(64)))

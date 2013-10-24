@@ -14,11 +14,13 @@
 
 import unittest2
 from mock import patch, Mock
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
 
 from fuel_plugin.ostf_adapter.nose_plugin import nose_discovery
 from fuel_plugin.ostf_adapter.storage import models
-from fuel_plugin.ostf_adapter.storage import engine
+
+TEST_PATH = 'fuel_plugin/tests/functional/dummy_tests'
 
 
 class BaseTestNoseDiscovery(unittest2.TestCase):
@@ -31,40 +33,23 @@ class BaseTestNoseDiscovery(unittest2.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.engine = engine.get_engine(
-            dbpath='postgresql+psycopg2://ostf:ostf@localhost/ostf'
+        cls.engine = create_engine(
+            'postgresql+psycopg2://ostf:ostf@localhost/ostf'
         )
 
         cls.Session = sessionmaker()
 
     def setUp(self):
-        connection = self.engine.connect()
-        self.trans = connection.begin()
+        self.connection = self.engine.connect()
+        self.trans = self.connection.begin()
 
-        self.Session.configure(bind=connection)
-        self.session = self.Session(bind=connection)
-
-        self.fixtures = {
-            'ha_deployment_test': {
-                'cluster_id': 1,
-                'deployment_tags': set([
-                    'ha',
-                    'rhel'
-                ])
-            },
-            'deployment_alternatives': {
-                'cluster_id': 5,
-                'deployment_tags': set([
-                    'alternative',
-                    'one_tag',
-                    'other_tag'
-                ])
-            },
-        }
+        self.Session.configure(bind=self.connection)
+        self.session = self.Session()
 
     def tearDown(self):
         self.trans.rollback()
         self.session.close()
+        self.connection.close()
 
 
 class TestNoseDiscovery(BaseTestNoseDiscovery):
@@ -79,68 +64,31 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
     def tearDown(self):
         super(TestNoseDiscovery, self).tearDown()
 
-    def test_discovery_testsets(self):
+    def test_discovery(self):
         expected = {
-            'id': 'ha_deployment_test',
-            'cluster_id': 1,
-            'deployment_tags': ['ha']
+            'test_sets_count': 6,
+            'tests_count': 20
         }
 
         nose_discovery.discovery(
-            session=self.session,
-            path=('fuel_plugin.tests.functional.dummy_tests.'
-                  'deployment_types_tests.ha_deployment_test'),
-            deployment_info=self.fixtures['ha_deployment_test']
+            path=TEST_PATH,
+            session=self.session
         )
 
-        test_set = self.session.query(models.TestSet)\
-            .filter_by(id=expected['id'])\
-            .filter_by(cluster_id=expected['cluster_id'])\
-            .one()
+        test_sets_count = self.session.query(func.count('*'))\
+            .select_from(models.TestSet)\
+            .scalar()
 
-        self.assertEqual(
-            test_set.deployment_tags,
-            expected['deployment_tags']
-        )
+        tests_count = self.session.query(func.count('*'))\
+            .select_from(models.Test)\
+            .scalar()
 
-    def test_discovery_tests(self):
-        expected = {
-            'test_set_id': 'ha_deployment_test',
-            'cluster_id': 1,
-            'results_count': 2,
-            'results_data': {
-                'names': [
-                    ('fuel_plugin.tests.functional.dummy_tests.'
-                     'deployment_types_tests.ha_deployment_test.'
-                     'HATest.test_ha_rhel_depl'),
-                    ('fuel_plugin.tests.functional.dummy_tests.'
-                     'deployment_types_tests.ha_deployment_test.'
-                     'HATest.test_ha_depl')
-                ]
-            }
-        }
-        nose_discovery.discovery(
-            session=self.session,
-            path=('fuel_plugin.tests.functional.dummy_tests.'
-                  'deployment_types_tests.ha_deployment_test'),
-            deployment_info=self.fixtures['ha_deployment_test']
-        )
-
-        tests = self.session.query(models.Test)\
-            .filter_by(test_set_id=expected['test_set_id'])\
-            .filter_by(cluster_id=expected['cluster_id'])\
-            .all()
-
-        self.assertTrue(len(tests) == expected['results_count'])
-
-        for test in tests:
-            self.assertTrue(test.name in expected['results_data']['names'])
-            self.assertTrue(
-                set(test.deployment_tags)
-                .issubset(
-                    self.fixtures['ha_deployment_test']['deployment_tags']
-                )
+        self.assertTrue(
+            all(
+                [test_sets_count == expected['test_sets_count'],
+                 tests_count == expected['tests_count']]
             )
+        )
 
     def test_get_proper_description(self):
         expected = {
@@ -150,21 +98,17 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
                      'ha_deployment_test.HATest.test_ha_rhel_depl'),
             'duration': '0sec',
             'test_set_id': 'ha_deployment_test',
-            'cluster_id': self.fixtures['ha_deployment_test']['cluster_id'],
             'deployment_tags': ['ha', 'rhel']
 
         }
 
         nose_discovery.discovery(
-            session=self.session,
-            path=('fuel_plugin.tests.functional.dummy_tests.'
-                  'deployment_types_tests.ha_deployment_test'),
-            deployment_info=self.fixtures['ha_deployment_test']
+            path=TEST_PATH,
+            session=self.session
         )
 
         test = self.session.query(models.Test)\
             .filter_by(name=expected['name'])\
-            .filter_by(cluster_id=expected['cluster_id'])\
             .filter_by(test_set_id=expected['test_set_id'])\
             .one()
 
@@ -181,7 +125,6 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
         expected = {
             'testset': {
                 'id': 'alternative_depl_tags_test',
-                'cluster_id': 5,
                 'deployment_tags': ['alternative | alternative_test']
             },
             'test': {
@@ -193,15 +136,12 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
         }
 
         nose_discovery.discovery(
-            session=self.session,
-            path=('fuel_plugin.tests.functional.dummy_tests.'
-                  'deployment_types_tests.alternative_depl_tags_test'),
-            deployment_info=self.fixtures['deployment_alternatives']
+            path=TEST_PATH,
+            session=self.session
         )
 
         test_set = self.session.query(models.TestSet)\
             .filter_by(id=expected['testset']['id'])\
-            .filter_by(cluster_id=expected['testset']['cluster_id'])\
             .one()
 
         self.assertEqual(

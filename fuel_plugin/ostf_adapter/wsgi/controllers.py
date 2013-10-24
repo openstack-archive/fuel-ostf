@@ -40,36 +40,48 @@ class BaseRestController(rest.RestController):
         return super(BaseRestController, self)._handle_get(method, remainder)
 
 
-class TestsController(BaseRestController):
-
-    @expose('json')
-    def get(self, cluster):
-        discovery_check(request.session, cluster)
-        with request.session.begin(subtransactions=True):
-            tests = request.session.query(models.Test)\
-                .filter_by(cluster_id=cluster)\
-                .filter_by(test_run_id=None)\
-                .order_by(models.Test.name)\
-                .all()
-
-            if tests:
-                return [item.frontend for item in tests]
-
-            return {}
-
-
 class TestsetsController(BaseRestController):
 
     @expose('json')
     def get(self, cluster):
         discovery_check(request.session, cluster)
         with request.session.begin(subtransactions=True):
+            needed_testsets = request.session\
+                .query(models.ClusterTestingPattern.test_set_id)\
+                .filter_by(cluster_id=cluster)
+
             test_sets = request.session.query(models.TestSet)\
-                .filter_by(cluster_id=cluster)\
+                .filter(models.TestSet.id.in_(needed_testsets))\
                 .all()
 
             if test_sets:
                 return [item.frontend for item in test_sets]
+            return {}
+
+
+class TestsController(BaseRestController):
+
+    @expose('json')
+    def get(self, cluster):
+        discovery_check(request.session, cluster)
+        with request.session.begin(subtransactions=True):
+            needed_tests_list = request.session\
+                .query(models.ClusterTestingPattern.tests)\
+                .filter_by(cluster_id=cluster)
+
+            result = []
+            for tests in needed_tests_list:
+                tests_to_return = request.session.query(models.Test)\
+                    .filter(models.Test.name.in_(tests[0]))\
+                    .all()
+
+                result.extend(tests_to_return)
+
+            result.sort(key=lambda test: test.name)
+
+            if result:
+                return [item.frontend for item in result]
+
             return {}
 
 
@@ -120,8 +132,7 @@ class TestrunsController(BaseRestController):
 
                 test_set = models.TestSet.get_test_set(
                     request.session,
-                    test_set,
-                    metadata
+                    test_set
                 )
 
                 test_run = models.TestRun.start(

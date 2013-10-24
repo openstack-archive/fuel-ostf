@@ -18,6 +18,7 @@ from sqlalchemy import create_engine, orm, pool
 
 _ENGINE = None
 _MAKER = None
+_REDISINST = None
 
 
 def get_session(autocommit=True, expire_on_commit=False):

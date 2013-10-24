@@ -15,19 +15,12 @@
 import requests
 from pecan import conf
 
-from fuel_plugin.ostf_adapter.storage import engine, models
-from fuel_plugin.ostf_adapter.nose_plugin import nose_discovery
-
-
-CORE_PATH = conf.debug_tests if conf.get('debug_tests') else 'fuel_health'
+from fuel_plugin.ostf_adapter.storage import models
+from fuel_plugin.ostf_adapter \
+    .storage.storage_utils import add_cluster_testing_pattern
 
 
 def discovery_check(session, cluster):
-    #get needed information from nailgun via series of
-    #requests to nailgun api. At this time we need
-    #info about deployment type(ha, non-ha), type of network
-    #management (nova-network, quntum) and attributes that
-    #indicate that savanna/murano is installed
     cluster_deployment_args = _get_cluster_depl_tags(cluster)
 
     cluster_data = {
@@ -40,13 +33,8 @@ def discovery_check(session, cluster):
             .filter_by(id=cluster_data['cluster_id'])\
             .first()
 
-        if not cluster_state:
-            nose_discovery.discovery(
-                session=session,
-                path=CORE_PATH,
-                deployment_info=cluster_data
-            )
-
+    if not cluster_state:
+        with session.begin(subtransactions=True):
             session.add(
                 models.ClusterState(
                     id=cluster_data['cluster_id'],
@@ -54,26 +42,30 @@ def discovery_check(session, cluster):
                 )
             )
 
-            return
-        old_deployment_tags = cluster_state.deployment_tags
-        if set(old_deployment_tags) != cluster_data['deployment_tags']:
-            #perform cascade deletion of testsets and corresponding to it
-            #tests and tesruns with exired cluster_info within them
-            session.query(models.TestSet)\
+        with session.begin(subtransactions=True):
+            add_cluster_testing_pattern(session, cluster_data)
+
+        return
+
+    old_deployment_tags = cluster_state.deployment_tags
+    if set(old_deployment_tags) != cluster_data['deployment_tags']:
+        with session.begin(subtransactions=True):
+            #delete testruns and their tests if cluster was redeployed
+            session.query(models.ClusterTestingPattern)\
                 .filter_by(cluster_id=cluster_state.id)\
                 .delete()
+
+        #separate block "with" is need here to resolve
+        #situation where previous deletion blocks table
+        #that is using in following update
+        with session.begin(subtransactions=True):
+            #make "rediscovering" of testsets for redeployed cluster
+            add_cluster_testing_pattern(session, cluster_data)
 
             cluster_state.deployment_tags = \
                 list(cluster_data['deployment_tags'])
 
             session.merge(cluster_state)
-
-    #perform rediscovery of testsets for current cluster
-    nose_discovery.discovery(
-        session=session,
-        path=CORE_PATH,
-        deployment_info=cluster_data
-    )
 
 
 def _get_cluster_depl_tags(cluster_id):

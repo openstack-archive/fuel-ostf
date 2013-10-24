@@ -13,21 +13,16 @@
 #    under the License.
 
 import time
-import mock
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine
 
 from fuel_plugin.tests.functional.base import BaseAdapterTest, Response
 from fuel_plugin.ostf_client.client import TestingAdapterClient as adapter
-
-from fuel_plugin.ostf_adapter.storage import engine, models
 
 
 class AdapterTests(BaseAdapterTest):
 
     @classmethod
     def setUpClass(cls):
-        print 'In setUpClass'
 
         url = 'http://0.0.0.0:8989/v1'
 
@@ -73,16 +68,12 @@ class AdapterTests(BaseAdapterTest):
 
     @classmethod
     def tearDownClass(cls):
-        print 'in tearDown'
-        eng = engine.get_engine(
-            dbpath='postgresql+psycopg2://ostf:ostf@localhost/ostf'
+        eng = create_engine(
+            'postgresql+psycopg2://ostf:ostf@localhost/ostf'
         )
-        #declarative_base().metadata.reflect(bind=eng)
-        session = sessionmaker(bind=eng)(autocommit=True)
-        with session.begin(subtransactions=True):
-            print 'id of testset', session.query(models.TestSet).first().id
-            session.query(models.TestSet).delete()
-            session.query(models.ClusterState).delete()
+
+        eng.execute('delete from cluster_testing_pattern;')
+        eng.execute('delete from cluster_state;')
 
     def test_list_testsets(self):
         """Verify that self.testsets are in json response
