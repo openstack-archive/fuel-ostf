@@ -32,7 +32,7 @@ class MuranoSanityTests(murano.MuranoTest):
         Scenario:
             1. Check that Key Pair 'murano-lb-key' exists.
 
-        Duration: 10 s.
+        Duration: 15 s.
 
         Deployment tags: Murano
         """
@@ -41,11 +41,12 @@ class MuranoSanityTests(murano.MuranoTest):
                     "Key Pair manually. Please refer to the "
                     "Fuel Web user documentation")
 
-        result = self.verify(10, self.is_keypair_available, 1, fail_msg,
+        result = self.verify(15, self.is_keypair_available, 1, fail_msg,
                              "checking if 'murano-lb-key' is available",
                              'murano-lb-key')
-        if not result:
-            self.fail(fail_msg)
+
+        self.verify_response_true(result,
+                                  "Step 1 failed: {msg}".format(msg=fail_msg))
 
     def test_check_windows_image_with_murano_tag(self):
         """Check Windows Image with Murano Tag availability
@@ -55,7 +56,7 @@ class MuranoSanityTests(murano.MuranoTest):
         Scenario:
             1. Check that image with Murano tag imported in Glance.
 
-        Duration: 10 s.
+        Duration: 15 s.
 
         Deployment tags: Murano
         """
@@ -71,11 +72,11 @@ class MuranoSanityTests(murano.MuranoTest):
                     return True
             return False
 
-        image = self.verify(10, find_image, 1, fail_msg,
+        image = self.verify(15, find_image, 1, fail_msg,
                             action_msg, 'murano_image_info')
 
-        if not image:
-            self.fail(fail_msg)
+        self.verify_response_true(image,
+                                  "Step 1 failed: {msg}".format(msg=fail_msg))
 
     def test_create_and_delete_service(self):
         """Create, list and delete Murano environment and service
@@ -90,7 +91,7 @@ class MuranoSanityTests(murano.MuranoTest):
             6. Send request to delete service.
             7. Send request to delete environment.
 
-        Duration: 30 s.
+        Duration: 140 s.
 
         Deployment tags: Murano
         """
