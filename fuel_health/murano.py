@@ -26,59 +26,26 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
     calling Murano API.
     """
 
-    def setUp(self):
+    def setUpClass(self):
+        super(MuranoTest, self).setUpClass()
+        msg = "Initialization failed: Murno API service is unavailable."
+        self.verify_response_true(self.murano_client, msg)
+
+    def find_murano_image(self):
         """
-            This method allows to initialize authentication before
-            each test case and define parameters of Murano API Service
-            This method also create environment for all tests
+            This method allows to find Windows images with Murano tag.
+
+            Returns the image object or None
         """
+        for image in self.compute_client.images.list():
+            if 'murano_image_info' in image.metadata and \
+               'ws-2012-std' == image.metadata[tag]['type']:
+                return image
 
-        super(MuranoTest, self).setUp()
-
-        if self.murano_client is None:
-            self.fail('Murano is unavailable.')
-
-    def verify_elements_list(self, elements, attrs, msg='', failed_step=''):
+    def find_keypair(self, keyname):
         """
-        Method provides human readable message for the verification of
-        list of elements with specific parameters
-        :param elements: the list of elements from response
-        :param attrs: required attributes for each element
-        :param msg: message to be used instead the default one
-        :param failed_step: step with failed action
+            Returns True if keypair exists.
         """
-        if failed_step:
-            msg = ('Step %s failed: ' % str(failed_step)) + msg
-
-        if not elements:
-            self.fail(msg)
-
-        for element in elements:
-            for attribute in attrs:
-                if not hasattr(element, attribute):
-                    self.fail(msg)
-
-    def check_image(self):
-        fail_msg = ("Windows image 'ws-2012-std' with Murano tag wasn't"
-                    " imported into Glance. Please refer to the "
-                    "Fuel Web user documentation")
-        action_msg = "checking if Windows image with Murano tag is available"
-
-        def find_image(tag):
-            for i in self.compute_client.images.list():
-                if 'murano_image_info' in i.metadata and \
-                   'ws-2012-std' == i.name and \
-                   'ws-2012-std' == i.metadata[tag]['type']:
-                    return True
-            return False
-
-        image = self.verify(4, find_image, 1, fail_msg,
-                            action_msg, 'murano_image_info')
-
-        if not image:
-            self.fail(fail_msg)
-
-    def is_keypair_available(self, keyname):
         return keyname in [k.id for k in self.compute_client.keypairs.list()]
 
     def list_environments(self):
