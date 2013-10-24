@@ -132,6 +132,23 @@ class FuelTestAssertMixin(object):
                           'Actual value - {actual_content}'.format(
                   actual_content=act_content), '\n', msg))
 
+    def verify_elements_list(self, elements, attrs, msg='', failed_step=''):
+        """
+        Method provides human readable message for the verification of
+        list of elements with specific parameters
+        :param elements: the list of elements from response
+        :param attrs: required attributes for each element
+        :param msg: message to be used instead the default one
+        :param failed_step: step with failed action
+        """
+        msg = "Step {0} failed: {1}".format(failed_step, msg)
+        self.verify_response_true(elements, msg)
+
+        for element in elements:
+            for attribute in attrs:
+                if not hasattr(element, attribute):
+                    self.fail(msg)
+
     def verify_response_body_not_equal(self, exp_content, act_content, msg='',
                                        failed_step=''):
         failed_step_msg = ''

@@ -36,13 +36,13 @@ class TestStackAction(heatmanager.HeatBaseTest):
         Target component: Heat
 
         Scenario:
-            1. Create stack.
-            2. Wait for stack status to become 'CREATE_COMPLETE'.
-            3. Get details of the created stack by its name.
-            4. Update stack.
-            5. Wait for stack to be updated.
-            6. Delete stack.
-            7. Wait for stack to be deleted.
+            1. Create a stack.
+            2. Wait for the stack status to change to 'CREATE_COMPLETE'.
+            3. Get the details of the created stack by its name.
+            4. Update the stack.
+            5. Wait for the stack to update.
+            6. Delete the stack.
+            7. Wait for the stack to be deleted.
         Duration: 600 s.
 
         Deployment tags: Heat
