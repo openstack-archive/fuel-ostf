@@ -32,7 +32,7 @@ class MuranoSanityTests(murano.MuranoTest):
         Scenario:
             1. Check that Key Pair 'murano-lb-key' exists.
 
-        Duration: 10 s.
+        Duration: 5 s.
 
         Deployment tags: Murano
         """
@@ -41,11 +41,8 @@ class MuranoSanityTests(murano.MuranoTest):
                     "Key Pair manually. Please refer to the "
                     "Fuel Web user documentation")
 
-        result = self.verify(10, self.is_keypair_available, 1, fail_msg,
-                             "checking if 'murano-lb-key' is available",
-                             'murano-lb-key')
-        if not result:
-            self.fail(fail_msg)
+        self.verify_response_true(self.find_keypair('murano-lb-key'),
+                                  "Step 1 failed: {msg}".format(msg=fail_msg))
 
     def test_check_windows_image_with_murano_tag(self):
         """Check Windows Image with Murano Tag availability
@@ -55,27 +52,17 @@ class MuranoSanityTests(murano.MuranoTest):
         Scenario:
             1. Check that image with Murano tag imported in Glance.
 
-        Duration: 10 s.
+        Duration: 5 s.
 
         Deployment tags: Murano
         """
 
-        fail_msg = ("Windows image 'ws-2012-std' with Murano tag wasn't"
+        fail_msg = ("Windows image with Murano tag wasn't"
                     " imported into Glance. Please refer to the "
-                    "Fuel Web user documentation")
-        action_msg = "checking if Windows image with Murano tag is available"
+                    "Fuel Web user documentation. ")
 
-        def find_image(tag):
-            for i in self.compute_client.images.list():
-                if 'murano_image_info' in i.metadata:
-                    return True
-            return False
-
-        image = self.verify(10, find_image, 1, fail_msg,
-                            action_msg, 'murano_image_info')
-
-        if not image:
-            self.fail(fail_msg)
+        self.verify_response_true(self.find_murano_image(),
+                                  "Step 1 failed: {msg}".format(msg=fail_msg))
 
     def test_create_and_delete_service(self):
         """Create, list and delete Murano environment and service
@@ -90,18 +77,18 @@ class MuranoSanityTests(murano.MuranoTest):
             6. Send request to delete service.
             7. Send request to delete environment.
 
-        Duration: 30 s.
+        Duration: 20 s.
 
         Deployment tags: Murano
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(20, self.create_environment,
+        self.environment = self.verify(3, self.create_environment,
                                        1, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
         fail_msg = "Environments list is unavailable. "
-        environments = self.verify(20, self.list_environments,
+        environments = self.verify(3, self.list_environments,
                                    2, fail_msg, "listing environments")
 
         step = "2. Request the list of environments. "
@@ -109,19 +96,19 @@ class MuranoSanityTests(murano.MuranoTest):
                                   msg=fail_msg, failed_step=step)
 
         fail_msg = "Can't create session for environment. "
-        session = self.verify(20, self.create_session,
+        session = self.verify(3, self.create_session,
                               3, fail_msg, "creating session",
                               self.environment.id)
 
         srv = {"name": "new_service", "type": "test", "units": [{}, ]}
         fail_msg = "Can't create service. "
-        service = self.verify(20, self.create_service,
+        service = self.verify(3, self.create_service,
                               4, fail_msg, "creating service",
                               self.environment.id, session.id, srv)
 
         step = '4. Request the list of services.'
         fail_msg = "Can't get list of services. "
-        services = self.verify(20, self.list_services,
+        services = self.verify(3, self.list_services,
                                5, fail_msg, "listing services",
                                self.environment.id, session.id)
 
@@ -130,11 +117,11 @@ class MuranoSanityTests(murano.MuranoTest):
                                   failed_step=step)
 
         fail_msg = "Can't delete service. "
-        self.verify(20, self.delete_service,
+        self.verify(3, self.delete_service,
                     6, fail_msg, "deleting service",
                     self.environment.id, session.id, service.id)
 
         fail_msg = "Can't delete environment. "
-        self.verify(20, self.delete_environment,
+        self.verify(3, self.delete_environment,
                     7, fail_msg, "deleting environment",
                     self.environment.id)
