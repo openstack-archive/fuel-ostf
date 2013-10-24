@@ -22,83 +22,85 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
     TestClass contains verifications of full Murano functionality.
     Special requirements:
         1. Murano component should be installed.
-        2. Key Pair 'murano-lb-key'
-        3. Internet access for virtual machines in OpenStack
-        4. Windows image with metadata should be imported.
-             Example Metadata for Windows image in Glance:
-             murano_image_info = {"type":"ws-2012-std",
-                                  "title":"Windows Server 2012"}
+        2. Key Pair 'murano-lb-key'.
+        3. Internet access for virtual machines in OpenStack.
+        4. Windows image with Murano metadata should be imported.
     """
+
+    def setUpClass(self):
+        super(MuranoDeploymentSmokeTests, self).setUpClass()
+        msg = ("Test was skiped: Windows Server 2012 image with Murano "
+               "tag isn't available. Need to import this image into "
+               "glance and mark with Murano metadata tag. Please "
+               "refer to the Fuel Web and Murano user documentation. ")
+        self.image = self.find_murano_image()
+        if not self.image:
+            log.debug(msg)
+            self.skip()
 
     def test_deploy_ad(self):
         """Check that user can deploy AD service in Murano environment
         Target component: Murano
 
         Scenario:
-            1. Check Windows Server 2012 image in glance.
-            2. Send request to create environment.
-            3. Send request to create session for environment.
-            4. Send request to create service AD.
-            5. Request to deploy session.
-            6. Checking environment status.
-            7. Checking deployments status
-            8. Send request to delete environment.
+            1. Send request to create environment.
+            2. Send request to create session for environment.
+            3. Send request to create service AD.
+            4. Request to deploy session.
+            5. Checking environment status.
+            6. Checking deployments status
+            7. Send request to delete environment.
 
         Duration: 1830 s.
 
         Deployment tags: Murano, Heat
         """
 
-        fail_msg = ("Windows Server 2012 image 'ws-2012-std' with Murano "
-                    "tag isn't available. Need to import this image into "
-                    "glance and mark with Murano metadata tag. Please "
-                    "refer to the Fuel Web and Murano user documentation. ")
-        self.verify(15, self.check_image, 1, fail_msg,
-                    'checking glance image')
-
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(20, self.create_environment,
-                                       2, fail_msg, 'creating environment',
+        self.environment = self.verify(5, self.create_environment,
+                                       1, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
         fail_msg = "User can't create session for environment. "
-        session = self.verify(20, self.create_session,
-                              3, fail_msg, "session creating",
+        session = self.verify(5, self.create_session,
+                              2, fail_msg, "session creating",
                               self.environment.id)
 
         post_body = {"type": "activeDirectory", "name": "ad.local",
                      "adminPassword": "P@ssw0rd", "domain": "ad.local",
                      "availabilityZone": "nova", "unitNamingPattern": "",
                      "flavor": "m1.medium", "osImage":
-                    {"type": "ws-2012-std", "name": "ws-2012-std", "title":
-                     "Windows Server 2012 Standard"}, "configuration":
-                     "standalone", "units": [{"isMaster": True,
-                     "recoveryPassword": "P@ssw0rd",
-                     "location": "west-dc"}]}
+                     {"type": "ws-2012-std", "name": str(self.image.name),
+                      "title": "Windows Server 2012 Standard"},
+                     "configuration": "standalone",
+                     "units": [{"isMaster": True,
+                                "recoveryPassword": "P@ssw0rd",
+                                "location": "west-dc"}]}
 
         fail_msg = "User can't create service. "
-        service = self.verify(20, self.create_service,
-                              4, fail_msg, "service creating",
+        service = self.verify(5, self.create_service,
+                              3, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = "User can't deploy session. "
-        deploy_sess = self.verify(30, self.deploy_session,
-                                  5, fail_msg, "session send on deploy",
+        deploy_sess = self.verify(5, self.deploy_session,
+                                  4, fail_msg,
+                                  "sending session on deployment",
                                   self.environment.id, session.id)
 
-        fail_msg = "Deploy did not complete correctly. "
+        fail_msg = "Deployment was not completed correctly. "
         status_env = self.verify(1800, self.deploy_check,
-                                 6, fail_msg, 'deploy is going',
+                                 5, fail_msg, 'deployment is going',
                                  self.environment.id)
 
-        deployment_status = self.verify(100, self.deployments_status_check,
-                                        7, fail_msg,
+        deployment_status = self.verify(5, self.deployments_status_check,
+                                        6, fail_msg,
                                         'Check deployments status',
                                         self.environment.id)
 
         fail_msg = "Can't delete environment. "
-        self.verify(20, self.delete_environment,
-                    8, fail_msg, "deleting environment",
+        self.verify(5, self.delete_environment,
+                    7, fail_msg, "deleting environment",
                     self.environment.id)
 
     def test_deploy_iis(self):
@@ -106,35 +108,27 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         Target component: Murano
 
         Scenario:
-            1. Check Windows Server 2012 image in glance.
-            2. Send request to create environment.
-            3. Send request to create session for environment.
-            4. Send request to create service IIS.
-            5. Request to deploy session.
-            6. Checking environment status.
-            7. Checking deployments status
-            8. Send request to delete environment.
+            1. Send request to create environment.
+            2. Send request to create session for environment.
+            3. Send request to create service IIS.
+            4. Request to deploy session.
+            5. Checking environment status.
+            6. Checking deployments status
+            7. Send request to delete environment.
 
         Duration: 1830 s.
 
         Deployment tags: Murano, Heat
         """
 
-        fail_msg = ("Windows Server 2012 image 'ws-2012-std' with Murano "
-                    "tag isn't available. Need to import this image into "
-                    "glance and mark with Murano metadata tag. Please "
-                    "refer to the Fuel Web and Murano user documentation. ")
-        self.verify(15, self.check_image, 1, fail_msg,
-                    'checking glance image')
-
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(20, self.create_environment,
-                                       2, fail_msg, 'creating environment',
+        self.environment = self.verify(5, self.create_environment,
+                                       1, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
         fail_msg = "User can't create session for environment. "
-        session = self.verify(20, self.create_session,
-                              3, fail_msg, "session creating",
+        session = self.verify(5, self.create_session,
+                              2, fail_msg, "session creating",
                               self.environment.id)
 
         creds = {'username': 'Administrator',
@@ -143,34 +137,35 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                      "availabilityZone": "nova", "name": "someIIS",
                      "adminPassword": "P@ssw0rd", "unitNamingPattern": "",
                      "osImage": {"type": "ws-2012-std",
-                                 "name": "ws-2012-std",
+                                 "name": str(self.image.name),
                                  "title": "Windows Server 2012 Standard"},
                      "units": [{}], "credentials": creds,
                      "flavor": "m1.medium"}
 
         fail_msg = "User can't create service. "
-        service = self.verify(20, self.create_service,
-                              4, fail_msg, "service creating",
+        service = self.verify(5, self.create_service,
+                              3, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = "User can't deploy session. "
-        deploy_sess = self.verify(30, self.deploy_session,
-                                  5, fail_msg, "session send on deploy",
+        deploy_sess = self.verify(5, self.deploy_session,
+                                  4, fail_msg,
+                                  "sending session on deployment",
                                   self.environment.id, session.id)
 
-        fail_msg = "Deploy did not complete correctly. "
+        fail_msg = "Deployment was not completed correctly. "
         status_env = self.verify(1800, self.deploy_check,
-                                 6, fail_msg, 'deploy is going',
+                                 5, fail_msg, 'deployment is going',
                                  self.environment.id)
 
-        deployment_status = self.verify(100, self.deployments_status_check,
-                                        7, fail_msg,
+        deployment_status = self.verify(5, self.deployments_status_check,
+                                        6, fail_msg,
                                         'Check deployments status',
                                         self.environment.id)
 
         fail_msg = "Can't delete environment. "
-        self.verify(20, self.delete_environment,
-                    8, fail_msg, "deleting environment",
+        self.verify(5, self.delete_environment,
+                    7, fail_msg, "deleting environment",
                     self.environment.id)
 
     def test_deploy_aspnet(self):
@@ -181,10 +176,81 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
             1. Internet access for virtual machines in OpenStack
 
         Scenario:
-            1. Check Windows Server 2012 image in glance.
+            1. Send request to create environment.
+            2. Send request to create session for environment.
+            3. Send request to create service ASPNet.
+            4. Request to deploy session.
+            5. Checking environment status.
+            6. Checking deployments status
+            7. Send request to delete environment.
+
+        Duration: 1830 s.
+
+        Deployment tags: Murano, Heat
+        """
+
+        fail_msg = "Can't create environment. Murano API is not available. "
+        self.environment = self.verify(5, self.create_environment,
+                                       1, fail_msg, 'creating environment',
+                                       "ost1_test-Murano_env01")
+
+        fail_msg = "User can't create session for environment. "
+        session = self.verify(5, self.create_session,
+                              2, fail_msg, "session creating",
+                              self.environment.id)
+
+        creds = {'username': 'Administrator',
+                 'password': 'P@ssw0rd'}
+        asp_repository = "git://github.com/Mirantis/murano-mvc-demo.git"
+        post_body = {"type": "aspNetApp", "domain": "",
+                     "availabilityZone": "nova", "name": "someasp",
+                     "repository": asp_repository,
+                     "adminPassword": "P@ssw0rd", "unitNamingPattern": "",
+                     "osImage":
+                     {"type": "ws-2012-std", "name": str(self.image.name),
+                      "title": "Windows Server 2012 Standard"},
+                     "units": [{}], "credentials": creds,
+                     "flavor": "m1.medium"}
+
+        fail_msg = "User can't create service. "
+        service = self.verify(5, self.create_service,
+                              3, fail_msg, "service creating",
+                              self.environment.id, session.id, post_body)
+
+        fail_msg = "User can't deploy session. "
+        deploy_sess = self.verify(5, self.deploy_session,
+                                  4, fail_msg,
+                                  "sending session on deployment",
+                                  self.environment.id, session.id)
+
+        fail_msg = ("Deployment was not completed correctly, please "
+                    "check that virtual machines have Internet access. ")
+        status_env = self.verify(1800, self.deploy_check,
+                                 5, fail_msg, 'deploy is going',
+                                 self.environment.id)
+
+        deployment_status = self.verify(5, self.deployments_status_check,
+                                        6, fail_msg,
+                                        'Check deployments status',
+                                        self.environment.id)
+
+        fail_msg = "Can't delete environment. "
+        self.verify(5, self.delete_environment,
+                    7, fail_msg, "deleting environment",
+                    self.environment.id)
+
+    def test_deploy_iis_farm(self):
+        """Check user can deploy IIS Servers Farm in Murano environment
+        Target component: Murano
+
+        Special requirements:
+            1. Key Pair 'murano-lb-key'
+
+        Scenario:
+            1. Check that Key Pair 'murano-lb-key' exists.
             2. Send request to create environment.
             3. Send request to create session for environment.
-            4. Send request to create service ASPNet.
+            4. Send request to create service IIS farm.
             5. Request to deploy session.
             6. Checking environment status.
             7. Checking deployments status
@@ -195,107 +261,20 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         Deployment tags: Murano, Heat
         """
 
-        fail_msg = ("Windows Server 2012 image 'ws-2012-std' with Murano "
-                    "tag isn't available. Need to import this image into "
-                    "glance and mark with Murano metadata tag. Please "
-                    "refer to the Fuel Web and Murano user documentation. ")
-        self.verify(15, self.check_image, 1, fail_msg,
-                    'checking glance image')
+        msg = ("Test was skiped: Key Pair 'murano-lb-key' does not exist."
+               " Please, add this key pair manually. ")
+        if not self.find_keypair('murano-lb-key'):
+            log.debug(msg)
+            self.skip()
 
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(20, self.create_environment,
+        self.environment = self.verify(5, self.create_environment,
                                        2, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
         fail_msg = "User can't create session for environment. "
-        session = self.verify(20, self.create_session,
+        session = self.verify(5, self.create_session,
                               3, fail_msg, "session creating",
-                              self.environment.id)
-
-        creds = {'username': 'Administrator',
-                 'password': 'P@ssw0rd'}
-        asp_repository = "git://github.com/Mirantis/murano-mvc-demo.git"
-        post_body = {"type": "aspNetApp", "domain": "",
-                     "availabilityZone": "nova", "name": "someasp",
-                     "repository": asp_repository,
-                     "adminPassword": "P@ssw0rd", "unitNamingPattern": "",
-                     "osImage": {"type": "ws-2012-std", "name": "ws-2012-std",
-                     "title": "Windows Server 2012 Standard"},
-                     "units": [{}], "credentials": creds,
-                     "flavor": "m1.medium"}
-
-        fail_msg = "User can't create service. "
-        service = self.verify(20, self.create_service,
-                              4, fail_msg, "service creating",
-                              self.environment.id, session.id, post_body)
-
-        fail_msg = "User can't deploy session. "
-        deploy_sess = self.verify(30, self.deploy_session,
-                                  5, fail_msg, "session send on deploy",
-                                  self.environment.id, session.id)
-
-        fail_msg = ("Deploy did not complete correctly, please check that "
-                    "virtual machines have Internet access. ")
-        status_env = self.verify(1800, self.deploy_check,
-                                 6, fail_msg, 'deploy is going',
-                                 self.environment.id)
-
-        deployment_status = self.verify(100, self.deployments_status_check,
-                                        7, fail_msg,
-                                        'Check deployments status',
-                                        self.environment.id)
-
-        fail_msg = "Can't delete environment. "
-        self.verify(20, self.delete_environment,
-                    8, fail_msg, "deleting environment",
-                    self.environment.id)
-
-    def test_deploy_iis_farm(self):
-        """Check user can deploy IIS farm in Murano environment
-        Target component: Murano
-
-        Special requirements:
-            1. Key Pair 'murano-lb-key'
-
-        Scenario:
-            1. Check Windows Server 2012 image in glance.
-            2. Check that Key Pair 'murano-lb-key' exists.
-            3. Send request to create environment.
-            4. Send request to create session for environment.
-            5. Send request to create service IIS farm.
-            6. Request to deploy session.
-            7. Checking environment status.
-            8. Checking deployments status
-            9. Send request to delete environment.
-
-        Duration: 1830 s.
-
-        Deployment tags: Murano, Heat
-        """
-
-        fail_msg = ("Windows Server 2012 image 'ws-2012-std' with Murano "
-                    "tag isn't available. Need to import this image into "
-                    "glance and mark with Murano metadata tag. Please "
-                    "refer to the Fuel Web and Murano user documentation. ")
-        self.verify(15, self.check_image, 1, fail_msg,
-                    'checking glance image')
-
-        keyname = 'murano-lb-key'
-        fail_msg = ("Key Pair {0} does not exist. Please, add this "
-                    "key pair manually. ")
-
-        self.verify(20, self.is_keypair_available, 2, fail_msg.format(keyname),
-                    "checking if %s keypair is available" % keyname,
-                    keyname)
-
-        fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(20, self.create_environment,
-                                       3, fail_msg, 'creating environment',
-                                       "ost1_test-Murano_env01")
-
-        fail_msg = "User can't create session for environment. "
-        session = self.verify(20, self.create_session,
-                              4, fail_msg, "session creating",
                               self.environment.id)
 
         creds = {'username': 'Administrator',
@@ -304,39 +283,41 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                      "availabilityZone": "nova", "name": "someIISFARM",
                      "adminPassword": "P@ssw0rd", "loadBalancerPort": 80,
                      "unitNamingPattern": "",
-                     "osImage": {"type": "ws-2012-std", "name": "ws-2012-std",
-                     "title": "Windows Server 2012 Standard"},
+                     "osImage":
+                     {"type": "ws-2012-std", "name": str(self.image.name),
+                      "title": "Windows Server 2012 Standard"},
                      "units": [{}, {}],
                      "credentials": creds, "flavor": "m1.medium"}
 
         fail_msg = "User can't create service. "
-        service = self.verify(20, self.create_service,
-                              5, fail_msg, "service creating",
+        service = self.verify(5, self.create_service,
+                              4, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = "User can't deploy session. "
-        deploy_sess = self.verify(30, self.deploy_session,
-                                  6, fail_msg, "session send on deploy",
+        deploy_sess = self.verify(5, self.deploy_session,
+                                  5, fail_msg,
+                                  "sending session on deployment",
                                   self.environment.id, session.id)
 
-        fail_msg = ("Deploy did not complete correctly, "
+        fail_msg = ("Deployment was not completed correctly, "
                     "please check that Key Pair 'murano-lb-key' exists. ")
         status_env = self.verify(1800, self.deploy_check,
-                                 7, fail_msg, 'deploy is going',
+                                 6, fail_msg, 'deployment is going',
                                  self.environment.id)
 
-        deployment_status = self.verify(40, self.deployments_status_check,
-                                        8, fail_msg,
+        deployment_status = self.verify(5, self.deployments_status_check,
+                                        7, fail_msg,
                                         'Check deployments status',
                                         self.environment.id)
 
         fail_msg = "Can't delete environment. "
-        self.verify(20, self.delete_environment,
-                    9, fail_msg, "deleting environment",
+        self.verify(5, self.delete_environment,
+                    8, fail_msg, "deleting environment",
                     self.environment.id)
 
     def test_deploy_aspnet_farm(self):
-        """Check that user can deploy ASP.NET farm in Murano environment
+        """Check that user can deploy ASP.NET Servers Farm in Murano environment
         Target component: Murano
 
         Special requirements:
@@ -344,44 +325,34 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
             2. Internet access for virtual machines in OpenStack
 
         Scenario:
-            1. Check Windows Server 2012 image in glance.
-            2. Check that Key Pair 'murano-lb-key' exists.
-            3. Send request to create environment.
-            4. Send request to create session for environment.
-            5. Send request to create service ASPNet farm.
-            6. Request to deploy session.
-            7. Checking environment status.
-            8. Checking deployments status
-            9. Send request to delete environment.
+            1. Check that Key Pair 'murano-lb-key' exists.
+            2. Send request to create environment.
+            3. Send request to create session for environment.
+            4. Send request to create service ASPNet farm.
+            5. Request to deploy session.
+            6. Checking environment status.
+            7. Checking deployments status
+            8. Send request to delete environment.
 
         Duration: 1830 s.
 
         Deployment tags: Murano, Heat
         """
 
-        fail_msg = ("Windows Server 2012 image 'ws-2012-std' with Murano "
-                    "tag isn't available. Need to import this image into "
-                    "glance and mark with Murano metadata tag. Please "
-                    "refer to the Fuel Web and Murano user documentation. ")
-        self.verify(15, self.check_image, 1, fail_msg,
-                    'checking glance image')
-
-        keyname = 'murano-lb-key'
-        fail_msg = "Key Pair {0} does not exist. Please, add this key pair" + \
-                   " manually"
-
-        self.verify(20, self.is_keypair_available, 2, fail_msg.format(keyname),
-                    "checking if %s keypair is available" % keyname,
-                    keyname)
+        msg = ("Test was skiped: Key Pair 'murano-lb-key' does not exist."
+               " Please, add this key pair manually. ")
+        if not self.find_keypair('murano-lb-key'):
+            log.debug(msg)
+            self.skip()
 
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(20, self.create_environment,
-                                       3, fail_msg, 'creating environment',
+        self.environment = self.verify(5, self.create_environment,
+                                       2, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
         fail_msg = "User can't create session for environment. "
-        session = self.verify(20, self.create_session,
-                              4, fail_msg, "session creating",
+        session = self.verify(5, self.create_session,
+                              3, fail_msg, "session creating",
                               self.environment.id)
 
         creds = {'username': 'Administrator',
@@ -392,36 +363,38 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                      "repository": asp_repository,
                      "adminPassword": "P@ssw0rd", "loadBalancerPort": 80,
                      "unitNamingPattern": "",
-                     "osImage": {"type": "ws-2012-std", "name": "ws-2012-std",
-                     "title": "Windows Server 2012 Standard"},
+                     "osImage":
+                     {"type": "ws-2012-std", "name": str(self.image.name),
+                      "title": "Windows Server 2012 Standard"},
                      "units": [{}, {}],
                      "credentials": creds, "flavor": "m1.medium"}
 
         fail_msg = "User can't create service. "
-        service = self.verify(20, self.create_service,
-                              5, fail_msg, "service creating",
+        service = self.verify(5, self.create_service,
+                              4, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = "User can't deploy session. "
-        deploy_sess = self.verify(30, self.deploy_session,
-                                  6, fail_msg, "session send on deploy",
+        deploy_sess = self.verify(5, self.deploy_session,
+                                  5, fail_msg,
+                                  "sending session on deployment",
                                   self.environment.id, session.id)
 
-        fail_msg = ("Deploy did not complete correctly, "
+        fail_msg = ("Deployment was not completed correctly, "
                     "please check, that Key Pair 'murano-lb-key' exists "
                     "and virtual machines have Internet access. ")
         status_env = self.verify(1800, self.deploy_check,
-                                 7, fail_msg, 'deploy is going',
+                                 6, fail_msg, 'deployment is going',
                                  self.environment.id)
 
-        deployment_status = self.verify(100, self.deployments_status_check,
-                                        8, fail_msg,
+        deployment_status = self.verify(5, self.deployments_status_check,
+                                        7, fail_msg,
                                         'Check deployments status',
                                         self.environment.id)
 
         fail_msg = "Can't delete environment. "
-        self.verify(20, self.delete_environment,
-                    9, fail_msg, "deleting environment",
+        self.verify(5, self.delete_environment,
+                    8, fail_msg, "deleting environment",
                     self.environment.id)
 
     def test_deploy_sql(self):
@@ -429,69 +402,64 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         Target component: Murano
 
         Scenario:
-            1. Check Windows Server 2012 image in glance.
-            2. Send request to create environment.
-            3. Send request to create session for environment.
-            4. Send request to create service SQL.
-            5. Request to deploy session.
-            6. Checking environment status.
-            7. Checking deployments status
-            8. Send request to delete environment.
+            1. Send request to create environment.
+            2. Send request to create session for environment.
+            3. Send request to create service SQL.
+            4. Request to deploy session.
+            5. Checking environment status.
+            6. Checking deployments status
+            7. Send request to delete environment.
 
         Duration: 1830 s.
 
         Deployment tags: Murano, Heat
         """
 
-        fail_msg = ("Windows Server 2012 image 'ws-2012-std' with Murano "
-                    "tag isn't available. Need to import this image into "
-                    "glance and mark with Murano metadata tag. Please "
-                    "refer to the Fuel Web and Murano user documentation. ")
-        self.verify(15, self.check_image, 1, fail_msg,
-                    'checking glance image')
-
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(20, self.create_environment,
-                                       2, fail_msg, 'creating environment',
+        self.environment = self.verify(5, self.create_environment,
+                                       1, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
         fail_msg = "User can't create session for environment. "
-        session = self.verify(20, self.create_session,
-                              3, fail_msg, "session creating",
+        session = self.verify(5, self.create_session,
+                              2, fail_msg, "session creating",
                               self.environment.id)
 
         post_body = {"type": "msSqlServer", "domain": "",
                      "availabilityZone": "nova", "name": "SQLSERVER",
                      "adminPassword": "P@ssw0rd", "unitNamingPattern": "",
                      "saPassword": "P@ssw0rd", "mixedModeAuth": "true",
-                     "osImage": {"type": "ws-2012-std", "name": "ws-2012-std",
-                     "title": "Windows Server 2012 Standard"}, "units": [{}],
+                     "osImage":
+                     {"type": "ws-2012-std", "name": str(self.image.name),
+                      "title": "Windows Server 2012 Standard"}, "units": [{}],
                      "credentials": {"username": "Administrator",
-                     "password": "P@ssw0rd"}, "flavor": "m1.medium"}
+                                     "password": "P@ssw0rd"},
+                     "flavor": "m1.medium"}
 
         fail_msg = "User can't create service. "
-        service = self.verify(20, self.create_service,
-                              4, fail_msg, "service creating",
+        service = self.verify(5, self.create_service,
+                              3, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = "User can't deploy session. "
-        deploy_sess = self.verify(30, self.deploy_session,
-                                  5, fail_msg, "session send on deploy",
+        deploy_sess = self.verify(5, self.deploy_session,
+                                  4, fail_msg,
+                                  "sending session on deployment",
                                   self.environment.id, session.id)
 
-        fail_msg = "Deploy did not complete correctly. "
+        fail_msg = "Deployment was not completed correctly. "
         status_env = self.verify(1800, self.deploy_check,
-                                 6, fail_msg, 'deploy is going',
+                                 5, fail_msg, 'deployment is going',
                                  self.environment.id)
 
-        deployment_status = self.verify(40, self.deployments_status_check,
-                                        7, fail_msg,
+        deployment_status = self.verify(5, self.deployments_status_check,
+                                        6, fail_msg,
                                         'Check deployments status',
                                         self.environment.id)
 
         fail_msg = "Can't delete environment. "
-        self.verify(20, self.delete_environment,
-                    8, fail_msg, "deleting environment",
+        self.verify(5, self.delete_environment,
+                    7, fail_msg, "deleting environment",
                     self.environment.id)
 
     def test_deploy_sql_cluster(self):
@@ -499,75 +467,69 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         Target component: Murano
 
         Scenario:
-            1. Check Windows Server 2012 image in glance.
-            2. Send request to create environment.
-            3. Send request to create session for environment.
-            4. Send request to create service AD.
-            5. Request to deploy session.
-            6. Checking environment status.
-            7. Checking deployments status.
-            8. Send request to create session for environment.
-            9. Send request to create service SQL cluster.
-            10. Request to deploy session..
-            11. Checking environment status.
-            12. Checking deployments status.
-            13. Send request to delete environment.
+            1. Send request to create environment.
+            2. Send request to create session for environment.
+            3. Send request to create service AD.
+            4. Request to deploy session.
+            5. Checking environment status.
+            6. Checking deployments status.
+            7. Send request to create session for environment.
+            8. Send request to create service SQL cluster.
+            9. Request to deploy session..
+            10. Checking environment status.
+            11. Checking deployments status.
+            12. Send request to delete environment.
 
         Duration: 2200 s.
 
         Deployment tags: Murano, Heat
         """
 
-        fail_msg = ("Windows Server 2012 image 'ws-2012-std' with Murano "
-                    "tag isn't available. Need to import this image into "
-                    "glance and mark with Murano metadata tag. Please "
-                    "refer to the Fuel Web and Murano user documentation. ")
-        self.verify(15, self.check_image, 1, fail_msg,
-                    'checking glance image')
-
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(20, self.create_environment,
-                                       2, fail_msg, 'creating environment',
+        self.environment = self.verify(5, self.create_environment,
+                                       1, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
         fail_msg = "User can't create session for environment. "
-        session = self.verify(20, self.create_session,
-                              3, fail_msg, "session creating",
+        session = self.verify(5, self.create_session,
+                              2, fail_msg, "session creating",
                               self.environment.id)
 
         post_body = {"type": "activeDirectory", "name": "ad.local",
                      "adminPassword": "P@ssw0rd", "domain": "ad.local",
                      "availabilityZone": "nova", "unitNamingPattern": "",
                      "flavor": "m1.medium", "osImage":
-                     {"type": "ws-2012-std", "name": "ws-2012-std", "title":
-                     "Windows Server 2012 Standard"}, "configuration":
-                     "standalone", "units": [{"isMaster": True,
-                     "recoveryPassword": "P@ssw0rd",
-                     "location": "west-dc"}]}
+                     {"type": "ws-2012-std", "name": str(self.image.name),
+                      "title": "Windows Server 2012 Standard"},
+                     "configuration": "standalone",
+                     "units": [{"isMaster": True,
+                                "recoveryPassword": "P@ssw0rd",
+                                "location": "west-dc"}]}
 
         fail_msg = "User can't create service. "
-        service = self.verify(20, self.create_service,
-                              4, fail_msg, "service creating",
+        service = self.verify(5, self.create_service,
+                              3, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = "User can't deploy session. "
-        deploy_sess = self.verify(30, self.deploy_session,
-                                  5, fail_msg, "session send on deploy",
+        deploy_sess = self.verify(5, self.deploy_session,
+                                  4, fail_msg,
+                                  "sending session on deployment",
                                   self.environment.id, session.id)
 
-        fail_msg = "Deploy did not complete correctly. "
+        fail_msg = "Deployment was not completed correctly. "
         status_env = self.verify(1800, self.deploy_check,
-                                 6, fail_msg, 'deploy is going',
+                                 5, fail_msg, 'deployment is going',
                                  self.environment.id)
 
-        deployment_status = self.verify(40, self.deployments_status_check,
-                                        7, fail_msg,
+        deployment_status = self.verify(5, self.deployments_status_check,
+                                        6, fail_msg,
                                         'Check deployments status',
                                         self.environment.id)
 
         fail_msg = "User can't create session for environment. "
-        session = self.verify(20, self.create_session,
-                              8, fail_msg, "session creating",
+        session = self.verify(5, self.create_session,
+                              7, fail_msg, "session creating",
                               self.environment.id)
 
         # it is just 'any unused IP addresses'
@@ -578,8 +540,9 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                      "externalAD": False,
                      "sqlServiceUserName": "Administrator",
                      "sqlServicePassword": "P@ssw0rd",
-                     "osImage": {"type": "ws-2012-std", "name": "ws-2012-std",
-                     "title": "Windows Server 2012 Standard"},
+                     "osImage":
+                     {"type": "ws-2012-std", "name": str(self.image.name),
+                      "title": "Windows Server 2012 Standard"},
                      "agListenerName": "SomeSQL_AGListner",
                      "flavor": "m1.medium",
                      "agGroupName": "SomeSQL_AG",
@@ -589,33 +552,34 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                      "type": "msSqlClusterServer", "availabilityZone": "nova",
                      "adminPassword": "P@ssw0rd",
                      "clusterName": "SomeSQL", "mixedModeAuth": True,
-                     "unitNamingPattern": "", "units": [{"isMaster": True,
-                     "name": "node1", "isSync": True}, {"isMaster": False,
-                     "name": "node2", "isSync": True}],
+                     "unitNamingPattern": "", "units":
+                     [{"isMaster": True, "name": "node1", "isSync": True},
+                      {"isMaster": False, "name": "node2", "isSync": True}],
                      "name": "Sqlname", "saPassword": "P@ssw0rd",
                      "databases": ['murano', 'test']}
 
         fail_msg = "User can't create service. "
-        service = self.verify(20, self.create_service,
-                              9, fail_msg, "service creating",
+        service = self.verify(5, self.create_service,
+                              8, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = "User can't deploy session. "
-        deploy_sess = self.verify(30, self.deploy_session,
-                                  10, fail_msg, "session send on deploy",
+        deploy_sess = self.verify(5, self.deploy_session,
+                                  9, fail_msg,
+                                  "sending session on deployment",
                                   self.environment.id, session.id)
 
         fail_msg = "Deploy did not complete correctly. "
         status_env = self.verify(1800, self.deploy_check,
-                                 11, fail_msg, 'deploy is going',
+                                 10, fail_msg, 'deploy is going',
                                  self.environment.id)
 
-        deployment_status = self.verify(40, self.deployments_status_check,
-                                        12, fail_msg,
+        deployment_status = self.verify(5, self.deployments_status_check,
+                                        11, fail_msg,
                                         'Check deployments status',
                                         self.environment.id)
 
         fail_msg = "Can't delete environment. "
-        self.verify(20, self.delete_environment,
-                    13, fail_msg, "deleting environment",
+        self.verify(5, self.delete_environment,
+                    12, fail_msg, "deleting environment",
                     self.environment.id)
