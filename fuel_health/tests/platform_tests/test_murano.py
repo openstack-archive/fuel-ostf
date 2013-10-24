@@ -54,8 +54,11 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     "tag isn't available. Need to import this image into "
                     "glance and mark with Murano metadata tag. Please "
                     "refer to the Fuel Web and Murano user documentation. ")
-        self.verify(15, self.check_image, 1, fail_msg,
-                    'checking glance image')
+        image = self.verify(15, self.check_image, 1, fail_msg,
+                            'checking glance image')
+
+        self.verify_response_true(image,
+                                  "Step 1 failed: {msg}".format(msg=fail_msg))
 
         fail_msg = "Can't create environment. Murano API is not available. "
         self.environment = self.verify(20, self.create_environment,
@@ -126,8 +129,11 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     "tag isn't available. Need to import this image into "
                     "glance and mark with Murano metadata tag. Please "
                     "refer to the Fuel Web and Murano user documentation. ")
-        self.verify(15, self.check_image, 1, fail_msg,
-                    'checking glance image')
+        image = self.verify(15, self.check_image, 1, fail_msg,
+                            'checking glance image')
+
+        self.verify_response_true(image,
+                                  "Step 1 failed: {msg}".format(msg=fail_msg))
 
         fail_msg = "Can't create environment. Murano API is not available. "
         self.environment = self.verify(20, self.create_environment,
@@ -202,8 +208,11 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     "tag isn't available. Need to import this image into "
                     "glance and mark with Murano metadata tag. Please "
                     "refer to the Fuel Web and Murano user documentation. ")
-        self.verify(15, self.check_image, 1, fail_msg,
-                    'checking glance image')
+        image = self.verify(15, self.check_image, 1, fail_msg,
+                            'checking glance image')
+
+        self.verify_response_true(image,
+                                  "Step 1 failed: {msg}".format(msg=fail_msg))
 
         fail_msg = "Can't create environment. Murano API is not available. "
         self.environment = self.verify(20, self.create_environment,
@@ -255,7 +264,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
     def test_deploy_iis_farm(self):
         """Murano environment with IIS Servers Farm service deployment
-        Test checks that user can deploy IIS farm.
+        Test checks that user can deploy IIS Servers Farm.
         Target component: Murano
 
         Special requirements:
@@ -281,16 +290,22 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     "tag isn't available. Need to import this image into "
                     "glance and mark with Murano metadata tag. Please "
                     "refer to the Fuel Web and Murano user documentation. ")
-        self.verify(15, self.check_image, 1, fail_msg,
-                    'checking glance image')
+        image = self.verify(15, self.check_image, 1, fail_msg,
+                            'checking glance image')
+
+        self.verify_response_true(image,
+                                  "Step 1 failed: {msg}".format(msg=fail_msg))
 
         keyname = 'murano-lb-key'
         fail_msg = ("Key Pair {0} does not exist. Please, add this "
                     "key pair manually. ")
 
-        self.verify(20, self.is_keypair_available, 2, fail_msg.format(keyname),
-                    "checking if %s keypair is available" % keyname,
-                    keyname)
+        key_pair = self.verify(20, self.is_keypair_available, 2,
+                               fail_msg.format(keyname),
+                               "checking if keypair is available", keyname)
+
+        self.verify_response_true(key_pair,
+                                  "Step 2 failed: {msg}".format(msg=fail_msg))
 
         fail_msg = "Can't create environment. Murano API is not available. "
         self.environment = self.verify(20, self.create_environment,
@@ -340,8 +355,8 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     self.environment.id)
 
     def test_deploy_aspnet_farm(self):
-        """Murano environment with ASP.NET application service deployment
-        Test checks that user can deploy ASPNet farm.
+        """Murano environment with ASP.NET application Servers Farm service deployment
+        Test checks that user can deploy ASP.NET Servers Farm.
         Target component: Murano
 
         Special requirements:
@@ -368,16 +383,22 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     "tag isn't available. Need to import this image into "
                     "glance and mark with Murano metadata tag. Please "
                     "refer to the Fuel Web and Murano user documentation. ")
-        self.verify(15, self.check_image, 1, fail_msg,
-                    'checking glance image')
+        image = self.verify(15, self.check_image, 1, fail_msg,
+                            'checking glance image')
+
+        self.verify_response_true(image,
+                                  "Step 1 failed: {msg}".format(msg=fail_msg))
 
         keyname = 'murano-lb-key'
-        fail_msg = "Key Pair {0} does not exist. Please, add this key pair" + \
-                   " manually"
+        fail_msg = ("Key Pair {0} does not exist. Please, add this key pair"
+                    " manually")
 
-        self.verify(20, self.is_keypair_available, 2, fail_msg.format(keyname),
-                    "checking if %s keypair is available" % keyname,
-                    keyname)
+        key_pair = self.verify(20, self.is_keypair_available, 2,
+                               fail_msg.format(keyname),
+                               "checking if keypair is available", keyname)
+
+        self.verify_response_true(key_pair,
+                                  "Step 2 failed: {msg}".format(msg=fail_msg))
 
         fail_msg = "Can't create environment. Murano API is not available. "
         self.environment = self.verify(20, self.create_environment,
@@ -453,8 +474,11 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     "tag isn't available. Need to import this image into "
                     "glance and mark with Murano metadata tag. Please "
                     "refer to the Fuel Web and Murano user documentation. ")
-        self.verify(15, self.check_image, 1, fail_msg,
-                    'checking glance image')
+        image = self.verify(15, self.check_image, 1, fail_msg,
+                            'checking glance image')
+
+        self.verify_response_true(image,
+                                  "Step 1 failed: {msg}".format(msg=fail_msg))
 
         fail_msg = "Can't create environment. Murano API is not available. "
         self.environment = self.verify(20, self.create_environment,
@@ -529,8 +553,11 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     "tag isn't available. Need to import this image into "
                     "glance and mark with Murano metadata tag. Please "
                     "refer to the Fuel Web and Murano user documentation. ")
-        self.verify(15, self.check_image, 1, fail_msg,
-                    'checking glance image')
+        image = self.verify(15, self.check_image, 1, fail_msg,
+                            'checking glance image')
+
+        self.verify_response_true(image,
+                                  "Step 1 failed: {msg}".format(msg=fail_msg))
 
         fail_msg = "Can't create environment. Murano API is not available. "
         self.environment = self.verify(20, self.create_environment,

@@ -35,8 +35,9 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
         super(MuranoTest, self).setUp()
 
-        if self.murano_client is None:
-            self.fail('Murano is unavailable.')
+        msg = "Murno API service is unavailable."
+        self.verify_response_true(self.murano_client,
+                                  "Initialization failed: {0}".format(msg))
 
     def verify_elements_list(self, elements, attrs, msg='', failed_step=''):
         """
@@ -47,11 +48,8 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         :param msg: message to be used instead the default one
         :param failed_step: step with failed action
         """
-        if failed_step:
-            msg = ('Step %s failed: ' % str(failed_step)) + msg
-
-        if not elements:
-            self.fail(msg)
+        msg = "Step {0} failed: {1}".format(failed_step, msg)
+        self.verify_response_true(elements, msg)
 
         for element in elements:
             for attribute in attrs:
@@ -74,8 +72,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         image = self.verify(4, find_image, 1, fail_msg,
                             action_msg, 'murano_image_info')
 
-        if not image:
-            self.fail(fail_msg)
+        return image
 
     def is_keypair_available(self, keyname):
         return keyname in [k.id for k in self.compute_client.keypairs.list()]
