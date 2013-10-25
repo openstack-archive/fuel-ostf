@@ -15,7 +15,6 @@
 # under the License.
 
 import logging
-from nose.plugins.attrib import attr
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health import nmanager
@@ -31,7 +30,6 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         3. SSH user credentials for the controller and the compute
            should be specified in the controller_node_ssh_user parameter
     """
-    _interface = 'json'
 
     @classmethod
     def setUpClass(cls):
@@ -47,7 +45,6 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
     def tearDownClass(cls):
         pass
 
-    @attr(type=['sanity', 'fuel'])
     def test_001_services_state(self):
         """Check that required services are running
         Target component: OpenStack
@@ -74,7 +71,6 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             u'XXX' not in output, 'Step 2 failed: Some nova services '
                                   'have not been started.')
 
-    @attr(type=['sanity', 'fuel'])
     def test_002_internet_connectivity_from_compute(self):
         """Check internet connectivity from a compute
         Target component: OpenStack
@@ -98,7 +94,6 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                     "'ping' command",
                     cmd)
 
-    @attr(type=['sanity', 'fuel'])
     def test_003_dns_resolution(self):
         """Check DNS resolution on compute node
         Target component: OpenStack
