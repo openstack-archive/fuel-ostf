@@ -20,6 +20,8 @@ from nose import plugins
 from fuel_plugin.ostf_adapter.nose_plugin import nose_test_runner
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
 from fuel_plugin.ostf_adapter.storage import engine, models
+from fuel_plugin.ostf_adapter \
+    .nose_plugin.nose_utils import process_deployment_tags
 
 
 LOG = logging.getLogger(__name__)
@@ -52,9 +54,13 @@ class DiscoveryPlugin(plugins.Plugin):
                 tag.lower() for tag in profile.get('deployment_tags', [])
             ]
 
-            if set(profile['deployment_tags']) \
-               .issubset(self.deployment_info['deployment_tags']):
+            if process_deployment_tags(
+                self.deployment_info['deployment_tags'],
+                profile['deployment_tags']
+            ):
 
+                if profile['id'] == "alternative_depl_tags_test":
+                    LOG.info(profile)
                 profile['cluster_id'] = self.deployment_info['cluster_id']
 
                 session = engine.get_session()
@@ -78,8 +84,10 @@ class DiscoveryPlugin(plugins.Plugin):
                      data['duration'], data['deployment_tags']) = \
                         nose_utils.get_description(test)
 
-                    if set(data['deployment_tags'])\
-                       .issubset(self.deployment_info['deployment_tags']):
+                    if process_deployment_tags(
+                        self.deployment_info['deployment_tags'],
+                        data['deployment_tags']
+                    ):
 
                         data.update(
                             {
