@@ -38,7 +38,6 @@ try:
 except:
     LOG.warning('Savanna client could not be imported.')
 import cinderclient.client
-import glanceclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
 
@@ -64,9 +63,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
     def __init__(self):
         super(OfficialClientManager, self).__init__()
         self.compute_client = self._get_compute_client()
-        self.image_client = self._get_image_client()
         self.identity_client = self._get_identity_client()
-        self.network_client = self._get_network_client()
         self.volume_client = self._get_volume_client()
         self.heat_client = self._get_heat_client()
         self.murano_client = self._get_murano_client()
@@ -74,9 +71,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
 
         self.client_attr_names = [
             'compute_client',
-            'image_client',
             'identity_client',
-            'network_client',
             'volume_client',
             'heat_client',
             'murano_client',
@@ -110,15 +105,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                         service_type=service_type,
                                         no_cache=True,
                                         insecure=dscv)
-
-    def _get_image_client(self):
-        keystone = self._get_identity_client()
-        token = keystone.auth_token
-        endpoint = keystone.service_catalog.url_for(service_type='image',
-                                                    endpoint_type='publicURL')
-        dscv = self.config.identity.disable_ssl_certificate_validation
-        return glanceclient.Client('1', endpoint=endpoint, token=token,
-                                   insecure=dscv)
 
     def _get_volume_client(self, username=None, password=None,
                            tenant_name=None):
@@ -160,58 +146,27 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                                  auth_url=auth_url,
                                                  insecure=dscv)
 
-    def _get_network_client(self):
-        username = self.config.identity.admin_username
-        password = self.config.identity.admin_password
-        tenant_name = self.config.identity.admin_tenant_name
-
-        if None in (username, password, tenant_name):
-            msg = ("Missing required credentials for network client. "
-                   "username: %(username)s, password: %(password)s, "
-                   "tenant_name: %(tenant_name)s") % locals()
-            raise exceptions.InvalidConfiguration(msg)
-
-        auth_url = self.config.identity.uri
-        dscv = self.config.identity.disable_ssl_certificate_validation
-
-        return
-
-    def _get_heat_client(self, username=None, password=None):
-        keystone = self._get_identity_client()
-        token = keystone.auth_token
-        auth_url = self.config.identity.uri
-        tenant_id = keystone.service_catalog.get_token()['tenant_id']
-
-        endpoint_public = self.config.heat.endpoint + '/' + tenant_id
-        endpoint_management = self.config.heat.endpoint_management
-        endpoint_management += '/' + tenant_id
+    def _get_heat_client(self, username=None, password=None,
+                                  tenant_name=None):
         if not username:
             username = self.config.identity.admin_username
         if not password:
             password = self.config.identity.admin_password
+        if not tenant_name:
+            tenant_name = self.config.identity.admin_tenant_name
 
+        keystone = self._get_identity_client(username, password, tenant_name)
+        token = keystone.auth_token
         try:
-            client = heatclient.v1.client.Client(endpoint_management,
-                                                 auth_url=auth_url,
-                                                 token=token,
-                                                 username=username,
-                                                 password=password)
-            " verify that we can connect to this address "
-            client.stacks.list()
-            return client
-        except:
-            pass
-        try:
-            client = heatclient.v1.client.Client(endpoint_public,
-                                                 auth_url=auth_url,
-                                                 token=token,
-                                                 username=username,
-                                                 password=password)
-            " verify that we can connect to this address "
-            client.stacks.list()
-            return client
-        except:
-            pass
+            endpoint = self.config.heat.endpoint
+        except keystoneclient.exceptions.EndpointNotFound:
+            LOG.warning('Can not initialize heat client, endpoint not found')
+            return None
+        else:
+            return heatclient.v1.client.Client(endpoint,
+                                               token=token,
+                                               username=username,
+                                               password=password)
 
     def _get_murano_client(self):
         """
@@ -223,43 +178,19 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.config.identity.admin_password,
             self.config.identity.admin_tenant_name).auth_token
 
-        # Get Murano API parameters
-        self.api_host = None
-        self.api_host_management = None
-        self.insecure = False
-        if hasattr(self.config.murano, 'api_url'):
-            self.api_host = self.config.murano.api_url
-        if hasattr(self.config.murano, 'api_url_management'):
-            self.api_host_management = self.config.murano.api_url_management
-        if hasattr(self.config.murano, 'insecure'):
-            self.insecure = self.config.murano.insecure
-
         try:
-            client = muranoclient.v1.client.Client(endpoint=self.api_host,
-                                                   token=self.token_id,
-                                                   insecure=self.insecure)
-            " verify that we can connect to this address "
-            client.environments.list()
-            return client
-        except:
-            pass
-        try:
-            endpoint = self.api_host_management
-            client = muranoclient.v1.client.Client(endpoint=endpoint,
-                                                   token=self.token_id,
-                                                   insecure=self.insecure)
-            " verify that we can connect to this address "
-            client.environments.list()
-            return client
-        except:
-            pass
+            return muranoclient.v1.client.Client(
+                endpoint=self.config.murano.api_url,
+                token=self.token_id,
+                insecure=self.config.murano.insecure)
+        except exceptions:
+            LOG.warning('Can not initialize murano client')
 
     def _get_savanna_client(self, username=None, password=None):
         auth_url = self.config.identity.uri
         tenant_name = self.config.identity.admin_tenant_name
-        savanna_ip = self.config.compute.controller_nodes[0]
-        savanna_url = 'http://%s:8386/v1.0' % savanna_ip
-        LOG.debug(savanna_url)
+        savanna_url = self.config.savanna.api_url
+        LOG.debug('Savana url is %s' % savanna_url)
         if not username:
             username = self.config.identity.admin_username
         if not password:

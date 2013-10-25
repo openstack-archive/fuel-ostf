@@ -17,8 +17,6 @@
 
 import logging
 
-from nose.plugins.attrib import attr
-
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import nmanager
 
@@ -58,7 +56,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     def tearDownClass(cls):
         super(TestNovaNetwork, cls).tearDownClass()
 
-    @attr(type=['fuel', 'smoke'])
     def test_001_create_keypairs(self):
         """Create keypair
         Target component: Nova.
@@ -76,7 +73,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                                                     'keypair creation',
                                                     self.compute_client)
 
-    @attr(type=['fuel', 'smoke'])
     def test_002_create_security_groups(self):
         """Create security group
         Target component: Nova
@@ -92,8 +88,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             'security group creation',
             self.compute_client)
 
-    @attr(type=['fuel', 'smoke'])
-    def test_004_check_networks(self):
+    def test_003_check_networks(self):
         """Check network parameters
         Target component: Nova
 
@@ -120,8 +115,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                                       ('Network can not be created.'
                                        ' properly '), failed_step=3)
 
-    @attr(type=['fuel', 'smoke'])
-    def test_005_create_servers(self):
+    def test_004_create_servers(self):
         """Launch instance
         Target component: Nova
 
@@ -154,60 +148,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
         self.servers.append(server)
 
-    @attr(type=['fuel', 'smoke'])
-    def test_006_assign_floating_ips(self):
-        """Create and assign floating IP
-        Target component: Nova
-
-        Scenario:
-            1. Create a new security group (if doesn`t exist yet).
-            2. Create instance using the new security group.
-            3. Create a new floating IP.
-            4. Assign the new floating IP to the instance.
-        Duration: 200 s.
-
-        """
-        if not self.servers:
-            if not self.security_groups:
-                self.security_groups[self.tenant_id] = self.verify(
-                    25, self._create_security_group, 1,
-                    "Security group can not be created.",
-                    'security group creation',
-                    self.compute_client)
-
-            name = rand_name('ost1_test-server-smoke-')
-            security_groups = [self.security_groups[self.tenant_id].name]
-
-            server = self.verify(
-                200,
-                self._create_server,
-                2,
-                "Server can not be created.",
-                "server creation",
-                self.compute_client, name, security_groups
-            )
-            self.servers.append(server)
-
-        floating_ip = self.verify(
-            20,
-            self._create_floating_ip,
-            3,
-            "Floating IP can not be created.",
-            'floating IP creation')
-
-        if self.servers:
-            self.verify(
-                10,
-                self._assign_floating_ip_to_instance,
-                4,
-                "Floating IP can not be assigned.",
-                'floating IP assignment',
-                self.compute_client, self.servers[0], floating_ip)
-
-        self.floating_ips.append(floating_ip)
-
-    @attr(type=['fuel', 'smoke'])
-    def test_007_check_public_network_connectivity(self):
+    def test_005_check_public_network_connectivity(self):
         """Check that VM is accessible via floating IP address
         Target component: Nova
 
@@ -253,7 +194,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                     "VM connectivity doesn`t function properly.",
                     'VM connectivity checking', floating_ip.ip)
 
-    @attr(type=['fuel', 'smoke'])
     def test_008_check_public_instance_connectivity_from_instance(self):
         """Check network connectivity from instance via floating IP
         Target component: Nova
@@ -304,8 +244,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                     "function properly."),
                     'public connectivity checking from VM', ip_address)
 
-    @attr(type=['fuel', 'smoke'])
-    def test_009_check_internet_connectivity_instance_without_floatingIP(self):
+    def test_006_check_internet_connectivity_instance_without_floatingIP(self):
         """Check network connectivity from instance without floating IP
         Target component: Nova
 
