@@ -17,7 +17,6 @@
 import logging
 
 import requests
-from nose.plugins.attrib import attr
 
 from fuel_health import nmanager
 
@@ -32,9 +31,6 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
       - verify that a user role can be created.
     """
 
-    _interface = 'json'
-
-    @attr(type=["fuel", "smoke"])
     def test_create_user(self):
         """Create user and authenticate with it to Horizon
         Target components: Nova, Keystone

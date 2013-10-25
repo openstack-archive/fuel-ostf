@@ -15,7 +15,6 @@
 # under the License.
 
 import logging
-from nose.plugins.attrib import attr
 
 from fuel_health import nmanager
 
@@ -47,7 +46,6 @@ class VolumesTest(nmanager.SmokeChecksTest):
     def _wait_for_instance_status(self, server, status):
         self.status_timeout(self.compute_client.servers, server.id, status)
 
-    @attr(type=["fuel", "smoke"])
     def test_volume_create(self):
         """Create volume and attach it to instance
         Target component: Compute
