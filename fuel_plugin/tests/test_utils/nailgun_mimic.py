@@ -74,6 +74,19 @@ cluster_fixture = {
                 'additional_components': {}
             }
         }
+    },
+    5: {
+        'cluster_meta': {
+            'mode': 'alternative',
+            'release': {
+                'operating_system': 'one_tag'
+            }
+        },
+        'cluster_attributes': {
+            'editable': {
+                'additional_components': {}
+            }
+        }
     }
 }
 

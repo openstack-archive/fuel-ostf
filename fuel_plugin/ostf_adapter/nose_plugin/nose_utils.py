@@ -17,6 +17,7 @@ import re
 import json
 import os
 import multiprocessing
+import itertools
 
 import logging
 
@@ -162,3 +163,48 @@ def get_tests_ids_to_update(test):
             tests_ids.extend(get_tests_ids_to_update(sub_test))
 
     return tests_ids
+
+
+def process_deployment_tags(cluster_depl_tags, test_depl_tags):
+    '''
+    Process alternative deployment tags for testsets and tests
+    and determines whether current test entity (testset or test)
+    is appropriate for cluster.
+    '''
+
+    is_alternative = lambda tag: '|' in tag
+
+    alternative_tags, univocal_tags = \
+        _separate_on_true(is_alternative, test_depl_tags)
+
+    alternative_tags = [
+        map(lambda tag: tag.strip(), el.split('|'))
+        for el in alternative_tags
+    ]
+
+    if alternative_tags:
+        for comb in itertools.product(*alternative_tags):
+            comb = list(comb)
+            comb.extend(univocal_tags)
+
+            if set(comb).issubset(cluster_depl_tags):
+                return True
+    else:
+        if set(univocal_tags).issubset(cluster_depl_tags):
+            return True
+
+    return False
+
+
+def _separate_on_true(predicate, iterable):
+    '''
+    Works as filter() function but returns
+    two collections: one with elements for which
+    predicate is true and other with elements
+    for which predicate become false.
+    '''
+
+    true_elements = itertools.ifilter(predicate, iterable)
+    false_elements = itertools.ifilterfalse(predicate, iterable)
+
+    return list(true_elements), list(false_elements)
