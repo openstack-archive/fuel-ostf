@@ -16,8 +16,6 @@
 
 import logging
 
-from nose.plugins.attrib import attr
-
 from fuel_health import nmanager
 
 LOG = logging.getLogger(__name__)
@@ -29,7 +27,6 @@ class SanityIdentityTest(nmanager.SanityChecksTest):
     Special requirements: OS admin user permissions are needed
     """
 
-    @attr(type=['sanity', 'fuel'])
     def test_list_services(self):
         """Request active services list
         Target component: Nova
@@ -47,7 +44,6 @@ class SanityIdentityTest(nmanager.SanityChecksTest):
         self.verify_response_true(services,
                                   "Step 2 failed: {msg}".format(msg=fail_msg))
 
-    @attr(type=['sanity', 'fuel'])
     def test_list_users(self):
         """Request user list
         Target component: Keystone
