@@ -15,7 +15,6 @@
 # under the License.
 
 import logging
-from nose.plugins.attrib import attr
 
 from fuel_health import nmanager
 
@@ -27,7 +26,6 @@ class NetworksTest(nmanager.SanityChecksTest):
     TestClass contains tests check base networking functionality
     """
 
-    @attr(type=['sanity', 'fuel'])
     def test_list_networks(self):
         """Request list of networks
         Target component: Nova Networking.

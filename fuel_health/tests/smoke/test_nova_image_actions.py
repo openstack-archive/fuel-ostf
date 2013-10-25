@@ -15,8 +15,6 @@
 # under the License.
 
 import logging
-from nose.plugins.attrib import attr
-
 
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import nmanager
@@ -99,7 +97,6 @@ class TestImageAction(nmanager.SmokeChecksTest):
             msg="Please refer to OpenStack logs for more details.")
         return image_id
 
-    @attr(type=['sanity', 'fuel'])
     def test_snapshot(self):
         """Launch instance, create snapshot, launch instance from snapshot
         Target component: Glance

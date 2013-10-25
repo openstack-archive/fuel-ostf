@@ -16,22 +16,15 @@
 
 import logging
 
-from nose.plugins.attrib import attr
-
 from fuel_health import nmanager
 
 
 LOG = logging.getLogger(__name__)
 
-""" Test module contains tests for flavor creation/deletion. """
-
 
 class FlavorsAdminTest(nmanager.SmokeChecksTest):
     """Tests for flavor creation that require admin privileges."""
 
-    _interface = 'json'
-
-    @attr(type=["fuel", "smoke"])
     def test_create_flavor(self):
         """Create instance flavor
         Target component: Nova

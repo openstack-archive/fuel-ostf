@@ -291,7 +291,7 @@ savanna = cfg.OptGroup(name='savanna',
                        title='Savanna Service Options')
 
 SavannaConfig = [
-    cfg.StrOpt('ip',
+    cfg.StrOpt('api_url',
                default='10.20.0.131',
                help="IP of savanna service."),
     cfg.StrOpt('port',
@@ -427,12 +427,14 @@ class FileConfig(object):
         register_volume_opts(cfg.CONF)
         register_murano_opts(cfg.CONF)
         register_heat_opts(cfg.CONF)
+        register_savanna_opts(cfg.CONF)
         self.compute = cfg.CONF.compute
         self.identity = cfg.CONF.identity
         self.network = cfg.CONF.network
         self.volume = cfg.CONF.volume
         self.murano = cfg.CONF.murano
         self.heat = cfg.CONF.heat
+        self.savanna = cfg.CONF.savanna
 
 
 class ConfigGroup(object):
@@ -471,6 +473,7 @@ class NailgunConfig(object):
     volume = ConfigGroup(VolumeGroup)
     object_storage = ConfigGroup(ObjectStoreConfig)
     murano = ConfigGroup(MuranoConfig)
+    savanna = ConfigGroup(SavannaConfig)
     heat = ConfigGroup(HeatConfig)
 
     def __init__(self, parse=True):
@@ -499,29 +502,11 @@ class NailgunConfig(object):
             LOG.info('set endpoints successful')
             self.set_proxy()
             LOG.info('set proxy successful')
-            self._parse_murano_configuration()
-            LOG.info('parse murano configuration successful')
-            self._parse_heat_configuration()
-            LOG.info('parse heat configuration successful')
             self._parse_cluster_generated_data()
             LOG.info('parse generated successful')
         except Exception, e:
             LOG.info('Something wrong with endpoints')
             LOG.debug(e)
-
-    def _parse_murano_configuration(self):
-        ips = self.compute.public_ips[0]
-        murano_url_public = self.network.raw_data.get('public_vip', ips)
-        murano_url = self.compute.controller_nodes[0]
-        self.murano.api_url = 'http://{0}:8082'.format(murano_url_public)
-        self.murano.api_url_management = 'http://{0}:8082'.format(murano_url)
-
-    def _parse_heat_configuration(self):
-        ips = self.compute.public_ips[0]
-        endpoint_public = self.network.raw_data.get('public_vip', ips)
-        endpoint = self.compute.controller_nodes[0]
-        self.heat.endpoint = 'http://{0}:8004/v1'.format(endpoint_public)
-        self.heat.endpoint_management = 'http://{0}:8004/v1'.format(endpoint)
 
     def _parse_cluster_attributes(self):
         api_url = '/api/clusters/%s/attributes' % self.cluster_id
@@ -633,6 +618,10 @@ class NailgunConfig(object):
             self.identity.ubuntu_url = 'http://{0}/'.format(endpoint)
             self.identity.uri = 'http://{0}:{1}/{2}/'.format(
                 endpoint, 5000, 'v2.0')
+            self.murano.api_url = 'http://{0}:{1}/'.format(
+                endpoint, 8082)
+            self.savanna.api_url = 'http://{0}:{1}/'.format(
+                endpoint, 8386, 'v1.0')
 
 
 def FuelConfig():
