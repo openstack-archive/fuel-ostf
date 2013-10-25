@@ -15,7 +15,6 @@
 # under the License.
 
 import logging
-from nose.plugins.attrib import attr
 
 from fuel_health import heatmanager
 
@@ -29,7 +28,6 @@ class SanityHeatTest(heatmanager.HeatBaseTest):
         1. Heat component should be installed.
     """
 
-    @attr(type=['sanity', 'fuel'])
     def test_list_stacks(self):
         """Request stack list
         Target component: Heat

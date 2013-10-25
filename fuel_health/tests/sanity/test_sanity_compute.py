@@ -15,7 +15,6 @@
 # under the License.
 
 import logging
-from nose.plugins.attrib import attr
 
 from fuel_health import nmanager
 
@@ -27,7 +26,6 @@ class SanityComputeTest(nmanager.SanityChecksTest):
     TestClass contains tests that check basic Compute functionality.
     """
 
-    @attr(type=['sanity', 'fuel'])
     def test_list_instances(self):
         """Request instance list
         Target component: Nova
@@ -41,7 +39,6 @@ class SanityComputeTest(nmanager.SanityChecksTest):
                                          1, fail_msg, "instance listing",
                                          self.compute_client)
 
-    @attr(type=['sanity', 'fuel'])
     def test_list_images(self):
         """Request image list
         Target component: Glance
@@ -59,7 +56,6 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         self.verify_response_true(list_images_resp,
                                   "Step 2 failed: {msg}".format(msg=fail_msg))
 
-    @attr(type=['sanity', 'fuel'])
     def test_list_volumes(self):
         """Request volume list
         Target component: Cinder
@@ -73,7 +69,6 @@ class SanityComputeTest(nmanager.SanityChecksTest):
                                         1, fail_msg, "volume listing",
                                         self.volume_client)
 
-    @attr(type=['sanity', 'fuel'])
     def test_list_snapshots(self):
         """Request snapshot list
         Target component: Glance
@@ -87,7 +82,6 @@ class SanityComputeTest(nmanager.SanityChecksTest):
                                           1, fail_msg, "snapshots listing",
                                           self.volume_client)
 
-    @attr(type=['sanity', 'fuel'])
     def test_list_flavors(self):
         """Request flavor list
         Target component: Nova
@@ -105,7 +99,6 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         self.verify_response_true(list_flavors_resp,
                                   "Step 2 failed: {msg}".format(msg=fail_msg))
 
-    @attr(type=['sanity', 'fuel'])
     def test_list_rate_limits(self):
         """Request absolute limits list
         Target component: Nova
