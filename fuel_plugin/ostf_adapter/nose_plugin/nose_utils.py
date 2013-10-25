@@ -12,13 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import traceback
-import re
+import itertools
 import json
-import os
-import multiprocessing
-
 import logging
+import multiprocessing
+import os
+import re
+import traceback
+
 
 from nose import case
 from nose.suite import ContextSuite
@@ -162,3 +163,22 @@ def get_tests_ids_to_update(test):
             tests_ids.extend(get_tests_ids_to_update(sub_test))
 
     return tests_ids
+
+
+def process_deployment_tags(cluster_depl_tags, test_depl_tags):
+    '''
+    Process alternative deployment tags for testsets and tests
+    and determines whether current test entity (testset or test)
+    is appropriate for cluster.
+    '''
+
+    test_depl_tags = [
+        [alt_tag.strip() for alt_tag in tag.split('|')]
+        for tag in test_depl_tags
+    ]
+
+    for comb in itertools.product(*test_depl_tags):
+        if set(comb).issubset(cluster_depl_tags):
+            return True
+
+    return False

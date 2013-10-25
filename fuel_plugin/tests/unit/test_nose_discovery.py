@@ -69,13 +69,14 @@ class BaseTestNoseDiscovery(unittest2.TestCase):
                     'rhel'
                 ])
             },
-            'multinode_deployment_test': {
-                'cluster_id': 2,
+            'deployment_alternatives': {
+                'cluster_id': 5,
                 'deployment_tags': set([
-                    'multinode',
-                    'ubuntu'
+                    'alternative',
+                    'one_tag',
+                    'other_tag'
                 ])
-            }
+            },
         }
 
     def tearDown(self):
@@ -192,4 +193,44 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
                     for key in expected.keys()
                 ]
             )
+        )
+
+    def test_discovery_tests_with_alternative_depl_tags(self):
+        expected = {
+            'testset': {
+                'id': 'alternative_depl_tags_test',
+                'cluster_id': 5,
+                'deployment_tags': ['alternative | alternative_test']
+            },
+            'test': {
+                'name': ('fuel_plugin.tests.functional.dummy_tests.'
+                         'deployment_types_tests.alternative_depl_tags_test.'
+                         'AlternativeDeplTagsTests.test_simple_fake_test'),
+                'deployment_tags': ['one_tag| another_tag', 'other_tag']
+            }
+        }
+
+        nose_discovery.discovery(
+            path=('fuel_plugin.tests.functional.dummy_tests.'
+                  'deployment_types_tests.alternative_depl_tags_test'),
+            deployment_info=self.fixtures['deployment_alternatives']
+        )
+
+        test_set = self.session.query(models.TestSet)\
+            .filter_by(id=expected['testset']['id'])\
+            .filter_by(cluster_id=expected['testset']['cluster_id'])\
+            .one()
+
+        self.assertEqual(
+            test_set.deployment_tags,
+            expected['testset']['deployment_tags']
+        )
+
+        test = self.session.query(models.Test)\
+            .filter_by(test_set_id=expected['testset']['id'])\
+            .filter_by(name=expected['test']['name'])\
+            .one()
+
+        self.assertEqual(
+            test.deployment_tags, expected['test']['deployment_tags']
         )
