@@ -20,6 +20,7 @@ def parse_cli():
     parser = argparse.ArgumentParser()
     parser.add_argument('--after-initialization-environment-hook',
                         action='store_true', dest='after_init_hook')
+    parser.add_argument('--cleanup_db', action='store_true')
     parser.add_argument('--debug',
                         action='store_true', dest='debug')
     parser.add_argument(

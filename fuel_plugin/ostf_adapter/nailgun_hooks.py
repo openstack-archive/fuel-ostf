@@ -14,6 +14,7 @@
 
 import logging
 from fuel_plugin.ostf_adapter.storage import alembic_cli
+from fuel_plugin.ostf_adapter.storage import engine, models
 
 LOG = logging.getLogger(__name__)
 
@@ -24,3 +25,10 @@ def after_initialization_environment_hook():
     """
     alembic_cli.do_apply_migrations()
     return 0
+
+
+def clean_up_db():
+    session = engine.get_session()
+    with session.begin(subtransactions=True):
+        session.query(models.TestSet).delete()
+        session.query(models.ClusterState).delete()

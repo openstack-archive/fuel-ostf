@@ -52,6 +52,9 @@ def main():
 
     if getattr(cli_args, 'after_init_hook'):
         return nailgun_hooks.after_initialization_environment_hook()
+    elif getattr(cli_args, 'cleanup_db'):
+        return nailgun_hooks.clean_up_db()
+
     host, port = pecan.conf.server.host, pecan.conf.server.port
     srv = pywsgi.WSGIServer((host, int(port)), root)
 
