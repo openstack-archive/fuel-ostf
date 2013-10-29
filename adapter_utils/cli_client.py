@@ -12,16 +12,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
-
-from fuel_plugin.ostf_adapter.storage import alembic_cli
-
-LOG = logging.getLogger(__name__)
+import argparse
+import sys
 
 
-def after_initialization_environment_hook():
-    """Expect 0 on success by nailgun
-    Exception is good enough signal that something goes wrong
-    """
-    alembic_cli.do_apply_migrations()
-    return 0
+def parse_cli_args():
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
+
+    cleandb_parser = subparsers.add_parser('cleandb')
+    cleandb_parser.add_argument(
+        '--dbpath',
+        default='postgresql+psycopg2://ostf:ostf@localhost/ostf'
+    )
+
+    return parser.parse_args(sys.argv[1:])

@@ -12,16 +12,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
+from sqlalchemy.ext.declarative import declarative_base
 
-from fuel_plugin.ostf_adapter.storage import alembic_cli
+from adapter_utils.storage.engine import get_session, get_engine
+from fuel_plugin.ostf_adapter.storage import models
 
-LOG = logging.getLogger(__name__)
 
+def clean_up_db(db_path):
+    Base = declarative_base()
+    Base.metadata.reflect(bind=get_engine(db_path))
 
-def after_initialization_environment_hook():
-    """Expect 0 on success by nailgun
-    Exception is good enough signal that something goes wrong
-    """
-    alembic_cli.do_apply_migrations()
-    return 0
+    session = get_session(db_path)
+    with session.begin(subtransactions=True):
+        session.query(models.TestSet).delete()
+        session.query(models.ClusterState).delete()

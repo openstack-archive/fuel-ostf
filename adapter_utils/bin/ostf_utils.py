@@ -12,16 +12,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
-
-from fuel_plugin.ostf_adapter.storage import alembic_cli
-
-LOG = logging.getLogger(__name__)
+from adapter_utils.cli_client import parse_cli_args
+from adapter_utils import support_utils
 
 
-def after_initialization_environment_hook():
-    """Expect 0 on success by nailgun
-    Exception is good enough signal that something goes wrong
-    """
-    alembic_cli.do_apply_migrations()
-    return 0
+def main():
+    cli_args = parse_cli_args()
+
+    support_utils.clean_up_db(cli_args.dbpath)
+
+
+if __name__ == '__main__':
+    main()
