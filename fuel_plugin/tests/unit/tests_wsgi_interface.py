@@ -27,20 +27,17 @@ class WsgiInterfaceTests(unittest2.TestCase):
 
     def setUp(self):
         self.app = TestApp(app.setup_app())
+        self.fixture = {
+            'cluster_id': 1
+        }
 
     def test_get_all_tests(self, request):
-        self.app.get('/v1/tests')
-
-    def test_get_one_test(self, request):
-        self.assertRaises(NotImplementedError,
-                          self.app.get,
-                          '/v1/tests/1')
+        self.app.get('/v1/tests/{0}'
+                     .format(self.fixture['cluster_id']))
 
     def test_get_all_testsets(self, request):
-        self.app.get('/v1/testsets')
-
-    def test_get_one_testset(self, request):
-        self.app.get('/v1/testsets/plugin_test')
+        self.app.get('/v1/testsets/{0}'
+                     .format(self.fixture['cluster_id']))
 
     def test_get_one_testruns(self, request):
         self.app.get('/v1/testruns/1')

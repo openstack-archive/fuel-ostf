@@ -37,13 +37,14 @@ def get_session(autocommit=True, expire_on_commit=False):
     return session
 
 
-def get_engine(pool_type=None):
+def get_engine(dbpath=None, pool_type=None):
     """Return a SQLAlchemy engine."""
     global _ENGINE
     engine = _ENGINE
 
     if engine is None:
-        engine = create_engine(conf.dbpath,
+        dbpath = dbpath if dbpath is not None else conf.dbpath
+        engine = create_engine(dbpath,
                                poolclass=pool_type or pool.NullPool)
     _ENGINE = engine
     return engine

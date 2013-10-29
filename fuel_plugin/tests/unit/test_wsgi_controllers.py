@@ -31,17 +31,10 @@ class BaseTestController(unittest2.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls._mocked_pecan_conf = MagicMock()
-        cls._mocked_pecan_conf.dbpath = \
-            'postgresql+psycopg2://ostf:ostf@localhost/ostf'
-
         cls.Session = sessionmaker()
-
-        with patch(
-            'fuel_plugin.ostf_adapter.storage.engine.conf',
-            cls._mocked_pecan_conf
-        ):
-            cls.engine = engine.get_engine()
+        cls.engine = engine.get_engine(
+            dbpath='postgresql+psycopg2://ostf:ostf@localhost/ostf'
+        )
 
     def setUp(self):
         #orm session wrapping
@@ -70,11 +63,6 @@ class BaseTestController(unittest2.TestCase):
 
         #engine.get_session mocking
         self.request_mock.session = self.session
-        self.session_getter_patcher = patch(
-            'fuel_plugin.ostf_adapter.storage.engine.get_session',
-            lambda *args: self.session
-        )
-        self.session_getter_patcher.start()
 
     def tearDown(self):
         #rollback changes to database
@@ -84,7 +72,6 @@ class BaseTestController(unittest2.TestCase):
 
         #end of test_case patching
         self.request_patcher.stop()
-        self.session_getter_patcher.stop()
 
 
 class TestTestsController(BaseTestController):
@@ -222,7 +209,11 @@ class TestTestRunsController(BaseTestController):
             ])
         }
 
-        discovery(deployment_info=depl_info, path=TEST_PATH)
+        discovery(
+            session=self.session,
+            deployment_info=depl_info,
+            path=TEST_PATH
+        )
 
         self.testruns = [
             {

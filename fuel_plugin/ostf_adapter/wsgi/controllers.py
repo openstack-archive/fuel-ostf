@@ -44,7 +44,7 @@ class TestsController(BaseRestController):
 
     @expose('json')
     def get(self, cluster):
-        discovery_check(cluster)
+        discovery_check(request.session, cluster)
         with request.session.begin(subtransactions=True):
             tests = request.session.query(models.Test)\
                 .filter_by(cluster_id=cluster)\
@@ -62,7 +62,7 @@ class TestsetsController(BaseRestController):
 
     @expose('json')
     def get(self, cluster):
-        discovery_check(cluster)
+        discovery_check(request.session, cluster)
         with request.session.begin(subtransactions=True):
             test_sets = request.session.query(models.TestSet)\
                 .filter_by(cluster_id=cluster)\
