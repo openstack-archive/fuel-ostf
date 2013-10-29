@@ -33,8 +33,9 @@ class DiscoveryPlugin(plugins.Plugin):
     name = 'discovery'
     score = 15000
 
-    def __init__(self, deployment_info):
+    def __init__(self, session, deployment_info):
         self.test_sets = {}
+        self.session = session
         self.deployment_info = deployment_info
         super(DiscoveryPlugin, self).__init__()
 
@@ -63,20 +64,18 @@ class DiscoveryPlugin(plugins.Plugin):
                     LOG.info(profile)
                 profile['cluster_id'] = self.deployment_info['cluster_id']
 
-                session = engine.get_session()
-                with session.begin(subtransactions=True):
+                with self.session.begin(subtransactions=True):
                     LOG.info('%s discovered.', module.__name__)
                     test_set = models.TestSet(**profile)
-                    test_set = session.merge(test_set)
-                    session.add(test_set)
+                    test_set = self.session.merge(test_set)
+                    self.session.add(test_set)
                     self.test_sets[test_set.id] = test_set
 
     def addSuccess(self, test):
         test_id = test.id()
         for test_set_id in self.test_sets.keys():
             if test_set_id in test_id:
-                session = engine.get_session()
-                with session.begin(subtransactions=True):
+                with self.session.begin(subtransactions=True):
 
                     data = dict()
                     data['cluster_id'] = self.deployment_info['cluster_id']
@@ -100,7 +99,7 @@ class DiscoveryPlugin(plugins.Plugin):
                         #tests existing with such test_set_id and cluster_id
                         #so we won't ended up with dublicating data upon tests
                         #in db.
-                        tests = session.query(models.Test)\
+                        tests = self.session.query(models.Test)\
                             .filter_by(cluster_id=self.test_sets[test_set_id].cluster_id)\
                             .filter_by(test_set_id=test_set_id)\
                             .filter_by(test_run_id=None)\
@@ -110,17 +109,17 @@ class DiscoveryPlugin(plugins.Plugin):
                         if not tests:
                             LOG.info('%s added for %s', test_id, test_set_id)
                             test_obj = models.Test(**data)
-                            session.add(test_obj)
+                            self.session.add(test_obj)
 
 
-def discovery(path, deployment_info=None):
+def discovery(session, path, deployment_info=None):
     """Will discover all tests on provided path and save info in db
     """
     deployment_info = deployment_info if deployment_info else dict()
     LOG.info('Starting discovery for %r.', path)
 
     nose_test_runner.SilentTestProgram(
-        addplugins=[DiscoveryPlugin(deployment_info)],
+        addplugins=[DiscoveryPlugin(session, deployment_info)],
         exit=False,
-        argv=['tests_discovery', '--collect-only', path]
+        argv=['tests_discovery', '--collect-only', '--nocapture', path]
     )

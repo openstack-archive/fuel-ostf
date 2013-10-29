@@ -22,7 +22,7 @@ from fuel_plugin.ostf_adapter.nose_plugin import nose_discovery
 CORE_PATH = conf.debug_tests if conf.get('debug_tests') else 'fuel_health'
 
 
-def discovery_check(cluster):
+def discovery_check(session, cluster):
     #get needed information from nailgun via series of
     #requests to nailgun api. At this time we need
     #info about deployment type(ha, non-ha), type of network
@@ -35,7 +35,6 @@ def discovery_check(cluster):
         'deployment_tags': cluster_deployment_args
     }
 
-    session = engine.get_session()
     with session.begin(subtransactions=True):
         cluster_state = session.query(models.ClusterState)\
             .filter_by(id=cluster_data['cluster_id'])\
@@ -43,6 +42,7 @@ def discovery_check(cluster):
 
         if not cluster_state:
             nose_discovery.discovery(
+                session=session,
                 path=CORE_PATH,
                 deployment_info=cluster_data
             )
@@ -70,6 +70,7 @@ def discovery_check(cluster):
 
     #perform rediscovery of testsets for current cluster
     nose_discovery.discovery(
+        session=session,
         path=CORE_PATH,
         deployment_info=cluster_data
     )

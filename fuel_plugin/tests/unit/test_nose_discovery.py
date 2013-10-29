@@ -31,35 +31,18 @@ class BaseTestNoseDiscovery(unittest2.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls._mocked_pecan_conf = Mock()
-        cls._mocked_pecan_conf.dbpath = \
-            'postgresql+psycopg2://ostf:ostf@localhost/ostf'
+        cls.engine = engine.get_engine(
+            dbpath='postgresql+psycopg2://ostf:ostf@localhost/ostf'
+        )
 
         cls.Session = sessionmaker()
 
-        with patch(
-            'fuel_plugin.ostf_adapter.storage.engine.conf',
-            cls._mocked_pecan_conf
-        ):
-            cls.engine = engine.get_engine()
-
     def setUp(self):
-        #database transaction wrapping
         connection = self.engine.connect()
         self.trans = connection.begin()
 
         self.Session.configure(bind=connection)
         self.session = self.Session(bind=connection)
-
-        #test_case level patching
-        self.mocked_get_session = lambda *args: self.session
-
-        self.session_patcher = patch(
-            ('fuel_plugin.ostf_adapter.nose_plugin.'
-             'nose_discovery.engine.get_session'),
-            self.mocked_get_session
-        )
-        self.session_patcher.start()
 
         self.fixtures = {
             'ha_deployment_test': {
@@ -80,10 +63,6 @@ class BaseTestNoseDiscovery(unittest2.TestCase):
         }
 
     def tearDown(self):
-        #end patching
-        self.session_patcher.stop()
-
-        #unwrapping
         self.trans.rollback()
         self.session.close()
 
@@ -108,6 +87,7 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
         }
 
         nose_discovery.discovery(
+            session=self.session,
             path=('fuel_plugin.tests.functional.dummy_tests.'
                   'deployment_types_tests.ha_deployment_test'),
             deployment_info=self.fixtures['ha_deployment_test']
@@ -140,6 +120,7 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
             }
         }
         nose_discovery.discovery(
+            session=self.session,
             path=('fuel_plugin.tests.functional.dummy_tests.'
                   'deployment_types_tests.ha_deployment_test'),
             deployment_info=self.fixtures['ha_deployment_test']
@@ -175,6 +156,7 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
         }
 
         nose_discovery.discovery(
+            session=self.session,
             path=('fuel_plugin.tests.functional.dummy_tests.'
                   'deployment_types_tests.ha_deployment_test'),
             deployment_info=self.fixtures['ha_deployment_test']
@@ -211,6 +193,7 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
         }
 
         nose_discovery.discovery(
+            session=self.session,
             path=('fuel_plugin.tests.functional.dummy_tests.'
                   'deployment_types_tests.alternative_depl_tags_test'),
             deployment_info=self.fixtures['deployment_alternatives']
