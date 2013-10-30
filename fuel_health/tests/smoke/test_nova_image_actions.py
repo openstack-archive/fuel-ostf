@@ -102,36 +102,41 @@ class TestImageAction(nmanager.SmokeChecksTest):
         Target component: Glance
 
         Scenario:
-            1. Launch an instance using the default image.
-            2. Make snapshot of the created instance.
-            3. Delete the instance created in step 1.
-            4. Wait while instance deleted
-            5. Launch another instance from the snapshot created in step 2.
-        Duration: 180 s.
+            1. Get existing image by name.
+            2. Launch an instance using the default image.
+            3. Make snapshot of the created instance.
+            4. Delete the instance created in step 1.
+            5. Wait while instance deleted
+            6. Launch another instance from the snapshot created in step 2.
+        Duration: 230 s.
         """
-        server = self.verify(180, self._boot_image, 1,
+        image = self.verify(5, nmanager.get_image_from_name, 1,
+                            "Image can not be retreived.",
+                            "getting image by name")
+
+        server = self.verify(180, self._boot_image, 2,
                              "Image can not be booted.",
                              "image booting",
-                             nmanager.get_image_from_name())
+                             image)
 
         # snapshot the instance
-        snapshot_image_id = self.verify(180, self._create_image, 2,
+        snapshot_image_id = self.verify(180, self._create_image, 3,
                                         "Snapshot of an"
                                         " instance can not be created.",
                                         'snapshotting an instance',
                                         server)
 
-        self.verify(180, self.compute_client.servers.delete, 3,
+        self.verify(180, self.compute_client.servers.delete, 4,
                     "Instance can not be deleted.",
                     'Instance deletion',
                     server)
 
-        self.verify(180, self._wait_for_server_deletion, 4,
+        self.verify(180, self._wait_for_server_deletion, 5,
                     "Instance can not be deleted.",
                     'Wait for instance deletion complete',
                     server)
 
-        self.verify(180, self._boot_image, 5,
+        self.verify(180, self._boot_image, 6,
                     "Instance can not be launched from snapshot.",
                     'booting instance from snapshot',
                     snapshot_image_id)
