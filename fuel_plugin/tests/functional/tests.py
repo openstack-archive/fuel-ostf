@@ -32,16 +32,26 @@ class AdapterTests(BaseAdapterTest):
         url = 'http://0.0.0.0:8989/v1'
 
         cls.mapping = {
-            'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_pass':  'fast_pass',
-            'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_error': 'fast_error',
-            'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fast_fail':  'fast_fail',
-            'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_long_pass':  'long_pass',
-            'fuel_plugin.tests.functional.dummy_tests.general_test.Dummy_test.test_fail_with_step': 'fail_step',
-            'fuel_plugin.tests.functional.dummy_tests.stopped_test.dummy_tests_stopped.test_really_long': 'really_long',
-            'fuel_plugin.tests.functional.dummy_tests.stopped_test.dummy_tests_stopped.test_not_long_at_all': 'not_long',
-            'fuel_plugin.tests.functional.dummy_tests.stopped_test.dummy_tests_stopped.test_one_no_so_long': 'so_long',
-            'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_depl': 'ha_depl',
-            'fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.ha_deployment_test.HATest.test_ha_rhel_depl': 'ha_rhel_depl'
+            ('fuel_plugin.tests.functional.dummy_tests.'
+             'general_test.Dummy_test.test_fast_pass'): 'fast_pass',
+            ('fuel_plugin.tests.functional.dummy_tests.'
+             'general_test.Dummy_test.test_fast_error'): 'fast_error',
+            ('fuel_plugin.tests.functional.dummy_tests.'
+             'general_test.Dummy_test.test_fast_fail'): 'fast_fail',
+            ('fuel_plugin.tests.functional.dummy_tests.'
+             'general_test.Dummy_test.test_long_pass'): 'long_pass',
+            ('fuel_plugin.tests.functional.dummy_tests.'
+             'general_test.Dummy_test.test_fail_with_step'): 'fail_step',
+            ('fuel_plugin.tests.functional.dummy_tests.stopped_test.'
+             'dummy_tests_stopped.test_really_long'): 'really_long',
+            ('fuel_plugin.tests.functional.dummy_tests.stopped_test.'
+             'dummy_tests_stopped.test_not_long_at_all'): 'not_long',
+            ('fuel_plugin.tests.functional.dummy_tests.stopped_test.'
+             'dummy_tests_stopped.test_one_no_so_long'): 'so_long',
+            ('fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.'
+             'ha_deployment_test.HATest.test_ha_depl'): 'ha_depl',
+            ('fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.'
+             'ha_deployment_test.HATest.test_ha_rhel_depl'): 'ha_rhel_depl'
         }
         cls.testsets = {
             "ha_deployment_test": [],
