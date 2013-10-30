@@ -14,67 +14,22 @@
 
 import json
 from mock import patch, MagicMock
+
 import unittest2
 
-from sqlalchemy.orm import sessionmaker
-
 from fuel_plugin.ostf_adapter.wsgi import controllers
-from fuel_plugin.ostf_adapter.storage import models, engine
+from fuel_plugin.ostf_adapter.storage import models
 from fuel_plugin.ostf_adapter.nose_plugin.nose_discovery import discovery
+
+from fuel_plugin.tests.unit.base \
+    import BaseWSGITest
 
 
 TEST_PATH = \
     'fuel_plugin/tests/functional/dummy_tests/deployment_types_tests'
 
 
-class BaseTestController(unittest2.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.Session = sessionmaker()
-        cls.engine = engine.get_engine(
-            dbpath='postgresql+psycopg2://ostf:ostf@localhost/ostf'
-        )
-
-    def setUp(self):
-        #orm session wrapping
-        connection = self.engine.connect()
-        self.trans = connection.begin()
-
-        self.Session.configure(bind=connection)
-        self.session = self.Session()
-
-        #test case level patching
-
-        #mocking
-        #request mocking
-        self.request_mock = MagicMock()
-
-        self.request_patcher = patch(
-            'fuel_plugin.ostf_adapter.wsgi.controllers.request',
-            self.request_mock
-        )
-        self.request_patcher.start()
-
-        #pecan conf mocking
-        self.pecan_conf_mock = MagicMock()
-        self.pecan_conf_mock.nailgun.host = '127.0.0.1'
-        self.pecan_conf_mock.nailgun.port = 8888
-
-        #engine.get_session mocking
-        self.request_mock.session = self.session
-
-    def tearDown(self):
-        #rollback changes to database
-        #made by tests
-        self.trans.rollback()
-        self.session.close()
-
-        #end of test_case patching
-        self.request_patcher.stop()
-
-
-class TestTestsController(BaseTestController):
+class TestTestsController(BaseWSGITest):
 
     @classmethod
     def setUpClass(cls):
@@ -142,7 +97,7 @@ class TestTestsController(BaseTestController):
         self.assertEqual(res, expected['frontend'])
 
 
-class TestTestSetsController(BaseTestController):
+class TestTestSetsController(BaseWSGITest):
 
     @classmethod
     def setUpClass(cls):
@@ -189,7 +144,7 @@ class TestTestSetsController(BaseTestController):
         self.assertEqual(res, expected['frontend'])
 
 
-class TestTestRunsController(BaseTestController):
+class TestTestRunsController(BaseWSGITest):
 
     @classmethod
     def setUpClass(cls):
@@ -391,7 +346,7 @@ class TestTestRunsPutController(TestTestRunsController):
         )
 
 
-class TestClusterRedployment(BaseTestController):
+class TestClusterRedployment(BaseWSGITest):
 
     @classmethod
     def setUpClass(cls):

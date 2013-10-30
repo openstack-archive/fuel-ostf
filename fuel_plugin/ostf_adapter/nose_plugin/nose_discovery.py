@@ -121,5 +121,5 @@ def discovery(session, path, deployment_info=None):
     nose_test_runner.SilentTestProgram(
         addplugins=[DiscoveryPlugin(session, deployment_info)],
         exit=False,
-        argv=['tests_discovery', '--collect-only', '--nocapture', path]
+        argv=['tests_discovery', '--collect-only', path]
     )
