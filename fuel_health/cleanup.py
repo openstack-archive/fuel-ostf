@@ -181,15 +181,19 @@ def cleanup(cluster_deployment_info):
 def _delete_it(client, log_message, name='ost1_test-', delete_type='name'):
     try:
         for item in client.list():
-            if item.name.startswith(name):
-                try:
-                    LOG.info(log_message)
-                    if delete_type == 'name':
-                        client.delete(item)
-                    else:
-                        client.delete(item.id)
-                except Exception as exc:
-                    LOG.debug(exc)
+            try:
+                if item.name.startswith(name):
+                    try:
+                        LOG.info(log_message)
+                        if delete_type == 'name':
+                            client.delete(item)
+                        else:
+                            client.delete(item.id)
+                    except Exception as exc:
+                        LOG.debug(exc)
+            except AttributeError:
+                if item.display_name.startswith(name):
+                    client.delete(item)
     except Exception as exc:
         LOG.warning(
             'Deletion is ommited due to error. Exception: %s', exc

@@ -147,7 +147,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                                  insecure=dscv)
 
     def _get_heat_client(self, username=None, password=None,
-                                  tenant_name=None):
+                         tenant_name=None):
         if not username:
             username = self.config.identity.admin_username
         if not password:
