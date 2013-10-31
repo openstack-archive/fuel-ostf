@@ -365,6 +365,20 @@ def register_heat_opts(conf):
         conf.register_opt(opt, group='heat')
 
 
+ceilometer_group = cfg.OptGroup(name='ceilometer',
+                            title='Ceiolometer API Service Options')
+CeilometerConfig = [
+    cfg.StrOpt('endpoint',
+               default=None,
+               help="Ceilometer API Service URL."),
+]
+
+def register_ceilometer_opts(conf):
+    conf.register_group(ceilometer_group)
+    for opt in CeilometerConfig:
+        conf.register_opt(opt, group='ceilometer')
+
+
 def process_singleton(cls):
     """Wrapper for classes... To be instantiated only one time per process"""
     instances = {}
@@ -428,6 +442,7 @@ class FileConfig(object):
         register_murano_opts(cfg.CONF)
         register_heat_opts(cfg.CONF)
         register_savanna_opts(cfg.CONF)
+        register_ceilometer_opts(cfg.CONF)
         self.compute = cfg.CONF.compute
         self.identity = cfg.CONF.identity
         self.network = cfg.CONF.network
@@ -435,6 +450,7 @@ class FileConfig(object):
         self.murano = cfg.CONF.murano
         self.heat = cfg.CONF.heat
         self.savanna = cfg.CONF.savanna
+        self.ceilometer = cfg.CONF.ceilometer
 
 
 class ConfigGroup(object):
@@ -475,6 +491,7 @@ class NailgunConfig(object):
     murano = ConfigGroup(MuranoConfig)
     savanna = ConfigGroup(SavannaConfig)
     heat = ConfigGroup(HeatConfig)
+    ceilometer = ConfigGroup(CeilometerConfig)
 
     def __init__(self, parse=True):
         LOG.info('INITIALIZING NAILGUN CONFIG')
@@ -625,6 +642,8 @@ class NailgunConfig(object):
                 endpoint_mur_sav, 8386, 'v1.0')
             self.heat.endpoint = 'http://{0}:{1}/{2}'.format(
                 endpoint_mur_sav, 8004, 'v1')
+            self.ceilometer.endpoint = 'http://{0}:{1}'.format(
+                endpoint_mur_sav, 8777 )
 
 
 def FuelConfig():
