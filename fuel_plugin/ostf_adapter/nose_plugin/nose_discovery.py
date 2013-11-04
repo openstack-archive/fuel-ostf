@@ -99,8 +99,9 @@ class DiscoveryPlugin(plugins.Plugin):
                         #tests existing with such test_set_id and cluster_id
                         #so we won't ended up with dublicating data upon tests
                         #in db.
+                        _cluster_id = self.test_sets[test_set_id].cluster_id
                         tests = self.session.query(models.Test)\
-                            .filter_by(cluster_id=self.test_sets[test_set_id].cluster_id)\
+                            .filter_by(cluster_id=_cluster_id)\
                             .filter_by(test_set_id=test_set_id)\
                             .filter_by(test_run_id=None)\
                             .filter_by(name=data['name'])\

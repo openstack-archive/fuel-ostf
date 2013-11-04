@@ -71,7 +71,21 @@ class TestImageAction(nmanager.SmokeChecksTest):
         client = self.compute_client
         flavor_id = self._create_nano_flavor().id
         LOG.debug("name:%s, image:%s" % (name, image_id))
-        server = client.servers.create(name=name,
+        if 'neutron' in self.config.network.network_provider:
+            network = [net.id for net in
+                       self.compute_client.networks.list()
+                       if net.label == self.private_net]
+
+            create_kwargs = {
+            'nics': [
+                {'net-id': network[0]},
+            ],
+            }
+            server = client.servers.create(name=name,
+                                       image=image_id,
+                                       flavor=flavor_id, **create_kwargs)
+        else:
+            server = client.servers.create(name=name,
                                        image=image_id,
                                        flavor=flavor_id)
         self.set_resource(name, server)

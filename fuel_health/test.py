@@ -113,11 +113,11 @@ class TestCase(BaseTestCase):
             # that all implement a get() method taking an identifier
             # for the singular resource to retrieve.
             thing = things.get(thing_id)
-            new_status = thing.status
-            if new_status == 'ERROR':
-                self.fail("Failed to get to expected status."
-                          "In ERROR state.")
-            elif new_status == expected_status:
+            new_status = thing.status.lower()
+            if new_status == 'error':
+                self.fail("Failed to get to expected status. "
+                          "In error state.")
+            elif new_status == expected_status.lower():
                 return True  # All good.
             LOG.debug("Waiting for %s to get to %s status. "
                       "Currently in %s status",
