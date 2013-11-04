@@ -513,15 +513,15 @@ class NailgunConfig(object):
         response = self.req_session.get(self.nailgun_url + api_url)
         LOG.info('RESPONSE %s STATUS %s' % (api_url, response.status_code))
         data = response.json()
-        network_provider = data.get('net_provider', 'nova_network')
         LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
         access_data = data['editable']['access']
         self.identity.admin_tenant_name = access_data['tenant']['value']
         self.identity.admin_username = access_data['user']['value']
         self.identity.admin_password = access_data['password']['value']
-        self.network.network_provider = network_provider
         api_url = '/api/clusters/%s' % self.cluster_id
         cluster_data = self.req_session.get(self.nailgun_url + api_url).json()
+        network_provider = cluster_data.get('net_provider', 'nova_network')
+        self.network.network_provider = network_provider
         deployment_os = cluster_data['release']['operating_system']
         if deployment_os != 'RHEL':
             storage = data['editable']['storage']['volumes_ceph']['value']

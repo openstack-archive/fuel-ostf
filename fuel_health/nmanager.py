@@ -287,6 +287,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         cls.floating_ips = []
         cls.sec_group = []
         cls.error_msg = []
+        cls.private_net = 'net04'
 
     def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
         kp_name = rand_name(namestart)
@@ -368,11 +369,24 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         return nets
 
     def _create_server(self, client, name, security_groups):
+        self._create_nano_flavor()
         base_image_id = get_image_from_name()
-        create_kwargs = {
+        if 'neutron' in self.config.network.network_provider:
+            network = [net.id for net in
+                       self.compute_client.networks.list()
+                       if net.label == self.private_net]
+
+            create_kwargs = {
+            'nics': [
+                {'net-id': network[0]},
+            ],
             'security_groups': security_groups,
         }
-        self._create_nano_flavor()
+        else:
+            create_kwargs = {
+                'security_groups': security_groups,
+            }
+
         server = client.servers.create(name, base_image_id, 42,
                                        **create_kwargs)
         self.verify_response_body_content(server.name,
@@ -623,6 +637,7 @@ class SmokeChecksTest(OfficialClientTest):
         cls.roles = []
         cls.volumes = []
         cls.error_msg = []
+        cls.private_net = 'net04'
 
     def _create_flavors(self, client, ram, disk, vcpus=1):
         name = rand_name('ost1_test-flavor-')
@@ -720,7 +735,19 @@ class SmokeChecksTest(OfficialClientTest):
         name = rand_name('ost1_test-volume-instance')
         base_image_id = get_image_from_name()
         flavor_id = self._create_nano_flavor().id
-        server = client.servers.create(name, base_image_id, flavor_id)
+        if 'neutron' in self.config.network.network_provider:
+            network = [net.id for net in
+                       self.compute_client.networks.list()
+                       if net.label == self.private_net]
+
+            create_kwargs = {
+            'nics': [
+                {'net-id': network[0]},
+            ]}
+            server = client.servers.create(name, base_image_id, flavor_id, **create_kwargs)
+        else:
+            server = client.servers.create(name, base_image_id, flavor_id)
+
         self.set_resource(name, server)
         self.verify_response_body_content(server.name,
                                           name,
