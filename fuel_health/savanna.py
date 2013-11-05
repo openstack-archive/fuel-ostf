@@ -40,8 +40,8 @@ class SavannaTest(nmanager.OfficialClientTest):
         cls.keys = []
         cls.plugin = 'vanilla'
         cls.plugin_version = '1.1.2'
-        cls.quantum_floating_ip = 'net04_ext'
-        cls.quantum_net = 'net04'
+        cls.neutron_floating_ip = 'net04_ext'
+        cls.neutron_net = 'net04'
         cls.TT_CONFIG = {'Task Tracker Heap Size': 515}
         cls.DN_CONFIG = {'Data Node Heap Size': 513}
         cls.CLUSTER_HDFS_CONFIG = {'dfs.replication': 2}
@@ -218,17 +218,19 @@ class SavannaTest(nmanager.OfficialClientTest):
     def _check_auto_assign_floating_ip(self):
         cmd_nova = ('grep auto_assign_floating_ip '
                     '/etc/nova/nova.conf | grep True')
-        cmd_quantum = ('grep network_api_class=nova.network.quantumv2.api.API '
+        cmd_neutron = ('grep -E '
+                       '"network_api_class=nova.network.neutronv2.api.API|'
+                       'network_api_class=nova.network.quntumv2.api.API" '
                        '/etc/nova/nova.conf')
         output_nova, output_nova_err = ssh_command(cmd_nova)
-        output_quantum, output_quantum_err = ssh_command(cmd_quantum)
+        output_neutron, output_neutron_err = ssh_command(cmd_neutron)
         if output_nova or str(output_nova_err).find(' True') > 0:
             LOG.debug('auto_assign_floating_ip is found')
             return ('nova_auto', None)
-        elif(output_quantum or str(output_quantum_err).find(
-             'network_api_class=nova.network.quantumv2.api.API') > 0):
-            LOG.debug('quantum is found')
-            return ('quantum', self.quantum_floating_ip)
+        elif(output_neutron or str(output_neutron_err).find(
+             'network_api_class=nova.network.neutronv2.api.API') > 0):
+            LOG.debug('neutron is found')
+            return ('neutron', self.neutron_floating_ip)
         else:
             LOG.debug('auto_assign_floating_ip is not found')
             LOG.debug('floating pool is %s',
@@ -284,9 +286,9 @@ class SavannaTest(nmanager.OfficialClientTest):
     def _create_cluster(self, client, cluster_template_id):
         net_type, _ = self._check_auto_assign_floating_ip()
         LOG.debug('Network type is "%s"', net_type)
-        if net_type == 'quantum':
+        if net_type == 'neutron':
             neutron_m_network = \
-                self.compute_client.networks.find(label=self.quantum_net)
+                self.compute_client.networks.find(label=self.neutron_net)
             LOG.debug('Neutron network - %s', neutron_m_network.id)
             LOG.debug('Creating clister for neutron network')
             self._create_cluster_and_get_info(
