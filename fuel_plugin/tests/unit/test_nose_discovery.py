@@ -12,8 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import unittest2
 from mock import patch, Mock
+import unittest2
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
 
@@ -23,46 +23,23 @@ from fuel_plugin.ostf_adapter.storage import models
 TEST_PATH = 'fuel_plugin/tests/functional/dummy_tests'
 
 
-class BaseTestNoseDiscovery(unittest2.TestCase):
-    '''
-    All test writing to database is wrapped in
-    non-ORM transaction which is created in
-    test_case setUp method and rollbacked in
-    tearDown, so that keep prodaction base clean
-    '''
+class TransactionBeginMock:
+    def __init__(inst, subtransactions):
+        pass
 
-    @classmethod
-    def setUpClass(cls):
-        cls.engine = create_engine(
-            'postgresql+psycopg2://ostf:ostf@localhost/ostf'
-        )
+    def __enter__(self):
+        pass
 
-        cls.Session = sessionmaker()
+    def __exit__(self, type, value, traceback):
+        pass
+
+
+class TestNoseDiscovery(unittest2.TestCase):
 
     def setUp(self):
-        self.connection = self.engine.connect()
-        self.trans = self.connection.begin()
-
-        self.Session.configure(bind=self.connection)
-        self.session = self.Session()
-
-    def tearDown(self):
-        self.trans.rollback()
-        self.session.close()
-        self.connection.close()
-
-
-class TestNoseDiscovery(BaseTestNoseDiscovery):
-
-    @classmethod
-    def setUpClass(cls):
-        super(TestNoseDiscovery, cls).setUpClass()
-
-    def setUp(self):
-        super(TestNoseDiscovery, self).setUp()
-
-    def tearDown(self):
-        super(TestNoseDiscovery, self).tearDown()
+        self.session_mock = Mock()
+        self.session_mock.begin = TransactionBeginMock
+        self.session_mock.test_attr = 'hello'
 
     def test_discovery(self):
         expected = {
@@ -70,23 +47,36 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
             'tests_count': 20
         }
 
+        self.session_mock.test_attr = 'hello!'
         nose_discovery.discovery(
             path=TEST_PATH,
-            session=self.session
+            session=self.session_mock
         )
 
-        test_sets_count = self.session.query(func.count('*'))\
-            .select_from(models.TestSet)\
-            .scalar()
+        test_sets = [
+            el[0][0] for el in self.session_mock.merge.call_args_list
+            if isinstance(el[0][0], models.TestSet)
+        ]
 
-        tests_count = self.session.query(func.count('*'))\
-            .select_from(models.Test)\
-            .scalar()
+        tests = [
+            el[0][0] for el in self.session_mock.merge.call_args_list
+            if isinstance(el[0][0], models.Test)
+        ]
 
         self.assertTrue(
             all(
-                [test_sets_count == expected['test_sets_count'],
-                 tests_count == expected['tests_count']]
+                [len(test_sets) == expected['test_sets_count'],
+                 len(tests) == expected['tests_count']]
+            )
+        )
+
+        unique_test_sets = list(set([testset.id for testset in test_sets]))
+        unique_tests = list(set([test.name for test in tests]))
+
+        self.assertTrue(
+            all(
+                [len(unique_test_sets) == len(test_sets),
+                 len(unique_tests) == len(tests)]
             )
         )
 
@@ -104,13 +94,15 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
 
         nose_discovery.discovery(
             path=TEST_PATH,
-            session=self.session
+            session=self.session_mock
         )
 
-        test = self.session.query(models.Test)\
-            .filter_by(name=expected['name'])\
-            .filter_by(test_set_id=expected['test_set_id'])\
-            .one()
+        tests = [
+            el[0][0] for el in self.session_mock.merge.call_args_list
+            if isinstance(el[0][0], models.Test)
+        ]
+
+        test = [t for t in tests if t.name == expected['name']].pop()
 
         self.assertTrue(
             all(
@@ -137,23 +129,31 @@ class TestNoseDiscovery(BaseTestNoseDiscovery):
 
         nose_discovery.discovery(
             path=TEST_PATH,
-            session=self.session
+            session=self.session_mock
         )
 
-        test_set = self.session.query(models.TestSet)\
-            .filter_by(id=expected['testset']['id'])\
-            .one()
+        test_sets = [
+            el[0][0] for el in self.session_mock.merge.call_args_list
+            if isinstance(el[0][0], models.TestSet)
+        ]
+
+        tests = [
+            el[0][0] for el in self.session_mock.merge.call_args_list
+            if isinstance(el[0][0], models.Test)
+        ]
+
+        needed_testset = [testset for testset in test_sets
+                          if testset.id == expected['testset']['id']].pop()
+
+        needed_test = [test for test in tests
+                       if test.name == expected['test']['name']].pop()
 
         self.assertEqual(
-            test_set.deployment_tags,
+            needed_testset.deployment_tags,
             expected['testset']['deployment_tags']
         )
 
-        test = self.session.query(models.Test)\
-            .filter_by(test_set_id=expected['testset']['id'])\
-            .filter_by(name=expected['test']['name'])\
-            .one()
-
         self.assertEqual(
-            test.deployment_tags, expected['test']['deployment_tags']
+            needed_test.deployment_tags,
+            expected['test']['deployment_tags']
         )

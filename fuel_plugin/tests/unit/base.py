@@ -15,6 +15,7 @@
 
 import unittest2
 from mock import patch, MagicMock
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from fuel_plugin.ostf_adapter.storage import engine
@@ -25,19 +26,19 @@ class BaseWSGITest(unittest2.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.Session = sessionmaker()
-        cls.engine = engine.get_engine(
-            dbpath='postgresql+psycopg2://ostf:ostf@localhost/ostf'
+        cls.engine = create_engine(
+            'postgresql+psycopg2://ostf:ostf@localhost/ostf'
         )
 
     def setUp(self):
         #orm session wrapping
-        connection = self.engine.connect()
-        self.trans = connection.begin()
+        self.connection = self.engine.connect()
+        self.trans = self.connection.begin()
 
-        self.Session.configure(bind=connection)
-        self.session = self.Session()
-
-        #test case level patching
+        self.Session.configure(
+            bind=self.connection
+        )
+        self.session = self.Session(autocommit=True)
 
         #mocking
         #request mocking
@@ -68,6 +69,7 @@ class BaseWSGITest(unittest2.TestCase):
         #made by tests
         self.trans.rollback()
         self.session.close()
+        self.connection.close()
 
         #end of test_case patching
         self.request_patcher.stop()
