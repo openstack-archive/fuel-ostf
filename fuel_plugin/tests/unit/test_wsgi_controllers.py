@@ -19,14 +19,9 @@ import unittest2
 
 from fuel_plugin.ostf_adapter.wsgi import controllers
 from fuel_plugin.ostf_adapter.storage import models
-from fuel_plugin.ostf_adapter.nose_plugin.nose_discovery import discovery
 
 from fuel_plugin.tests.unit.base \
     import BaseWSGITest
-
-
-TEST_PATH = \
-    'fuel_plugin/tests/functional/dummy_tests/deployment_types_tests'
 
 
 @unittest2.skip('Refactoring is needed')
@@ -42,15 +37,18 @@ class TestTestsController(BaseWSGITest):
 
     def test_get(self):
         expected = {
-            'cluster_id': 1,
-            'frontend': [
+            'cluster': {
+                'id': 1,
+                'deployment_tags': set(['ha', 'rhel', 'nova_network'])
+            },
+            'tests': [
                 {
                     'testset': 'ha_deployment_test',
                     'name': 'fake empty test',
                     'id': ('fuel_plugin.tests.functional.dummy_tests.'
                            'deployment_types_tests.ha_deployment_test.'
                            'HATest.test_ha_depl'),
-                    'description': (u'        This is empty test for any\n'
+                    'description': ('        This is empty test for any\n'
                                     '        ha deployment\n        '),
                 },
                 {
@@ -65,7 +63,24 @@ class TestTestsController(BaseWSGITest):
             ]
         }
 
-        res = self.controller.get(expected['cluster_id'])
+        res = self.controller.get(expected['cluster']['id'])
+
+        with self.session.begin(subtransactions=True):
+            cluster_state = self.session.query(models.ClusterState)\
+                .filter_by(id=expected['cluster']['id'])\
+                .one()
+            self.assertEqual(set(cluster_state.deployment_tags),
+                             expected['cluster']['deployment_tags'])
+
+            cluster_testing_pattern = self.session\
+                .query(models.ClusterTestingPattern)\
+                .filter_by(cluster_id=expected['cluster']['id'])\
+                .filter_by(test_set_id=expected['tests'][0]['testset'])\
+                .one()
+            self.assertEqual(
+                set([test['name'] for test in expected['tests']]),
+                set(cluster_testing_pattern.tests)
+            )
 
         self.assertEqual(res, expected['frontend'])
 
