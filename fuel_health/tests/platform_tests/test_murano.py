@@ -317,7 +317,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                     self.environment.id)
 
     def test_deploy_aspnet_farm(self):
-        """Check that user can deploy ASP.NET Servers Farm in Murano environment
+        """Check deployment of ASP.NET Servers Farm in Murano environment
         Target component: Murano
 
         Special requirements:

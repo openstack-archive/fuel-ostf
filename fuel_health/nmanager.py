@@ -630,6 +630,7 @@ class SmokeChecksTest(OfficialClientTest):
         cls.users = []
         cls.roles = []
         cls.volumes = []
+        cls.servers = []
         cls.error_msg = []
         cls.private_net = 'net04'
 
@@ -748,8 +749,20 @@ class SmokeChecksTest(OfficialClientTest):
         # details, necessitating retrieval after it becomes active to
         # ensure correct details.
         server = self._wait_server_param(client, server, 'addresses', 5, 1)
-        #self.set_resource(name, server)
+        self.servers.append(server)
+        self.set_resource(name, server)
         return server
+
+    @classmethod
+    def _clean_servers(cls):
+        if cls.servers:
+            for serv in cls.servers:
+                try:
+                    cls.compute_client.servers.delete(serv)
+                    time.sleep(100)
+                except Exception as exc:
+                    cls.error_msg.append(exc)
+                    LOG.debug(exc)
 
     def _wait_server_param(self, client, server, param_name,
                            tries=1, timeout=1, expected_value=None):
@@ -800,5 +813,6 @@ class SmokeChecksTest(OfficialClientTest):
         cls._clean_tenants()
         cls._clean_users()
         cls._clean_roles()
+        cls._clean_servers()
         cls._clean_volumes()
       #  cls._verification_of_exceptions()

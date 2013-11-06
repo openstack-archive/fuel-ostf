@@ -77,17 +77,17 @@ class TestImageAction(nmanager.SmokeChecksTest):
                        if net.label == self.private_net]
 
             create_kwargs = {
-            'nics': [
-                {'net-id': network[0]},
-            ],
+                'nics': [
+                    {'net-id': network[0]},
+                ],
             }
             server = client.servers.create(name=name,
-                                       image=image_id,
-                                       flavor=flavor_id, **create_kwargs)
+                                           image=image_id,
+                                           flavor=flavor_id, **create_kwargs)
         else:
             server = client.servers.create(name=name,
-                                       image=image_id,
-                                       flavor=flavor_id)
+                                           image=image_id,
+                                           flavor=flavor_id)
         self.set_resource(name, server)
         #self.addCleanup(self.compute_client.servers.delete, server)
         self.verify_response_body_content(
