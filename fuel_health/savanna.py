@@ -91,7 +91,7 @@ class SavannaTest(nmanager.OfficialClientTest):
             floating_ip_pool=None):
         if not self.flavors:
             flavor = self.compute_client.flavors.create(self.SAVANNA_FLAVOR,
-                                                        700, 1, 700)
+                                                        700, 1, 20)
             self.flavors.append(flavor.id)
         if floating_ip_pool:
             data = client.node_group_templates.create(
