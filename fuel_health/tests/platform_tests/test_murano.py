@@ -27,6 +27,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         4. Windows image with Murano metadata should be imported.
     """
 
+    @classmethod
     def setUpClass(self):
         super(MuranoDeploymentSmokeTests, self).setUpClass()
         msg = ("Test was skiped: Windows Server 2012 image with Murano "
