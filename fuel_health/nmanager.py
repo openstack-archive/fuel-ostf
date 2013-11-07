@@ -815,4 +815,3 @@ class SmokeChecksTest(OfficialClientTest):
         cls._clean_roles()
         cls._clean_servers()
         cls._clean_volumes()
-      #  cls._verification_of_exceptions()

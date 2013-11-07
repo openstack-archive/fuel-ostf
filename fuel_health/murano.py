@@ -25,12 +25,6 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
     Manager that provides access to the Murano python client for
     calling Murano API.
     """
-
-    def setUpClass(self):
-        super(MuranoTest, self).setUpClass()
-        msg = "Initialization failed: Murno API service is unavailable."
-        self.verify_response_true(self.murano_client, msg)
-
     def find_murano_image(self):
         """
             This method allows to find Windows images with Murano tag.
@@ -39,7 +33,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         """
         for image in self.compute_client.images.list():
             if 'murano_image_info' in image.metadata and \
-               'ws-2012-std' == image.metadata[tag]['type']:
+               'ws-2012-std' == image.metadata['tag']['type']:
                 return image
 
     def find_keypair(self, keyname):
