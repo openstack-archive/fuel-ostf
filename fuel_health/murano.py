@@ -26,6 +26,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
     calling Murano API.
     """
 
+    @classmethod
     def setUpClass(self):
         super(MuranoTest, self).setUpClass()
         msg = "Initialization failed: Murno API service is unavailable."
