@@ -18,13 +18,12 @@ import logging
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.common.utils import data_utils
-from fuel_health import nmanager
-
+import fuel_health.test
 
 LOG = logging.getLogger(__name__)
 
 
-class TestMysqlReplication(nmanager.OfficialClientTest):
+class TestMysqlReplication(fuel_health.test.BaseTestCase):
     @classmethod
     def setUpClass(cls):
         super(TestMysqlReplication, cls).setUpClass()

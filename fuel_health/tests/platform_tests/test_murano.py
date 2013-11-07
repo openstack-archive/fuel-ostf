@@ -16,6 +16,8 @@
 
 from fuel_health import murano
 
+LOG = logging.getLogger(__name__)
+
 
 class MuranoDeploymentSmokeTests(murano.MuranoTest):
     """
@@ -27,16 +29,16 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         4. Windows image with Murano metadata should be imported.
     """
 
-    def setUpClass(self):
-        super(MuranoDeploymentSmokeTests, self).setUpClass()
-        msg = ("Test was skiped: Windows Server 2012 image with Murano "
+    def setUp(self):
+        super(MuranoDeploymentSmokeTests, self).setUp()
+        msg = ("Windows Server 2012 image with Murano "
                "tag isn't available. Need to import this image into "
                "glance and mark with Murano metadata tag. Please "
                "refer to the Fuel Web and Murano user documentation. ")
         self.image = self.find_murano_image()
         if not self.image:
-            log.debug(msg)
-            self.skip()
+            LOG.debug(msg)
+            self.fail(msg)
 
     def test_deploy_ad(self):
         """Check that user can deploy AD service in Murano environment
