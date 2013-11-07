@@ -57,16 +57,17 @@ def main():
         return nailgun_hooks.after_initialization_environment_hook()
 
     #performing cleaning of expired data (if any) in db
-    clean_db()
+    clean_db(engine.get_engine())
 
     #discover testsets and their tests
     CORE_PATH = pecan.conf.debug_tests if \
         pecan.conf.get('debug_tests') else 'fuel_health'
 
-    discovery(path=CORE_PATH, session=engine.get_session())
+    session = engine.get_session()
+    discovery(path=CORE_PATH, session=session)
 
     #cache needed data from test repository
-    cache_data()
+    cache_data(session)
 
     host, port = pecan.conf.server.host, pecan.conf.server.port
     srv = pywsgi.WSGIServer((host, int(port)), root)

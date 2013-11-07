@@ -18,7 +18,12 @@ from mock import patch, MagicMock
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from fuel_plugin.ostf_adapter.storage import engine
+from fuel_plugin.utils.utils import cache_data
+from fuel_plugin.ostf_adapter.nose_plugin.nose_discovery import discovery
+from fuel_plugin.ostf_adapter.storage import models
+from fuel_plugin.ostf_adapter.storage import simple_cache
+
+TEST_PATH = 'fuel_plugin/tests/functional/dummy_tests'
 
 
 class BaseWSGITest(unittest2.TestCase):
@@ -30,6 +35,38 @@ class BaseWSGITest(unittest2.TestCase):
             'postgresql+psycopg2://ostf:ostf@localhost/ostf'
         )
 
+        cls.Session.configure(bind=cls.engine, autocommit=True)
+        session = cls.Session()
+        discovery(path=TEST_PATH, session=session)
+
+        cls.ext_id = 'fuel_plugin.tests.functional.dummy_tests.'
+        cls.expected = {
+            'cluster': {
+                'id': 1,
+                'deployment_tags': set(['ha', 'rhel', 'nova_network'])
+            },
+            'test_sets': ['general_test',
+                          'stopped_test', 'ha_deployment_test'],
+            'tests': [cls.ext_id + test for test in [
+                ('deployment_types_tests.ha_deployment_test.'
+                 'HATest.test_ha_depl'),
+                ('deployment_types_tests.ha_deployment_test.'
+                 'HATest.test_ha_rhel_depl'),
+                'general_test.Dummy_test.test_fast_pass',
+                'general_test.Dummy_test.test_long_pass',
+                'general_test.Dummy_test.test_fast_fail',
+                'general_test.Dummy_test.test_fast_error',
+                'general_test.Dummy_test.test_fail_with_step',
+                'stopped_test.dummy_tests_stopped.test_really_long',
+                'stopped_test.dummy_tests_stopped.test_one_no_so_long',
+                'stopped_test.dummy_tests_stopped.test_not_long_at_all'
+            ]]
+        }
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.engine.execute('delete from test_sets')
+
     def setUp(self):
         #orm session wrapping
         self.connection = self.engine.connect()
@@ -39,6 +76,7 @@ class BaseWSGITest(unittest2.TestCase):
             bind=self.connection
         )
         self.session = self.Session(autocommit=True)
+        cache_data(self.session)
 
         #mocking
         #request mocking
@@ -74,3 +112,30 @@ class BaseWSGITest(unittest2.TestCase):
         #end of test_case patching
         self.request_patcher.stop()
         self.pecan_conf_patcher.stop()
+
+        simple_cache.TEST_REPOSITORY = []
+
+    @property
+    def is_background_working(self):
+        is_working = True
+
+        with self.session.begin(subtransactions=True):
+            cluster_state = self.session.query(models.ClusterState)\
+                .filter_by(id=self.expected['cluster']['id'])\
+                .one()
+            is_working = is_working and set(cluster_state.deployment_tags) == \
+                self.expected['cluster']['deployment_tags']
+
+            cluster_testing_patterns = self.session\
+                .query(models.ClusterTestingPattern)\
+                .filter_by(cluster_id=self.expected['cluster']['id'])\
+                .all()
+
+            for testing_pattern in cluster_testing_patterns:
+                is_working = is_working and \
+                    (testing_pattern.test_set_id in self.expected['test_sets'])
+
+                is_working = is_working and set(testing_pattern.tests)\
+                    .issubset(set(self.expected['tests']))
+
+        return is_working

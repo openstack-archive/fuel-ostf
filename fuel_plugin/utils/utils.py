@@ -14,12 +14,10 @@
 
 from sqlalchemy.orm import joinedload
 
-from fuel_plugin.ostf_adapter.storage import engine, models, simple_cache
+from fuel_plugin.ostf_adapter.storage import models, simple_cache
 
 
-def clean_db():
-    eng = engine.get_engine()
-
+def clean_db(eng):
     conn = eng.connect()
 
     conn.execute('delete from cluster_testing_pattern;')
@@ -29,9 +27,7 @@ def clean_db():
     conn.close()
 
 
-def cache_data():
-    session = engine.get_session()
-
+def cache_data(session):
     with session.begin(subtransactions=True):
         test_repository = session.query(models.TestSet)\
             .options(joinedload('tests'))\
