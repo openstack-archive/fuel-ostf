@@ -22,6 +22,7 @@ import testresources
 import unittest2
 
 from fuel_health import config
+import fuel_health
 from fuel_health.common import log as logging
 from fuel_health.common.test_mixins import FuelTestAssertMixin
 
