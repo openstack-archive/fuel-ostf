@@ -39,7 +39,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         """
         for image in self.compute_client.images.list():
             if 'murano_image_info' in image.metadata and \
-               'ws-2012-std' == image.metadata[tag]['type']:
+               'ws-2012-std' == image.metadata['tag']['type']:
                 return image
 
     def find_keypair(self, keyname):
