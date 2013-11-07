@@ -16,7 +16,6 @@
 #    under the License.
 
 import time
-
 import fuel_health.nmanager
 
 
@@ -26,10 +25,11 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
     calling Murano API.
     """
 
-    def setUpClass(self):
-        super(MuranoTest, self).setUpClass()
+    @classmethod
+    def setUpClass(cls):
+        super(MuranoTest, cls).setUpClass()
         msg = "Initialization failed: Murno API service is unavailable."
-        self.verify_response_true(self.murano_client, msg)
+        cls.verify_response_true(self.murano_client, msg)
 
     def find_murano_image(self):
         """
