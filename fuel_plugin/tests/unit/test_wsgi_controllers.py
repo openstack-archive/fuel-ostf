@@ -15,8 +15,6 @@
 import json
 from mock import patch, Mock
 
-import unittest2
-
 from fuel_plugin.ostf_adapter.wsgi import controllers
 from fuel_plugin.ostf_adapter.storage import models
 

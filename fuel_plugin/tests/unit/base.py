@@ -35,10 +35,6 @@ class BaseWSGITest(unittest2.TestCase):
             'postgresql+psycopg2://ostf:ostf@localhost/ostf'
         )
 
-        cls.Session.configure(bind=cls.engine, autocommit=True)
-        session = cls.Session()
-        discovery(path=TEST_PATH, session=session)
-
         cls.ext_id = 'fuel_plugin.tests.functional.dummy_tests.'
         cls.expected = {
             'cluster': {
@@ -63,10 +59,6 @@ class BaseWSGITest(unittest2.TestCase):
             ]]
         }
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.engine.execute('delete from test_sets')
-
     def setUp(self):
         #orm session wrapping
         self.connection = self.engine.connect()
@@ -76,6 +68,14 @@ class BaseWSGITest(unittest2.TestCase):
             bind=self.connection
         )
         self.session = self.Session(autocommit=True)
+
+        with self.session.begin(subtransactions=True):
+            test_sets = self.session.query(models.TestSet).all()
+
+        #need this if start unit tests in conjuction with integration
+        if not test_sets:
+            discovery(path=TEST_PATH, session=self.session)
+
         cache_data(self.session)
 
         #mocking
