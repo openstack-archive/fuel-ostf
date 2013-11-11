@@ -39,7 +39,7 @@ class SavannaTest(nmanager.OfficialClientTest):
         cls.clusters = []
         cls.keys = []
         cls.plugin = 'vanilla'
-        cls.plugin_version = '1.1.2'
+        cls.plugin_version = '1.2.1'
         cls.neutron_floating_ip = 'net04_ext'
         cls.neutron_net = 'net04'
         cls.TT_CONFIG = {'Task Tracker Heap Size': 515}
@@ -59,7 +59,6 @@ class SavannaTest(nmanager.OfficialClientTest):
         cls.CLUSTER_CREATION_TIMEOUT = '90'
         cls.USER_KEYPAIR_ID = 'ostf_test-savanna'
         cls.PLUGIN_NAME = 'vanilla'
-        cls.HADOOP_VERSION = '1.1.2'
         cls.IMAGE_NAME = 'savanna'
         cls.CLUSTER_NAME = 'ostf-test-savanna-cluster'
         cls.SAVANNA_FLAVOR = 'ostf_test-savanna-flavor'
@@ -69,9 +68,9 @@ class SavannaTest(nmanager.OfficialClientTest):
         cls.DN_PORT = 50075
         cls.SEC_NN_PORT = 50090
 
-    def _test_image(self, version, plugin):
-        tag_version = '_savanna_tag_%s' % version
-        tag_plugin = '_savanna_tag_%s' % plugin
+    def _test_image(self):
+        tag_version = '_savanna_tag_%s' % self.plugin_version
+        tag_plugin = '_savanna_tag_%s' % self.plugin
         LOG.debug('Testing image - plugin - %s version - %s',
                   tag_plugin, tag_version)
         for image in self.compute_client.images.list():
@@ -86,7 +85,7 @@ class SavannaTest(nmanager.OfficialClientTest):
         return False
 
     def _create_node_group_template_and_get_id(
-            self, client, name, plugin_name, hadoop_version, description,
+            self, client, name, plugin_name, plugin_version, description,
             volumes_per_node, volume_size, node_processes, node_configs,
             floating_ip_pool=None):
         if not self.flavors:
@@ -95,13 +94,13 @@ class SavannaTest(nmanager.OfficialClientTest):
             self.flavors.append(flavor.id)
         if floating_ip_pool:
             data = client.node_group_templates.create(
-                name, plugin_name, hadoop_version, self.flavors[0],
+                name, plugin_name, plugin_version, self.flavors[0],
                 description, volumes_per_node, volume_size,
                 node_processes, node_configs, floating_ip_pool
             )
         else:
             data = client.node_group_templates.create(
-                name, plugin_name, hadoop_version, self.flavors[0],
+                name, plugin_name, plugin_version, self.flavors[0],
                 description, volumes_per_node, volume_size,
                 node_processes, node_configs
             )
@@ -110,11 +109,11 @@ class SavannaTest(nmanager.OfficialClientTest):
 
     @classmethod
     def _create_cluster_template_and_get_id(
-            cls, client, name, plugin_name, hadoop_version, description,
+            cls, client, name, plugin_name, plugin_version, description,
             cluster_configs, node_groups,  anti_affinity):
 
         data = client.cluster_templates.create(
-            name, plugin_name, hadoop_version, description, cluster_configs,
+            name, plugin_name, plugin_version, description, cluster_configs,
             node_groups, anti_affinity
         )
         cluster_template_id = data.id
@@ -163,7 +162,7 @@ class SavannaTest(nmanager.OfficialClientTest):
         return node_ip_list_with_node_processes
 
     def _create_cluster_and_get_info(
-            self, client, plugin_name, hadoop_version, cluster_template_id,
+            self, client, plugin_name, plugin_version, cluster_template_id,
             image_name, description, cluster_configs, node_groups,
             anti_affinity, neutron_management_network=None):
         self.keys.append(
@@ -171,14 +170,14 @@ class SavannaTest(nmanager.OfficialClientTest):
         image_id = str(self.compute_client.images.find(name=image_name).id)
         if neutron_management_network:
             data = client.clusters.create(
-                self.CLUSTER_NAME, plugin_name, hadoop_version,
+                self.CLUSTER_NAME, plugin_name, plugin_version,
                 cluster_template_id, image_id, description, cluster_configs,
                 node_groups, self.USER_KEYPAIR_ID, anti_affinity,
                 neutron_management_network
             )
         else:
             data = client.clusters.create(
-                self.CLUSTER_NAME, plugin_name, hadoop_version,
+                self.CLUSTER_NAME, plugin_name, plugin_version,
                 cluster_template_id, image_id, description, cluster_configs,
                 node_groups, self.USER_KEYPAIR_ID, anti_affinity
             )
@@ -294,7 +293,7 @@ class SavannaTest(nmanager.OfficialClientTest):
             self._create_cluster_and_get_info(
                 client,
                 self.PLUGIN_NAME,
-                self.HADOOP_VERSION,
+                self.plugin_version,
                 cluster_template_id,
                 self.IMAGE_NAME,
                 description='test cluster',
@@ -307,7 +306,7 @@ class SavannaTest(nmanager.OfficialClientTest):
             self._create_cluster_and_get_info(
                 client,
                 self.PLUGIN_NAME,
-                self.HADOOP_VERSION,
+                self.plugin_version,
                 cluster_template_id,
                 self.IMAGE_NAME,
                 description='test cluster',

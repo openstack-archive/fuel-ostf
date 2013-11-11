@@ -48,15 +48,14 @@ class PlatformSavannaTests(savanna.SavannaTest):
         """
         fail_msg = ("Savanna image with tags wasn't imported into Glance, "
                     "please check "
-                    "http://docs.mirantis.com/fuel/fuel-3.2/user-guide.html"
+                    "http://docs.mirantis.com/fuel/fuel-4.0/user-guide.html"
                     "#platform-tests-description")
         self.verify_response_true(
             self.verify(
-                20,
+                30,
                 self._test_image,
                 1, fail_msg,
-                "Test images with tags",
-                '1.1.2', 'vanilla'),
+                "Test images with tags"),
             "Step 1 failed: {msg}".format(msg=fail_msg))
 
         fail_msg = 'Fail create node group template.'
