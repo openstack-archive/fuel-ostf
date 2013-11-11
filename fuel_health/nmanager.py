@@ -31,9 +31,6 @@ try:
 except:
     LOG.warning('Muranoclient could not be imported.')
 try:
-    from fuel_health.common.utils import savanna_client_patch
-    savanna_client_patch.patch_client()
-
     import savannaclient.api.client
 except:
     LOG.warning('Savanna client could not be imported.')
