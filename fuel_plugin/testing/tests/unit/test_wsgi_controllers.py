@@ -18,11 +18,10 @@ from mock import patch, Mock
 from fuel_plugin.ostf_adapter.wsgi import controllers
 from fuel_plugin.ostf_adapter.storage import models
 
-from fuel_plugin.tests.unit.base \
-    import BaseWSGITest
+from fuel_plugin.testing.tests.unit import base
 
 
-class TestTestsController(BaseWSGITest):
+class TestTestsController(base.BaseWSGITest):
 
     def setUp(self):
         super(TestTestsController, self).setUp()
@@ -40,7 +39,7 @@ class TestTestsController(BaseWSGITest):
         )
 
 
-class TestTestSetsController(BaseWSGITest):
+class TestTestSetsController(base.BaseWSGITest):
 
     def setUp(self):
         super(TestTestSetsController, self).setUp()
@@ -66,7 +65,7 @@ class TestTestSetsController(BaseWSGITest):
         )
 
 
-class TestTestRunsController(BaseWSGITest):
+class TestTestRunsController(base.BaseWSGITest):
 
     def setUp(self):
         super(TestTestRunsController, self).setUp()
@@ -106,10 +105,10 @@ class TestTestRunsPostController(TestTestRunsController):
             'cluster_id': 1,
             'tests': {
                 'names': [
-                    ('fuel_plugin.tests.functional.dummy_tests.'
+                    ('fuel_plugin.testing.fixture.dummy_tests.'
                      'deployment_types_tests.ha_deployment_test.'
                      'HATest.test_ha_depl'),
-                    ('fuel_plugin.tests.functional.dummy_tests.'
+                    ('fuel_plugin.testing.fixture.dummy_tests.'
                      'deployment_types_tests.ha_deployment_test.'
                      'HATest.test_ha_rhel_depl')
                 ]
@@ -147,7 +146,6 @@ class TestTestRunsPostController(TestTestRunsController):
         )
 
 
-#@unittest2.skip('Is broken, fixing is appreciated')
 class TestTestRunsPutController(TestTestRunsController):
 
     def setUp(self):
@@ -173,10 +171,10 @@ class TestTestRunsPutController(TestTestRunsController):
             'cluster_id': 1,
             'tests': {
                 'names': [
-                    ('fuel_plugin.tests.functional.dummy_tests.'
+                    ('fuel_plugin.testing.fixture.dummy_tests.'
                      'deployment_types_tests.ha_deployment_test.'
                      'HATest.test_ha_depl'),
-                    ('fuel_plugin.tests.functional.dummy_tests.'
+                    ('fuel_plugin.testing.fixture.dummy_tests.'
                      'deployment_types_tests.ha_deployment_test.'
                      'HATest.test_ha_rhel_depl')
                 ]
@@ -215,7 +213,7 @@ class TestTestRunsPutController(TestTestRunsController):
         )
 
 
-class TestClusterRedeployment(BaseWSGITest):
+class TestClusterRedeployment(base.BaseWSGITest):
 
     def setUp(self):
         super(TestClusterRedeployment, self).setUp()
