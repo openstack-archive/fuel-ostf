@@ -15,7 +15,8 @@
 import time
 from sqlalchemy import create_engine
 
-from fuel_plugin.tests.functional.base import BaseAdapterTest, Response
+from fuel_plugin.testing.tests.functional.base import \
+    BaseAdapterTest, Response
 from fuel_plugin.ostf_client.client import TestingAdapterClient as adapter
 
 
@@ -27,25 +28,25 @@ class AdapterTests(BaseAdapterTest):
         url = 'http://0.0.0.0:8989/v1'
 
         cls.mapping = {
-            ('fuel_plugin.tests.functional.dummy_tests.'
+            ('fuel_plugin.testing.fixture.dummy_tests.'
              'general_test.Dummy_test.test_fast_pass'): 'fast_pass',
-            ('fuel_plugin.tests.functional.dummy_tests.'
+            ('fuel_plugin.testing.fixture.dummy_tests.'
              'general_test.Dummy_test.test_fast_error'): 'fast_error',
-            ('fuel_plugin.tests.functional.dummy_tests.'
+            ('fuel_plugin.testing.fixture.dummy_tests.'
              'general_test.Dummy_test.test_fast_fail'): 'fast_fail',
-            ('fuel_plugin.tests.functional.dummy_tests.'
+            ('fuel_plugin.testing.fixture.dummy_tests.'
              'general_test.Dummy_test.test_long_pass'): 'long_pass',
-            ('fuel_plugin.tests.functional.dummy_tests.'
+            ('fuel_plugin.testing.fixture.dummy_tests.'
              'general_test.Dummy_test.test_fail_with_step'): 'fail_step',
-            ('fuel_plugin.tests.functional.dummy_tests.stopped_test.'
+            ('fuel_plugin.testing.fixture.dummy_tests.stopped_test.'
              'dummy_tests_stopped.test_really_long'): 'really_long',
-            ('fuel_plugin.tests.functional.dummy_tests.stopped_test.'
+            ('fuel_plugin.testing.fixture.dummy_tests.stopped_test.'
              'dummy_tests_stopped.test_not_long_at_all'): 'not_long',
-            ('fuel_plugin.tests.functional.dummy_tests.stopped_test.'
+            ('fuel_plugin.testing.fixture.dummy_tests.stopped_test.'
              'dummy_tests_stopped.test_one_no_so_long'): 'so_long',
-            ('fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.'
+            ('fuel_plugin.testing.fixture.dummy_tests.deployment_types_tests.'
              'ha_deployment_test.HATest.test_ha_depl'): 'ha_depl',
-            ('fuel_plugin.tests.functional.dummy_tests.deployment_types_tests.'
+            ('fuel_plugin.testing.fixture.dummy_tests.deployment_types_tests.'
              'ha_deployment_test.HATest.test_ha_rhel_depl'): 'ha_rhel_depl'
         }
         cls.testsets = {
@@ -218,6 +219,9 @@ class AdapterTests(BaseAdapterTest):
         for cluster_id in range(1, 2):
             r = self.client.start_testrun(testset, cluster_id)
             msg = '{0} was empty'.format(r.request)
+            if r.is_empty:
+                print r
+
             self.assertFalse(r.is_empty, msg)
 
         '''TODO: Rewrite assertions to verity that all
@@ -228,10 +232,10 @@ class AdapterTests(BaseAdapterTest):
         """Verify that you can run individual tests from given testset"""
         testset = "general_test"
         tests = [
-            ('fuel_plugin.tests.functional.dummy_tests.'
+            ('fuel_plugin.testing.fixture.dummy_tests.'
              'general_test.Dummy_test.test_fast_pass'),
-            ('fuel_plugin.tests.functional.dummy_tests.'
-             'general_test.Dummy_test.test_fast_fail')
+            ('fuel_plugin.testing.fixture.dummy_tests.'
+             'general_test.Dummy_test.test_fast_error')
         ]
         cluster_id = 1
 
@@ -248,31 +252,31 @@ class AdapterTests(BaseAdapterTest):
                     {
                         'status': 'disabled',
                         'name': 'Fast fail with step',
-                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_fail_with_step'),
                     },
                     {
-                        'status': 'disabled',
+                        'status': 'wait_running',
                         'name': 'And fast error',
-                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_fast_error'),
                     },
                     {
-                        'status': 'wait_running',
+                        'status': 'disabled',
                         'name': 'Fast fail',
-                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_fast_fail'),
                     },
                     {
                         'status': 'wait_running',
                         'name': 'fast pass test',
-                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_fast_pass'),
                     },
                     {
                         'status': 'disabled',
                         'name': 'Will sleep 5 sec',
-                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_long_pass'),
                     }
                 ],
@@ -281,25 +285,40 @@ class AdapterTests(BaseAdapterTest):
         ])
 
         self.compare(r, assertions)
-        time.sleep(2)
+        time.sleep(5)
 
         r = self.client.testruns_last(cluster_id)
         assertions.general_test['status'] = 'finished'
 
         for test in assertions.general_test['tests']:
-            if test['name'] == 'Fast fail':
-                test['status'] = 'failure'
+            if test['name'] == 'And fast error':
+                test['status'] = 'error'
             elif test['name'] == 'fast pass test':
                 test['status'] = 'success'
-        self.compare(r, assertions)
+
+        try:
+            self.compare(r, assertions)
+        except AssertionError:
+            from fuel_plugin.ostf_adapter.storage import models
+            from sqlalchemy import create_engine
+            from sqlalchemy.orm import sessionmaker
+
+            session = sessionmaker()(bind=create_engine('postgresql+psycopg2://ostf:ostf@localhost/ostf'))
+
+            test_run_id = [r[k]['id'] for k in r.keys() if k == 'general_test'].pop()
+            fast_error = session.query(models.Test).filter_by(test_run_id=test_run_id)\
+                .filter_by(test_set_id='general_test')\
+                .filter_by(name='fuel_plugin.testing.fixture.dummy_tests.general_test.Dummy_test.test_fast_error')\
+                .one()
+            raise AssertionError('Status of fast_error_test from database -- {0}'.format(fast_error.status))
 
     def test_single_test_restart(self):
         """Verify that you restart individual tests for given testrun"""
         testset = "general_test"
         tests = [
-            ('fuel_plugin.tests.functional.dummy_tests.'
+            ('fuel_plugin.testing.fixture.dummy_tests.'
              'general_test.Dummy_test.test_fast_pass'),
-            ('fuel_plugin.tests.functional.dummy_tests.general_test.'
+            ('fuel_plugin.testing.fixture.dummy_tests.general_test.'
              'Dummy_test.test_fast_fail')
         ]
         cluster_id = 1
@@ -319,31 +338,31 @@ class AdapterTests(BaseAdapterTest):
                     {
                         'status': 'failure',
                         'name': 'Fast fail with step',
-                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_fail_with_step'),
                     },
                     {
                         'status': 'error',
                         'name': 'And fast error',
-                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_fast_error'),
                     },
                     {
                         'status': 'wait_running',
                         'name': 'Fast fail',
-                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_fast_fail'),
                     },
                     {
                         'status': 'wait_running',
                         'name': 'fast pass test',
-                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_fast_pass'),
                     },
                     {
                         'status': 'success',
                         'name': 'Will sleep 5 sec',
-                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_long_pass'),
                     }
                 ],
@@ -362,20 +381,36 @@ class AdapterTests(BaseAdapterTest):
                 test['status'] = 'failure'
             elif test['name'] == 'fast pass test':
                 test['status'] = 'success'
-        self.compare(r, assertions)
+
+        #DEBUG
+        try:
+            self.compare(r, assertions)
+        except AssertionError:
+            from fuel_plugin.ostf_adapter.storage import models
+            from sqlalchemy import create_engine
+            from sqlalchemy.orm import sessionmaker
+
+            session = sessionmaker()(bind=create_engine('postgresql+psycopg2://ostf:ostf@localhost/ostf'))
+
+            test_run_id = [r[k]['id'] for k in r.keys() if k == 'general_test'].pop()
+            fast_error = session.query(models.Test).filter_by(test_run_id=test_run_id)\
+                .filter_by(test_set_id='general_test')\
+                .filter_by(name='fuel_plugin.testing.fixture.dummy_tests.general_test.Dummy_test.test_fast_fail')\
+                .one()
+            raise AssertionError('Status of test_fast_fail from database -- {0}'.format(fast_error.status))
 
     def test_restart_combinations(self):
         """Verify that you can restart both tests that
         ran and did not run during single test start"""
         testset = "general_test"
         tests = [
-            ('fuel_plugin.tests.functional.dummy_tests.'
+            ('fuel_plugin.testing.fixture.dummy_tests.'
              'general_test.Dummy_test.test_fast_pass'),
-            ('fuel_plugin.tests.functional.dummy_tests.'
+            ('fuel_plugin.testing.fixture.dummy_tests.'
              'general_test.Dummy_test.test_fast_fail')
         ]
         disabled_test = [
-            ('fuel_plugin.tests.functional.dummy_tests.'
+            ('fuel_plugin.testing.fixture.dummy_tests.'
              'general_test.Dummy_test.test_fast_error')
         ]
         cluster_id = 1
@@ -383,7 +418,7 @@ class AdapterTests(BaseAdapterTest):
         #make sure we have all needed data in db
         self.adapter.testsets(cluster_id)
 
-        self.client.run_with_timeout(testset, tests, cluster_id, 70)
+        self.client.run_with_timeout(testset, tests, cluster_id, 80)
         self.client.restart_with_timeout(testset, tests, cluster_id, 10)
 
         r = self.client.restart_tests_last(testset, disabled_test, cluster_id)
@@ -396,31 +431,31 @@ class AdapterTests(BaseAdapterTest):
                     {
                         'status': 'disabled',
                         'name': 'Fast fail with step',
-                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_fail_with_step'),
                     },
                     {
                         'status': 'wait_running',
                         'name': 'And fast error',
-                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_fast_error'),
                     },
                     {
                         'status': 'failure',
                         'name': 'Fast fail',
-                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_fast_fail'),
                     },
                     {
                         'status': 'success',
                         'name': 'fast pass test',
-                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_fast_pass'),
                     },
                     {
                         'status': 'disabled',
                         'name': 'Will sleep 5 sec',
-                        'id': ('fuel_plugin.tests.functional.dummy_tests.'
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_long_pass'),
                     }
                 ],
@@ -441,11 +476,11 @@ class AdapterTests(BaseAdapterTest):
     def test_cant_restart_during_run(self):
         testset = 'general_test'
         tests = [
-            ('fuel_plugin.tests.functional.dummy_tests.'
+            ('fuel_plugin.testing.fixture.dummy_tests.'
              'general_test.Dummy_test.test_fast_pass'),
-            ('fuel_plugin.tests.functional.dummy_tests.'
+            ('fuel_plugin.testing.fixture.dummy_tests.'
              'general_test.Dummy_test.test_fast_fail'),
-            ('fuel_plugin.tests.functional.dummy_tests.'
+            ('fuel_plugin.testing.fixture.dummy_tests.'
              'general_test.Dummy_test.test_fast_pass')
         ]
         cluster_id = 1
@@ -481,7 +516,7 @@ class AdapterTests(BaseAdapterTest):
                 'tests': [
                     {
                         'id': (
-                            'fuel_plugin.tests.functional.'
+                            'fuel_plugin.testing.fixture.'
                             'dummy_tests.test_with_error.WithErrorTest.'
                             'test_supposed_to_be_fail'
                         ),
@@ -489,7 +524,7 @@ class AdapterTests(BaseAdapterTest):
                     },
                     {
                         'id': (
-                            'fuel_plugin.tests.functional.'
+                            'fuel_plugin.testing.fixture.'
                             'dummy_tests.test_with_error.WithErrorTest.'
                             'test_supposed_to_be_success'
                         ),

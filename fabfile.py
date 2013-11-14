@@ -37,11 +37,11 @@ def startserver():
 def startdebugserver():
     local(('ostf-server '
            '--nailgun-port=8888 '
-           '--debug_tests=fuel_plugin/tests/functional/dummy_tests'))
+           '--debug_tests=fuel_plugin/testing/fixture/dummy_tests'))
 
 
 def startnailgunmimic():
-    path = 'fuel_plugin/tests/test_utils/nailgun_mimic.py'
+    path = 'fuel_plugin/testing/test_utils/nailgun_mimic.py'
     local('python {0}'.format(path))
 
 
@@ -66,7 +66,7 @@ def migrate(database='ostf'):
 
 
 def auth(method='trust', os='ubuntu'):
-    """By default postgres doesnot allow auth withour password
+    """By default postgres doesn't allow auth without password
     development without password is more fun
     """
     if os == 'centos':
@@ -98,8 +98,24 @@ def testall():
 
 
 def integration():
-    local('nosetests fuel_plugin/tests/functional/tests.py:AdapterTests -v')
+    local(
+        ('nosetests fuel_plugin/testing/'
+         'tests/functional/tests.py:AdapterTests -v')
+    )
 
 
 def unit():
-    local('nosetests fuel_plugin/tests/unit -v')
+    local('nosetests fuel_plugin/testing/tests/unit -v')
+
+
+def masstest():
+    for i in range(10):
+        testall()
+
+
+def testissue():
+    for i in range(10):
+        local(
+            ('nosetests -sv fuel_plugin/testing/tests/functional/'
+             'tests.py:AdapterTests.test_run_single_test')
+        )

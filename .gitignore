@@ -11,3 +11,4 @@ dist
 .coverage
 .ropeproject
 *.swp
+etc/*

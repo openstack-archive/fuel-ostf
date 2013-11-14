@@ -18,7 +18,7 @@ from webtest import TestApp
 
 from fuel_plugin.ostf_adapter.wsgi import app
 from fuel_plugin.ostf_adapter.wsgi.app import PECAN_DEFAULT
-from fuel_plugin.tests.unit.base \
+from fuel_plugin.testing.tests.unit.base \
     import BaseWSGITest
 
 
