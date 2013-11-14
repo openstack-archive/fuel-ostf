@@ -18,7 +18,7 @@ from mock import patch, Mock
 from fuel_plugin.ostf_adapter.wsgi import controllers
 from fuel_plugin.ostf_adapter.storage import models
 
-from fuel_plugin.tests.unit.base \
+from fuel_plugin.testing.tests.unit.base \
     import BaseWSGITest
 
 
@@ -106,10 +106,10 @@ class TestTestRunsPostController(TestTestRunsController):
             'cluster_id': 1,
             'tests': {
                 'names': [
-                    ('fuel_plugin.tests.functional.dummy_tests.'
+                    ('fuel_plugin.testing.fixture.dummy_tests.'
                      'deployment_types_tests.ha_deployment_test.'
                      'HATest.test_ha_depl'),
-                    ('fuel_plugin.tests.functional.dummy_tests.'
+                    ('fuel_plugin.testing.fixture.dummy_tests.'
                      'deployment_types_tests.ha_deployment_test.'
                      'HATest.test_ha_rhel_depl')
                 ]
@@ -147,7 +147,6 @@ class TestTestRunsPostController(TestTestRunsController):
         )
 
 
-#@unittest2.skip('Is broken, fixing is appreciated')
 class TestTestRunsPutController(TestTestRunsController):
 
     def setUp(self):
@@ -173,10 +172,10 @@ class TestTestRunsPutController(TestTestRunsController):
             'cluster_id': 1,
             'tests': {
                 'names': [
-                    ('fuel_plugin.tests.functional.dummy_tests.'
+                    ('fuel_plugin.testing.fixture.dummy_tests.'
                      'deployment_types_tests.ha_deployment_test.'
                      'HATest.test_ha_depl'),
-                    ('fuel_plugin.tests.functional.dummy_tests.'
+                    ('fuel_plugin.testing.fixture.dummy_tests.'
                      'deployment_types_tests.ha_deployment_test.'
                      'HATest.test_ha_rhel_depl')
                 ]

@@ -20,7 +20,7 @@ from sqlalchemy.orm import sessionmaker
 from fuel_plugin.ostf_adapter.nose_plugin import nose_discovery
 from fuel_plugin.ostf_adapter.storage import models
 
-TEST_PATH = 'fuel_plugin/tests/functional/dummy_tests'
+TEST_PATH = 'fuel_plugin/testing/fixture/dummy_tests'
 
 
 class TransactionBeginMock:
@@ -84,7 +84,7 @@ class TestNoseDiscovery(unittest2.TestCase):
     def test_get_proper_description(self):
         expected = {
             'title': 'fake empty test',
-            'name': ('fuel_plugin.tests.functional.'
+            'name': ('fuel_plugin.testing.fixture.'
                      'dummy_tests.deployment_types_tests.'
                      'ha_deployment_test.HATest.test_ha_rhel_depl'),
             'duration': '0sec',
@@ -111,7 +111,7 @@ class TestNoseDiscovery(unittest2.TestCase):
                 'deployment_tags': ['alternative | alternative_test']
             },
             'test': {
-                'name': ('fuel_plugin.tests.functional.dummy_tests.'
+                'name': ('fuel_plugin.testing.fixture.dummy_tests.'
                          'deployment_types_tests.alternative_depl_tags_test.'
                          'AlternativeDeplTagsTests.test_simple_fake_test'),
                 'deployment_tags': ['one_tag| another_tag', 'other_tag']
