@@ -18,11 +18,10 @@ from webtest import TestApp
 
 from fuel_plugin.ostf_adapter.wsgi import app
 from fuel_plugin.ostf_adapter.wsgi.app import PECAN_DEFAULT
-from fuel_plugin.tests.unit.base \
-    import BaseWSGITest
+from fuel_plugin.testing.tests.unit import base
 
 
-class WsgiInterfaceTests(BaseWSGITest):
+class WsgiInterfaceTests(base.BaseWSGITest):
 
     @classmethod
     def setUpClass(cls):

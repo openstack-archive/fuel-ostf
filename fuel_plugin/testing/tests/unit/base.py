@@ -23,7 +23,7 @@ from fuel_plugin.ostf_adapter.nose_plugin.nose_discovery import discovery
 from fuel_plugin.ostf_adapter.storage import models
 from fuel_plugin.ostf_adapter.storage import simple_cache
 
-TEST_PATH = 'fuel_plugin/tests/functional/dummy_tests'
+TEST_PATH = 'fuel_plugin/testing/fixture/dummy_tests'
 
 
 class BaseWSGITest(unittest2.TestCase):
@@ -35,7 +35,7 @@ class BaseWSGITest(unittest2.TestCase):
             'postgresql+psycopg2://ostf:ostf@localhost/ostf'
         )
 
-        cls.ext_id = 'fuel_plugin.tests.functional.dummy_tests.'
+        cls.ext_id = 'fuel_plugin.testing.fixture.dummy_tests.'
         cls.expected = {
             'cluster': {
                 'id': 1,

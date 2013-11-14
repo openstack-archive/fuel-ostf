@@ -66,7 +66,17 @@ class NoseDriver(object):
         session = engine.get_session()
         if test_run_id in self._named_threads:
 
-            self._named_threads[test_run_id].terminate()
+            try:
+                self._named_threads[test_run_id].terminate()
+            except OSError as e:
+                if e.errno != os.errno.ESRCH:
+                    raise
+
+                LOG.warning(
+                    'There is no process for test_run with following id - %s',
+                    test_run_id
+                )
+
             self._named_threads.pop(test_run_id, None)
 
             if cleanup:
