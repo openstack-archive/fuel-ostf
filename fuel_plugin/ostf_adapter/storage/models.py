@@ -285,7 +285,9 @@ class TestRun(BASE):
             .scalar()
 
         tests = session.query(Test)\
-            .filter(Test.name.in_(tests_names))
+            .filter(Test.name.in_(tests_names))\
+            .filter_by(test_set_id=test_set)\
+            .filter_by(test_run_id=None)
 
         test_run = cls(test_set_id=test_set, cluster_id=cluster_id,
                        status=status)
