@@ -426,7 +426,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def _ping_ip_address(self, ip_address):
         def ping():
             cmd = 'ping -c1 -w1 ' + ip_address
-            time.sleep(30)
+            time.sleep(60)
 
             if self.host:
 
@@ -760,6 +760,7 @@ class SmokeChecksTest(OfficialClientTest):
                 try:
                     cls.compute_client.servers.delete(serv)
                     time.sleep(100)
+
                 except Exception as exc:
                     cls.error_msg.append(exc)
                     LOG.debug(exc)
