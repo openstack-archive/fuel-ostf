@@ -426,7 +426,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def _ping_ip_address(self, ip_address):
         def ping():
             cmd = 'ping -c1 -w1 ' + ip_address
-            time.sleep(30)
+            time.sleep(60)
 
             if self.host:
 
@@ -455,7 +455,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def _ping_ip_address_from_instance(self, ip_address, viaHost=None):
         def ping():
-            time.sleep(30)
+            time.sleep(60)
             ssh_timeout = self.timeout > 30 and self.timeout or 30
             if not (self.host or viaHost):
                 self.fail('Wrong tests configurations, one from the next '
@@ -759,7 +759,9 @@ class SmokeChecksTest(OfficialClientTest):
             for serv in cls.servers:
                 try:
                     cls.compute_client.servers.delete(serv)
-                    time.sleep(100)
+                    # time.sleep(100)
+                    time-sleep(20)
+
                 except Exception as exc:
                     cls.error_msg.append(exc)
                     LOG.debug(exc)
