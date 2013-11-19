@@ -229,7 +229,6 @@ class OfficialClientTest(fuel_health.test.TestCase):
         except Exception as exc:
             cls.error_msg.append(exc)
             LOG.debug(exc)
-            pass
         while cls.os_resources:
             thing = cls.os_resources.pop()
             LOG.debug("Deleting %r from shared resources of %s" %
@@ -278,14 +277,12 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         cls.usr = cls.config.compute.controller_node_ssh_user
         cls.pwd = cls.config.compute.controller_node_ssh_password
         cls.key = cls.config.compute.path_to_private_key
-        cls.timeout = cls.config.compute.ssh_timeout
         cls.tenant_id = cls.manager._get_identity_client(
             cls.config.identity.admin_username,
             cls.config.identity.admin_password,
             cls.config.identity.admin_tenant_name).tenant_id
         cls.network = []
         cls.floating_ips = []
-        cls.sec_group = []
         cls.error_msg = []
         cls.private_net = 'net04'
 
@@ -395,6 +392,15 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         self.set_resource(name, server)
         return server
 
+    def _delete_server(self, server):
+        LOG.debug("Deleting server.")
+        self.compute_client.servers.delete(server)
+        if server.__class__.__name__ != 'NotFound':
+            LOG.debug("Reset server state.")
+            self.compute_client.servers.reset_state(server)
+            LOG.debug("Force-deleting server.")
+            self.compute_client.servers.delete(server)
+
     def _create_floating_ip(self):
         floating_ips_pool = self.compute_client.floating_ip_pools.list()
 
@@ -414,7 +420,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             self.fail('Can not assign floating ip to instance')
 
     @classmethod
-    def _clean_floating_is(cls):
+    def _clean_floating_ips(cls):
         for ip in cls.floating_ips:
             try:
                 cls.compute_client.floating_ips.delete(ip)
@@ -423,18 +429,15 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 LOG.debug(exc)
                 pass
 
-    def _ping_ip_address(self, ip_address):
+    def _ping_ip_address(self, ip_address, timeout):
         def ping():
             cmd = 'ping -c1 -w1 ' + ip_address
-            time.sleep(60)
-
             if self.host:
-
                 try:
                     SSHClient(self.host[0],
                               self.usr, self.pwd,
                               key_filename=self.key,
-                              timeout=self.timeout).exec_command(cmd)
+                              timeout=timeout).exec_command(cmd)
                     return True
 
                 except SSHExecCommandFailed as exc:
@@ -453,10 +456,9 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         # TODO Allow configuration of execution and sleep duration.
         return fuel_health.test.call_until_true(ping, 40, 1)
 
-    def _ping_ip_address_from_instance(self, ip_address, viaHost=None):
+    def _ping_ip_address_from_instance(self, ip_address, timeout=120,
+                                       viaHost=None):
         def ping():
-            time.sleep(30)
-            ssh_timeout = self.timeout > 30 and self.timeout or 30
             if not (self.host or viaHost):
                 self.fail('Wrong tests configurations, one from the next '
                           'parameters are empty controller_node_name or '
@@ -466,7 +468,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 ssh = SSHClient(host,
                                 self.usr, self.pwd,
                                 key_filename=self.key,
-                                timeout=ssh_timeout)
+                                timeout=timeout)
                 LOG.debug('Get ssh to auxiliary host')
                 ssh.exec_command_on_vm(command='ping -c1 -w1 8.8.8.8',
                                        user='cirros',
@@ -485,14 +487,15 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         # TODO Allow configuration of execution and sleep duration.
         return fuel_health.test.call_until_true(ping, 40, 1)
 
-    def _check_vm_connectivity(self, ip_address):
-        self.assertTrue(self._ping_ip_address(ip_address),
+    def _check_vm_connectivity(self, ip_address, timeout):
+        self.assertTrue(self._ping_ip_address(ip_address, timeout),
                         "Timed out waiting for %s to become "
                         "reachable. Please, check Network "
                         "configuration" % ip_address)
 
-    def _check_connectivity_from_vm(self, ip_address, viaHost=None):
+    def _check_connectivity_from_vm(self, ip_address, timeout, viaHost=None):
         self.assertTrue(self._ping_ip_address_from_instance(ip_address,
+                                                            timeout,
                                                             viaHost=viaHost),
                         "Timed out waiting for %s to become "
                         "reachable. Please, check Network "
@@ -514,9 +517,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     @classmethod
     def tearDownClass(cls):
         super(NovaNetworkScenarioTest, cls).tearDownClass()
-        cls._clean_floating_is()
+        cls._clean_floating_ips()
         cls._clear_networks()
-      #  cls._verification_of_exceptions()
 
 
 def get_image_from_name():
@@ -629,8 +631,8 @@ class SmokeChecksTest(OfficialClientTest):
         cls.tenants = []
         cls.users = []
         cls.roles = []
-        cls.volumes = []
         cls.servers = []
+        cls.volumes = []
         cls.error_msg = []
         cls.private_net = 'net04'
 
@@ -655,76 +657,29 @@ class SmokeChecksTest(OfficialClientTest):
     def _create_tenant(self, client):
         name = rand_name('ost1_test-tenant-')
         tenant = client.tenants.create(name)
-        self.tenants.append(tenant)
+        # self.tenants.append(tenant)
+        self.set_resource(name, tenant)
         return tenant
-
-    @classmethod
-    def _clean_tenants(cls):
-        if cls.tenants:
-            for ten in cls.tenants:
-                try:
-                    cls.identity_client.tenants.delete(ten)
-                except Exception as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
-                    pass
 
     def _create_user(self, client, tenant_id):
         password = "123456"
         email = "test@test.com"
         name = rand_name('ost1_test-user-')
         user = client.users.create(name, password, email, tenant_id)
-        self.users.append(user)
+        self.set_resource(name, user)
         return user
-
-    @classmethod
-    def _clean_users(cls):
-        if cls.users:
-            for user in cls.users:
-                try:
-                    cls.identity_client.users.delete(user)
-                except Exception as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
-                    pass
 
     def _create_role(self, client):
         name = rand_name('ost1_test-role-')
         role = client.roles.create(name)
-        self.roles.append(role)
+        self.set_resource(name, role)
         return role
-
-    @classmethod
-    def _clean_roles(cls):
-        if cls.roles:
-            for role in cls.roles:
-                try:
-                    cls.identity_client.roles.delete(role)
-                except Exception as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
-                    pass
 
     def _create_volume(self, client):
         display_name = rand_name('ost1_test-volume')
         volume = client.volumes.create(size=1, display_name=display_name)
         self.set_resource(display_name, volume)
-        self.volumes.append(volume)
         return volume
-
-    @classmethod
-    def _clean_volumes(cls):
-        if cls.volumes:
-            for v in cls.volumes:
-                if v.status == 'available' or v.status == 'error':
-                    try:
-                        cls.volume_client.volumes.delete(v)
-                    except Exception as exc:
-                        cls.error_msg.append(exc)
-                        LOG.debug(exc)
-                        pass
-                else:
-                    pass
 
     def _create_server(self, client):
         name = rand_name('ost1_test-volume-instance')
@@ -741,7 +696,6 @@ class SmokeChecksTest(OfficialClientTest):
         else:
             server = client.servers.create(name, base_image_id, flavor_id)
 
-        self.set_resource(name, server)
         self.verify_response_body_content(server.name,
                                           name,
                                           "Instance creation failed")
@@ -749,21 +703,17 @@ class SmokeChecksTest(OfficialClientTest):
         # details, necessitating retrieval after it becomes active to
         # ensure correct details.
         server = self._wait_server_param(client, server, 'addresses', 5, 1)
-        self.servers.append(server)
         self.set_resource(name, server)
         return server
 
-    @classmethod
-    def _clean_servers(cls):
-        if cls.servers:
-            for serv in cls.servers:
-                try:
-                    cls.compute_client.servers.delete(serv)
-                    time.sleep(100)
-
-                except Exception as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
+    def _delete_server(self, server):
+        LOG.debug("Deleting server.")
+        self.compute_client.servers.delete(server)
+        if server.__class__.__name__ != 'NotFound':
+            LOG.debug("Reset server state.")
+            self.compute_client.servers.reset_state(server)
+            LOG.debug("Force-deleting server.")
+            self.compute_client.servers.delete(server)
 
     def _wait_server_param(self, client, server, param_name,
                            tries=1, timeout=1, expected_value=None):
@@ -811,8 +761,3 @@ class SmokeChecksTest(OfficialClientTest):
     def tearDownClass(cls):
         super(SmokeChecksTest, cls).tearDownClass()
         cls._clean_flavors()
-        cls._clean_tenants()
-        cls._clean_users()
-        cls._clean_roles()
-        cls._clean_servers()
-        cls._clean_volumes()

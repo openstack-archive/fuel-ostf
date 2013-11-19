@@ -36,11 +36,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @classmethod
     def setUpClass(cls):
         super(TestNovaNetwork, cls).setUpClass()
-        cls.tenant_id = cls.manager._get_identity_client(
-            cls.config.identity.admin_username,
-            cls.config.identity.admin_password,
-            cls.config.identity.admin_tenant_name).tenant_id
-
         cls.keypairs = {}
         cls.security_groups = {}
         cls.network = []
@@ -122,6 +117,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Scenario:
             1. Create a new security group (if it doesn`t exist yet).
             2. Create an instance using the new security group.
+            3. Delete instance.
         Duration: 200 s.
 
         """
@@ -146,7 +142,9 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.compute_client, name, security_groups
         )
 
-        self.servers.append(server)
+        self.verify(30, self._delete_server, 3,
+                    "Server can not be deleted.",
+                    "server deletion", server)
 
     def test_005_check_public_network_connectivity(self):
         """Check that VM is accessible via floating IP address
@@ -158,6 +156,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             3. Create a new floating IP
             4. Assign the new floating IP to the instance.
             5. Check connectivity to the floating IP using ping command.
+            6. Remove server floating ip.
+            7. Delete server.
         Duration: 200 s.
 
         """
@@ -192,7 +192,15 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
         self.verify(100, self._check_vm_connectivity, 5,
                     "VM connectivity doesn`t function properly.",
-                    'VM connectivity checking', floating_ip.ip)
+                    'VM connectivity checking', floating_ip.ip, 120)
+
+        self.verify(10, self.compute_client.servers.remove_floating_ip,
+                    6, "Floating IP cannot be removed.",
+                    "removing floating IP", server, floating_ip)
+
+        self.verify(30, self._delete_server, 7,
+                    "Server can not be deleted. ",
+                    "server deletion", server)
 
     def test_008_check_public_instance_connectivity_from_instance(self):
         """Check network connectivity from instance via floating IP
@@ -204,6 +212,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             3. Create a new floating IP
             4. Assign the new floating IP to the instance.
             5. Check that public IP 8.8.8.8 can be pinged from instance.
+            6. Remove server floating ip.
+            7. Delete server.
         Duration: 200 s.
 
         """
@@ -242,7 +252,15 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         self.verify(100, self._check_connectivity_from_vm,
                     5, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                     "function properly."),
-                    'public connectivity checking from VM', ip_address)
+                    'public connectivity checking from VM', ip_address, 120)
+
+        self.verify(10, self.compute_client.servers.remove_floating_ip,
+                    6, "Floating IP cannot be removed.",
+                    "removing floating IP", server, floating_ip)
+
+        self.verify(30, self._delete_server, 7,
+                    "Server can not be deleted. ",
+                    "server deletion", server)
 
     def test_006_check_internet_connectivity_instance_without_floatingIP(self):
         """Check network connectivity from instance without floating IP
@@ -253,6 +271,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             2. Create an instance using the new security group.
             (if it doesn`t exist yet).
             3. Check that public IP 8.8.8.8 can be pinged from instance.
+            4. Delete server.
         Duration: 200 s.
 
         Deployment tags: nova_network
@@ -286,4 +305,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                         "function properly."),
                     'public connectivity checking from VM',
                     instance_ip,
-                    compute)
+                    120, compute)
+
+        self.verify(30, self._delete_server, 7,
+                    "Server can not be deleted. ",
+                    "server deletion", server)
