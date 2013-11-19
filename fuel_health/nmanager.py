@@ -218,6 +218,27 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 name, 64, 1, 1, flavorid)
             return flavor
 
+    def _delete_server(self, server):
+        LOG.debug("Deleting server.")
+        self.compute_client.servers.delete(server)
+
+        def is_deletion_complete():
+            try:
+                server.get()
+            except Exception as e:
+                if e.__class__.__name__ == 'NotFound':
+                    return True
+                return False
+
+        res = fuel_health.test.call_until_true(
+            is_deletion_complete, 20, 1)
+
+        if not res:
+            LOG.debug("Reset server state.")
+            self.compute_client.servers.reset_state(server)
+            LOG.debug("Force-deleting server.")
+            self.compute_client.servers.delete(server)
+
     @classmethod
     def tearDownClass(cls):
         cls.error_msg = []
@@ -226,7 +247,6 @@ class OfficialClientTest(fuel_health.test.TestCase):
         except Exception as exc:
             cls.error_msg.append(exc)
             LOG.debug(exc)
-            pass
         while cls.os_resources:
             thing = cls.os_resources.pop()
             LOG.debug("Deleting %r from shared resources of %s" %
@@ -282,7 +302,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             cls.config.identity.admin_tenant_name).tenant_id
         cls.network = []
         cls.floating_ips = []
-        cls.sec_group = []
         cls.error_msg = []
         cls.private_net = 'net04'
 
@@ -411,7 +430,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             self.fail('Can not assign floating ip to instance')
 
     @classmethod
-    def _clean_floating_is(cls):
+    def _clean_floating_ips(cls):
         for ip in cls.floating_ips:
             try:
                 cls.compute_client.floating_ips.delete(ip)
@@ -426,7 +445,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             time.sleep(60)
 
             if self.host:
-
                 try:
                     SSHClient(self.host[0],
                               self.usr, self.pwd,
@@ -454,6 +472,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         def ping():
             time.sleep(30)
             ssh_timeout = self.timeout > 30 and self.timeout or 30
+
             if not (self.host or viaHost):
                 self.fail('Wrong tests configurations, one from the next '
                           'parameters are empty controller_node_name or '
@@ -511,9 +530,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     @classmethod
     def tearDownClass(cls):
         super(NovaNetworkScenarioTest, cls).tearDownClass()
-        cls._clean_floating_is()
+        cls._clean_floating_ips()
         cls._clear_networks()
-      #  cls._verification_of_exceptions()
 
 
 def get_image_from_name():
@@ -623,11 +641,6 @@ class SmokeChecksTest(OfficialClientTest):
         cls.build_timeout = cls.config.volume.build_timeout
 
         cls.flavors = []
-        cls.tenants = []
-        cls.users = []
-        cls.roles = []
-        cls.volumes = []
-        cls.servers = []
         cls.error_msg = []
         cls.private_net = 'net04'
 
@@ -652,76 +665,29 @@ class SmokeChecksTest(OfficialClientTest):
     def _create_tenant(self, client):
         name = rand_name('ost1_test-tenant-')
         tenant = client.tenants.create(name)
-        self.tenants.append(tenant)
+        # self.tenants.append(tenant)
+        self.set_resource(name, tenant)
         return tenant
-
-    @classmethod
-    def _clean_tenants(cls):
-        if cls.tenants:
-            for ten in cls.tenants:
-                try:
-                    cls.identity_client.tenants.delete(ten)
-                except Exception as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
-                    pass
 
     def _create_user(self, client, tenant_id):
         password = "123456"
         email = "test@test.com"
         name = rand_name('ost1_test-user-')
         user = client.users.create(name, password, email, tenant_id)
-        self.users.append(user)
+        self.set_resource(name, user)
         return user
-
-    @classmethod
-    def _clean_users(cls):
-        if cls.users:
-            for user in cls.users:
-                try:
-                    cls.identity_client.users.delete(user)
-                except Exception as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
-                    pass
 
     def _create_role(self, client):
         name = rand_name('ost1_test-role-')
         role = client.roles.create(name)
-        self.roles.append(role)
+        self.set_resource(name, role)
         return role
-
-    @classmethod
-    def _clean_roles(cls):
-        if cls.roles:
-            for role in cls.roles:
-                try:
-                    cls.identity_client.roles.delete(role)
-                except Exception as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
-                    pass
 
     def _create_volume(self, client):
         display_name = rand_name('ost1_test-volume')
         volume = client.volumes.create(size=1, display_name=display_name)
         self.set_resource(display_name, volume)
-        self.volumes.append(volume)
         return volume
-
-    @classmethod
-    def _clean_volumes(cls):
-        if cls.volumes:
-            for v in cls.volumes:
-                if v.status == 'available' or v.status == 'error':
-                    try:
-                        cls.volume_client.volumes.delete(v)
-                    except Exception as exc:
-                        cls.error_msg.append(exc)
-                        LOG.debug(exc)
-                        pass
-                else:
-                    pass
 
     def _create_server(self, client):
         name = rand_name('ost1_test-volume-instance')
@@ -738,7 +704,6 @@ class SmokeChecksTest(OfficialClientTest):
         else:
             server = client.servers.create(name, base_image_id, flavor_id)
 
-        self.set_resource(name, server)
         self.verify_response_body_content(server.name,
                                           name,
                                           "Instance creation failed")
@@ -746,21 +711,8 @@ class SmokeChecksTest(OfficialClientTest):
         # details, necessitating retrieval after it becomes active to
         # ensure correct details.
         server = self._wait_server_param(client, server, 'addresses', 5, 1)
-        self.servers.append(server)
         self.set_resource(name, server)
         return server
-
-    @classmethod
-    def _clean_servers(cls):
-        if cls.servers:
-            for serv in cls.servers:
-                try:
-                    cls.compute_client.servers.delete(serv)
-                    time.sleep(100)
-
-                except Exception as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
 
     def _wait_server_param(self, client, server, param_name,
                            tries=1, timeout=1, expected_value=None):
@@ -808,8 +760,3 @@ class SmokeChecksTest(OfficialClientTest):
     def tearDownClass(cls):
         super(SmokeChecksTest, cls).tearDownClass()
         cls._clean_flavors()
-        cls._clean_tenants()
-        cls._clean_users()
-        cls._clean_roles()
-        cls._clean_servers()
-        cls._clean_volumes()
