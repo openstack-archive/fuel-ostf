@@ -62,6 +62,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
             9. Detach volume from the instance.
             10. Check volume has "available" status.
             11. Delete volume.
+            12. Delete server.
         Duration: 200 s.
         """
 
@@ -128,3 +129,8 @@ class VolumesTest(nmanager.SmokeChecksTest):
                     'Can not delete volume. ',
                     "volume deletion",
                     volume)
+
+        self.verify(30, self._delete_server, 12,
+                    "Can not delete server. ",
+                    "server deletion",
+                    instance)
