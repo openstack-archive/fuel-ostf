@@ -116,7 +116,7 @@ class AdapterTests(BaseAdapterTest):
 
         time.sleep(5)
 
-        r = self.client.testruns_last(cluster_id)
+        resp = self.client.testruns_last(cluster_id)
 
         assertions = Response(
             [
@@ -137,15 +137,15 @@ class AdapterTests(BaseAdapterTest):
             ]
         )
 
-        self.compare(r, assertions)
+        self.compare(resp, assertions)
         time.sleep(30)
 
-        r = self.client.testruns_last(cluster_id)
+        resp = self.client.testruns_last(cluster_id)
 
         assertions.general_test['status'] = 'finished'
         assertions.stopped_test['status'] = 'finished'
 
-        self.compare(r, assertions)
+        self.compare(resp, assertions)
 
     def test_stop_testset(self):
         """Verify that long running testrun can be stopped
@@ -160,7 +160,7 @@ class AdapterTests(BaseAdapterTest):
         self.client.start_testrun(testset, cluster_id)
         time.sleep(20)
 
-        r = self.client.testruns_last(cluster_id)
+        resp = self.client.testruns_last(cluster_id)
 
         assertions = Response([
             {
@@ -172,13 +172,13 @@ class AdapterTests(BaseAdapterTest):
             }
         ])
 
-        self.compare(r, assertions)
+        self.compare(resp, assertions)
 
         self.client.stop_testrun_last(testset, cluster_id)
-        r = self.client.testruns_last(cluster_id)
+        resp = self.client.testruns_last(cluster_id)
 
         assertions.stopped_test['status'] = 'finished'
-        self.compare(r, assertions)
+        self.compare(resp, assertions)
 
     def test_cant_start_while_running(self):
         """Verify that you can't start new testrun
@@ -198,14 +198,14 @@ class AdapterTests(BaseAdapterTest):
         self.client.testruns_last(cluster_id)
 
         for testset in testsets:
-            r = self.client.start_testrun(testset, cluster_id)
+            resp = self.client.start_testrun(testset, cluster_id)
 
             msg = (
                 "Response {0} is not empty when you try to start testrun"
                 " with testset and cluster_id that are already running"
-            ).format(r)
+            ).format(resp)
 
-            self.assertTrue(r.is_empty, msg)
+            self.assertTrue(resp.is_empty, msg)
 
     def test_start_many_runs(self):
         """Verify that you can start more than one
@@ -217,12 +217,9 @@ class AdapterTests(BaseAdapterTest):
         self.adapter.testsets(cluster_id)
 
         for cluster_id in range(1, 2):
-            r = self.client.start_testrun(testset, cluster_id)
-            msg = '{0} was empty'.format(r.request)
-            if r.is_empty:
-                print r
-
-            self.assertFalse(r.is_empty, msg)
+            resp = self.client.start_testrun(testset, cluster_id)
+            msg = '{0} was empty'.format(resp.request)
+            self.assertFalse(resp.is_empty, msg)
 
         '''TODO: Rewrite assertions to verity that all
         5 testruns ended with appropriate status
@@ -242,7 +239,7 @@ class AdapterTests(BaseAdapterTest):
         #make sure that we have all needed data in db
         self.adapter.testsets(cluster_id)
 
-        r = self.client.start_testrun_tests(testset, tests, cluster_id)
+        resp = self.client.start_testrun_tests(testset, tests, cluster_id)
 
         assertions = Response([
             {
@@ -284,10 +281,10 @@ class AdapterTests(BaseAdapterTest):
             }
         ])
 
-        self.compare(r, assertions)
+        self.compare(resp, assertions)
         time.sleep(5)
 
-        r = self.client.testruns_last(cluster_id)
+        resp = self.client.testruns_last(cluster_id)
         assertions.general_test['status'] = 'finished'
 
         for test in assertions.general_test['tests']:
@@ -296,21 +293,7 @@ class AdapterTests(BaseAdapterTest):
             elif test['name'] == 'fast pass test':
                 test['status'] = 'success'
 
-        try:
-            self.compare(r, assertions)
-        except AssertionError:
-            from fuel_plugin.ostf_adapter.storage import models
-            from sqlalchemy import create_engine
-            from sqlalchemy.orm import sessionmaker
-
-            session = sessionmaker()(bind=create_engine('postgresql+psycopg2://ostf:ostf@localhost/ostf'))
-
-            test_run_id = [r[k]['id'] for k in r.keys() if k == 'general_test'].pop()
-            fast_error = session.query(models.Test).filter_by(test_run_id=test_run_id)\
-                .filter_by(test_set_id='general_test')\
-                .filter_by(name='fuel_plugin.testing.fixture.dummy_tests.general_test.Dummy_test.test_fast_error')\
-                .one()
-            raise AssertionError('Status of fast_error_test from database -- {0}'.format(fast_error.status))
+        self.compare(resp, assertions)
 
     def test_single_test_restart(self):
         """Verify that you restart individual tests for given testrun"""
@@ -328,7 +311,7 @@ class AdapterTests(BaseAdapterTest):
 
         self.client.run_testset_with_timeout(testset, cluster_id, 10)
 
-        r = self.client.restart_tests_last(testset, tests, cluster_id)
+        resp = self.client.restart_tests_last(testset, tests, cluster_id)
 
         assertions = Response([
             {
@@ -370,10 +353,10 @@ class AdapterTests(BaseAdapterTest):
             }
         ])
 
-        self.compare(r, assertions)
+        self.compare(resp, assertions)
         time.sleep(5)
 
-        r = self.client.testruns_last(cluster_id)
+        resp = self.client.testruns_last(cluster_id)
 
         assertions.general_test['status'] = 'finished'
         for test in assertions.general_test['tests']:
@@ -382,22 +365,7 @@ class AdapterTests(BaseAdapterTest):
             elif test['name'] == 'fast pass test':
                 test['status'] = 'success'
 
-        #DEBUG
-        try:
-            self.compare(r, assertions)
-        except AssertionError:
-            from fuel_plugin.ostf_adapter.storage import models
-            from sqlalchemy import create_engine
-            from sqlalchemy.orm import sessionmaker
-
-            session = sessionmaker()(bind=create_engine('postgresql+psycopg2://ostf:ostf@localhost/ostf'))
-
-            test_run_id = [r[k]['id'] for k in r.keys() if k == 'general_test'].pop()
-            fast_error = session.query(models.Test).filter_by(test_run_id=test_run_id)\
-                .filter_by(test_set_id='general_test')\
-                .filter_by(name='fuel_plugin.testing.fixture.dummy_tests.general_test.Dummy_test.test_fast_fail')\
-                .one()
-            raise AssertionError('Status of test_fast_fail from database -- {0}'.format(fast_error.status))
+        self.compare(resp, assertions)
 
     def test_restart_combinations(self):
         """Verify that you can restart both tests that
@@ -421,7 +389,7 @@ class AdapterTests(BaseAdapterTest):
         self.client.run_with_timeout(testset, tests, cluster_id, 80)
         self.client.restart_with_timeout(testset, tests, cluster_id, 10)
 
-        r = self.client.restart_tests_last(testset, disabled_test, cluster_id)
+        resp = self.client.restart_tests_last(testset, disabled_test, cluster_id)
 
         assertions = Response([
             {
@@ -462,16 +430,16 @@ class AdapterTests(BaseAdapterTest):
                 'cluster_id': '1',
             }
         ])
-        self.compare(r, assertions)
+        self.compare(resp, assertions)
         time.sleep(5)
 
-        r = self.client.testruns_last(cluster_id)
+        resp = self.client.testruns_last(cluster_id)
 
         assertions.general_test['status'] = 'finished'
         for test in assertions.general_test['tests']:
             if test['name'] == 'And fast error':
                 test['status'] = 'error'
-        self.compare(r, assertions)
+        self.compare(resp, assertions)
 
     def test_cant_restart_during_run(self):
         testset = 'general_test'
@@ -491,10 +459,10 @@ class AdapterTests(BaseAdapterTest):
         self.client.start_testrun(testset, cluster_id)
         time.sleep(2)
 
-        r = self.client.restart_tests_last(testset, tests, cluster_id)
+        resp = self.client.restart_tests_last(testset, tests, cluster_id)
         msg = ('Response was not empty after trying'
-               ' to restart running testset:\n {0}').format(r.request)
-        self.assertTrue(r.is_empty, msg)
+               ' to restart running testset:\n {0}').format(resp.request)
+        self.assertTrue(resp.is_empty, msg)
 
     def test_nose_adapter_error_while_running_tests(self):
         testset = 'test_with_error'
@@ -506,7 +474,7 @@ class AdapterTests(BaseAdapterTest):
         self.client.start_testrun(testset, cluster_id)
         time.sleep(5)
 
-        r = self.client.testruns_last(cluster_id)
+        resp = self.client.testruns_last(cluster_id)
 
         assertions = Response([
             {
@@ -535,4 +503,4 @@ class AdapterTests(BaseAdapterTest):
             }
         ])
 
-        self.compare(r, assertions)
+        self.compare(resp, assertions)

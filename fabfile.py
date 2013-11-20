@@ -36,6 +36,7 @@ def startserver():
 
 def startdebugserver():
     local(('ostf-server '
+           '--debug '
            '--nailgun-port=8888 '
            '--debug_tests=fuel_plugin/testing/fixture/dummy_tests'))
 
@@ -100,7 +101,7 @@ def testall():
 def integration():
     local(
         ('nosetests fuel_plugin/testing/'
-         'tests/functional/tests.py:AdapterTests -v')
+         'tests/functional/tests.py:AdapterTests -vs')
     )
 
 

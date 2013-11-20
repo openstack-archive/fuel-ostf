@@ -1,2 +1,4 @@
+# Ignore everything in this directory
 *
+# Do not ignore .gitignore itself
 !.gitignore

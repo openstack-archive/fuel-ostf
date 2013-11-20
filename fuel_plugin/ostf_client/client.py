@@ -41,12 +41,6 @@ class TestingAdapterClient(object):
             )
         return r
 
-    #def __getattr__(self, item):
-    #    getters = ['testsets', 'tests', 'testruns']
-    #    if item in getters:
-    #        url = ''.join([self.url, '/', item])
-    #        return lambda: self._request('GET', url)
-
     def testsets(self, cluster_id):
         url = ''.join(
             [self.url, '/testsets/', str(cluster_id)]
