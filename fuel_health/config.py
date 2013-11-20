@@ -580,12 +580,9 @@ class NailgunConfig(object):
         api_url = '/api/clusters/%s/generated' % self.cluster_id
         data = self.req_session.get(self.nailgun_url + api_url).json()
         self.generated_data = data
-        if 'RHEL' not in self.compute.deployment_os:
-            amqp_data = data['rabbit']
-            self.amqp_pwd = amqp_data['password']
-        else:
-            amqp_data = data.get('rabbit', '')
-            self.amqp_pwd = amqp_data['password']
+        amqp_data = data['rabbit']
+        self.amqp_pwd = amqp_data['password']
+        if 'RHEL' in self.compute.deployment_os:
             storage = data['storage']['volumes_ceph']
             self.volume.ceph_exist = storage
 
