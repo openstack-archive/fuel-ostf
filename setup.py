@@ -46,8 +46,8 @@ test_requires = [
     'mock==1.0.1',
     'pep8==1.4.6',
     'py==1.4.15',
-    'six==1.3.0',
-    'tox==1.5.0',
+    'six>=1.3.0',
+    'tox>=1.5.0',
     'unittest2',
     'nose',
     'requests'
