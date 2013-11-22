@@ -18,7 +18,8 @@ __profile__ = {
     "test_path": ("fuel_plugin/tests/functional/dummy_tests/"
                   "deployment_types_tests/alternative_depl_tags_test.py"),
     "description": "Fake testset to test alternative deployment tags",
-    "deployment_tags": ["alternative | alternative_test"]
+    "deployment_tags": ["alternative | alternative_test"],
+    "test_runs_ordering_priority": 5
 }
 
 import unittest

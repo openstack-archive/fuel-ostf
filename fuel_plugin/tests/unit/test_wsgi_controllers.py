@@ -67,6 +67,18 @@ class TestTestSetsController(BaseWSGITest):
             sorted(self.expected['test_set_description'])
         )
 
+        test_set_order = {
+            'general_test': 0,
+            'stopped_test': 1,
+            'ha_deployment_test': 2
+        }
+
+        resp_elements = [testset['id'] for testset in res]
+        for test_set in resp_elements:
+            self.assertTrue(
+                test_set_order[test_set] == resp_elements.index(test_set)
+            )
+
 
 class TestTestRunsController(BaseWSGITest):
 

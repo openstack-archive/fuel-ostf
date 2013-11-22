@@ -18,7 +18,8 @@ __profile__ = {
     "test_path": ("fuel_plugin/tests/functional/deployment_types_tests/"
                   "multinode_deployment.py"),
     "description": "Fake tests for multinode deployment on ubuntu",
-    "deployment_tags": ["multinode", "ubuntu"]
+    "deployment_tags": ["multinode", "ubuntu"],
+    "test_runs_ordering_priority": 4
 }
 
 import unittest
