@@ -34,6 +34,10 @@ try:
     import savannaclient.api.client
 except:
     LOG.warning('Savanna client could not be imported.')
+try:
+    import ceilometerclient.v2.client
+except:
+    LOG.warning('Ceilometer client could not be imported.')
 import cinderclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
@@ -198,6 +202,12 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                                auth_url=auth_url,
                                                savanna_url=savanna_url)
 
+    def _get_ceilometer_client(self):
+        keystone = self._get_identity_client()
+        endpoint = keystone.service_catalog.url_for(service_type='metering',
+                                                    endpoint_type='publicURL')
+        return ceilometerclient.v2.Client(endpoint=endpoint,
+                                          token=lambda: keystone.auth_token)
 
 class OfficialClientTest(fuel_health.test.TestCase):
     manager_class = OfficialClientManager
