@@ -21,6 +21,7 @@ This information will be stored in ostf database
 in test_sets table.
 '''
 __profile__ = {
+    "ordering_priority": 200,
     "id": "smoke",
     "driver": "nose",
     "test_path": "fuel_health/tests/smoke",
