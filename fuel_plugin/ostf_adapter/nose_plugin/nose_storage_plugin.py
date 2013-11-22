@@ -38,6 +38,8 @@ class StoragePlugin(plugins.Plugin):
         super(StoragePlugin, self).__init__()
         self._start_time = None
 
+        self.session = engine.get_session()
+
     def options(self, parser, env=os.environ):
         env['NAILGUN_HOST'] = str(conf.nailgun.host)
         env['NAILGUN_PORT'] = str(conf.nailgun.port)
@@ -52,7 +54,6 @@ class StoragePlugin(plugins.Plugin):
         data = {
             'status': status,
             'time_taken': self.taken,
-            #disable traceback
             'traceback': u'',
             'step': None,
             'message': u''
@@ -63,15 +64,13 @@ class StoragePlugin(plugins.Plugin):
                 data['step'], data['message'] = \
                     nose_utils.format_failure_message(exc_value)
 
-        session = engine.get_session()
-
-        with session.begin(subtransactions=True):
+        with self.session.begin(subtransactions=True):
 
             tests_to_update = nose_utils.get_tests_ids_to_update(test)
 
             for test_id in tests_to_update:
                 models.Test.add_result(
-                    session,
+                    self.session,
                     self.test_run_id,
                     test_id,
                     data
