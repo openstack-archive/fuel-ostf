@@ -1,20 +1,20 @@
-"""initial_migration
+"""initial
 
-Revision ID: 430d8c6aae6d
+Revision ID: 1fd6054552f1
 Revises: None
-Create Date: 2013-10-31 11:41:03.192811
+Create Date: 2013-11-22 19:05:47.553587
 
 """
 
 # revision identifiers, used by Alembic.
-revision = '430d8c6aae6d'
+revision = '1fd6054552f1'
 down_revision = None
 
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-from fuel_plugin.ostf_adapter.storage.fields import JsonField, ListField
+from fuel_plugin.ostf_adapter.storage import fields
 
 
 def upgrade():
@@ -25,18 +25,18 @@ def upgrade():
         sa.Column('description', sa.String(length=256), nullable=True),
         sa.Column('test_path', sa.String(length=256), nullable=True),
         sa.Column('driver', sa.String(length=128), nullable=True),
-        sa.Column('additional_arguments', ListField(), nullable=True),
+        sa.Column('additional_arguments', fields.ListField(), nullable=True),
         sa.Column('cleanup_path', sa.String(length=128), nullable=True),
-        sa.Column('meta', JsonField(), nullable=True),
+        sa.Column('meta', fields.JsonField(), nullable=True),
         sa.Column('deployment_tags', postgresql.ARRAY(sa.String(length=64)),
                   nullable=True),
+        sa.Column('test_runs_ordering_priority', sa.Integer(), nullable=True),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
         'cluster_state',
         sa.Column('id', sa.Integer(), autoincrement=False, nullable=False),
-        sa.Column('deployment_tags',
-                  postgresql.ARRAY(sa.String(length=64)),
+        sa.Column('deployment_tags', postgresql.ARRAY(sa.String(length=64)),
                   nullable=True),
         sa.PrimaryKeyConstraint('id')
     )
@@ -44,7 +44,8 @@ def upgrade():
         'cluster_testing_pattern',
         sa.Column('cluster_id', sa.Integer(), nullable=False),
         sa.Column('test_set_id', sa.String(length=128), nullable=False),
-        sa.Column('tests', postgresql.ARRAY(sa.String(length=512)),
+        sa.Column('tests',
+                  postgresql.ARRAY(sa.String(length=512)),
                   nullable=True),
         sa.ForeignKeyConstraint(['cluster_id'], ['cluster_state.id'], ),
         sa.ForeignKeyConstraint(['test_set_id'], ['test_sets.id'], ),
@@ -54,10 +55,9 @@ def upgrade():
         'test_runs',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('status',
-                  sa.Enum('running', 'finished',
-                          name='test_run_states'),
+                  sa.Enum('running', 'finished', name='test_run_states'),
                   nullable=False),
-        sa.Column('meta', JsonField(), nullable=True),
+        sa.Column('meta', fields.JsonField(), nullable=True),
         sa.Column('started_at', sa.DateTime(), nullable=True),
         sa.Column('ended_at', sa.DateTime(), nullable=True),
         sa.Column('test_set_id', sa.String(length=128), nullable=True),
@@ -66,8 +66,7 @@ def upgrade():
             ['test_set_id', 'cluster_id'],
             ['cluster_testing_pattern.test_set_id',
              'cluster_testing_pattern.cluster_id'],
-            ondelete='CASCADE'
-        ),
+            ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -81,14 +80,12 @@ def upgrade():
         sa.Column('traceback', sa.Text(), nullable=True),
         sa.Column('status',
                   sa.Enum('wait_running', 'running', 'failure', 'success',
-                          'error', 'stopped', 'disabled',
-                          name='test_states'),
+                          'error', 'stopped', 'disabled', name='test_states'),
                   nullable=True),
         sa.Column('step', sa.Integer(), nullable=True),
         sa.Column('time_taken', sa.Float(), nullable=True),
-        sa.Column('meta', JsonField(), nullable=True),
-        sa.Column('deployment_tags',
-                  postgresql.ARRAY(sa.String(length=64)),
+        sa.Column('meta', fields.JsonField(), nullable=True),
+        sa.Column('deployment_tags', postgresql.ARRAY(sa.String(length=64)),
                   nullable=True),
         sa.Column('test_run_id', sa.Integer(), nullable=True),
         sa.Column('test_set_id', sa.String(length=128), nullable=True),

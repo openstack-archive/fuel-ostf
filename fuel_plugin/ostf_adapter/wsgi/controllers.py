@@ -52,7 +52,7 @@ class TestsetsController(BaseRestController):
 
             test_sets = request.session.query(models.TestSet)\
                 .filter(models.TestSet.id.in_(needed_testsets))\
-                .order_by(models.TestSet.id)\
+                .order_by(models.TestSet.test_runs_ordering_priority)\
                 .all()
 
             if test_sets:

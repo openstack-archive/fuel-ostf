@@ -18,7 +18,8 @@ __profile__ = {
     "test_path": ("fuel_plugin/tests/functional/deployment_types_tests/"
                   "ha_deployment_test.py"),
     "description": "Fake tests for HA deployment",
-    "deployment_tags": ["Ha"]
+    "deployment_tags": ["Ha"],
+    "test_runs_ordering_priority": 3
 }
 
 import unittest

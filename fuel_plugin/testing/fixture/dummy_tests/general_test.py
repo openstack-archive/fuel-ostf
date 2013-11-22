@@ -17,7 +17,8 @@ __profile__ = {
     "driver": "nose",
     "test_path": "fuel_plugin/tests/functional/dummy_tests/general_test.py",
     "description": "General fake tests",
-    "deployment_tags": []
+    "deployment_tags": [],
+    "test_runs_ordering_priority": 1
 }
 
 import time

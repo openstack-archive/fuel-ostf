@@ -82,6 +82,7 @@ class TestSet(BASE):
     cleanup_path = sa.Column(sa.String(128))
     meta = sa.Column(fields.JsonField())
     deployment_tags = sa.Column(ARRAY(sa.String(64)))
+    test_runs_ordering_priority = sa.Column(sa.Integer)
 
     tests = relationship(
         'Test',
