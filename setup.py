@@ -18,12 +18,11 @@ import setuptools
 
 fuel_health_reqs = [
     'oslo.config>=1.1.1',
-    'python-cinderclient==1.0.4',
-    'python-glanceclient==0.9.0',
-    'python-keystoneclient==0.2.4',
-    'python-novaclient==2.12.0',
-    'python-heatclient==0.2.2',
-    'python-muranoclient==0.2',
+    'python-cinderclient>=1.0.6',
+    'python-keystoneclient>=0.4.1',
+    'python-novaclient>=2.15.0',
+    'python-heatclient>=0.2.5',
+    'python-muranoclient>=0.2.11',
     'python-savannaclient>=0.3',
     'paramiko>=1.10.1',
     'requests>=1.1,<1.2.3',
@@ -43,10 +42,10 @@ fuel_ostf_reqs = [
 ]
 
 test_requires = [
-    'mock==1.0.1',
-    'pep8==1.4.6',
-    'py==1.4.15',
-    'six>=1.3.0',
+    'mock>=1.0.1',
+    'pep8>=1.4.6',
+    'py>=1.4.15',
+    'six>=1.4.1',
     'tox>=1.5.0',
     'unittest2',
     'nose',
