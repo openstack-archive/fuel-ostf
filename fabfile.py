@@ -115,8 +115,13 @@ def masstest():
 
 
 def testissue():
-    for i in range(10):
+    for i in range(100):
         local(
             ('nosetests -sv fuel_plugin/testing/tests/functional/'
-             'tests.py:AdapterTests.test_run_single_test')
+             'tests.py:AdapterTests.test_start_many_runs')
         )
+
+
+def massintegration():
+    for i in range(20):
+        integration()
