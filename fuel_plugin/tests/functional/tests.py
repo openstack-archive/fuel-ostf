@@ -184,10 +184,10 @@ class AdapterTests(BaseAdapterTest):
         for the same cluster_id while previous run
         is running
         """
-        testsets = {
-            "stopped_test": None,
-            "general_test": None
-        }
+        testsets = [
+            "stopped_test",
+            "general_test"
+        ]
         cluster_id = 1
 
         self.adapter.testsets(cluster_id)
@@ -286,6 +286,7 @@ class AdapterTests(BaseAdapterTest):
         r = self.client.testruns_last(cluster_id)
         assertions.general_test['status'] = 'finished'
 
+        assertions.general_test['status'] = 'finished'
         for test in assertions.general_test['tests']:
             if test['name'] == 'Fast fail':
                 test['status'] = 'failure'

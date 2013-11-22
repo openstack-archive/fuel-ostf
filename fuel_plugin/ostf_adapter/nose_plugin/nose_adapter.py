@@ -41,6 +41,7 @@ class NoseDriver(object):
         if tests:
             argv_add = [nose_utils.modify_test_name_for_nose(test) for test in
                         tests]
+
         else:
             argv_add = [test_set.test_path] + test_set.additional_arguments
 
