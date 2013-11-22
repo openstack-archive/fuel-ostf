@@ -420,27 +420,33 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 LOG.debug(exc)
                 pass
 
-    def _ping_ip_address(self, ip_address):
+    def retry_command(self, retries, method, *args, **kwargs):
+        for _ in range(retries):
+            try:
+                method(*args, **kwargs)
+                LOG.debug("Command execution successful.")
+                return True
+            except Exception:
+                LOG.debug("Connection failed. Another"
+                          " effort needed.")
+        self.fail("Instance is not reachable by floating IP.")
+
+    def _ping_ip_address(self, ip_address, timeout, retries):
         def ping():
             cmd = 'ping -c1 -w1 ' + ip_address
-            time.sleep(60)
 
+            ssh_timeout = self.timeout > 30 and self.timeout or timeout
             if self.host:
-
                 try:
-                    SSHClient(self.host[0],
-                              self.usr, self.pwd,
-                              key_filename=self.key,
-                              timeout=self.timeout).exec_command(cmd)
-                    return True
-
-                except SSHExecCommandFailed as exc:
-                    output_msg = "Instance is not reachable by floating IP."
-                    LOG.debug(exc)
-                    self.fail(output_msg)
+                    ssh = SSHClient(self.host[0],
+                                    self.usr, self.pwd,
+                                    key_filename=self.key,
+                                    timeout=ssh_timeout)
                 except Exception as exc:
                     LOG.debug(exc)
                     self.fail("Connection failed.")
+
+                return self.retry_command(retries, ssh.exec_command, cmd)
 
             else:
                 self.fail('Wrong tests configurations, one from the next '
@@ -450,46 +456,47 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         # TODO Allow configuration of execution and sleep duration.
         return fuel_health.test.call_until_true(ping, 40, 1)
 
-    def _ping_ip_address_from_instance(self, ip_address, viaHost=None):
+    def _ping_ip_address_from_instance(self, ip_address, timeout,
+                                       retries, viaHost=None):
         def ping():
-            time.sleep(30)
-            ssh_timeout = self.timeout > 30 and self.timeout or 30
+            ssh_timeout = self.timeout > 30 and self.timeout or timeout
+
             if not (self.host or viaHost):
                 self.fail('Wrong tests configurations, one from the next '
                           'parameters are empty controller_node_name or '
                           'controller_node_ip ')
             try:
                 host = viaHost or self.host[0]
+                LOG.debug('Get ssh to instance')
                 ssh = SSHClient(host,
                                 self.usr, self.pwd,
                                 key_filename=self.key,
                                 timeout=ssh_timeout)
-                LOG.debug('Get ssh to auxiliary host')
-                ssh.exec_command_on_vm(command='ping -c1 -w1 8.8.8.8',
-                                       user='cirros',
-                                       password='cubswin:)',
-                                       vm=ip_address)
-                LOG.debug('Get ssh to instance')
-                return True
-            except SSHExecCommandFailed as exc:
-                output_msg = "Ping command failed."
-                LOG.debug(exc)
-                self.fail(output_msg)
+
             except Exception as exc:
                 LOG.debug(exc)
                 self.fail("Connection failed.")
 
+            return self.retry_command(retries, ssh.exec_command_on_vm,
+                                      command='ping -c1 -w1 8.8.8.8',
+                                      user='cirros',
+                                      password='cubswin:)',
+                                      vm=ip_address)
+
         # TODO Allow configuration of execution and sleep duration.
         return fuel_health.test.call_until_true(ping, 40, 1)
 
-    def _check_vm_connectivity(self, ip_address):
-        self.assertTrue(self._ping_ip_address(ip_address),
+    def _check_vm_connectivity(self, ip_address, timeout, retries):
+        self.assertTrue(self._ping_ip_address(ip_address, timeout, retries),
                         "Timed out waiting for %s to become "
                         "reachable. Please, check Network "
                         "configuration" % ip_address)
 
-    def _check_connectivity_from_vm(self, ip_address, viaHost=None):
+    def _check_connectivity_from_vm(self, ip_address,
+                                    timeout, retries,
+                                    viaHost=None):
         self.assertTrue(self._ping_ip_address_from_instance(ip_address,
+                                                            timeout, retries,
                                                             viaHost=viaHost),
                         "Timed out waiting for %s to become "
                         "reachable. Please, check Network "
