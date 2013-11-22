@@ -190,9 +190,10 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
         self.floating_ips.append(floating_ip)
 
-        self.verify(100, self._check_vm_connectivity, 5,
+        self.verify(300, self._check_vm_connectivity, 5,
                     "VM connectivity doesn`t function properly.",
-                    'VM connectivity checking', floating_ip.ip)
+                    'VM connectivity checking', floating_ip.ip,
+                    30, 10)
 
     def test_008_check_public_instance_connectivity_from_instance(self):
         """Check network connectivity from instance via floating IP
@@ -239,10 +240,11 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         ip_address = floating_ip.ip
         LOG.info('is address is %s' % ip_address)
         LOG.debug(ip_address)
-        self.verify(100, self._check_connectivity_from_vm,
+        self.verify(300, self._check_connectivity_from_vm,
                     5, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                     "function properly."),
-                    'public connectivity checking from VM', ip_address)
+                    'public connectivity checking from VM', ip_address,
+                    30, 10)
 
     def test_006_check_internet_connectivity_instance_without_floatingIP(self):
         """Check network connectivity from instance without floating IP
@@ -281,9 +283,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.fail("Step 3 failed: cannot get instance details. "
                       "Please refer to OpenStack logs for more details.")
 
-        self.verify(100, self._check_connectivity_from_vm,
+        self.verify(300, self._check_connectivity_from_vm,
                     3, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                         "function properly."),
                     'public connectivity checking from VM',
-                    instance_ip,
-                    compute)
+                    instance_ip, 30, 10, compute)
