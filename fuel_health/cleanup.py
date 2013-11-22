@@ -106,6 +106,23 @@ def cleanup(cluster_deployment_info):
         except Exception:
             LOG.warning(traceback.format_exc())
 
+    if 'ceilometer' in cluster_deployment_info:
+        try:
+            ceilometer_client = manager._get_ceilometer_client()
+            if ceilometer_client is not None:
+                alarms = ceilometer_client.alarms.list()
+                for a in alarms:
+                    if a.name.startswith('ost1_test-'):
+                        try:
+                            LOG.info('Start alarms deletion.')
+                            ceilometer_client.alarms.delete(a.id)
+                        except Exception as exc:
+                            LOG.debug(exc)
+        except Exception as exc:
+            LOG.warning(
+                'Something wrong with ceilometer client. Esception: %s', exc
+            )
+
     if 'heat' in cluster_deployment_info:
         try:
             heat_client = manager._get_heat_client()
