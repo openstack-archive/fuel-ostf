@@ -185,10 +185,10 @@ class AdapterTests(BaseAdapterTest):
         for the same cluster_id while previous run
         is running
         """
-        testsets = {
-            "stopped_test": None,
-            "general_test": None
-        }
+        testsets = [
+            "stopped_test",
+            "general_test"
+        ]
         cluster_id = 1
 
         self.adapter.testsets(cluster_id)
@@ -282,11 +282,12 @@ class AdapterTests(BaseAdapterTest):
         ])
 
         self.compare(resp, assertions)
-        time.sleep(5)
+
+        time.sleep(3)
 
         resp = self.client.testruns_last(cluster_id)
-        assertions.general_test['status'] = 'finished'
 
+        assertions.general_test['status'] = 'finished'
         for test in assertions.general_test['tests']:
             if test['name'] == 'And fast error':
                 test['status'] = 'error'
@@ -386,7 +387,7 @@ class AdapterTests(BaseAdapterTest):
         #make sure we have all needed data in db
         self.adapter.testsets(cluster_id)
 
-        self.client.run_with_timeout(testset, tests, cluster_id, 80)
+        self.client.run_with_timeout(testset, tests, cluster_id, 70)
         self.client.restart_with_timeout(testset, tests, cluster_id, 10)
 
         resp = self.client.restart_tests_last(testset, disabled_test, cluster_id)

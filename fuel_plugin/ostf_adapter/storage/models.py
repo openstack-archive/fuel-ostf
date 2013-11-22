@@ -249,7 +249,13 @@ class TestRun(BASE):
 
     @property
     def enabled_tests(self):
-        return [test.name for test in self.tests if test.status != 'disabled']
+        session = engine.get_session()
+        tests = session.query(Test)\
+            .filter_by(test_run_id=self.id)\
+            .order_by(Test.name)
+
+        return [test.name for test
+                in tests if test.status != 'disabled']
 
     def is_finished(self):
         return self.status == 'finished'
@@ -364,18 +370,24 @@ class TestRun(BASE):
         plugin = nose_plugin.get_plugin(test_set.driver)
         if cls.is_last_running(session, test_set.id,
                                metadata['cluster_id']):
-            test_run = cls.add_test_run(
-                session, test_set.id,
-                metadata['cluster_id'], tests=tests)
+
+            with session.begin(subtransactions=True):
+                test_run = cls.add_test_run(
+                    session, test_set.id,
+                    metadata['cluster_id'], tests=tests)
+
+            retvalue = test_run.frontend
+            session.close()
+
             plugin.run(test_run, test_set)
-            return test_run.frontend
+
+            return retvalue
         return {}
 
     def restart(self, session, tests=None):
         """Restart test run with
             if tests given they will be enabled
         """
-        #test_set = self.get_test_set(session)
         if TestRun.is_last_running(session,
                                    self.test_set_id,
                                    self.cluster_id):
