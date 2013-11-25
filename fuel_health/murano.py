@@ -16,7 +16,6 @@
 #    under the License.
 
 import time
-
 import fuel_health.nmanager
 
 
@@ -32,8 +31,9 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             Returns the image object or None
         """
         for image in self.compute_client.images.list():
-            if 'murano_image_info' in image.metadata and \
-               'ws-2012-std' == image.metadata['tag']['type']:
+            tag = 'murano_image_info'
+            if tag in image.metadata and \
+               'ws-2012-std' == image.metadata[tag]['type']:
                 return image
 
     def find_keypair(self, keyname):

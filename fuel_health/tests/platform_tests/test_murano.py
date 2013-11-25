@@ -14,10 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
 from fuel_health import murano
-
-LOG = logging.getLogger(__name__)
 
 
 class MuranoDeploymentSmokeTests(murano.MuranoTest):
@@ -32,14 +29,13 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
     def setUp(self):
         super(MuranoDeploymentSmokeTests, self).setUp()
-        msg = ("Windows Server 2012 image with Murano "
+        msg = ("Test was skiped: Windows Server 2012 image with Murano "
                "tag isn't available. Need to import this image into "
                "glance and mark with Murano metadata tag. Please "
                "refer to the Fuel Web and Murano user documentation. ")
         self.image = self.find_murano_image()
         if not self.image:
-            LOG.debug(msg)
-            self.fail(msg)
+            self.skipTest(msg)
 
     def test_deploy_ad(self):
         """Check that user can deploy AD service in Murano environment
@@ -267,8 +263,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         msg = ("Test was skiped: Key Pair 'murano-lb-key' does not exist."
                " Please, add this key pair manually. ")
         if not self.find_keypair('murano-lb-key'):
-            LOG.debug(msg)
-            self.fail(msg)
+            self.skipTest(msg)
 
         fail_msg = "Can't create environment. Murano API is not available. "
         self.environment = self.verify(5, self.create_environment,
@@ -342,11 +337,10 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         Deployment tags: Murano, Heat
         """
 
-        msg = ("Key Pair 'murano-lb-key' does not exist."
+        msg = ("Test was skiped: Key Pair 'murano-lb-key' does not exist."
                " Please, add this key pair manually. ")
         if not self.find_keypair('murano-lb-key'):
-            LOG.debug(msg)
-            self.fail(msg)
+            self.skipTest(msg)
 
         fail_msg = "Can't create environment. Murano API is not available. "
         self.environment = self.verify(5, self.create_environment,
