@@ -209,6 +209,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         return ceilometerclient.v2.Client(endpoint=endpoint,
                                           token=lambda: keystone.auth_token)
 
+
 class OfficialClientTest(fuel_health.test.TestCase):
     manager_class = OfficialClientManager
 
@@ -523,7 +524,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         super(NovaNetworkScenarioTest, cls).tearDownClass()
         cls._clean_floating_is()
         cls._clear_networks()
-      #  cls._verification_of_exceptions()
+        #  cls._verification_of_exceptions()
 
 
 def get_image_from_name():
@@ -621,6 +622,7 @@ class SmokeChecksTest(OfficialClientTest):
     """
     Base class for openstack smoke tests
     """
+
     @classmethod
     def setUpClass(cls):
         super(SmokeChecksTest, cls).setUpClass()

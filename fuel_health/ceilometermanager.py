@@ -94,7 +94,6 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         return self.ceilometer_client.alarms.set_state(alarm_id=alarm_id,
                                                        state=state)
 
-
     def get_state(self, alarm_id):
         """
         This method provide getting state
@@ -102,7 +101,6 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         return self.ceilometer_client.alarms.get_state(alarm_id=alarm_id)
 
     def verify_state(self, alarm_id, state):
-
         """
         This method provide getting state
         """
