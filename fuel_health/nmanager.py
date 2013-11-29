@@ -155,7 +155,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         keystone = self._get_identity_client(username, password, tenant_name)
         token = keystone.auth_token
         try:
-            endpoint = self.config.heat.endpoint
+            endpoint = self.config.heat.endpoint + "/" + token
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Can not initialize heat client, endpoint not found')
             return None
