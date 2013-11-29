@@ -264,7 +264,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         Deployment tags: Murano, Heat
         """
 
-        msg = ("Test was skiped: Key Pair 'murano-lb-key' does not exist."
+        msg = ("Key Pair 'murano-lb-key' does not exist."
                " Please, add this key pair manually. ")
         if not self.find_keypair('murano-lb-key'):
             LOG.debug(msg)
