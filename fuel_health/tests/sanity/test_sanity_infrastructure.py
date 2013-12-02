@@ -18,6 +18,7 @@ import logging
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health import nmanager
+from time import sleep
 
 LOG = logging.getLogger(__name__)
 
@@ -62,14 +63,26 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                self.usr, self.pwd,
                                key_filename=self.key,
                                timeout=self.timeout)
-        output = self.verify(50, ssh_client.exec_command,
-                             1, "'nova-manage' command execution failed. ",
-                             "nova-manage command execution",
-                             cmd)
-        LOG.debug(output)
-        self.verify_response_true(
-            u'XXX' not in output, 'Step 2 failed: Some nova services '
-                                  'have not been started.')
+        try:
+            output = self.verify(50, ssh_client.exec_command,
+                                 1, "'nova-manage' command execution failed. ",
+                                 "nova-manage command execution",
+                                 cmd)
+            LOG.debug(output)
+            self.verify_response_true(
+                u'XXX' not in output, 'Step 2 failed: Some nova services '
+                'have not been started.')
+        except:
+            LOG.info("Will sleep for 60 seconds and try again")
+            sleep(60)
+            output = self.verify(50, ssh_client.exec_command,
+                                 1, "'nova-manage' command execution failed. ",
+                                 "nova-manage command execution",
+                                 cmd)
+            LOG.debug(output)
+            self.verify_response_true(
+                u'XXX' not in output, 'Step 2 failed: Some nova services '
+                'have not been started.')
 
     def test_002_internet_connectivity_from_compute(self):
         """Check internet connectivity from a compute
