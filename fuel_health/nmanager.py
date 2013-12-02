@@ -446,16 +446,20 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 LOG.debug(exc)
                 pass
 
-    def retry_command(self, retries, method, *args, **kwargs):
+    def retry_command(self, retries, timeout, method, *args, **kwargs):
         for i in range(retries):
             try:
                 method(*args, **kwargs)
                 LOG.debug("Command execution successful.")
                 return True
+            except SSHExecCommandFailed:
+                self.fail("Command execution failed.")
             except Exception:
                 LOG.debug("Connection failed. Another"
                           " effort needed.")
-        self.fail("Instance is not reachable by floating IP.")
+                time.sleep(timeout)
+
+        self.fail("Instance is not reachable by IP.")
 
     def _ping_ip_address(self, ip_address, timeout, retries):
         def ping():
@@ -470,7 +474,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 except Exception as exc:
                     LOG.debug(exc)
 
-                return self.retry_command(retries, ssh.exec_command, cmd)
+                return self.retry_command(retries[0], retries[1],
+                                          ssh.exec_command, cmd)
 
             else:
                 self.fail('Wrong tests configurations, one from the next '
@@ -498,9 +503,11 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
             except Exception as exc:
                 LOG.debug(exc)
-
-            return self.retry_command(retries, ssh.exec_command_on_vm,
-                                      command='ping -c1 -w1 8.8.8.8',
+            command = "ping -q -c3 -w3 8.8.8.8 | grep 'received' |" \
+                      " grep -v '0 packets received'"
+            return self.retry_command(retries[0], retries[1],
+                                      ssh.exec_command_on_vm,
+                                      command=command,
                                       user='cirros',
                                       password='cubswin:)',
                                       vm=ip_address)
