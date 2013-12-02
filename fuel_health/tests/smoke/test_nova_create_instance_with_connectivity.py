@@ -208,7 +208,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         self.verify(300, self._check_vm_connectivity, 5,
                     "VM connectivity doesn`t function properly.",
                     'VM connectivity checking', floating_ip.ip,
-                    30, 10)
+                    30, (10, 30))
 
         self.verify(10, self.compute_client.servers.remove_floating_ip,
                     6, "Floating IP cannot be removed.",
@@ -269,7 +269,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                     5, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                     "function properly."),
                     'public connectivity checking from VM', ip_address,
-                    30, 10)
+                    30, (10, 30))
 
         self.verify(10, self.compute_client.servers.remove_floating_ip,
                     6, "Floating IP cannot be removed.",
@@ -320,7 +320,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                     3, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                         "function properly."),
                     'public connectivity checking from VM',
-                    instance_ip, 30, 10, compute)
+                    instance_ip, 30, (10, 30), compute)
 
         self.verify(30, self._delete_server, 5,
                     "Server can not be deleted. ",

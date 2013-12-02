@@ -82,17 +82,19 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         if not self.computes:
             self.fail('Step 1 failed: There are no compute nodes')
 
-        cmd = "ping 8.8.8.8 -c 1 -w 1"
+        cmd = "ping -q -c3 -w3 8.8.8.8 | grep 'received' |" \
+              " grep -v '0 received'"
+
         ssh_client = SSHClient(self.computes[0],
                                self.usr,
                                self.pwd,
                                key_filename=self.key,
                                timeout=self.timeout)
-        self.verify(50, ssh_client.exec_command, 1,
+        self.verify(50, self.retry_command, 1,
                     "'ping' command failed. Looks like there is no "
                     "Internet connection on the compute node.",
                     "'ping' command",
-                    cmd)
+                    2, 30, ssh_client.exec_command, cmd)
 
     def test_003_dns_resolution(self):
         """Check DNS resolution on compute node
