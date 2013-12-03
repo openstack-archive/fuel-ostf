@@ -15,10 +15,10 @@
 # under the License.
 
 import logging
+from time import sleep
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health import nmanager
-from time import sleep
 
 LOG = logging.getLogger(__name__)
 
@@ -124,11 +124,11 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                timeout=self.timeout)
         expected_output = "google"
         cmd = "host 8.8.8.8"
-        output = self.verify(50, ssh_client.exec_command, 1,
+        output = self.verify(50, self.retry_command, 1,
                              "'host' command failed. Looks like there is no "
                              "Internet connection on the compute node.",
-                             "'ping' command",
-                             cmd)
+                             "'ping' command", 10, 5,
+                             ssh_client.exec_command, cmd)
         LOG.debug(output)
         self.verify_response_true(expected_output in output,
                                   'Step 2 failed: '
@@ -137,11 +137,11 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
         expected_output = "google.com has address"
         cmd = "host google.com"
-        output = self.verify(50, ssh_client.exec_command, 3,
+        output = self.verify(50, self.retry_command, 3,
                              "'host' command failed. "
                              "DNS name cannot be resolved.",
-                             "'host' command",
-                             cmd)
+                             "'host' command", 10, 5,
+                             ssh_client.exec_command, cmd)
         LOG.debug(output)
         self.verify_response_true(expected_output in output,
                                   'Step 4 failed: '

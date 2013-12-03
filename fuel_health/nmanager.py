@@ -219,6 +219,8 @@ class OfficialClientTest(fuel_health.test.TestCase):
             return flavor
 
     def _delete_server(self, server):
+        LOG.debug("Stopping server.")
+        self.compute_client.servers.stop(server)
         LOG.debug("Deleting server.")
         self.compute_client.servers.delete(server)
 
@@ -245,9 +247,9 @@ class OfficialClientTest(fuel_health.test.TestCase):
     def retry_command(self, retries, timeout, method, *args, **kwargs):
         for i in range(retries):
             try:
-                method(*args, **kwargs)
+                result = method(*args, **kwargs)
                 LOG.debug("Command execution successful.")
-                return True
+                return result
             except SSHExecCommandFailed as exc:
                 LOG.debug("Command execution failed: %s" % exc)
                 self.fail("Command execution failed.")
