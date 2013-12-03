@@ -155,7 +155,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         keystone = self._get_identity_client(username, password, tenant_name)
         token = keystone.auth_token
         try:
-            endpoint = self.config.heat.endpoint + "/" + token
+            endpoint = self.config.heat.endpoint + "/" + keystone.tenant_id
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Can not initialize heat client, endpoint not found')
             return None
@@ -201,6 +201,17 @@ class OfficialClientManager(fuel_health.manager.Manager):
 
 class OfficialClientTest(fuel_health.test.TestCase):
     manager_class = OfficialClientManager
+
+    @classmethod
+    def setUpClass(cls):
+        super(OfficialClientTest, cls).setUpClass()
+        cls.host = cls.config.compute.controller_nodes
+        cls.usr = cls.config.compute.controller_node_ssh_user
+        cls.pwd = cls.config.compute.controller_node_ssh_password
+        cls.key = cls.config.compute.path_to_private_key
+        cls.timeout = cls.config.compute.ssh_timeout
+
+        cls.private_net = 'net04'
 
     @classmethod
     def _create_nano_flavor(cls):
@@ -260,71 +271,31 @@ class OfficialClientTest(fuel_health.test.TestCase):
 
         self.fail("Instance is not reachable by IP.")
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.error_msg = []
+    def _create_floating_ip(self):
+        floating_ips_pool = self.compute_client.floating_ip_pools.list()
+
+        if floating_ips_pool:
+            floating_ip = self.compute_client.floating_ips.create(
+                pool=floating_ips_pool[0].name)
+
+            self.set_resource(floating_ip.ip, floating_ip)
+            return floating_ip
+        else:
+            self.fail('No available floating IP found')
+
+    def _assign_floating_ip_to_instance(self, client, server, floating_ip):
         try:
-            cls.compute_client.flavors.delete('42')
-        except Exception as exc:
-            cls.error_msg.append(exc)
-            LOG.debug(exc)
-        while cls.os_resources:
-            thing = cls.os_resources.pop()
-            LOG.debug("Deleting %r from shared resources of %s" %
-                      (thing, cls.__name__))
+            client.servers.add_floating_ip(server, floating_ip)
+        except Exception:
+            self.fail('Can not assign floating ip to instance')
 
-            try:
-                # OpenStack resources are assumed to have a delete()
-                # method which destroys the resource...
-                thing.delete()
-            except Exception as e:
-                # If the resource is already missing, mission accomplished.
-                if e.__class__.__name__ == 'NotFound':
-                    continue
-                cls.error_msg.append(e)
-                LOG.debug(e)
-
-            def is_deletion_complete():
-                # Deletion testing is only required for objects whose
-                # existence cannot be checked via retrieval.
-                if isinstance(thing, dict):
-                    return True
-                try:
-                    thing.get()
-                except Exception as e:
-                    # Clients are expected to return an exception
-                    # called 'NotFound' if retrieval fails.
-                    if e.__class__.__name__ == 'NotFound':
-                        return True
-                    cls.error_msg.append(e)
-                    LOG.debug(e)
-                return False
-
-            # Block until resource deletion has completed or timed-out
-            fuel_health.test.call_until_true(is_deletion_complete, 10, 1)
-
-
-class NovaNetworkScenarioTest(OfficialClientTest):
-    """
-    Base class for nova network scenario tests
-    """
-
-    @classmethod
-    def setUpClass(cls):
-        super(NovaNetworkScenarioTest, cls).setUpClass()
-        cls.host = cls.config.compute.controller_nodes
-        cls.usr = cls.config.compute.controller_node_ssh_user
-        cls.pwd = cls.config.compute.controller_node_ssh_password
-        cls.key = cls.config.compute.path_to_private_key
-        cls.timeout = cls.config.compute.ssh_timeout
-        cls.tenant_id = cls.manager._get_identity_client(
-            cls.config.identity.admin_username,
-            cls.config.identity.admin_password,
-            cls.config.identity.admin_tenant_name).tenant_id
-        cls.network = []
-        cls.floating_ips = []
-        cls.error_msg = []
-        cls.private_net = 'net04'
+    def _create_flavors(self, client, ram, disk, vcpus=1):
+        name = rand_name('ost1_test-flavor-')
+        flavorid = rand_int_id()
+        flavor = client.flavors.create(name=name, ram=ram, disk=disk,
+                                       vcpus=vcpus, flavorid=flavorid)
+        self.set_resource(name, flavor)
+        return flavor
 
     def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
         kp_name = rand_name(namestart)
@@ -379,6 +350,65 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
         return secgroup
 
+    @classmethod
+    def tearDownClass(cls):
+        cls.error_msg = []
+        try:
+            cls.compute_client.flavors.delete('42')
+        except Exception as exc:
+            cls.error_msg.append(exc)
+            LOG.debug(exc)
+        while cls.os_resources:
+            thing = cls.os_resources.pop()
+            LOG.debug("Deleting %r from shared resources of %s" %
+                      (thing, cls.__name__))
+
+            try:
+                # OpenStack resources are assumed to have a delete()
+                # method which destroys the resource...
+                thing.delete()
+            except Exception as e:
+                # If the resource is already missing, mission accomplished.
+                if e.__class__.__name__ == 'NotFound':
+                    continue
+                cls.error_msg.append(e)
+                LOG.debug(e)
+
+            def is_deletion_complete():
+                # Deletion testing is only required for objects whose
+                # existence cannot be checked via retrieval.
+                if isinstance(thing, dict):
+                    return True
+                try:
+                    thing.get()
+                except Exception as e:
+                    # Clients are expected to return an exception
+                    # called 'NotFound' if retrieval fails.
+                    if e.__class__.__name__ == 'NotFound':
+                        return True
+                    cls.error_msg.append(e)
+                    LOG.debug(e)
+                return False
+
+            # Block until resource deletion has completed or timed-out
+            fuel_health.test.call_until_true(is_deletion_complete, 10, 1)
+
+
+class NovaNetworkScenarioTest(OfficialClientTest):
+    """
+    Base class for nova network scenario tests
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super(NovaNetworkScenarioTest, cls).setUpClass()
+        cls.tenant_id = cls.manager._get_identity_client(
+            cls.config.identity.admin_username,
+            cls.config.identity.admin_password,
+            cls.config.identity.admin_tenant_name).tenant_id
+        cls.network = []
+        cls.error_msg = []
+
     def _create_network(self, label='ost1_test-network-smoke-'):
         n_label = rand_name(label)
         cidr = self.config.network.tenant_network_cidr
@@ -432,34 +462,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         self.set_resource(name, server)
         self.servers.append(server)
         return server
-
-    def _create_floating_ip(self):
-        floating_ips_pool = self.compute_client.floating_ip_pools.list()
-
-        if floating_ips_pool:
-            floating_ip = self.compute_client.floating_ips.create(
-                pool=floating_ips_pool[0].name)
-
-            self.floating_ips.append(floating_ip)
-            return floating_ip
-        else:
-            self.fail('No available floating IP found')
-
-    def _assign_floating_ip_to_instance(self, client, server, floating_ip):
-        try:
-            client.servers.add_floating_ip(server, floating_ip)
-        except Exception:
-            self.fail('Can not assign floating ip to instance')
-
-    @classmethod
-    def _clean_floating_ips(cls):
-        for ip in cls.floating_ips:
-            try:
-                cls.compute_client.floating_ips.delete(ip)
-            except Exception as exc:
-                cls.error_msg.append(exc)
-                LOG.debug(exc)
-                pass
 
     def _ping_ip_address(self, ip_address, timeout, retries):
         def ping():
@@ -548,7 +550,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     @classmethod
     def tearDownClass(cls):
         super(NovaNetworkScenarioTest, cls).tearDownClass()
-        cls._clean_floating_ips()
         cls._clear_networks()
 
 
@@ -600,7 +601,6 @@ class SanityChecksTest(OfficialClientTest):
             cls.config.identity.admin_password,
             cls.config.identity.admin_tenant_name).tenant_id
         cls.network = []
-        cls.floating_ips = []
 
     @classmethod
     def tearDownClass(cls):
@@ -658,27 +658,7 @@ class SmokeChecksTest(OfficialClientTest):
         cls.build_interval = cls.config.volume.build_interval
         cls.build_timeout = cls.config.volume.build_timeout
 
-        cls.flavors = []
         cls.error_msg = []
-        cls.private_net = 'net04'
-
-    def _create_flavors(self, client, ram, disk, vcpus=1):
-        name = rand_name('ost1_test-flavor-')
-        flavorid = rand_int_id()
-        flavor = client.flavors.create(name, ram, disk, vcpus, flavorid)
-        self.flavors.append(flavor)
-        return flavor
-
-    @classmethod
-    def _clean_flavors(cls):
-        if cls.flavors:
-            for flav in cls.flavors:
-                try:
-                    cls.compute_client.flavors.delete(flav)
-                except Exception as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
-                    pass
 
     def _create_tenant(self, client):
         name = rand_name('ost1_test-tenant-')
@@ -772,8 +752,3 @@ class SmokeChecksTest(OfficialClientTest):
                     raise cls.failureException('REST API of '
                                                'OpenStack is inaccessible.'
                                                ' Please try again')
-
-    @classmethod
-    def tearDownClass(cls):
-        super(SmokeChecksTest, cls).tearDownClass()
-        cls._clean_flavors()

@@ -352,10 +352,7 @@ heat_group = cfg.OptGroup(name='heat',
 HeatConfig = [
     cfg.StrOpt('endpoint',
                default=None,
-               help="Heat API Service URL."),
-    cfg.StrOpt('endpoint_management',
-               default=None,
-               help="Heat API Service management URL."),
+               help="Heat API Service URL.")
 ]
 
 
