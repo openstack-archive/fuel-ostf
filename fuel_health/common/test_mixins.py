@@ -161,10 +161,16 @@ class FuelTestAssertMixin(object):
             failed_step_msg + 'Actual value - {actual_content}'.format(
                 actual_content=act_content), '\n', msg))
 
-    def verify_response_true(self, resp, msg):
+    def verify_response_true(self, resp, msg, failed_step=''):
         if resp:
             return
-        self.fail(msg + " Please refer to OpenStack logs for more details.")
+
+        failed_step_msg = ''
+        if failed_step:
+            failed_step_msg = ('Step %s failed: ' % str(failed_step))
+
+        message = "{0}{1}. Please refer to OpenStack logs for more details."
+        self.fail(message.format(failed_step_msg, msg))
 
     def verify(self, secs, func, step='', msg='', action='', *args, **kwargs):
         """
