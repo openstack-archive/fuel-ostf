@@ -26,17 +26,21 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
     calling Murano API.
     """
 
-    def find_murano_image(self):
+    def find_murano_image(self, image_type):
         """
             This method allows to find Windows images with Murano tag.
 
             Returns the image object or None
+
+            ImageType can be:
+              linux
+              ws-2012-std
         """
         for image in self.compute_client.images.list():
             tag = 'murano_image_info'
             if tag in image.metadata:
                 metadata = json.loads(image.metadata[tag])
-                if 'ws-2012-std' == metadata['type']:
+                if image_type == metadata['type']:
                     return image
 
     def find_keypair(self, keyname):
