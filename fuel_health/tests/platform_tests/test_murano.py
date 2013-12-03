@@ -36,7 +36,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                "tag isn't available. Need to import this image into "
                "glance and mark with Murano metadata tag. Please "
                "refer to the Fuel Web and Murano user documentation. ")
-        self.image = self.find_murano_image()
+        self.image = self.find_murano_image('ws-2012-std')
         if not self.image:
             LOG.debug(msg)
             self.fail(msg)
