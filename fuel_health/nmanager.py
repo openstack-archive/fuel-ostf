@@ -222,6 +222,8 @@ class OfficialClientTest(fuel_health.test.TestCase):
             return flavor
 
     def _delete_server(self, server):
+        LOG.debug("Stopping server.")
+        self.compute_client.servers.stop(server)
         LOG.debug("Deleting server.")
         self.compute_client.servers.delete(server)
 
@@ -244,6 +246,21 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 self.compute_client.servers.delete(server)
             except Exception as exc:
                 LOG.debug("Server can not be deleted: %s" % exc)
+
+    def retry_command(self, retries, timeout, method, *args, **kwargs):
+        for i in range(retries):
+            try:
+                result = method(*args, **kwargs)
+                LOG.debug("Command execution successful.")
+                return result
+            except SSHExecCommandFailed:
+                self.fail("Command execution failed.")
+            except Exception:
+                LOG.debug("Connection failed. Another"
+                          " effort needed.")
+                time.sleep(timeout)
+
+        self.fail("Instance is not reachable by IP.")
 
     @classmethod
     def tearDownClass(cls):
@@ -445,21 +462,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 cls.error_msg.append(exc)
                 LOG.debug(exc)
                 pass
-
-    def retry_command(self, retries, timeout, method, *args, **kwargs):
-        for i in range(retries):
-            try:
-                method(*args, **kwargs)
-                LOG.debug("Command execution successful.")
-                return True
-            except SSHExecCommandFailed:
-                self.fail("Command execution failed.")
-            except Exception:
-                LOG.debug("Connection failed. Another"
-                          " effort needed.")
-                time.sleep(timeout)
-
-        self.fail("Instance is not reachable by IP.")
 
     def _ping_ip_address(self, ip_address, timeout, retries):
         def ping():

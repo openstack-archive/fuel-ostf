@@ -18,7 +18,6 @@ import logging
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health import nmanager
-from time import sleep
 
 LOG = logging.getLogger(__name__)
 
@@ -63,26 +62,16 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                self.usr, self.pwd,
                                key_filename=self.key,
                                timeout=self.timeout)
-        try:
-            output = self.verify(50, ssh_client.exec_command,
-                                 1, "'nova-manage' command execution failed. ",
-                                 "nova-manage command execution",
-                                 cmd)
-            LOG.debug(output)
-            self.verify_response_true(
-                u'XXX' not in output, 'Step 2 failed: Some nova services '
-                'have not been started.')
-        except:
-            LOG.info("Will sleep for 60 seconds and try again")
-            sleep(60)
-            output = self.verify(50, ssh_client.exec_command,
-                                 1, "'nova-manage' command execution failed. ",
-                                 "nova-manage command execution",
-                                 cmd)
-            LOG.debug(output)
-            self.verify_response_true(
-                u'XXX' not in output, 'Step 2 failed: Some nova services '
-                'have not been started.')
+
+        output = self.verify(50, self.retry_command, 1,
+                             "'nova-manage' command execution failed. ",
+                             "nova-manage command execution", 10, 5,
+                             ssh_client.exec_command, cmd)
+
+        LOG.debug(output)
+        self.verify_response_true(
+            u'XXX' not in output, 'Step 2 failed: Some nova services '
+                                  'have not been started.')
 
     def test_002_internet_connectivity_from_compute(self):
         """Check internet connectivity from a compute
@@ -95,17 +84,19 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         if not self.computes:
             self.fail('Step 1 failed: There are no compute nodes')
 
-        cmd = "ping 8.8.8.8 -c 1 -w 1"
+        cmd = "ping -q -c3 -w3 8.8.8.8 | grep 'received' |" \
+              " grep -v '0 received'"
         ssh_client = SSHClient(self.computes[0],
                                self.usr,
                                self.pwd,
                                key_filename=self.key,
                                timeout=self.timeout)
-        self.verify(50, ssh_client.exec_command, 1,
+
+        self.verify(50, self.retry_command, 1,
                     "'ping' command failed. Looks like there is no "
                     "Internet connection on the compute node.",
-                    "'ping' command",
-                    cmd)
+                    "'ping' command", 10, 5,
+                    ssh_client.exec_command, cmd)
 
     def test_003_dns_resolution(self):
         """Check DNS resolution on compute node
@@ -127,11 +118,13 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                timeout=self.timeout)
         expected_output = "google"
         cmd = "host 8.8.8.8"
-        output = self.verify(50, ssh_client.exec_command, 1,
+
+        output = self.verify(50, self.retry_command, 1,
                              "'host' command failed. Looks like there is no "
                              "Internet connection on the compute node.",
-                             "'ping' command",
-                             cmd)
+                             "'ping' command", 10, 5,
+                             ssh_client.exec_command, cmd)
+
         LOG.debug(output)
         self.verify_response_true(expected_output in output,
                                   'Step 2 failed: '
@@ -140,11 +133,13 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
         expected_output = "google.com has address"
         cmd = "host google.com"
-        output = self.verify(50, ssh_client.exec_command, 3,
+
+        output = self.verify(50, self.retry_command, 3,
                              "'host' command failed. "
                              "DNS name cannot be resolved.",
-                             "'host' command",
-                             cmd)
+                             "'host' command", 10, 5,
+                             ssh_client.exec_command, cmd)
+
         LOG.debug(output)
         self.verify_response_true(expected_output in output,
                                   'Step 4 failed: '
