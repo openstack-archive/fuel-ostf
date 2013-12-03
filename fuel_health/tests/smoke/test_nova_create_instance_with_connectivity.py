@@ -44,7 +44,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         cls.security_groups = {}
         cls.network = []
         cls.servers = []
-        cls.floating_ips = []
 
     def setUp(self):
         super(TestNovaNetwork, self).setUp()
@@ -203,8 +202,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                     'floating IP assignment',
                     self.compute_client, server, floating_ip)
 
-        self.floating_ips.append(floating_ip)
-
         self.verify(300, self._check_vm_connectivity, 5,
                     "VM connectivity doesn`t function properly.",
                     'VM connectivity checking', floating_ip.ip,
@@ -259,8 +256,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                     4, "Floating IP can not be assigned.",
                     'floating IP assignment',
                     self.compute_client, server, floating_ip)
-
-        self.floating_ips.append(floating_ip)
 
         ip_address = floating_ip.ip
         LOG.info('is address is %s' % ip_address)

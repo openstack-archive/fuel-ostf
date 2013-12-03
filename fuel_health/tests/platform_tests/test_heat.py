@@ -19,86 +19,434 @@ from nose.plugins.attrib import attr
 
 from fuel_health import heatmanager
 
-
 LOG = logging.getLogger(__name__)
 
 
-class TestStackAction(heatmanager.HeatBaseTest):
+class HeatSmokeTests(heatmanager.HeatBaseTest):
     """
-    Test class verifies that stack can be created, updated and deleted
+    Test class verifies Heat API calls, rollback and autoscaling use-cases.
     Special requirements:
-        1. Heat component should be installed.
+        1. F17-x86_64-cfntools image should be imported.
     """
 
     @attr(type=["fuel", "smoke"])
-    def test_stack(self):
-        """Create stack, check its details, then update and delete Heat stack
+    def test_actions(self):
+        """Typical stack actions: create, update, delete, show details, etc.
         Target component: Heat
 
         Scenario:
             1. Create a stack.
             2. Wait for the stack status to change to 'CREATE_COMPLETE'.
             3. Get the details of the created stack by its name.
-            4. Update the stack.
-            5. Wait for the stack to update.
-            6. Delete the stack.
-            7. Wait for the stack to be deleted.
-        Duration: 600 s.
-
-        Deployment tags: Heat
+            4. Get the resources list of the created stack.
+            5. Get the details of the stack resource.
+            6. Get the events list of the created stack.
+            7. Get the details of the stack event.
+            8. Update the stack.
+            9. Wait for the stack to update.
+            10. Get the stack template details.
+            11. Get the resources list of the updated stack.
+            12. Delete the stack.
+            13. Wait for the stack to be deleted.
+        Duration: 440 s.
         """
+
+        template = """
+            AWSTemplateFormatVersion: "2013-11-01"
+            Parameters:
+              ImageId:
+                Type: String
+              InstanceType:
+                Type: String
+              Subnet:
+                Type: String
+                Default: ''
+            Resources:
+              MyInstance:
+                Type: AWS::EC2::Instance
+                Properties:
+                  ImageId: {Ref: ImageId}
+                  InstanceType: {Ref: InstanceType}
+                  SubnetId: {Ref: Subnet}
+            """
+
+        parameters = {
+            "InstanceType": self._create_nano_flavor().name,
+            "ImageId": self.config.compute.image_name
+        }
+        if 'neutron' in self.config.network.network_provider:
+            parameters['Subnet'] = self._get_subnet_id()
+        else:
+            template = self._customize_template(template)
 
         fail_msg = "Stack was not created properly."
         # create stack
-        stack = self.verify(100, self.create_stack, 1,
+        stack = self.verify(20, self._create_stack, 1,
                             fail_msg,
                             "stack creation",
-                            self.heat_client)
+                            self.heat_client,
+                            template,
+                            parameters=parameters)
 
-        self.verify(100, self.wait_for_stack_status, 2,
+        self.verify(100, self._wait_for_stack_status, 2,
                     fail_msg,
                     "stack status becoming 'CREATE_COMPLETE'",
                     stack.id, 'CREATE_COMPLETE')
 
         # get stack details
-        details = self.verify(100, self.heat_client.stacks.get, 3,
+        details = self.verify(20, self.heat_client.stacks.get, 3,
                               "Cannot retrieve stack details.",
                               "retrieving stack details",
                               stack.stack_name)
 
         fail_msg = "Stack details contain incorrect values."
-        self.verify_response_body_content(
-            details.id, stack.id,
-            fail_msg, 3)
+        self.verify_response_body_content(details.id, stack.id,
+                                          fail_msg, 3)
+        self.verify_response_body_content(self.config.compute.image_name,
+                                          details.parameters['ImageId'],
+                                          fail_msg, 3)
+        self.verify_response_body_content(details.stack_status,
+                                          'CREATE_COMPLETE',
+                                          fail_msg, 3)
+        # get resources list
+        fail_msg = "Cannot retrieve list of stack resources."
+        resources = self.verify(10, self.heat_client.resources.list, 4,
+                                fail_msg,
+                                "retrieving list of stack resources",
+                                stack.id)
+        self.verify_response_body_content(len(resources),
+                                          1, fail_msg, 4)
+        resource_id = resources[0].logical_resource_id
+        self.verify_response_body_content("MyInstance", resource_id,
+                                          fail_msg, 4)
 
-        self.verify_response_body_content(
-            self.config.compute.image_name, details.parameters['ImageId'],
-            fail_msg, 3)
+        # get resource details
+        res_details = self.verify(10, self.heat_client.resources.get, 5,
+                                  "Cannot retrieve stack resource details.",
+                                  "retrieving stack resource details",
+                                  stack.id, resource_id)
 
-        self.verify_response_body_content(
-            details.stack_status, 'CREATE_COMPLETE',
-            fail_msg, 3)
+        fail_msg = "Resource details contain incorrect values."
+        self.verify_response_body_content("CREATE_COMPLETE",
+                                          res_details.resource_status,
+                                          fail_msg, 5)
+        self.verify_response_body_content("AWS::EC2::Instance",
+                                          res_details.resource_type,
+                                          fail_msg, 5)
+
+        # get events list
+        fail_msg = "Cannot retrieve list of stack events."
+        events = self.verify(10, self.heat_client.events.list, 6,
+                             fail_msg,
+                             "retrieving list of stack events",
+                             stack.id)
+        self.verify_response_body_not_equal(0, len(events), fail_msg, 6)
+
+        fail_msg = "Event details contain incorrect values."
+        self.verify_response_body_content("MyInstance",
+                                          events[0].logical_resource_id,
+                                          fail_msg, 6)
+
+        # get event details
+        event_id = events[0].id
+        ev_details = self.verify(10, self.heat_client.events.get, 7,
+                                 "Cannot retrieve stack event details.",
+                                 "retrieving stack event details",
+                                 stack.id, resource_id, event_id)
+
+        fail_msg = "Event details contain incorrect values."
+        self.verify_response_body_content(ev_details.id, event_id,
+                                          fail_msg, 7)
+        self.verify_response_body_content(ev_details.logical_resource_id,
+                                          "MyInstance", fail_msg, 7)
 
         # update stack
+        template = template.replace("MyInstance", "UpdatedInstance")
         fail_msg = "Cannot update stack."
-        stack = self.verify(100, self.update_stack, 4,
+        stack = self.verify(20, self._update_stack, 8,
                             fail_msg,
                             "updating stack.",
-                            self.heat_client, stack.id)
-
-        self.verify(100, self.wait_for_stack_status, 5,
+                            self.heat_client, stack.id,
+                            template,
+                            parameters=parameters)
+        self.verify(100, self._wait_for_stack_status, 9,
                     fail_msg,
                     "stack status becoming 'UPDATE_COMPLETE'",
                     stack.id, 'UPDATE_COMPLETE')
 
+        # show template
+        fail_msg = "Cannot retrieve template of the stack."
+        act_tpl = self.verify(10, self.heat_client.stacks.template,
+                              10,
+                              fail_msg,
+                              "retrieving stack template",
+                              stack.id)
+
+        check_content = lambda: ("InstanceType" in act_tpl["Parameters"] and
+                                 "MyInstance" in act_tpl["Resources"])
+        self.verify(10, check_content, 10,
+                    fail_msg, "verifying template content")
+
+        # get updated resources list
+        resources = self.verify(10, self.heat_client.resources.list, 11,
+                                "Cannot retrieve list of stack resources.",
+                                "retrieving list of stack resources",
+                                stack.id)
+        resource_id = resources[0].logical_resource_id
+        self.verify_response_body_content("UpdatedInstance", resource_id,
+                                          fail_msg, 11)
+
         # delete stack
         fail_msg = "Cannot delete stack."
-        self.verify(100, self.heat_client.stacks.delete, 6,
+        self.verify(20, self.heat_client.stacks.delete, 12,
                     fail_msg,
                     "deleting stack",
                     stack.id)
 
-        self.verify(100, self.wait_for_stack_deleted, 7,
+        self.verify(100, self._wait_for_stack_deleted, 13,
                     fail_msg,
                     "deleting stack",
                     stack.id)
+
+    @attr(type=["fuel", "smoke"])
+    def test_autoscaling(self):
+        """Check stack autoscaling
+        Target component: Heat
+
+        Scenario:
+            1. Image with cfntools package should be imported.
+            2. Create a flavor.
+            3. Create a keypair.
+            4. Save generated private key to file on Controller node.
+            5. Create a stack.
+            6. Wait for the stack status to change to 'CREATE_COMPLETE'.
+            7. Create a floating ip.
+            8. Assign the floating ip to the instance of the stack.
+            9. Wait for cloud_init procedure to be completed on the instance.
+            10. Load the instance CPU to initiate the stack scaling up.
+            11. Wait for the 2nd instance to be launched.
+            12. Release the instance CPU to initiate the stack scaling down.
+            13. Wait for the 2nd instance to be terminated.
+            14. Delete the file with private key.
+            15. Delete the stack.
+            16. Wait for the stack to be deleted.
+        Duration: 2000 s.
+        """
+        image_name = "F17-x86_64-cfntools"
+        fail_msg = ("Image with cfntools package wasn't "
+                    "imported into Glance, please check "
+                    "http://docs.mirantis.com/fuel/fuel-4.0/user-guide.html"
+                    "#platform-tests-description")
+
+        self.verify(10, self._find_heat_image, 1,
+                    fail_msg,
+                    "checking if %s image is registered "
+                    "in Glance" % image_name,
+                    image_name)
+
+        fail_msg = "Flavor was not created properly."
+        self.flavor = self.verify(10, self._create_flavors, 2,
+                                  fail_msg,
+                                  "flavor creation",
+                                  self.compute_client, 382, 12)
+
+        self.keypair = self.verify(10,
+                                   self._create_keypair,
+                                   3,
+                                   'Keypair can not be created.',
+                                   'keypair creation',
+                                   self.compute_client)
+
+        path_to_key = self.verify(10,
+                                  self._save_key_to_file,
+                                  4,
+                                  "Private key was not saved "
+                                  "to file properly.",
+                                  "saving private key to the file",
+                                  self.keypair.private_key)
+
+        template = self._load_template(
+            __file__, 'heat_autoscaling_template.yaml')
+        parameters = {
+            "KeyName": self.keypair.name,
+            "InstanceType": self.flavor.name,
+            "ImageId": image_name
+        }
+        if 'neutron' in self.config.network.network_provider:
+            parameters['Subnet'] = self._get_subnet_id()
+        else:
+            template = self._customize_template(template)
+
+        fail_msg = "Stack was not created properly."
+        #create stack
+        stack = self.verify(20,
+                            self._create_stack,
+                            5,
+                            fail_msg,
+                            "stack creation",
+                            self.heat_client,
+                            template,
+                            parameters=parameters)
+        self.verify(600,
+                    self._wait_for_stack_status,
+                    6,
+                    fail_msg,
+                    "stack status becoming 'CREATE_COMPLETE'",
+                    stack.id,
+                    'CREATE_COMPLETE',
+                    600, 15)
+
+        # find just created instance
+        for instance in self.compute_client.servers.list():
+            if instance.name.startswith(stack.stack_name):
+                self.instance = instance
+                break
+        else:
+            self.fail("Instance for the %s stack "
+                      "was not created." % stack.stack_name)
+
+        floating_ip = self.verify(10, self._create_floating_ip, 7,
+                                  "Floating IP can not be created.",
+                                  'floating IP creation')
+
+        self.verify(10, self._assign_floating_ip_to_instance, 8,
+                    "Floating IP can not be assigned.",
+                    'assigning floating IP',
+                    self.compute_client, self.instance, floating_ip)
+
+        vm_connection = "ssh -o StrictHostKeyChecking=no -i %s %s@%s" % (
+            path_to_key, "ec2-user", floating_ip.ip)
+
+        self.verify(600,
+                    self._wait_for_cloudinit,
+                    9,
+                    "Cloud-init script cannot finish within timeout.",
+                    "waiting for cloud-init script completion on VM",
+                    vm_connection, 600, 15)
+
+        self.verify(60, self._load_vm_cpu, 10,
+                    "Cannot create a process to load VM CPU.",
+                    "loading VM CPU",
+                    vm_connection)
+
+        self.verify(180,
+                    self._wait_for_autoscaling, 11,
+                    "Stack failed to launch the 2nd instance "
+                    "per autoscaling alarm.",
+                    "checking if the new instance is launched "
+                    "per autoscaling alarm",
+                    stack.stack_name, 2, 180, 10)
+
+        self.verify(180, self._release_vm_cpu, 12,
+                    "Cannot kill the process on VM to turn CPU load off.",
+                    "turning off VM CPU load",
+                    vm_connection)
+
+        self.verify(300,
+                    self._wait_for_autoscaling, 13,
+                    "Stack failed to terminate the 2nd instance "
+                    "per autoscaling alarm.",
+                    "checking if the 2nd instance is terminated "
+                    "per autoscaling alarm",
+                    stack.stack_name, 1, 300, 10)
+
+        # delete private key file
+        self.verify(10, self._delete_key_file, 14,
+                    "The file with private key cannot be deleted.",
+                    "deleting the file with private key",
+                    path_to_key)
+
+        fail_msg = "Cannot delete stack."
+        self.verify(20, self.heat_client.stacks.delete, 15,
+                    fail_msg,
+                    "deleting stack",
+                    stack.id)
+
+        self.verify(100, self._wait_for_stack_deleted, 16,
+                    fail_msg,
+                    "deleting stack",
+                    stack.id)
+
+    @attr(type=["fuel", "smoke"])
+    def test_rollback(self):
+        """Check stack rollback
+        Target component: Heat
+
+        Scenario:
+            1. Start stack creation with rollback enabled.
+            2. Verify the stack appears with status 'CREATE_IN_PROGRESS'.
+            3. Wait for the stack to be deleted in result of rollback after
+               expiration of timeout defined in WaitHandle resource
+               of the stack.
+            4. Verify the instance of the stack has been deleted.
+        Duration: 140 s.
+        """
+
+        template = """
+            HeatTemplateFormatVersion: '2013-11-01'
+            Description: Template which creates single EC2 instance
+            Parameters:
+              InstanceType:
+                Type: String
+              ImageId:
+                Type: String
+              Subnet:
+                Type: String
+                Default: ''
+            Resources:
+              WaitHandle:
+                Type: AWS::CloudFormation::WaitConditionHandle
+              WaitCondition:
+                Type: AWS::CloudFormation::WaitCondition
+                DependsOn: SmokeServer
+                Properties:
+                  Handle: {Ref: WaitHandle}
+                  Timeout: '30'
+              SmokeServer:
+                Type: AWS::EC2::Instance
+                Properties:
+                  ImageId: {Ref: ImageId}
+                  InstanceType: {Ref: InstanceType}
+                  SubnetId: {Ref: Subnet}
+                  UserData:
+                    Fn::Base64:
+                      Fn::Join:
+                      - ''
+                      - - '#!/bin/bash -v
+
+                          '
+                        - ' sleep 40
+
+                          '
+        """
+
+        parameters = {
+            "InstanceType": self._create_nano_flavor().name,
+            "ImageId": self.config.compute.image_name
+        }
+        if 'neutron' in self.config.network.network_provider:
+            parameters['Subnet'] = self._get_subnet_id()
+        else:
+            template = self._customize_template(template)
+
+        fail_msg = "Stack creation was not started."
+        stack = self.verify(20, self._create_stack, 1,
+                            fail_msg, "starting stack creation",
+                            self.heat_client, template,
+                            disable_rollback=False, parameters=parameters)
+
+        self.verify_response_body_content("CREATE_IN_PROGRESS",
+                                          stack.stack_status,
+                                          fail_msg, 2)
+
+        self.verify(100, self._wait_for_stack_deleted, 3,
+                    "Rollback of the stack failed.",
+                    "waiting for rollback of the stack",
+                    stack.id)
+
+        instances = [i for i in self.compute_client.servers.list()
+                     if i.name.startswith(stack.stack_name)]
+        self.verify(20, self.assertTrue, 4,
+                    "The stack instance rollback failed.",
+                    "verifying if the instance was rolled back",
+                    len(instances) == 0)

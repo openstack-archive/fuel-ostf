@@ -34,6 +34,11 @@ try:
     import savannaclient.api.client
 except:
     LOG.warning('Savanna client could not be imported.')
+try:
+    import neutronclient.v2_0.client
+except:
+    LOG.warning('Neutronclient could not be imported.')
+
 import cinderclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
@@ -63,6 +68,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         self.identity_client = self._get_identity_client()
         self.volume_client = self._get_volume_client()
         self.heat_client = self._get_heat_client()
+        self.network_client = self._get_network_client()
         self.murano_client = self._get_murano_client()
         self.savanna_client = self._get_savanna_client()
 
@@ -71,6 +77,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
             'identity_client',
             'volume_client',
             'heat_client',
+            'network_client',
             'murano_client',
             'savanna_client'
         ]
@@ -155,7 +162,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         keystone = self._get_identity_client(username, password, tenant_name)
         token = keystone.auth_token
         try:
-            endpoint = self.config.heat.endpoint + "/" + token
+            endpoint = self.config.heat.endpoint + "/" + keystone.tenant_id
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Can not initialize heat client, endpoint not found')
             return None
@@ -198,9 +205,40 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                                auth_url=auth_url,
                                                savanna_url=savanna_url)
 
+    def _get_network_client(self, username=None, password=None,
+                            tenant_name=None):
+        if not username:
+            username = self.config.identity.admin_username
+        if not password:
+            password = self.config.identity.admin_password
+        if not tenant_name:
+            tenant_name = self.config.identity.admin_tenant_name
+
+        auth_url = self.config.identity.uri
+        dscv = self.config.identity.disable_ssl_certificate_validation
+
+        try:
+            return neutronclient.v2_0.client.Client(
+                username=username, password=password,
+                tenant_name=tenant_name, auth_url=auth_url,
+                insecure=dscv)
+        except (NameError, exceptions) as e:
+            LOG.warning('Can not initialize neutron client')
+
 
 class OfficialClientTest(fuel_health.test.TestCase):
     manager_class = OfficialClientManager
+
+    @classmethod
+    def setUpClass(cls):
+        super(OfficialClientTest, cls).setUpClass()
+        cls.host = cls.config.compute.controller_nodes
+        cls.usr = cls.config.compute.controller_node_ssh_user
+        cls.pwd = cls.config.compute.controller_node_ssh_password
+        cls.key = cls.config.compute.path_to_private_key
+        cls.timeout = cls.config.compute.ssh_timeout
+
+        cls.private_net = 'net04'
 
     @classmethod
     def _create_nano_flavor(cls):
@@ -258,6 +296,41 @@ class OfficialClientTest(fuel_health.test.TestCase):
 
         self.fail("Instance is not reachable by IP.")
 
+    def _create_floating_ip(self):
+        floating_ips_pool = self.compute_client.floating_ip_pools.list()
+
+        if floating_ips_pool:
+            floating_ip = self.compute_client.floating_ips.create(
+                pool=floating_ips_pool[0].name)
+
+            self.set_resource(floating_ip.ip, floating_ip)
+            return floating_ip
+        else:
+            self.fail('No available floating IP found')
+
+    def _assign_floating_ip_to_instance(self, client, server, floating_ip):
+        try:
+            client.servers.add_floating_ip(server, floating_ip)
+        except Exception:
+            self.fail('Can not assign floating ip to instance')
+
+    def _create_flavors(self, client, ram, disk, vcpus=1):
+        name = rand_name('ost1_test-flavor-')
+        flavorid = rand_int_id()
+        flavor = client.flavors.create(name=name, ram=ram, disk=disk,
+                                       vcpus=vcpus, flavorid=flavorid)
+        self.set_resource(name, flavor)
+        return flavor
+
+    def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
+        kp_name = rand_name(namestart)
+        keypair = client.keypairs.create(kp_name)
+        self.set_resource(kp_name, keypair)
+        self.verify_response_body_content(keypair.id,
+                                          kp_name,
+                                          'Keypair creation failed')
+        return keypair
+
     @classmethod
     def tearDownClass(cls):
         cls.error_msg = []
@@ -310,28 +383,12 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     @classmethod
     def setUpClass(cls):
         super(NovaNetworkScenarioTest, cls).setUpClass()
-        cls.host = cls.config.compute.controller_nodes
-        cls.usr = cls.config.compute.controller_node_ssh_user
-        cls.pwd = cls.config.compute.controller_node_ssh_password
-        cls.key = cls.config.compute.path_to_private_key
-        cls.timeout = cls.config.compute.ssh_timeout
         cls.tenant_id = cls.manager._get_identity_client(
             cls.config.identity.admin_username,
             cls.config.identity.admin_password,
             cls.config.identity.admin_tenant_name).tenant_id
         cls.network = []
-        cls.floating_ips = []
         cls.error_msg = []
-        cls.private_net = 'net04'
-
-    def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
-        kp_name = rand_name(namestart)
-        keypair = client.keypairs.create(kp_name)
-        self.set_resource(kp_name, keypair)
-        self.verify_response_body_content(keypair.id,
-                                          kp_name,
-                                          'Keypair creation failed')
-        return keypair
 
     def _create_security_group(
             self, client, namestart='ost1_test-secgroup-smoke-netw'):
@@ -431,34 +488,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         self.servers.append(server)
         return server
 
-    def _create_floating_ip(self):
-        floating_ips_pool = self.compute_client.floating_ip_pools.list()
-
-        if floating_ips_pool:
-            floating_ip = self.compute_client.floating_ips.create(
-                pool=floating_ips_pool[0].name)
-
-            self.floating_ips.append(floating_ip)
-            return floating_ip
-        else:
-            self.fail('No available floating IP found')
-
-    def _assign_floating_ip_to_instance(self, client, server, floating_ip):
-        try:
-            client.servers.add_floating_ip(server, floating_ip)
-        except Exception:
-            self.fail('Can not assign floating ip to instance')
-
-    @classmethod
-    def _clean_floating_ips(cls):
-        for ip in cls.floating_ips:
-            try:
-                cls.compute_client.floating_ips.delete(ip)
-            except Exception as exc:
-                cls.error_msg.append(exc)
-                LOG.debug(exc)
-                pass
-
     def _ping_ip_address(self, ip_address, timeout, retries):
         def ping():
             cmd = "ping -q -c3 -w3 %s | grep 'received' |" \
@@ -546,7 +575,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     @classmethod
     def tearDownClass(cls):
         super(NovaNetworkScenarioTest, cls).tearDownClass()
-        cls._clean_floating_ips()
         cls._clear_networks()
 
 
@@ -598,7 +626,6 @@ class SanityChecksTest(OfficialClientTest):
             cls.config.identity.admin_password,
             cls.config.identity.admin_tenant_name).tenant_id
         cls.network = []
-        cls.floating_ips = []
 
     @classmethod
     def tearDownClass(cls):
@@ -656,27 +683,7 @@ class SmokeChecksTest(OfficialClientTest):
         cls.build_interval = cls.config.volume.build_interval
         cls.build_timeout = cls.config.volume.build_timeout
 
-        cls.flavors = []
         cls.error_msg = []
-        cls.private_net = 'net04'
-
-    def _create_flavors(self, client, ram, disk, vcpus=1):
-        name = rand_name('ost1_test-flavor-')
-        flavorid = rand_int_id()
-        flavor = client.flavors.create(name, ram, disk, vcpus, flavorid)
-        self.flavors.append(flavor)
-        return flavor
-
-    @classmethod
-    def _clean_flavors(cls):
-        if cls.flavors:
-            for flav in cls.flavors:
-                try:
-                    cls.compute_client.flavors.delete(flav)
-                except Exception as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(exc)
-                    pass
 
     def _create_tenant(self, client):
         name = rand_name('ost1_test-tenant-')
@@ -770,8 +777,3 @@ class SmokeChecksTest(OfficialClientTest):
                     raise cls.failureException('REST API of '
                                                'OpenStack is inaccessible.'
                                                ' Please try again')
-
-    @classmethod
-    def tearDownClass(cls):
-        super(SmokeChecksTest, cls).tearDownClass()
-        cls._clean_flavors()
