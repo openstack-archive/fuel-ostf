@@ -220,7 +220,7 @@ class SavannaTest(nmanager.OfficialClientTest):
                     '/etc/nova/nova.conf | grep True')
         cmd_neutron = ('grep -E '
                        '"network_api_class=nova.network.neutronv2.api.API|'
-                       'network_api_class=nova.network.quntumv2.api.API" '
+                       'network_api_class=nova.network.quantumv2.api.API" '
                        '/etc/nova/nova.conf')
         output_nova, output_nova_err = ssh_command(cmd_nova)
         output_neutron, output_neutron_err = ssh_command(cmd_neutron)
