@@ -250,12 +250,14 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 result = method(*args, **kwargs)
                 LOG.debug("Command execution successful.")
                 return result
-            except SSHExecCommandFailed as exc:
-                LOG.debug("Command execution failed: %s" % exc)
-                self.fail("Command execution failed.")
-            except Exception as exc:
-                LOG.debug("%s. Another"
-                          " effort needed." % exc)
+            except SSHExecCommandFailed:
+                if i == retries - 1:
+                    self.fail("Command execution failed. No retries left.")
+                LOG.debug("Command execution failed. Retrying.")
+                time.sleep(timeout)
+            except Exception:
+                LOG.debug("Connection failed. Another"
+                          " effort needed.")
                 time.sleep(timeout)
 
         self.fail("Instance is not reachable by IP.")
