@@ -309,7 +309,9 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.compute_client, name, security_groups)
 
         try:
-            instance_ip = server.addresses['novanetwork'][0]['addr']
+            for addr in server.addresses:
+                if addr.startswith('novanetwork'):
+                    instance_ip = server.addresses[addr][0]['addr']
             compute = getattr(server, 'OS-EXT-SRV-ATTR:host')
         except Exception as e:
             LOG.debug(e)
