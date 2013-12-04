@@ -253,14 +253,12 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 result = method(*args, **kwargs)
                 LOG.debug("Command execution successful.")
                 return result
-            except SSHExecCommandFailed:
-                self.fail("Command execution failed.")
-            except Exception:
-                LOG.debug("Connection failed. Another"
-                          " effort needed.")
+            except Exception as exc:
+                LOG.debug("Connection failed: %s. Another"
+                          " effort needed." % exc)
                 time.sleep(timeout)
 
-        self.fail("Instance is not reachable by IP.")
+        self.fail("Instance connectivity doesn`t function properly. ")
 
     @classmethod
     def tearDownClass(cls):
