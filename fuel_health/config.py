@@ -619,7 +619,7 @@ class NailgunConfig(object):
             self.identity.ubuntu_url = 'http://{0}/'.format(endpoint)
             self.identity.uri = 'http://{0}:{1}/{2}/'.format(
                 endpoint, 5000, 'v2.0')
-            self.murano.api_url = 'http://{0}:{1}/'.format(
+            self.murano.api_url = 'http://{0}:{1}'.format(
                 endpoint_mur_sav, 8082)
             self.savanna.api_url = 'http://{0}:{1}/{2}'.format(
                 endpoint_mur_sav, 8386, 'v1.0')
