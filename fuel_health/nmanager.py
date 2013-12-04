@@ -254,7 +254,10 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 LOG.debug("Command execution successful.")
                 return result
             except SSHExecCommandFailed:
-                self.fail("Command execution failed.")
+                if i == retries - 1:
+                    self.fail("Command execution failed. No retries left.")
+                LOG.debug("Command execution failed. Retrying.")
+                time.sleep(timeout)
             except Exception:
                 LOG.debug("Connection failed. Another"
                           " effort needed.")
