@@ -38,6 +38,10 @@ class AdapterTests(BaseAdapterTest):
              'general_test.Dummy_test.test_long_pass'): 'long_pass',
             ('fuel_plugin.testing.fixture.dummy_tests.'
              'general_test.Dummy_test.test_fail_with_step'): 'fail_step',
+            ('fuel_plugin.testing.fixture.dummy_tests.'
+             'general_test.Dummy_test.test_skip'): 'skip',
+            ('fuel_plugin.testing.fixture.dummy_tests.'
+             'general_test.Dummy_test.test_skip_directly'): 'skip_directly',
             ('fuel_plugin.testing.fixture.dummy_tests.stopped_test.'
              'dummy_tests_stopped.test_really_long'): 'really_long',
             ('fuel_plugin.testing.fixture.dummy_tests.stopped_test.'
@@ -56,6 +60,8 @@ class AdapterTests(BaseAdapterTest):
                 'fast_error',
                 'fast_fail',
                 'long_pass',
+                'skip',
+                'skip_directly'
             ],
             "stopped_test": [
                 'really_long',
@@ -275,6 +281,18 @@ class AdapterTests(BaseAdapterTest):
                         'name': 'Will sleep 5 sec',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_long_pass'),
+                    },
+                    {
+                        'status': 'disabled',
+                        'name': 'Skip',
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
+                               'general_test.Dummy_test.test_skip'),
+                    },
+                    {
+                        'status': 'disabled',
+                        'name': 'Skip with exception',
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
+                               'general_test.Dummy_test.test_skip_directly'),
                     }
                 ],
                 'cluster_id': '1',
@@ -348,6 +366,18 @@ class AdapterTests(BaseAdapterTest):
                         'name': 'Will sleep 5 sec',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_long_pass'),
+                    },
+                    {
+                        'status': 'skipped',
+                        'name': 'Skip',
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
+                               'general_test.Dummy_test.test_skip'),
+                    },
+                    {
+                        'status': 'skipped',
+                        'name': 'Skip with exception',
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
+                               'general_test.Dummy_test.test_skip_directly'),
                     }
                 ],
                 'cluster_id': '1',
@@ -426,6 +456,18 @@ class AdapterTests(BaseAdapterTest):
                         'name': 'Will sleep 5 sec',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
                                'general_test.Dummy_test.test_long_pass'),
+                    },
+                    {
+                        'status': 'disabled',
+                        'name': 'Skip',
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
+                               'general_test.Dummy_test.test_skip'),
+                    },
+                    {
+                        'status': 'disabled',
+                        'name': 'Skip with exception',
+                        'id': ('fuel_plugin.testing.fixture.dummy_tests.'
+                               'general_test.Dummy_test.test_skip_directly'),
                     }
                 ],
                 'cluster_id': '1',
