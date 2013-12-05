@@ -53,10 +53,18 @@ class DiscoveryPlugin(plugins.Plugin):
             ]
 
             with self.session.begin(subtransactions=True):
+                try:
+                    test_set = models.TestSet(**profile)
+                    self.session.merge(test_set)
+                    self.test_sets[test_set.id] = test_set
+                except Exception as exc:
+                    LOG.error(
+                        ('An error has occured while processing'
+                         ' data entity for %s. Error message: %s'),
+                        module.__name__,
+                        e.message
+                    )
                 LOG.info('%s discovered.', module.__name__)
-                test_set = models.TestSet(**profile)
-                self.session.merge(test_set)
-                self.test_sets[test_set.id] = test_set
 
     def addSuccess(self, test):
         test_id = test.id()
@@ -77,9 +85,18 @@ class DiscoveryPlugin(plugins.Plugin):
                         }
                     )
 
+                    try:
+                        test_obj = models.Test(**data)
+                        self.session.merge(test_obj)
+                    except Exception as e:
+                        LOG.error(
+                            ('An error has occured while '
+                             'processing data entity for '
+                             'test with name %s. Error message: %s'),
+                            test_id,
+                            e.message
+                        )
                     LOG.info('%s added for %s', test_id, test_set_id)
-                    test_obj = models.Test(**data)
-                    self.session.merge(test_obj)
 
 
 def discovery(path, session):
