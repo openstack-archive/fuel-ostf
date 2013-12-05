@@ -31,6 +31,17 @@ def setup():
                         ],
                         stdout=devnull,
                         stderr=devnull
+                    ),
+                    subprocess.Popen(
+                        [
+                            'ostf-server',
+                            '--debug',
+                            '--nailgun-port=8888',
+                            ('--debug_tests=fuel_plugin/testing/'
+                             'fixture/dummy_tests')
+                        ],
+                        stdout=devnull,
+                        stderr=devnull
                     )
                 ]
             )
