@@ -113,7 +113,8 @@ class Test(BASE):
         'success',
         'error',
         'stopped',
-        'disabled'
+        'disabled',
+        'skipped'
     )
 
     id = sa.Column(sa.Integer(), primary_key=True)
