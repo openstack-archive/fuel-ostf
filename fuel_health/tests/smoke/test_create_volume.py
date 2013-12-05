@@ -63,7 +63,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
             10. Check volume has "available" status.
             11. Delete volume.
             12. Delete server.
-        Duration: 200 s.
+        Duration: 250 s.
         """
 
         msg_s1 = 'Volume was not created.'
