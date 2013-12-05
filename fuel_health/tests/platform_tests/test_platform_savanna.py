@@ -52,7 +52,7 @@ class PlatformSavannaTests(savanna.SavannaTest):
                     "#platform-tests-description")
         self.verify_response_true(
             self.verify(
-                20,
+                40,
                 self._test_image,
                 1, fail_msg,
                 "Test images with tags",
@@ -61,7 +61,7 @@ class PlatformSavannaTests(savanna.SavannaTest):
 
         fail_msg = 'Fail create node group template.'
         self.verify(
-            20,
+            40,
             self._create_node_group_template_tt_dn_id,
             2, fail_msg,
             "Create node group templates",
@@ -69,7 +69,7 @@ class PlatformSavannaTests(savanna.SavannaTest):
 
         fail_msg = 'Fail create cluster template.'
         cluster_template = self.verify(
-            20,
+            40,
             self._create_tiny_cluster_template,
             3, fail_msg,
             "Create cluster templates",
@@ -77,7 +77,7 @@ class PlatformSavannaTests(savanna.SavannaTest):
 
         fail_msg = 'Fail list group templates.'
         self.verify(
-            20,
+            40,
             self._list_node_group_template,
             4, fail_msg,
             "List group templates",
@@ -85,7 +85,7 @@ class PlatformSavannaTests(savanna.SavannaTest):
 
         fail_msg = 'Fail list cluster templates.'
         self.verify(
-            20,
+            40,
             self._list_cluster_templates,
             5, fail_msg,
             "List cluster templates",
@@ -101,21 +101,21 @@ class PlatformSavannaTests(savanna.SavannaTest):
 
         fail_msg = 'Fail delete cluster.'
         self.verify(
-            20,
+            40,
             self._clean_clusters,
             7, fail_msg,
             "Delete cluster")
 
         fail_msg = 'Fail delete cluster template.'
         self.verify(
-            20,
+            40,
             self._clean_cluster_templates,
             8, fail_msg,
             "Delete cluster template")
 
         fail_msg = 'Fail delete node group  templates.'
         self.verify(
-            20,
+            40,
             self._clean_node_groups_templates,
             9, fail_msg,
             "Delete node group templates")
