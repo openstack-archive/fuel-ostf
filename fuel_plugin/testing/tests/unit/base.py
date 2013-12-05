@@ -53,6 +53,8 @@ class BaseWSGITest(unittest2.TestCase):
                 'general_test.Dummy_test.test_fast_fail',
                 'general_test.Dummy_test.test_fast_error',
                 'general_test.Dummy_test.test_fail_with_step',
+                'general_test.Dummy_test.test_skip',
+                'general_test.Dummy_test.test_skip_directly',
                 'stopped_test.dummy_tests_stopped.test_really_long',
                 'stopped_test.dummy_tests_stopped.test_one_no_so_long',
                 'stopped_test.dummy_tests_stopped.test_not_long_at_all'
