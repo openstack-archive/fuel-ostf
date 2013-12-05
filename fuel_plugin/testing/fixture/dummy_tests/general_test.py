@@ -23,10 +23,10 @@ __profile__ = {
 
 import time
 import httplib
-import unittest
+import unittest2
 
 
-class Dummy_test(unittest.TestCase):
+class Dummy_test(unittest2.TestCase):
     """Class docstring is required?
     """
 
@@ -61,3 +61,9 @@ class Dummy_test(unittest.TestCase):
         """Fast fail with step
         """
         self.fail('Step 3 Failed: Fake fail message')
+
+    def test_skip(self):
+        """Skip
+        """
+        msg = 'The reason to skip goes here'
+        self.skipTest(msg)
