@@ -107,21 +107,3 @@ def integration():
 
 def unit():
     local('nosetests fuel_plugin/testing/tests/unit -v')
-
-
-def masstest():
-    for i in range(10):
-        testall()
-
-
-def testissue():
-    for i in range(100):
-        local(
-            ('nosetests -sv fuel_plugin/testing/tests/functional/'
-             'tests.py:AdapterTests.test_start_many_runs')
-        )
-
-
-def massintegration():
-    for i in range(20):
-        integration()
