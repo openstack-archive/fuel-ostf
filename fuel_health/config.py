@@ -18,6 +18,7 @@
 
 import os
 import sys
+import traceback
 
 from oslo.config import cfg
 import requests
@@ -505,8 +506,8 @@ class NailgunConfig(object):
             self._parse_cluster_generated_data()
             LOG.info('parse generated successful')
         except Exception, e:
-            LOG.info('Something wrong with endpoints')
-            LOG.debug(e)
+            LOG.warning('Something wrong with endpoints')
+            LOG.debug(traceback.format_exc())
 
     def _parse_cluster_attributes(self):
         api_url = '/api/clusters/%s/attributes' % self.cluster_id

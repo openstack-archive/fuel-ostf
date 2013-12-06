@@ -18,6 +18,7 @@
 
 import logging
 import time
+import traceback
 
 LOG = logging.getLogger(__name__)
 
@@ -29,10 +30,12 @@ except:
 try:
     import muranoclient.v1.client
 except:
+    LOG.debug(traceback.format_exc())
     LOG.warning('Muranoclient could not be imported.')
 try:
     import savannaclient.api.client
 except:
+    LOG.debug(traceback.format_exc())
     LOG.warning('Savanna client could not be imported.')
 import cinderclient.client
 import keystoneclient.v2_0.client
@@ -181,6 +184,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                 token=self.token_id,
                 insecure=self.config.murano.insecure)
         except exceptions:
+            LOG.debug(traceback.format_exc())
             LOG.warning('Can not initialize murano client')
 
     def _get_savanna_client(self, username=None, password=None):
@@ -221,6 +225,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
     def _delete_server(self, server):
         LOG.debug("Stopping server.")
         self.compute_client.servers.stop(server)
+        # TODO we need to wait when server actually stops
         LOG.debug("Deleting server.")
         self.compute_client.servers.delete(server)
 
@@ -230,6 +235,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
             except Exception as e:
                 if e.__class__.__name__ == 'NotFound':
                     return True
+                LOG.debug(traceback.format_exc())
                 return False
 
         res = fuel_health.test.call_until_true(
@@ -241,8 +247,9 @@ class OfficialClientTest(fuel_health.test.TestCase):
             try:
                 LOG.debug("Deleting server.")
                 self.compute_client.servers.delete(server)
-            except Exception as exc:
-                LOG.debug("Server can not be deleted: %s" % exc)
+            except Exception:
+                LOG.debug("Server can not be deleted: %s" % server.id)
+                LOG.debug(traceback.format_exc())
 
     def retry_command(self, retries, timeout, method, *args, **kwargs):
         for i in range(retries):
@@ -251,9 +258,10 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 LOG.debug("Command execution successful.")
                 return result
             except SSHExecCommandFailed as exc:
-                LOG.debug("Command execution failed: %s" % exc)
+                LOG.debug(traceback.format_exc())
                 self.fail("Command execution failed.")
             except Exception as exc:
+                LOG.debug(traceback.format_exc())
                 LOG.debug("%s. Another"
                           " effort needed." % exc)
                 time.sleep(timeout)
@@ -267,7 +275,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
             cls.compute_client.flavors.delete('42')
         except Exception as exc:
             cls.error_msg.append(exc)
-            LOG.debug(exc)
+            LOG.debug(traceback.format_exc())
         while cls.os_resources:
             thing = cls.os_resources.pop()
             LOG.debug("Deleting %r from shared resources of %s" %
@@ -282,7 +290,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 if e.__class__.__name__ == 'NotFound':
                     continue
                 cls.error_msg.append(e)
-                LOG.debug(e)
+                LOG.debug(traceback.format_exc())
 
             def is_deletion_complete():
                 # Deletion testing is only required for objects whose
@@ -297,7 +305,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                     if e.__class__.__name__ == 'NotFound':
                         return True
                     cls.error_msg.append(e)
-                    LOG.debug(e)
+                    LOG.debug(traceback.format_exc())
                 return False
 
             # Block until resource deletion has completed or timed-out
@@ -375,6 +383,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             try:
                 client.security_group_rules.create(secgroup.id, **ruleset)
             except Exception:
+                LOG.debug(traceback.format_exc())
                 self.fail("Failed to create rule in security group.")
 
         return secgroup
@@ -398,7 +407,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 cls.compute_client.networks.delete(net)
         except Exception as exc:
             cls.error_msg.append(exc)
-            LOG.debug(exc)
+            LOG.debug(traceback.format_exc())
             pass
 
     def _list_networks(self):
@@ -449,6 +458,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         try:
             client.servers.add_floating_ip(server, floating_ip)
         except Exception:
+            LOG.debug(traceback.format_exc())
             self.fail('Can not assign floating ip to instance')
 
     @classmethod
@@ -458,7 +468,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 cls.compute_client.floating_ips.delete(ip)
             except Exception as exc:
                 cls.error_msg.append(exc)
-                LOG.debug(exc)
+                LOG.debug(traceback.format_exc())
                 pass
 
     def _ping_ip_address(self, ip_address, timeout, retries):
@@ -473,7 +483,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                     key_filename=self.key,
                                     timeout=timeout)
                 except Exception as exc:
-                    LOG.debug(exc)
+                    LOG.debug(traceback.format_exc())
 
                 return self.retry_command(retries[0], retries[1],
                                           ssh.exec_command, cmd)
@@ -503,9 +513,11 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                 timeout=timeout)
 
             except Exception as exc:
-                LOG.debug(exc)
+                LOG.debug(traceback.format_exc())
+
             command = "ping -q -c3 -w3 8.8.8.8 | grep 'received' |" \
                       " grep -v '0 packets received'"
+
             return self.retry_command(retries[0], retries[1],
                                       ssh.exec_command_on_vm,
                                       command=command,
@@ -677,7 +689,7 @@ class SmokeChecksTest(OfficialClientTest):
                     cls.compute_client.flavors.delete(flav)
                 except Exception as exc:
                     cls.error_msg.append(exc)
-                    LOG.debug(exc)
+                    LOG.debug(traceback.format_exc())
                     pass
 
     def _create_tenant(self, client):

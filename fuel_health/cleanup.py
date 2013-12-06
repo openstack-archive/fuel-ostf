@@ -21,6 +21,7 @@ path = os.getcwd()
 sys.path.append(path)
 
 import logging
+import traceback
 
 from fuel_health import exceptions
 import fuel_health.nmanager
@@ -35,7 +36,6 @@ class CleanUpClientManager(fuel_health.nmanager.OfficialClientManager):
     calling various OpenStack APIs.
     """
 
-    #Where this is method is used?
     def wait_for_server_termination(self, server, ignore_error=False):
         """Waits for server to reach termination."""
         start_time = int(time.time())
@@ -88,10 +88,8 @@ def cleanup(cluster_deployment_info):
                            log_message='Start savanna node'
                                        ' group template deletion',
                            delete_type='id')
-        except Exception as exc:
-            LOG.warning(
-                'Something wrong with savanna client. Esception: %s', exc
-            )
+        except Exception:
+            LOG.warning(traceback.format_exc())
 
     if 'murano' in cluster_deployment_info:
         try:
@@ -103,12 +101,10 @@ def cleanup(cluster_deployment_info):
                         try:
                             LOG.info('Start environment deletion.')
                             murano_client.stacks.delete(e.id)
-                        except Exception as exc:
-                            LOG.debug(exc)
-        except Exception as exc:
-            LOG.warning(
-                'Something wrong with murano client. Esception: %s', exc
-            )
+                        except Exception:
+                            LOG.debug(traceback.format_exc())
+        except Exception:
+            LOG.warning(traceback.format_exc())
 
     if 'heat' in cluster_deployment_info:
         try:
@@ -121,12 +117,10 @@ def cleanup(cluster_deployment_info):
                             try:
                                 LOG.info('Start stacks deletion.')
                                 heat_client.stacks.delete(s.id)
-                            except Exception as exc:
-                                LOG.debug(exc)
-        except Exception as exc:
-            LOG.warning(
-                'Something wrong with heat client. Esception: %s', exc
-            )
+                            except Exception:
+                                LOG.debug(traceback.format_exc())
+        except Exception:
+            LOG.warning(traceback.format_exc())
 
     instances_id = []
     servers = manager._get_compute_client().servers.list()
@@ -142,13 +136,13 @@ def cleanup(cluster_deployment_info):
                             LOG.info('Delete floating ip %s' % f.ip)
                             manager._get_compute_client().floating_ips.delete(
                                 f.id)
-                        except Exception as exc:
-                            LOG.debug(exc)
+                        except Exception:
+                            LOG.debug(traceback.format_exc())
                 try:
                     LOG.info('Delete server with name %s' % s.name)
                     manager._get_compute_client().servers.delete(s.id)
-                except Exception as exc:
-                    LOG.debug(exc)
+                except Exception:
+                    LOG.debug(traceback.format_exc())
     else:
         LOG.info('No servers found')
 
@@ -156,8 +150,8 @@ def cleanup(cluster_deployment_info):
             try:
                 LOG.info('Wait for server terminations')
                 manager.wait_for_server_termination(s)
-            except Exception as exc:
-                LOG.debug(exc)
+            except Exception:
+                LOG.debug(traceback.format_exc())
 
     _delete_it(manager._get_compute_client().keypairs,
                'Start keypair deletion')
@@ -189,15 +183,13 @@ def _delete_it(client, log_message, name='ost1_test-', delete_type='name'):
                             client.delete(item)
                         else:
                             client.delete(item.id)
-                    except Exception as exc:
-                        LOG.debug(exc)
+                    except Exception:
+                        LOG.debug(traceback.format_exc())
             except AttributeError:
                 if item.display_name.startswith(name):
                     client.delete(item)
-    except Exception as exc:
-        LOG.warning(
-            'Deletion is ommited due to error. Exception: %s', exc
-        )
+    except Exception:
+        LOG.warning(traceback.format_exc())
 
 
 if __name__ == "__main__":

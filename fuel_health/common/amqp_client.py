@@ -16,6 +16,7 @@
 
 import logging
 import time
+import traceback
 
 import fuel_health.common.ssh
 
@@ -141,5 +142,5 @@ class RabbitClient(object):
                 time.sleep(1)
             except Exception as exc:
                 exception = exc
-                LOG.debug(exc)
+                LOG.debug(traceback.format_exc())
         raise exception
