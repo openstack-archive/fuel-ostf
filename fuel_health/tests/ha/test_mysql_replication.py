@@ -15,6 +15,7 @@
 # under the License.
 
 import logging
+import traceback
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.common.utils import data_utils
@@ -48,8 +49,8 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
 
                 SSHClient(cls.master_ip[0], cls.controller_user,
                           key_filename=cls.controller_key).exec_command(cmd)
-            except Exception as e:
-                LOG.debug(e)
+            except Exception:
+                LOG.debug(traceback.format_exc())
                 pass
 
     def test_mysql_replication(self):

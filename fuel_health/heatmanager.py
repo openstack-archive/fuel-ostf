@@ -19,7 +19,6 @@
 import logging
 
 from fuel_health.common.utils.data_utils import rand_name
-from fuel_health import config
 import fuel_health.nmanager
 import fuel_health.test
 
