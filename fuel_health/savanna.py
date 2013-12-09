@@ -17,6 +17,7 @@
 
 import logging
 import time
+import traceback
 
 from fuel_health.common.savanna_ssh import ssh_command
 
@@ -609,7 +610,7 @@ class SavannaTest(nmanager.OfficialClientTest):
                     client.delete(item)
                 except RuntimeError as exc:
                     cls.error_msg.append(exc)
-                    LOG.debug(exc)
+                    LOG.debug(traceback.format_exc())
 
     @classmethod
     def tearDownClass(cls):

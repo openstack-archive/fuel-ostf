@@ -15,11 +15,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
 import os
 import select
 import socket
 import time
+import traceback
 import warnings
+
+LOG = logging.getLogger(__name__)
 
 from fuel_health import exceptions
 
@@ -98,6 +102,7 @@ class Client(object):
                 _timed_out = self._is_timed_out(self.timeout, _start_time)
             ssh.close()
         except (EOFError, paramiko.AuthenticationException, socket.error):
+            LOG.debug(traceback.format_exc())
             return
 
     def exec_command(self, cmd):
@@ -152,6 +157,7 @@ class Client(object):
             connection = self._get_ssh_connection()
             connection.close()
         except paramiko.AuthenticationException:
+            LOG.debug(traceback.format_exc())
             return False
 
         return True
