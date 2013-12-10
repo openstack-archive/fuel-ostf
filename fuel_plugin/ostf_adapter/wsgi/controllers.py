@@ -19,8 +19,8 @@ from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 from pecan import rest, expose, request
 
+from fuel_plugin.ostf_adapter import mixins
 from fuel_plugin.ostf_adapter.storage import models
-from fuel_plugin.ostf_adapter.wsgi.wsgi_utils import discovery_check
 
 
 LOG = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ class TestsetsController(BaseRestController):
 
     @expose('json')
     def get(self, cluster):
-        discovery_check(request.session, cluster)
+        mixins.discovery_check(request.session, cluster)
         with request.session.begin(subtransactions=True):
             needed_testsets = request.session\
                 .query(models.ClusterTestingPattern.test_set_id)\
@@ -64,7 +64,7 @@ class TestsController(BaseRestController):
 
     @expose('json')
     def get(self, cluster):
-        discovery_check(request.session, cluster)
+        mixins.discovery_check(request.session, cluster)
         with request.session.begin(subtransactions=True):
             needed_tests_list = request.session\
                 .query(models.ClusterTestingPattern.tests)\
