@@ -87,6 +87,22 @@ class Client(object):
                                         key_filename=self.key_filename)
         return ssh
 
+    def exec_longrun_command(self, cmd):
+        """
+        Execute the specified command on the server.
+
+        Unlike exec_command and exec_command_on_vm, this method allows
+        to start a process on VM in background and leave it alive
+        after it closes the session.
+
+        :returns: data read from standard output of the command.
+        """
+        s = self._get_ssh_connection()
+        _, stdout, stderr = s.exec_command(cmd)
+        res = stdout.read()
+        s.close()
+        return res
+
     def _is_timed_out(self, timeout, start_time):
         return (time.time() - timeout) > start_time
 
