@@ -15,7 +15,7 @@
 import unittest
 import mock
 
-from fuel_plugin.ostf_adapter.wsgi.wsgi_utils import _get_cluster_depl_tags
+from fuel_plugin.ostf_adapter import mixins
 
 
 class TestDeplTagsGetter(unittest.TestCase):
@@ -34,9 +34,10 @@ class TestDeplTagsGetter(unittest.TestCase):
         mocked_pecan_conf.nailgun.port = 8888
 
         with mock.patch(
-            'fuel_plugin.ostf_adapter.wsgi.wsgi_utils.conf',
+            'fuel_plugin.ostf_adapter.mixins.conf',
             mocked_pecan_conf
         ):
-            res = _get_cluster_depl_tags(expected['cluster_id'])
+            res = mixins._get_cluster_depl_tags(expected['cluster_id'])
+            print res
 
         self.assertEqual(res, expected['depl_tags'])

@@ -18,10 +18,9 @@ from mock import patch, MagicMock
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from fuel_plugin.utils.utils import cache_data
 from fuel_plugin.ostf_adapter.nose_plugin.nose_discovery import discovery
 from fuel_plugin.ostf_adapter.storage import models
-from fuel_plugin.ostf_adapter.storage import simple_cache
+from fuel_plugin.ostf_adapter import mixins
 
 TEST_PATH = 'fuel_plugin/testing/fixture/dummy_tests'
 
@@ -76,7 +75,7 @@ class BaseWSGITest(unittest2.TestCase):
         if not test_sets:
             discovery(path=TEST_PATH, session=self.session)
 
-        cache_data(self.session)
+        mixins.cache_test_repository(self.session)
 
         #mocking
         #request mocking
@@ -94,7 +93,7 @@ class BaseWSGITest(unittest2.TestCase):
         self.pecan_conf_mock.nailgun.port = 8888
 
         self.pecan_conf_patcher = patch(
-            'fuel_plugin.ostf_adapter.wsgi.wsgi_utils.conf',
+            'fuel_plugin.ostf_adapter.mixins.conf',
             self.pecan_conf_mock
         )
         self.pecan_conf_patcher.start()
@@ -113,7 +112,7 @@ class BaseWSGITest(unittest2.TestCase):
         self.request_patcher.stop()
         self.pecan_conf_patcher.stop()
 
-        simple_cache.TEST_REPOSITORY = []
+        mixins.TEST_REPOSITORY = []
 
     @property
     def is_background_working(self):

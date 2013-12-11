@@ -24,9 +24,9 @@ from fuel_plugin.ostf_adapter import cli_config
 from fuel_plugin.ostf_adapter import nailgun_hooks
 from fuel_plugin.ostf_adapter import logger
 from fuel_plugin.ostf_adapter.wsgi import app
-from fuel_plugin.ostf_adapter.nose_plugin.nose_discovery import discovery
-from fuel_plugin.utils.utils import clean_db, cache_data
+from fuel_plugin.ostf_adapter.nose_plugin import nose_discovery
 from fuel_plugin.ostf_adapter.storage import engine
+from fuel_plugin.ostf_adapter import mixins
 
 
 def main():
@@ -57,17 +57,17 @@ def main():
         return nailgun_hooks.after_initialization_environment_hook()
 
     #performing cleaning of expired data (if any) in db
-    clean_db(engine.get_engine())
+    mixins.clean_db(engine.get_engine())
 
     #discover testsets and their tests
     CORE_PATH = pecan.conf.debug_tests if \
         pecan.conf.get('debug_tests') else 'fuel_health'
 
     session = engine.get_session()
-    discovery(path=CORE_PATH, session=session)
+    nose_discovery.discovery(path=CORE_PATH, session=session)
 
     #cache needed data from test repository
-    cache_data(session)
+    mixins.cache_test_repository(session)
 
     host, port = pecan.conf.server.host, pecan.conf.server.port
     srv = pywsgi.WSGIServer((host, int(port)), root)
