@@ -69,6 +69,15 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
         super(HeatBaseTest, cls).setUpClass()
         cls.wait_interval = cls.config.compute.build_interval
         cls.wait_timeout = cls.config.compute.build_timeout
+        cls.flavor = cls._create_mini_flavor()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(HeatBaseTest, cls).tearDownClass()
+        try:
+            cls.compute_client.flavors.delete(cls.flavor.id)
+        except Exception as exc:
+            LOG.debug(exc)
 
     def setUp(self):
         super(HeatBaseTest, self).setUp()
@@ -84,6 +93,13 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
                 return stack
         return None
 
+    @classmethod
+    def _create_mini_flavor(cls):
+        name = rand_name('ost1_test-heat')
+        cls.flavor = cls.compute_client.flavors.create(
+            name=name, ram=64, vcpus=1, disk=1)
+        return cls.flavor
+
     def create_stack(self, client):
         stack_name = rand_name('ost1_test-stack')
 
@@ -92,7 +108,7 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
                              parameters={
                                  'ImageId': self.config.compute.image_name,
                                  'Instance'
-                                 'Type': self._create_nano_flavor().name
+                                 'Type': self.flavor.name
                              })
         # heat client doesn't return stack details after creation
         # so need to request them:
@@ -107,7 +123,7 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
                              parameters={
                                  'ImageId': self.config.compute.image_name,
                                  'Instance'
-                                 'Type': self._create_nano_flavor().name
+                                 'Type': self.flavor.name
                              })
         return self.find_stack(client, 'id', stack_id)
 
