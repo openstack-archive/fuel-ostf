@@ -113,6 +113,10 @@ def _get_cluster_depl_tags(cluster_id):
        and additional_components.get('heat')['value'] is True:
         additional_depl_tags.add('heat')
 
+    if additional_components.get('ceilometer') \
+        and additional_components.get('ceilometer')['value'] is True:
+        additional_depl_tags.add('ceilometer')
+
     if additional_depl_tags:
         deployment_tags.add('additional_components')
         deployment_tags.update(additional_depl_tags)
