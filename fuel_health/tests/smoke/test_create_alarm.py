@@ -47,42 +47,42 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
         project_id = list_meters_resp[0].project_id
         user_id = list_meters_resp[0].user_id
 
-        create_alarm_resp = self.verify(5, self.create_alarm,
-                                        1, fail_msg, "Alarm_create",
-                                        project_id=project_id,
-                                        user_id=user_id,
-                                        meter_name=self.meter_name,
-                                        threshold='1',
-                                        name=self.name)
+        self.verify(5, self.create_alarm,
+                    1, fail_msg, "Alarm_create",
+                    project_id=project_id,
+                    user_id=user_id,
+                    meter_name=self.meter_name,
+                    threshold='1',
+                    name=self.name)
 
         fail_msg = "Alarm update failed."
 
-        alarm_update_resp = self.verify(5, self.alarm_update,
-                                        2, fail_msg, "Alarm_update",
-                                        alarm_id=self.get_alarm_id(),
-                                        threshold='50')
+        self.verify(5, self.alarm_update,
+                    2, fail_msg, "Alarm_update",
+                    alarm_id=self.get_alarm_id(),
+                    threshold='50')
 
         fail_msg = "Get alarm history failed."
 
-        alarm_history_resp = self.verify(5, self.alarm_history,
-                                         3, fail_msg, "Alarm_history",
-                                         alarm_id=self.get_alarm_id())
+        self.verify(5, self.alarm_history,
+                    3, fail_msg, "Alarm_history",
+                    alarm_id=self.get_alarm_id())
 
         fail_msg = "Alarm setting state failed."
 
-        alarm_state_resp = self.verify(5, self.set_state,
-                                       4, fail_msg, "Set_state",
-                                       alarm_id=self.get_alarm_id(),
-                                       state=self.state_ok)
+        self.verify(5, self.set_state,
+                    4, fail_msg, "Set_state",
+                    alarm_id=self.get_alarm_id(),
+                    state=self.state_ok)
 
         fail_msg = "Alarm verify state failed."
 
-        alarm_state_resp = self.verify(5, self.verify_state,
-                                       5, fail_msg, "Verify_state",
-                                       alarm_id=self.get_alarm_id(),
-                                       state=self.state_ok)
+        self.verify(5, self.verify_state,
+                    5, fail_msg, "Verify_state",
+                    alarm_id=self.get_alarm_id(),
+                    state=self.state_ok)
 
         fail_msg = "Alarm delete."
-        alarm_history_resp = self.verify(5, self.delete_alarm,
-                                         6, fail_msg, "Delete_alarm",
-                                         alarm_id=self.get_alarm_id())
+        self.verify(5, self.delete_alarm,
+                    6, fail_msg, "Delete_alarm",
+                    alarm_id=self.get_alarm_id())
