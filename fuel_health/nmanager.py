@@ -258,7 +258,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 return False
 
         res = fuel_health.test.call_until_true(
-            is_deletion_complete, 20, 1)
+            is_deletion_complete, 20, 10)
 
         if not res:
             LOG.debug("Reset server state.")
@@ -266,7 +266,9 @@ class OfficialClientTest(fuel_health.test.TestCase):
             try:
                 LOG.debug("Deleting server.")
                 self.compute_client.servers.delete(server)
-            except Exception:
+            except Exception as e:
+                if e.__class__.__name__ == 'NotFound':
+                    return True
                 LOG.debug("Server can not be deleted: %s" % server.id)
                 LOG.debug(traceback.format_exc())
 
@@ -328,7 +330,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 return False
 
             # Block until resource deletion has completed or timed-out
-            fuel_health.test.call_until_true(is_deletion_complete, 10, 1)
+            fuel_health.test.call_until_true(is_deletion_complete, 20, 10)
 
 
 class NovaNetworkScenarioTest(OfficialClientTest):
