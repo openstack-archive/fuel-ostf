@@ -17,7 +17,7 @@ import logging
 import os
 from nose import plugins
 from pecan import conf
-import unittest2
+from nose.plugins import skip
 
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
 from fuel_plugin.ostf_adapter.storage import models, engine
@@ -87,7 +87,7 @@ class StoragePlugin(plugins.Plugin):
         if err[0] is AssertionError:
             LOG.error('%s', test.id(), exc_info=err)
             self._add_message(test, err=err, status='failure')
-        elif issubclass(err[0], unittest2.SkipTest):
+        elif issubclass(err[0], skip.SkipTest):
             LOG.warning('%s is skipped', test.id())
             self._add_message(test, err=err, status='skipped')
         else:

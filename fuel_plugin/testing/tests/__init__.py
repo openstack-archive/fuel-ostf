@@ -40,8 +40,8 @@ def setup():
                             ('--debug_tests=fuel_plugin/testing/'
                              'fixture/dummy_tests')
                         ],
-                        stdout=devnull,
-                        stderr=devnull
+                        stdout=serverlogs,
+                        stderr=serverlogs
                     )
                 ]
             )
