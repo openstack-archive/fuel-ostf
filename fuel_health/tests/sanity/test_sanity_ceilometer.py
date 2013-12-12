@@ -39,15 +39,15 @@ class CeilometerApiTests(ceilometermanager.CeilometerBaseTest):
         """
         fail_msg = "Meter list unavailable"
 
-        list_meters_resp = self.verify(5, self.list_meters,
-                                       1, fail_msg, "Meter listing")
+        self.verify(5, self.list_meters,
+                    1, fail_msg, "Meter listing")
 
         fail_msg = "Alarm list unavailable"
 
-        list_alarms_resp = self.verify(5, self.list_alarm,
-                                       2, fail_msg, "Alarm listing")
+        self.verify(5, self.list_alarm,
+                    2, fail_msg, "Alarm listing")
 
         fail_msg = 'Resource list is unavailable. '
 
-        list_resources_resp = self.verify(5, self.list_resources,
-                                          3, fail_msg, "Resource listing")
+        self.verify(5, self.list_resources,
+                    3, fail_msg, "Resource listing")
