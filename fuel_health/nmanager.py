@@ -262,8 +262,8 @@ class OfficialClientTest(fuel_health.test.TestCase):
 
         if not res:
             LOG.debug("Reset server state.")
-            self.compute_client.servers.reset_state(server)
             try:
+                self.compute_client.servers.reset_state(server)
                 LOG.debug("Deleting server.")
                 self.compute_client.servers.delete(server)
             except Exception as e:
