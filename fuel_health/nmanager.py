@@ -228,18 +228,11 @@ class OfficialClientTest(fuel_health.test.TestCase):
     @classmethod
     def _create_nano_flavor(cls):
         name = rand_name('ost1_test-flavor-nano')
-        flavorid = 42
-        flavor_list = cls.compute_client.flavors.list()
-        if flavor_list:
-            for flavor in flavor_list:
-                LOG.debug(flavor.id)
-                if '42' in flavor.id:
-                    LOG.info('42 flavor id already exists')
-                    return flavor
+        flavorid = rand_int_id(999, 10000)
 
-            flavor = cls.compute_client.flavors.create(
-                name, 64, 1, 1, flavorid)
-            return flavor
+        flavor = cls.compute_client.flavors.create(
+            name, 64, 1, 1, flavorid)
+        return flavor
 
     def _delete_server(self, server):
         LOG.debug("Stopping server.")
@@ -292,11 +285,6 @@ class OfficialClientTest(fuel_health.test.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.error_msg = []
-        try:
-            cls.compute_client.flavors.delete('42')
-        except Exception as exc:
-            cls.error_msg.append(exc)
-            LOG.debug(traceback.format_exc())
         while cls.os_resources:
             thing = cls.os_resources.pop()
             LOG.debug("Deleting %r from shared resources of %s" %
@@ -436,7 +424,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         return nets
 
     def _create_server(self, client, name, security_groups):
-        self._create_nano_flavor()
         base_image_id = get_image_from_name()
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in
@@ -448,7 +435,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         else:
             create_kwargs = {'security_groups': security_groups}
 
-        server = client.servers.create(name, base_image_id, 42,
+        server = client.servers.create(name, base_image_id,
+                                       self.nova_netw_flavor.id,
                                        **create_kwargs)
         self.verify_response_body_content(server.name,
                                           name,
@@ -684,7 +672,6 @@ class SmokeChecksTest(OfficialClientTest):
     @classmethod
     def setUpClass(cls):
         super(SmokeChecksTest, cls).setUpClass()
-        cls._create_nano_flavor()
         cls.tenant_id = cls.manager._get_identity_client(
             cls.config.identity.admin_username,
             cls.config.identity.admin_password,
@@ -692,6 +679,7 @@ class SmokeChecksTest(OfficialClientTest):
         cls.build_interval = cls.config.volume.build_interval
         cls.build_timeout = cls.config.volume.build_timeout
 
+        cls.smoke_flavors = []
         cls.flavors = []
         cls.error_msg = []
         cls.private_net = 'net04'
@@ -743,7 +731,6 @@ class SmokeChecksTest(OfficialClientTest):
     def _create_server(self, client):
         name = rand_name('ost1_test-volume-instance')
         base_image_id = get_image_from_name()
-        flavor_id = self._create_nano_flavor().id
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in
                        self.compute_client.networks.list()
@@ -751,9 +738,10 @@ class SmokeChecksTest(OfficialClientTest):
 
             create_kwargs = {'nics': [{'net-id': network[0]}]}
             server = client.servers.create(
-                name, base_image_id, flavor_id, **create_kwargs)
+                name, base_image_id, self.smoke_flavor.id, **create_kwargs)
         else:
-            server = client.servers.create(name, base_image_id, flavor_id)
+            server = client.servers.create(name, base_image_id,
+                                           self.smoke_flavor.id)
 
         self.verify_response_body_content(server.name,
                                           name,
@@ -795,19 +783,11 @@ class SmokeChecksTest(OfficialClientTest):
         return False
 
     @classmethod
-    def _verification_of_exceptions(cls):
-        if cls.error_msg:
-            for err in cls.error_msg:
-                if err.__class__.__name__ == 'InternalServerError':
-                    raise cls.failureException('REST API of '
-                                               'OpenStack is inaccessible.'
-                                               ' Please try again')
-                if err.__class__.__name__ == 'ClientException':
-                    raise cls.failureException('REST API of '
-                                               'OpenStack is inaccessible.'
-                                               ' Please try again')
-
-    @classmethod
     def tearDownClass(cls):
         super(SmokeChecksTest, cls).tearDownClass()
         cls._clean_flavors()
+        try:
+            cls.compute_client.flavors.delete(cls.smoke_flavor)
+        except Exception:
+            LOG.debug("OSTF test flavor cannot be deleted.")
+            LOG.debug(traceback.format_exc())

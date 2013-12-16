@@ -27,6 +27,11 @@ class VolumesTest(nmanager.SmokeChecksTest):
     @classmethod
     def setUpClass(cls):
         super(VolumesTest, cls).setUpClass()
+        try:
+            cls.smoke_flavor = cls._create_nano_flavor()
+        except Exception:
+            LOG.debug('OSTF test flavor can not be created.')
+            LOG.debug(traceback.format_exc())
 
     def setUp(self):
         super(VolumesTest, self).setUp()
