@@ -37,6 +37,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @classmethod
     def setUpClass(cls):
         super(TestNovaNetwork, cls).setUpClass()
+        cls.nova_netw_flavor = cls._create_nano_flavor()
         cls.tenant_id = cls.manager._get_identity_client(
             cls.config.identity.admin_username,
             cls.config.identity.admin_password,
@@ -55,6 +56,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @classmethod
     def tearDownClass(cls):
         super(TestNovaNetwork, cls).tearDownClass()
+        cls.compute_client.flavors.delete(cls.nova_netw_flavor.id)
 
     def tearDown(self):
         super(TestNovaNetwork, self).tearDown()
