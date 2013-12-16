@@ -224,22 +224,17 @@ class OfficialClientManager(fuel_health.manager.Manager):
 
 class OfficialClientTest(fuel_health.test.TestCase):
     manager_class = OfficialClientManager
+    flavors = []
 
     @classmethod
     def _create_nano_flavor(cls):
         name = rand_name('ost1_test-flavor-nano')
-        flavorid = 42
-        flavor_list = cls.compute_client.flavors.list()
-        if flavor_list:
-            for flavor in flavor_list:
-                LOG.debug(flavor.id)
-                if '42' in flavor.id:
-                    LOG.info('42 flavor id already exists')
-                    return flavor
+        flavorid = rand_int_id(42, 10000)
 
-            flavor = cls.compute_client.flavors.create(
-                name, 64, 1, 1, flavorid)
-            return flavor
+        flavor = cls.compute_client.flavors.create(
+            name, 64, 1, 1, flavorid)
+        cls.flavors.append(flavor)
+        return flavor
 
     def _delete_server(self, server):
         LOG.debug("Stopping server.")
@@ -293,7 +288,9 @@ class OfficialClientTest(fuel_health.test.TestCase):
     def tearDownClass(cls):
         cls.error_msg = []
         try:
-            cls.compute_client.flavors.delete('42')
+            for fl in cls.flavors:
+                cls.compute_client.flavors.delete(fl.id)
+                cls.flavors.remove(fl)
         except Exception as exc:
             cls.error_msg.append(exc)
             LOG.debug(traceback.format_exc())
@@ -436,7 +433,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         return nets
 
     def _create_server(self, client, name, security_groups):
-        self._create_nano_flavor()
+        # flavor_id = self._create_nano_flavor()
         base_image_id = get_image_from_name()
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in
@@ -448,7 +445,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         else:
             create_kwargs = {'security_groups': security_groups}
 
-        server = client.servers.create(name, base_image_id, 42,
+        server = client.servers.create(name, base_image_id, self.flavor.id,
                                        **create_kwargs)
         self.verify_response_body_content(server.name,
                                           name,
@@ -684,7 +681,7 @@ class SmokeChecksTest(OfficialClientTest):
     @classmethod
     def setUpClass(cls):
         super(SmokeChecksTest, cls).setUpClass()
-        cls._create_nano_flavor()
+        cls.flavor_id = cls._create_nano_flavor().id
         cls.tenant_id = cls.manager._get_identity_client(
             cls.config.identity.admin_username,
             cls.config.identity.admin_password,
@@ -743,7 +740,7 @@ class SmokeChecksTest(OfficialClientTest):
     def _create_server(self, client):
         name = rand_name('ost1_test-volume-instance')
         base_image_id = get_image_from_name()
-        flavor_id = self._create_nano_flavor().id
+        # flavor_id = self._create_nano_flavor().id
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in
                        self.compute_client.networks.list()
@@ -751,9 +748,9 @@ class SmokeChecksTest(OfficialClientTest):
 
             create_kwargs = {'nics': [{'net-id': network[0]}]}
             server = client.servers.create(
-                name, base_image_id, flavor_id, **create_kwargs)
+                name, base_image_id, self.flavor_id, **create_kwargs)
         else:
-            server = client.servers.create(name, base_image_id, flavor_id)
+            server = client.servers.create(name, base_image_id, self.flavor_id)
 
         self.verify_response_body_content(server.name,
                                           name,

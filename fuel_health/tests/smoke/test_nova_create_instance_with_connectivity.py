@@ -37,6 +37,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @classmethod
     def setUpClass(cls):
         super(TestNovaNetwork, cls).setUpClass()
+        cls.flavor = cls._create_nano_flavor()
         cls.tenant_id = cls.manager._get_identity_client(
             cls.config.identity.admin_username,
             cls.config.identity.admin_password,
