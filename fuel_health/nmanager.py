@@ -164,7 +164,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         keystone = self._get_identity_client(username, password, tenant_name)
         token = keystone.auth_token
         try:
-            endpoint = self.config.heat.endpoint + "/" + token
+            endpoint = self.config.heat.endpoint + "/" + keystone.tenant_id
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Can not initialize heat client, endpoint not found')
             return None
@@ -699,7 +699,8 @@ class SmokeChecksTest(OfficialClientTest):
     def _create_flavors(self, client, ram, disk, vcpus=1):
         name = rand_name('ost1_test-flavor-')
         flavorid = rand_int_id()
-        flavor = client.flavors.create(name, ram, disk, vcpus, flavorid)
+        flavor = client.flavors.create(name=name, ram=ram, disk=disk,
+                                       vcpus=vcpus, flavorid=flavorid)
         self.flavors.append(flavor)
         return flavor
 
