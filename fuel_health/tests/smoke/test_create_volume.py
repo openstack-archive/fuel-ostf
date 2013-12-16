@@ -27,6 +27,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
     @classmethod
     def setUpClass(cls):
         super(VolumesTest, cls).setUpClass()
+        cls.smoke_flavor = cls._create_nano_flavor()
 
     def setUp(self):
         super(VolumesTest, self).setUp()

@@ -37,6 +37,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @classmethod
     def setUpClass(cls):
         super(TestNovaNetwork, cls).setUpClass()
+        cls.nova_netw_flavor = cls._create_nano_flavor()
         cls.tenant_id = cls.manager._get_identity_client(
             cls.config.identity.admin_username,
             cls.config.identity.admin_password,
@@ -55,6 +56,10 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @classmethod
     def tearDownClass(cls):
         super(TestNovaNetwork, cls).tearDownClass()
+        try:
+            cls.compute_client.flavors.delete(cls.nova_netw_flavor.id)
+        except Exception:
+            LOG.debug(traceback.format_exc())
 
     def tearDown(self):
         super(TestNovaNetwork, self).tearDown()
@@ -66,7 +71,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                 except Exception:
                     LOG.debug(traceback.format_exc())
                     LOG.debug("Server was already deleted.")
-
 
     def test_001_create_keypairs(self):
         """Create keypair
