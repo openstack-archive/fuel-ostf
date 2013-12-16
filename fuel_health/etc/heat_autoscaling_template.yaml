@@ -1,0 +1,149 @@
+HeatTemplateFormatVersion: '2013-11-01'
+Description: AWS CloudFormation Sample Template
+Parameters:
+  KeyName:
+    Type: String
+  InstanceType:
+    Type: String
+  ImageId:
+    Type: String
+  Subnet:
+    Type: String
+    Default: ''
+  SecurityGroup:
+    Type: String
+Resources:
+  CfnUser: {Type: 'AWS::IAM::User'}
+  AKeys:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: {Ref: CfnUser}
+  AGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AvailabilityZones: {'Fn::GetAZs': ''}
+      LaunchConfigurationName: {Ref: LaunchConfig}
+      MinSize: '1'
+      MaxSize: '2'
+      VPCZoneIdentifier: [{Ref: Subnet}]
+  AScaleUpPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: {Ref: AGroup}
+      Cooldown: '60'
+      ScalingAdjustment: '1'
+  AScaleDownPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: {Ref: AGroup}
+      Cooldown: '60'
+      ScalingAdjustment: '-1'
+  CPUAlarmHigh:
+    Type: OS::Heat::CWLiteAlarm
+    Properties:
+      AlarmDescription: Scale-up if CPU > 90% for 1 minute
+      MetricName: CPUUtilization
+      Namespace: system/linux
+      Statistic: Average
+      Period: '60'
+      EvaluationPeriods: '1'
+      Threshold: '90'
+      AlarmActions:
+      - {Ref: AScaleUpPolicy}
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value: {Ref: AGroup}
+      ComparisonOperator: GreaterThanThreshold
+  CPUAlarmLow:
+    Type: OS::Heat::CWLiteAlarm
+    Properties:
+      AlarmDescription: Scale-down if CPU < 50% for 1 minute
+      MetricName: CPUUtilization
+      Namespace: system/linux
+      Statistic: Average
+      Period: '60'
+      EvaluationPeriods: '1'
+      Threshold: '50'
+      AlarmActions:
+      - {Ref: AScaleDownPolicy}
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value: {Ref: AGroup}
+      ComparisonOperator: LessThanThreshold
+  LaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          files:
+            /etc/cfn/cfn-credentials:
+              content:
+                Fn::Join:
+                - ''
+                - - AWSAccessKeyId=
+                  - {Ref: AKeys}
+                  - '
+
+                    '
+                  - AWSSecretKey=
+                  - Fn::GetAtt: [AKeys, SecretAccessKey]
+                  - '
+
+                    '
+              mode: '000400'
+              owner: root
+              group: root
+            /tmp/stats-crontab.txt:
+              content:
+                Fn::Join:
+                - ''
+                - - 'MAIL=""
+
+                    '
+                  - '
+
+                    '
+                  - '* * * * * /opt/aws/bin/cfn-push-stats --watch '
+                  - {Ref: CPUAlarmHigh}
+                  - ' --cpu-util
+
+                    '
+                  - '* * * * * /opt/aws/bin/cfn-push-stats --watch '
+                  - {Ref: CPUAlarmLow}
+                  - ' --cpu-util
+
+                    '
+              mode: '000600'
+              owner: root
+              group: root
+    Properties:
+      ImageId: {Ref: ImageId}
+      InstanceType: {Ref: InstanceType}
+      KeyName: {Ref: KeyName}
+      SecurityGroups: [{Ref: SecurityGroup}]
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          - - '#!/bin/bash -v
+
+              '
+            - '/opt/aws/bin/cfn-init -s '
+            - {Ref: 'AWS::StackName'}
+            - ' -r LaunchConfig '
+            - ' --region '
+            - {Ref: 'AWS::Region'}
+            - '
+
+              '
+            - '# install crontab
+
+              '
+            - 'crontab /tmp/stats-crontab.txt
+
+              '
+            - 'touch /tmp/vm_ready.txt
+
+              '

@@ -37,7 +37,7 @@ class SanityHeatTest(heatmanager.HeatBaseTest):
 
         Duration: 20 s.
         """
-        self.verify(10, self.list_stacks, 1,
+        self.verify(10, self._list_stacks, 1,
                     'Stack list is unavailable. ',
                     "stack listing",
                     self.heat_client)
