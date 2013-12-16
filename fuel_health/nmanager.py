@@ -705,7 +705,8 @@ class SmokeChecksTest(OfficialClientTest):
     def _create_flavors(self, client, ram, disk, vcpus=1):
         name = rand_name('ost1_test-flavor-')
         flavorid = rand_int_id()
-        flavor = client.flavors.create(name, ram, disk, vcpus, flavorid)
+        flavor = client.flavors.create(name=name, ram=ram, disk=disk,
+                                       vcpus=vcpus, flavorid=flavorid)
         self.flavors.append(flavor)
         return flavor
 
