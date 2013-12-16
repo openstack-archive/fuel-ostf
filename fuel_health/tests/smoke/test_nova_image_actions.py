@@ -33,6 +33,18 @@ class TestImageAction(nmanager.SmokeChecksTest):
       - verify that snapshot can be created from an instance;
       - verify that instance can be booted from a snapshot.
     """
+    @classmethod
+    def setUpClass(cls):
+        super(TestImageAction, cls).setUpClass()
+        try:
+            cls.smoke_flavor = cls._create_nano_flavor()
+        except Exception:
+            LOG.debug('OSTF test flavor cannot be created.')
+            LOG.debug(traceback.format_exc())
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestImageAction, cls).tearDownClass()
 
     def setUp(self):
         super(TestImageAction, self).setUp()
@@ -70,7 +82,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
     def _boot_image(self, image_id):
         name = rand_name('ost1_test-image')
         client = self.compute_client
-        flavor_id = self._create_nano_flavor().id
+        flavor_id = self.smoke_flavor
         LOG.debug("name:%s, image:%s" % (name, image_id))
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in
