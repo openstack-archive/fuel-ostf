@@ -65,7 +65,7 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
             5. Get replicated data from each controller.
             6. Verify that replicated data in the same from each controller
             7. Drop created database
-        Duration: 40 s.
+        Duration: 100 s.
         """
         # Find mysql master node
         master_node_ip = []
@@ -154,7 +154,7 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
         Scenario:
             1. Request list of tables for os databases on each node.
             2. Check that amount of tables for each database is the same
-        Duration: 40 s.
+        Duration: 100 s.
         """
         dbs = ['nova', 'glance', 'keystone']
         cmd = "mysql -e 'SHOW TABLES FROM %(database)s'"
@@ -195,7 +195,7 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
             5. Verify that  Slave_IO_State is in appropriate state
             6. Verify that Slave_IO_Running is in appropriate state
             7. Verify that Slave_SQL_Running is in appropriate state
-        Duration: 40 s.
+        Duration: 100 s.
         Deployment tags: RHEL
         """
 
@@ -276,7 +276,7 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
             2. For each node check cluster size
             3. For each node check status is ready
             4. For each node check that node is connected to cluster
-        Duration: 20 s.
+        Duration: 60 s.
         Deployment tags: CENTOS
         """
         if 'CentOS' in self.config.compute.deployment_os:
@@ -328,7 +328,7 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
             2. For each node check cluster size
             3. For each node check status is ready
             4. For each node check that node is connected to cluster
-        Duration: 20 s.
+        Duration: 60 s.
         Deployment tags: Ubuntu
         """
         if 'Ubuntu' in self.config.compute.deployment_os:
