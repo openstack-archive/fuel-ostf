@@ -1,0 +1,10 @@
+Change-Id: I421ba879a36c1bd817fa27aa780476d2008eb6d0
+Verified+2: Jenkins
+Approved+1: tatyana-leontovich <tleontovich@mirantis.com>
+Code-Review+2: tatyana-leontovich <tleontovich@mirantis.com>
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Submitted-by: Jenkins
+Submitted-at: Thu, 19 Dec 2013 19:33:44 +0000
+Reviewed-on: https://review.openstack.org/63145
+Project: stackforge/fuel-ostf
+Branch: refs/heads/master
