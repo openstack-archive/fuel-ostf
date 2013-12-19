@@ -24,14 +24,30 @@ LOG = logging.getLogger(__name__)
 
 
 class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
+
+    @classmethod
+    def setUpClass(cls):
+        super(CeilometerBaseTest, cls).setUpClass()
+        cls.flavor = cls._create_mini_flavor()
+        cls.wait_interval = cls.config.compute.build_interval
+        cls.wait_timeout = cls.config.compute.build_timeout
+        cls.private_net = 'net04'
+
     def setUp(self):
         super(CeilometerBaseTest, self).setUp()
         if not self.ceilometer_client:
             self.fail('Ceilometer is unavailable.')
-        self.name = rand_name('ost1_test-')
-        self.meter_name = 'image'
+        if not self.config.compute.compute_nodes:
+            self.fail('There are no compute nodes')
+        self.name = rand_name('ost1_test-alarm_actions')
+        self.meter_name = 'cpu'
+        self.meter_name_image = 'image'
         self.state_ok = 'ok'
-        alarm_id = self.get_alarm_id()
+        self.comparison_operator = 'lt'
+        self.statistic = 'avg'
+        self.instance = object()
+        self.period = '600'
+        self.threshold = '20'
 
     def list_meters(self):
         """
@@ -46,11 +62,11 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         """
         return self.ceilometer_client.alarms.list()
 
-    def list_resources(self):
+    def list_resources(self, project_id):
         """
         This method list resources
         """
-        return self.ceilometer_client.resources.list()
+        return self.ceilometer_client.resources.list(project_id)
 
     def list_statistics(self, meter_name):
         """
@@ -58,15 +74,11 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         """
         return self.ceilometer_client.statistics.list(meter_name)
 
-    def create_alarm(self, project_id, user_id, threshold, name, meter_name):
+    def create_alarm(self, **kwargs):
         """
         This method provide creation of alarm
         """
-        return self.ceilometer_client.alarms.create(project_id=project_id,
-                                                    user_id=user_id,
-                                                    meter_name=meter_name,
-                                                    threshold=threshold,
-                                                    name=name)
+        return self.ceilometer_client.alarms.create(**kwargs)
 
     def get_alarm_id(self):
         list_alarms_resp = self.list_alarm()
@@ -118,6 +130,45 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         """
         return self.ceilometer_client.alarms.delete(alarm_id=alarm_id)
 
+    def _wait_for_instance_metrics(self, server, status):
+        self.status_timeout(self.compute_client.servers, server.id, status)
+
+    def wait_for_alarm_status(self, alarm_id):
+        """
+        The method is a customization of test.status_timeout().
+        """
+        def check_status():
+            alarm_state_resp = self.get_state(alarm_id)
+            if alarm_state_resp == 'alarm':
+                return True  # All good.
+            LOG.debug("Waiting for state to get alarm status.")
+
+        if not fuel_health.test.call_until_true(check_status, 600, 10):
+            self.fail("Timed out waiting to become alarm")
+
+    def wait_for_instance_metrics(self, meter_name):
+        """
+        The method is a customization of test.status_timeout().
+        """
+        def check_status():
+            stat_state_resp = self.list_statistics(meter_name)
+            if len(stat_state_resp) > 0:
+                return True  # All good.
+            LOG.debug("Waiting for state to get state status.")
+
+        if not fuel_health.test.call_until_true(check_status, 600, 10):
+
+            self.fail("Timed out waiting to become alarm")
+        else:
+            return self.list_statistics(meter_name)
+
+    @classmethod
+    def _create_mini_flavor(cls):
+        name = rand_name('ost1_test-ceilometer')
+        cls.flavor = cls.compute_client.flavors.create(
+            name=name, ram=64, vcpus=1, disk=1)
+        return cls.flavor
+
     @classmethod
     def _clean_alarms(cls):
         list_alarms_resp = cls.ceilometer_client.alarms.list()
@@ -130,3 +181,7 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
     def tearDownClass(cls):
         super(CeilometerBaseTest, cls).tearDownClass()
         cls._clean_alarms()
+        try:
+            cls.compute_client.flavors.delete(cls.flavor.id)
+        except Exception as exc:
+            LOG.debug(exc)
