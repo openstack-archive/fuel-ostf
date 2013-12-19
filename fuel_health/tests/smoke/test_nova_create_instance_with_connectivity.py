@@ -220,6 +220,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                     6, "Floating IP cannot be removed.",
                     "removing floating IP", server, floating_ip)
 
+        self.floating_ips.remove(floating_ip)
+
         self.verify(30, self._delete_server, 7,
                     "Server can not be deleted. ",
                     "server deletion", server)
@@ -276,10 +278,12 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                     "function properly."),
                     'public connectivity checking from VM', ip_address,
                     30, (10, 30))
-
+        #TODO verify here that deletion complete with success
         self.verify(10, self.compute_client.servers.remove_floating_ip,
                     6, "Floating IP cannot be removed.",
                     "removing floating IP", server, floating_ip)
+
+        self.floating_ips.remove(floating_ip)
 
         self.verify(30, self._delete_server, 7,
                     "Server can not be deleted. ",

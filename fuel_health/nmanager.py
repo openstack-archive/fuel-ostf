@@ -238,9 +238,6 @@ class OfficialClientTest(fuel_health.test.TestCase):
         return flavor
 
     def _delete_server(self, server):
-        LOG.debug("Stopping server.")
-        self.compute_client.servers.stop(server)
-        # TODO we need to wait when server actually stops
         LOG.debug("Deleting server.")
         self.compute_client.servers.delete(server)
 
@@ -475,13 +472,13 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     @classmethod
     def _clean_floating_ips(cls):
-        for ip in cls.floating_ips:
+        if cls.floating_ips:
             try:
-                cls.compute_client.floating_ips.delete(ip)
+                [cls.compute_client.floating_ips.delete(ip)
+                 for ip in cls.floating_ips]
             except Exception as exc:
                 cls.error_msg.append(exc)
                 LOG.debug(traceback.format_exc())
-                pass
 
     def _ping_ip_address(self, ip_address, timeout, retries):
         def ping():
