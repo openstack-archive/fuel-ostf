@@ -32,7 +32,7 @@ class MuranoSanityTests(murano.MuranoTest):
             1. Send request to create environment.
             2. Send request to delete environment.
 
-        Duration: 4 s.
+        Duration: 14 s.
 
         Deployment tags: Murano
         """

@@ -131,7 +131,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
             4. Delete the instance created in step 1.
             5. Wait while instance deleted
             6. Launch another instance from the snapshot created in step 2.
-        Duration: 230 s.
+        Duration: 300 s.
         """
         image = self.verify(30, nmanager.get_image_from_name, 1,
                             "Image can not be retreived.",
