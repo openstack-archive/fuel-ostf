@@ -137,8 +137,9 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
         def check_status():
             stack = self.heat_client.stacks.get(stack_id)
             new_status = stack.stack_status
-            if new_status == 'ERROR':
-                self.fail("Failed to get to expected status. In ERROR state.")
+            if new_status == 'CREATE_FAILED':
+                self.fail("Failed to get to expected status. "
+                          "In CREATE_FAILED state.")
             elif new_status == expected_status:
                 return True  # All good.
             LOG.debug("Waiting for %s to get to %s status. "
