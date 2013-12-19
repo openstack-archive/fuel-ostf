@@ -35,7 +35,7 @@ class SanityHeatTest(heatmanager.HeatBaseTest):
         Scenario:
             1. Request the list of stacks.
 
-        Duration: 10 s.
+        Duration: 20 s.
         """
         self.verify(10, self.list_stacks, 1,
                     'Stack list is unavailable. ',

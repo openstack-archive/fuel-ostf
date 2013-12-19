@@ -54,7 +54,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Scenario:
             1. Execute nova-manage service list command on a controller node.
             2. Check there are no failed services (with XXX state).
-        Duration: 50 s.
+        Duration: 100 s.
         """
         output = u'XXX'
         cmd = 'nova-manage service list'
@@ -87,7 +87,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
         Scenario:
             1. Execute ping 8.8.8.8 command from a compute node.
-        Duration: 40 s.
+        Duration: 100 s.
         """
         if not self.computes:
             self.fail('Step 1 failed: There are no compute nodes')
@@ -100,7 +100,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                self.pwd,
                                key_filename=self.key,
                                timeout=self.timeout)
-        self.verify(50, self.retry_command, 1,
+        self.verify(70, self.retry_command, 1,
                     "'ping' command failed. Looks like there is no "
                     "Internet connection on the compute node.",
                     "'ping' command",
@@ -115,7 +115,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             2. Check 8.8.8.8 host was successfully resolved
             3. Check host google.com command from the compute node.
             4. Check google.com host was successfully resolved.
-        Duration: 60 s.
+        Duration: 120 s.
         """
         if not self.computes:
             self.fail('Step 1 failed: There are no compute nodes')
@@ -126,7 +126,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                timeout=self.timeout)
         expected_output = "google"
         cmd = "host 8.8.8.8"
-        output = self.verify(50, self.retry_command, 1,
+        output = self.verify(60, self.retry_command, 1,
                              "'host' command failed. Looks like there is no "
                              "Internet connection on the compute node.",
                              "'ping' command", 10, 5,
@@ -139,7 +139,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
         expected_output = "google.com has address"
         cmd = "host google.com"
-        output = self.verify(50, self.retry_command, 3,
+        output = self.verify(60, self.retry_command, 3,
                              "'host' command failed. "
                              "DNS name cannot be resolved.",
                              "'host' command", 10, 5,
