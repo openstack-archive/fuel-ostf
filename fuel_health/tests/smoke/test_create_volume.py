@@ -15,6 +15,7 @@
 # under the License.
 
 import logging
+import time
 
 from fuel_health import nmanager
 
@@ -125,7 +126,8 @@ class VolumesTest(nmanager.SmokeChecksTest):
                     'Volume status did not become "available".',
                     "volume becoming 'available'",
                     volume, 'available')
-
+	# Sleeping due to non-syncronous procedure and potential race.
+	time.sleep(5)
         self.verify(50, self.volume_client.volumes.delete, 11,
                     'Can not delete volume. ',
                     "volume deletion",
