@@ -61,6 +61,8 @@ class WsgiInterfaceTests(base.BaseWSGITest):
         self.app.get('/v1/testruns')
 
     @patch('fuel_plugin.ostf_adapter.wsgi.controllers.models')
+    @patch('fuel_plugin.ostf_adapter.wsgi.controllers.nose_plugin.get_plugin',
+           lambda *args, **kwargs: MagicMock())
     def test_post_testruns(self, models):
         testruns = [
             {
@@ -74,7 +76,7 @@ class WsgiInterfaceTests(base.BaseWSGITest):
         ]
 
         self.request_mock.body = json.dumps(testruns)
-        models.TestRun.start.return_value = {}
+        models.TestRun.create_test_run.return_value = {}
         self.app.post_json('/v1/testruns', testruns)
 
     def test_put_testruns(self):

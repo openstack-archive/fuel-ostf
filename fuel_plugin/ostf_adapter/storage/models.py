@@ -25,6 +25,10 @@ from fuel_plugin.ostf_adapter import nose_plugin
 from fuel_plugin.ostf_adapter.storage import fields, engine
 
 
+import logging
+LOG = logging.getLogger(__name__)
+
+
 BASE = declarative_base()
 
 
@@ -95,6 +99,10 @@ class TestSet(BASE):
     def frontend(self):
         return {'id': self.id, 'name': self.description}
 
+    @property
+    def run_test_additional_args(self):
+        return [self.test_path] + self.additional_arguments
+
     @classmethod
     def get_test_set(cls, session, test_set):
         return session.query(cls)\
@@ -161,6 +169,11 @@ class Test(BASE):
         }
 
     @classmethod
+    def modify_test_name_for_nose(cls, test_path):
+        test_module, test_class, test_method = test_path.rsplit('.', 2)
+        return '{0}:{1}.{2}'.format(test_module, test_class, test_method)
+
+    @classmethod
     def add_result(cls, session, test_run_id, test_name, data):
         session.query(cls).\
             filter_by(name=test_name, test_run_id=test_run_id).\
@@ -206,6 +219,7 @@ class TestRun(BASE):
 
     STATES = (
         'running',
+        'deffered',
         'finished'
     )
 
@@ -279,13 +293,17 @@ class TestRun(BASE):
 
     @classmethod
     def add_test_run(cls, session, test_set, cluster_id, status='running',
-                     tests=None):
+                     tests=None, is_exclusive=True):
         '''
         Creates new test_run object with given data
         and makes copy of tests that will be bound
         with this test_run. Copying is performed by
         copy_test method of Test class.
         '''
+
+        if not is_exclusive:
+            status = 'deffered'
+
         predefined_tests = tests or []
         tests_names = session.query(ClusterTestingPattern.tests)\
             .filter_by(test_set_id=test_set, cluster_id=cluster_id)\
@@ -347,40 +365,30 @@ class TestRun(BASE):
     def is_last_running(cls, session, test_set, cluster_id):
         '''
         Checks whether there one can perform creation of new
-        test_run by testing of existing of test_run object
+        test_run by testing of existence of test_run object
         with given data or test_run with 'finished' status.
         '''
         test_run = cls.get_last_test_run(session, test_set, cluster_id)
         return not bool(test_run) or test_run.is_finished()
 
     @classmethod
-    def start(cls, session, test_set, metadata, tests):
-        '''
-        Checks whether system must create new test_run or
-        not by calling is_last_running.
-
-        Creates new test_run if needed via
-        add_test_run function. Creation of new
-        test_run assumes not only adding test_run obj
-        but also copying of tests which is in relation
-        with test_set of created test_run.
-
-        Run tests from newly created test_run
-        via neded testing plugin.
-        '''
-        plugin = nose_plugin.get_plugin(test_set.driver)
+    def create_test_run(cls, session, test_set,
+                        metadata, tests, is_exclusive):
+        #plugin = nose_plugin.get_plugin(test_set.driver)
         if cls.is_last_running(session, test_set.id,
                                metadata['cluster_id']):
 
-            with session.begin(subtransactions=True):
-                test_run = cls.add_test_run(
-                    session, test_set.id,
-                    metadata['cluster_id'], tests=tests)
+            test_run = cls.add_test_run(
+                session, test_set.id,
+                metadata['cluster_id'],
+                tests=tests,
+                is_exclusive=is_exclusive
+            )
 
             retvalue = test_run.frontend
-            session.close()
+            #session.close()
 
-            plugin.run(test_run, test_set)
+            #plugin.run(test_run, test_set)
 
             return retvalue
         return {}
@@ -405,10 +413,9 @@ class TestRun(BASE):
         """Stop test run if running
         """
         plugin = nose_plugin.get_plugin(self.test_set.driver)
-        killed = plugin.kill(
-            self.id, self.cluster_id,
-            cleanup=self.test_set.cleanup_path)
-        if killed:
-            Test.update_running_tests(
-                session, self.id, status='stopped')
+        #killed =
+        plugin.kill(self.id, self.cluster_id)
+        #if killed:
+        #    Test.update_running_tests(
+        #        session, self.id, status='stopped')
         return self.frontend
