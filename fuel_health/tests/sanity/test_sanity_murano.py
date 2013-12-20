@@ -32,17 +32,17 @@ class MuranoSanityTests(murano.MuranoTest):
             1. Send request to create environment.
             2. Send request to delete environment.
 
-        Duration: 4 s.
+        Duration: 10 s.
 
         Deployment tags: Murano
         """
 
         fail_msg = "Can't create environment. Murano API isn't available. "
-        self.environment = self.verify(2, self.create_environment,
+        self.environment = self.verify(5, self.create_environment,
                                        1, fail_msg, "creating environment",
                                        "ost1_test-Murano_env01")
 
         fail_msg = ("Can't delete environment. Murano API isn't available "
                     "or RabbitMQ connectivity broken. ")
-        self.verify(2, self.delete_environment, 2, fail_msg,
+        self.verify(5, self.delete_environment, 2, fail_msg,
                     "deleting environment", self.environment.id)
