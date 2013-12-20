@@ -26,6 +26,17 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
     calling Murano API.
     """
 
+    def tearDown(self):
+        """
+            This method allows to clean up the OpenStack environment
+            after the Murano OSTF tests
+        """
+        super(MuranoTest, self).tearDown()
+        try:
+            self.delete_environment(self.environment.id)
+        except:
+            pass
+
     def find_murano_image(self):
         """
             This method allows to find Windows images with Murano tag.
