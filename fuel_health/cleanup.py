@@ -130,7 +130,8 @@ def cleanup(cluster_deployment_info):
                 stacks = heat_client.stacks.list()
                 for s in stacks:
                     if s.stack_name.startswith('ost1_test-'):
-                        if s.stack_status in ('CREATE_COMPLETE', 'ERROR'):
+                        if s.stack_status in ('CREATE_COMPLETE',
+                                              'CREATE_FAILED'):
                             try:
                                 LOG.info('Start stacks deletion.')
                                 heat_client.stacks.delete(s.id)

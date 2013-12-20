@@ -17,8 +17,10 @@
 #    under the License.
 
 import logging
+import traceback
 
 from fuel_health.common.utils.data_utils import rand_name
+import fuel_health.common.ssh
 import fuel_health.nmanager
 import fuel_health.test
 
@@ -26,63 +28,27 @@ import fuel_health.test
 LOG = logging.getLogger(__name__)
 
 
-class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
+class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest,
+                   fuel_health.nmanager.SmokeChecksTest):
     """
     Base class for Heat openstack sanity and smoke tests.
     """
 
-    simple_template = """
-        {
-            "AWSTemplateFormatVersion": "2010-09-09",
-            "Parameters": {
-                "ImageId" : {
-                      "Type" : "String"
-                },
-                "InstanceType" : {
-                      "Type" : "String"
-                }
-            },
-
-            "Resources": {
-                "MyInstance": {
-                    "Type": "AWS::EC2::Instance",
-                    "Properties": {
-                        "ImageId": {"Ref": "ImageId"},
-                        "InstanceType": {"Ref": "InstanceType"},
-                        "UserData": {"Fn::Base64": "80"}
-                    }
-                }
-            },
-            "Outputs": {
-                "InstanceIp": {
-                    "Value": {"Fn::Join": ["", ["ssh ec2-user@",
-                                                {"Fn::GetAtt":["MyInstance",
-                                                               "PublicIp"]}]]},
-                    "Description": "My ssh command"
-                }
-            }
-        }
-        """
-
     @classmethod
     def setUpClass(cls):
-        super(HeatBaseTest, cls).setUpClass()
+        fuel_health.nmanager.NovaNetworkScenarioTest.setUpClass()
         cls.wait_interval = cls.config.compute.build_interval
         cls.wait_timeout = cls.config.compute.build_timeout
-        cls.flavor = cls._create_mini_flavor()
-
-    @classmethod
-    def tearDownClass(cls):
-        super(HeatBaseTest, cls).tearDownClass()
-        try:
-            cls.compute_client.flavors.delete(cls.flavor.id)
-        except Exception as exc:
-            LOG.debug(exc)
+        cls.testvm_flavor = None
+        cls.flavors = []
 
     def setUp(self):
         super(HeatBaseTest, self).setUp()
         if self.heat_client is None:
             self.fail('Heat is unavailable.')
+        if not self.testvm_flavor:
+            self.testvm_flavor = self._create_flavors(self.compute_client,
+                                                      64, 1)
 
     def list_stacks(self, client):
         return client.stacks.list()
@@ -93,38 +59,24 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
                 return stack
         return None
 
-    @classmethod
-    def _create_mini_flavor(cls):
-        name = rand_name('ost1_test-heat')
-        cls.flavor = cls.compute_client.flavors.create(
-            name=name, ram=64, vcpus=1, disk=1)
-        return cls.flavor
+    def create_stack(self, client, template,
+                     disable_rollback=True, parameters={}):
 
-    def create_stack(self, client):
-        stack_name = rand_name('ost1_test-stack')
-
+        stack_name = rand_name('ost1_test-')
         client.stacks.create(stack_name=stack_name,
-                             template=self.simple_template,
-                             parameters={
-                                 'ImageId': self.config.compute.image_name,
-                                 'Instance'
-                                 'Type': self.flavor.name
-                             })
+                             template=template,
+                             parameters=parameters,
+                             disable_rollback=disable_rollback)
         # heat client doesn't return stack details after creation
         # so need to request them:
         stack = self.find_stack(client, 'stack_name', stack_name)
+        self.set_resource(stack.id, stack)
         return stack
 
-    def update_stack(self, client, stack_id, template=None):
-        if template is None:
-            template = self.simple_template
+    def update_stack(self, client, stack_id, template, parameters={}):
         client.stacks.update(stack_id=stack_id,
                              template=template,
-                             parameters={
-                                 'ImageId': self.config.compute.image_name,
-                                 'Instance'
-                                 'Type': self.flavor.name
-                             })
+                             parameters=parameters)
         return self.find_stack(client, 'id', stack_id)
 
     def wait_for_stack_status(self, stack_id, expected_status):
@@ -137,8 +89,9 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
         def check_status():
             stack = self.heat_client.stacks.get(stack_id)
             new_status = stack.stack_status
-            if new_status == 'ERROR':
-                self.fail("Failed to get to expected status. In ERROR state.")
+            if new_status == 'CREATE_FAILED':
+                self.fail("Failed to get to expected status. "
+                          "In CREATE_FAILED state.")
             elif new_status == expected_status:
                 return True  # All good.
             LOG.debug("Waiting for %s to get to %s status. "
@@ -157,3 +110,56 @@ class HeatBaseTest(fuel_health.nmanager.OfficialClientTest):
                                                 self.wait_timeout,
                                                 self.wait_interval):
             self.fail("Timed out waiting for stack to be deleted.")
+
+    def run_ssh_cmd(self, cmd):
+        """
+        Open SSH session with Controller and and execute command.
+        """
+        if not self.host:
+            self.fail('Wrong tests configuration: '
+                      'controller_nodes parameter is empty ')
+        try:
+            sshclient = fuel_health.common.ssh.Client(
+                self.host[0], self.usr, self.pwd,
+                key_filename=self.key, timeout=self.timeout
+            )
+            return sshclient.exec_longrun_command(cmd)
+        except Exception as exc:
+            LOG.debug(traceback.format_exc())
+            self.fail("%s command failed." % cmd)
+
+    def get_subnet_id(self):
+        if 'neutron' in self.config.network.network_provider:
+            neutron_net_list = ("neutron "
+                                "--os-username=%s --os-password=%s "
+                                "--os-tenant-name=%s --os-auth-url=%s "
+                                "net-list" % (
+                                    self.config.identity.admin_username,
+                                    self.config.identity.admin_password,
+                                    self.config.identity.admin_tenant_name,
+                                    self.config.identity.uri))
+
+            # net name surrounded with spaces to guarantee strict match
+            grep = "%s | grep ' %s ' | grep -v grep | awk '{ print $6 }'" % (
+                neutron_net_list, self.private_net)
+
+            cmd = "echo -ne `%s`" % grep
+
+            subnet = self.run_ssh_cmd(cmd)
+            if subnet:
+                return subnet
+                # if network has no subnets
+            networks = [net.id for net in
+                        self.compute_client.networks.list()
+                        if net.label == self.private_net]
+            return networks[0]
+
+    @staticmethod
+    def customize_template(template):
+        """
+        By default, heat templates expect neutron subnets to be available.
+        But if nova-network is used instead of neutron then
+        subnet usage should be removed from the template.
+        """
+        return '\n'.join(line for line in template.splitlines()
+                         if 'Ref: Subnet' not in line)
