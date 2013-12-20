@@ -78,6 +78,19 @@ class TestingAdapterClient(object):
         ]
         return self._request('POST', url, data=dumps(data))
 
+    def start_many_test_runs(self, testsets, cluster_id):
+        url = ''.join([self.url, '/testruns'])
+        data = []
+        for test_set in testsets:
+            data.append(
+                {
+                    'testset': test_set,
+                    'tests': [],
+                    'metadata': {'cluster_id': str(cluster_id)}
+                }
+            )
+        return self._request('POST', url, data=dumps(data))
+
     def stop_testrun(self, testrun_id):
         url = ''.join([self.url, '/testruns'])
         data = [
