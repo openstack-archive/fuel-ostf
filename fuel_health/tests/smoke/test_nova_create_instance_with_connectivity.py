@@ -179,7 +179,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             5. Check connectivity to the floating IP using ping command.
             6. Remove server floating ip.
             7. Delete server.
-        Duration: 200 s.
+        Duration: 300 s.
 
         """
         if not self.security_groups:
@@ -211,10 +211,10 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
         self.floating_ips.append(floating_ip)
 
-        self.verify(350, self._check_vm_connectivity, 5,
+        self.verify(250, self._check_vm_connectivity, 5,
                     "VM connectivity doesn`t function properly.",
                     'VM connectivity checking', floating_ip.ip,
-                    30, (10, 30))
+                    30, (4, 30))
 
         self.verify(10, self.compute_client.servers.remove_floating_ip,
                     6, "Floating IP cannot be removed.",
@@ -238,7 +238,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             5. Check that public IP 8.8.8.8 can be pinged from instance.
             6. Remove server floating ip.
             7. Delete server.
-        Duration: 200 s.
+        Duration: 300 s.
 
         """
         if not self.security_groups:
@@ -273,13 +273,12 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         ip_address = floating_ip.ip
         LOG.info('is address is %s' % ip_address)
         LOG.debug(ip_address)
-        self.verify(350, self._check_connectivity_from_vm,
+        self.verify(250, self._check_connectivity_from_vm,
                     5, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                     "function properly."),
                     'public connectivity checking from VM', ip_address,
-                    30, (10, 30))
+                    30, (4, 30))
 
-        #TODO verify here that deletion complete with success
         self.verify(10, self.compute_client.servers.remove_floating_ip,
                     6, "Floating IP cannot be removed.",
                     "removing floating IP", server, floating_ip)
@@ -300,7 +299,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             (if it doesn`t exist yet).
             3. Check that public IP 8.8.8.8 can be pinged from instance.
             4. Delete server.
-        Duration: 200 s.
+        Duration: 300 s.
 
         Deployment tags: nova_network
         """
@@ -329,11 +328,11 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.fail("Step 3 failed: cannot get instance details. "
                       "Please refer to OpenStack logs for more details.")
 
-        self.verify(350, self._check_connectivity_from_vm,
+        self.verify(250, self._check_connectivity_from_vm,
                     3, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                         "function properly."),
                     'public connectivity checking from VM',
-                    instance_ip, 30, (10, 30), compute)
+                    instance_ip, 30, (4, 30), compute)
 
         self.verify(30, self._delete_server, 5,
                     "Server can not be deleted. ",
