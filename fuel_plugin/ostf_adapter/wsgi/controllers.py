@@ -21,6 +21,7 @@ from pecan import rest, expose, request
 
 from fuel_plugin.ostf_adapter import mixins
 from fuel_plugin.ostf_adapter.storage import models
+from fuel_plugin.ostf_adapter import nose_plugin
 
 
 LOG = logging.getLogger(__name__)
@@ -92,6 +93,11 @@ class TestrunsController(BaseRestController):
         'last': ['GET'],
     }
 
+    #following testsets will be executed in
+    #separate subprocess alongside with corresponding
+    #"deffered" testruns for current cluster
+    exclusive_test_sets = set(['sanity'])
+
     @expose('json')
     def get_all(self):
         with request.session.begin(subtransactions=True):
@@ -126,25 +132,43 @@ class TestrunsController(BaseRestController):
         test_runs = json.loads(request.body)
         res = []
 
-        for test_run in test_runs:
-            test_set = test_run['testset']
-            metadata = test_run['metadata']
-            tests = test_run.get('tests', [])
+        test_sets_drivers = set()
+        testsets_to_process = set([test_run['testset']
+                                   for test_run in test_runs])
 
-            with request.session.begin(subtransactions=True):
+        all_exclusive = testsets_to_process.isdisjoint(
+            self.exclusive_test_sets
+        )
+
+        with request.session.begin(subtransactions=True):
+            for test_run in test_runs:
+                test_set = test_run['testset']
+                metadata = test_run['metadata']
+                tests = test_run.get('tests', [])
+
                 test_set = models.TestSet.get_test_set(
-                    request.session,
-                    test_set
+                    request.session, test_set
+                )
+                test_sets_drivers.add(nose_plugin.get_plugin(test_set.driver))
+
+                create_test_run_kargs = dict(session=request.session,
+                                             test_set=test_set,
+                                             metadata=metadata,
+                                             tests=tests,
+                                             is_exclusive=True)
+
+                if not all_exclusive and test_run['testset']\
+                        not in self.exclusive_test_sets:
+                    create_test_run_kargs['is_exclusive'] = False
+
+                test_run = models.TestRun.create_test_run(
+                    **create_test_run_kargs
                 )
 
-            test_run = models.TestRun.start(
-                request.session,
-                test_set,
-                metadata,
-                tests
-            )
+                res.append(test_run)
 
-            res.append(test_run)
+        for plugin in test_sets_drivers:
+            plugin.run()
 
         return res
 
