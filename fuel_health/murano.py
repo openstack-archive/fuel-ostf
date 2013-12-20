@@ -17,7 +17,10 @@
 
 import time
 import json
+import logging
 import fuel_health.nmanager
+
+LOG = logging.getLogger(__name__)
 
 
 class MuranoTest(fuel_health.nmanager.OfficialClientTest):
@@ -25,6 +28,18 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
     Manager that provides access to the Murano python client for
     calling Murano API.
     """
+
+    def tearDown(self):
+        """
+            This method allows to clean up the OpenStack environment
+            after the Murano OSTF tests
+        """
+        super(MuranoTest, self).tearDown()
+        try:
+            self.delete_environment(self.environment.id)
+        except Exception as ex:
+            msg = "Error during the tear down method: {0}"
+            LOG.warning(msg.format(ex))
 
     def find_murano_image(self):
         """
