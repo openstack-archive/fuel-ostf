@@ -14,8 +14,8 @@
 
 import os
 import logging
-
 from pecan import conf
+
 from fuel_plugin.ostf_adapter.nose_plugin import nose_storage_plugin
 from fuel_plugin.ostf_adapter.nose_plugin import nose_test_runner
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
@@ -30,23 +30,42 @@ class NoseDriver(object):
         LOG.warning('Initializing Nose Driver')
         self._named_threads = {}
         session = engine.get_session()
-        with session.begin(subtransactions=True):
-            storage_utils.update_all_running_test_runs(session)
+        storage_utils.update_all_running_test_runs(session)
 
     def check_current_running(self, unique_id):
         return unique_id in self._named_threads
 
-    def run(self, test_run, test_set, tests=None):
-        tests = tests or test_run.enabled_tests
-        if tests:
-            argv_add = [nose_utils.modify_test_name_for_nose(test) for test in
-                        tests]
+    def run(self):
+        session = engine.get_session()
+        test_runs_to_run_first = session.query(models.TestRun)\
+            .filter_by(status='running')\
+            .all()
 
-        else:
-            argv_add = [test_set.test_path] + test_set.additional_arguments
+        for test_run in test_runs_to_run_first:
+            tests = test_run.enabled_tests
+            if tests:
+                argv_add = [
+                    models.Test.modify_test_name_for_nose(test) for test in
+                    tests
+                ]
 
-        self._named_threads[test_run.id] = nose_utils.run_proc(
-            self._run_tests, test_run.id, test_run.cluster_id, argv_add)
+            else:
+                test_set = session.query(models.TestSet)\
+                    .filter_by(id=test_run.test_set_id)\
+                    .one()
+
+                argv_add = test_set.run_test_additional_args
+
+            deffered_test_runs = session.query(models.TestRun)\
+                .filter_by(cluster_id=test_run.cluster_id)\
+                .filter_by(status='deffered')\
+                .all()
+
+            named_threads_key = tuple(
+                [test_run.id] + [tr.id for tr in deffered_test_runs]
+            )
+            self._named_threads[named_threads_key] = nose_utils.run_proc(
+                self._run_tests, test_run.id, test_run.cluster_id, argv_add)
 
     def _run_tests(self, test_run_id, cluster_id, argv_add):
         session = engine.get_session()
@@ -56,42 +75,88 @@ class NoseDriver(object):
                     test_run_id, str(cluster_id))],
                 exit=False,
                 argv=['ostf_tests'] + argv_add)
-            self._named_threads.pop(int(test_run_id), None)
+            #self._named_threads.pop(int(test_run_id), None)
         except Exception:
             LOG.exception('Test run ID: %s', test_run_id)
         finally:
             models.TestRun.update_test_run(
                 session, test_run_id, status='finished')
 
-    def kill(self, test_run_id, cluster_id, cleanup=None):
+            #run deffered test_runs
+            deffered_test_runs = session.query(models.TestRun)\
+                .filter_by(status='deffered')\
+                .filter_by(cluster_id=cluster_id)\
+                .all()
+
+            if deffered_test_runs:
+                for test_run in deffered_test_runs:
+                    models.TestRun.update_test_run(session, test_run.id,
+                                                   status='running')
+                    tests = test_run.enabled_tests
+
+                    if tests:
+                        argv_add = [
+                            models.Test.modify_test_name_for_nose(test)
+                            for test in tests
+                        ]
+
+                    else:
+                        test_set = session.query(models.TestSet)\
+                            .filter_by(id=test_run.test_set_id)\
+                            .one()
+
+                        argv_add = test_set.run_test_additional_args
+
+                    self._run_tests(test_run.id, cluster_id, argv_add)
+
+    def kill(self, test_run_id, cluster_id):
         session = engine.get_session()
-        if test_run_id in self._named_threads:
 
-            try:
-                self._named_threads[test_run_id].terminate()
-            except OSError as e:
-                if e.errno != os.errno.ESRCH:
-                    raise
+        threads_keys = self._named_threads.keys()
+        for test_runs_key in threads_keys:
+            if test_run_id in test_runs_key:
 
-                LOG.warning(
-                    'There is no process for test_run with following id - %s',
-                    test_run_id
-                )
+                try:
+                    self._named_threads[test_runs_key].terminate()
+                except OSError as e:
+                    if e.errno != os.errno.ESRCH:
+                        raise
 
-            self._named_threads.pop(test_run_id, None)
+                    LOG.warning(
+                        'There is no process for test_run with id-%s',
+                        test_runs_key
+                    )
 
-            if cleanup:
-                nose_utils.run_proc(
-                    self._clean_up,
-                    test_run_id,
-                    cluster_id,
-                    cleanup)
-            else:
-                models.TestRun.update_test_run(
-                    session, test_run_id, status='finished')
+                test_runs_data = session.query(models.TestRun)\
+                    .filter(models.TestRun.id.in_(test_runs_key))\
+                    .all()
 
-            return True
-        return False
+                for tr in test_runs_data:
+                    if tr.status == 'deffered':
+                        models.TestRun.update_test_run(session, tr.id,
+                                                       status='finished')
+                        models.Test.update_running_tests(session,
+                                                         tr.id,
+                                                         status='stopped')
+                    elif tr.status == 'running':
+                        test_set = session.query(models.TestSet)\
+                            .filter_by(id=tr.test_set_id)\
+                            .one()
+
+                        if test_set.cleanup_path:
+                            nose_utils.run_proc(self._clean_up, tr.id,
+                                                tr.cluster_id,
+                                                test_set.cleanup_path)
+                        else:
+                            models.TestRun.update_test_run(session,
+                                                           tr.id,
+                                                           status='finished')
+
+                        models.Test.update_running_tests(session,
+                                                         tr.id,
+                                                         status='stopped')
+
+                self._named_threads.pop(test_runs_key, None)
 
     def _clean_up(self, test_run_id, cluster_id, cleanup):
         session = engine.get_session()

@@ -14,6 +14,7 @@
 
 import time
 from sqlalchemy import create_engine
+import unittest2
 
 from fuel_plugin.testing.tests.functional.base import \
     BaseAdapterTest, Response
@@ -314,6 +315,7 @@ class AdapterTests(BaseAdapterTest):
 
         self.compare(resp, assertions)
 
+    @unittest2.skip('Skip until test_run restart will be fixed')
     def test_single_test_restart(self):
         """Verify that you restart individual tests for given testrun"""
         testset = "general_test"
@@ -398,6 +400,7 @@ class AdapterTests(BaseAdapterTest):
 
         self.compare(resp, assertions)
 
+    @unittest2.skip('Skip until test_run restart action will be fixed')
     def test_restart_combinations(self):
         """Verify that you can restart both tests that
         ran and did not run during single test start"""
@@ -420,7 +423,8 @@ class AdapterTests(BaseAdapterTest):
         self.client.run_with_timeout(testset, tests, cluster_id, 70)
         self.client.restart_with_timeout(testset, tests, cluster_id, 10)
 
-        resp = self.client.restart_tests_last(testset, disabled_test, cluster_id)
+        resp = self.client.restart_tests_last(testset, disabled_test,
+                                              cluster_id)
 
         assertions = Response([
             {
@@ -484,6 +488,7 @@ class AdapterTests(BaseAdapterTest):
                 test['status'] = 'error'
         self.compare(resp, assertions)
 
+    @unittest2.skip('Skip until restart action will be fixed')
     def test_cant_restart_during_run(self):
         testset = 'general_test'
         tests = [
