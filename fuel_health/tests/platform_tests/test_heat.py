@@ -48,12 +48,42 @@ class TestStackAction(heatmanager.HeatBaseTest):
         Deployment tags: Heat
         """
 
+        template = """
+            AWSTemplateFormatVersion: "2013-11-01"
+            Parameters:
+              ImageId:
+                Type: String
+              InstanceType:
+                Type: String
+              Subnet:
+                Type: String
+                Default: ''
+            Resources:
+              MyInstance:
+                Type: AWS::EC2::Instance
+                Properties:
+                  ImageId: {Ref: ImageId}
+                  InstanceType: {Ref: InstanceType}
+                  SubnetId: {Ref: Subnet}
+            """
+
+        parameters = {
+            "InstanceType": self.testvm_flavor.name,
+            "ImageId": self.config.compute.image_name
+        }
+        if 'neutron' in self.config.network.network_provider:
+            parameters['Subnet'] = self.get_subnet_id()
+        else:
+            template = self.customize_template(template)
+
         fail_msg = "Stack was not created properly."
         # create stack
-        stack = self.verify(100, self.create_stack, 1,
+        stack = self.verify(20, self.create_stack, 1,
                             fail_msg,
                             "stack creation",
-                            self.heat_client)
+                            self.heat_client,
+                            template,
+                            parameters=parameters)
 
         self.verify(100, self.wait_for_stack_status, 2,
                     fail_msg,
@@ -80,12 +110,14 @@ class TestStackAction(heatmanager.HeatBaseTest):
             fail_msg, 3)
 
         # update stack
+        template = template.replace("MyInstance", "UpdatedInstance")
         fail_msg = "Cannot update stack."
-        stack = self.verify(100, self.update_stack, 4,
+        stack = self.verify(20, self.update_stack, 4,
                             fail_msg,
                             "updating stack.",
-                            self.heat_client, stack.id)
-
+                            self.heat_client, stack.id,
+                            template,
+                            parameters=parameters)
         self.verify(100, self.wait_for_stack_status, 5,
                     fail_msg,
                     "stack status becoming 'UPDATE_COMPLETE'",
