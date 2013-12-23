@@ -139,7 +139,7 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         """
         def check_status():
             alarm_state_resp = self.get_state(alarm_id)
-            if alarm_state_resp == 'alarm':
+            if alarm_state_resp == 'alarm' or 'ok':
                 return True  # All good.
             LOG.debug("Waiting for state to get alarm status.")
 
