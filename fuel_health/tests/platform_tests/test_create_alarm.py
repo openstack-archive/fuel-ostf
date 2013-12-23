@@ -31,25 +31,28 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
         Scenario:
             1. Create metrics.
             2. Create a new alarm.
-            3. Update the alarm.
-            4. Get alarm history.
-            5. Change alarm state to 'ok'.
-            6. Verify state.
-            7. Delete the alarm.
-        Duration: 550 s.
+            3. List alarms
+            4. Update the alarm.
+            5. List statistic
+            6. Get alarm history.
+            7. Change alarm state to 'ok'.
+            8. Verify state.
+            9. List meters
+            10. Delete the alarm.
+        Duration: 650 s.
         Deployment tags: Ceilometer
         """
 
         fail_msg = "Creation metrics failed."
 
-        self.verify(500, self.wait_for_instance_metrics, 1,
+        self.verify(600, self.wait_for_instance_metrics, 1,
                                            fail_msg,
                                            "metrics created",
                                            self.meter_name_image)
 
         fail_msg = "Creation alarm failed."
 
-        create_alarm_resp = self.verify(5, self.create_alarm,
+        create_alarm_resp = self.verify(10, self.create_alarm,
                                         2, fail_msg, "alarm_create",
                                         meter_name=self.meter_name,
                                         threshold=self.threshold,
@@ -58,34 +61,50 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
                                         statistic=self.statistic,
                                         comparison_operator=self.comparison_operator)
 
+        fail_msg = "Alarm list unavailable"
+
+        self.verify(10, self.list_alarm,
+                    2, fail_msg, "Alarm listing")
+
         fail_msg = "Alarm update failed."
 
-        self.verify(5, self.alarm_update,
+        self.verify(10, self.alarm_update,
                     3, fail_msg, "Alarm_update",
                     alarm_id=create_alarm_resp.alarm_id,
                     threshold='50')
 
+        fail_msg = "Alarm list unavailable"
+
+        self.verify(10, self.list_statistics,
+                    2, fail_msg, "Alarm listing",
+                    meter_name=self.meter_name)
+
         fail_msg = "Get alarm history failed."
 
-        self.verify(5, self.alarm_history,
+        self.verify(10, self.alarm_history,
                     4, fail_msg, "Alarm_history",
                     alarm_id=create_alarm_resp.alarm_id)
 
         fail_msg = "Alarm setting state failed."
 
-        self.verify(5, self.set_state,
+        self.verify(10, self.set_state,
                     5, fail_msg, "Set_state",
                     alarm_id=create_alarm_resp.alarm_id,
                     state=self.state_ok)
 
         fail_msg = "Alarm verify state failed."
 
-        self.verify(5, self.verify_state,
+        self.verify(10, self.verify_state,
                     6, fail_msg, "Verify_state",
                     alarm_id=create_alarm_resp.alarm_id,
                     state=self.state_ok)
 
+        fail_msg = "Meter list unavailable"
+
+        self.verify(10, self.list_meters,
+                    1, fail_msg, "Meter listing")
+
         fail_msg = "Alarm delete."
-        self.verify(5, self.delete_alarm,
+        self.verify(10, self.delete_alarm,
                     7, fail_msg, "Delete_alarm",
                     alarm_id=create_alarm_resp.alarm_id)
