@@ -29,6 +29,7 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
     @classmethod
     def setUpClass(cls):
         super(CeilometerBaseTest, cls).setUpClass()
+        cls.flavor = cls._create_mini_flavor()
         cls.wait_interval = cls.config.compute.build_interval
         cls.wait_timeout = cls.config.compute.build_timeout
         cls.private_net = 'net04'
@@ -140,7 +141,7 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         return self.ceilometer_client.alarms.delete(alarm_id=alarm_id)
 
     def _wait_for_instance_metrics(self, server, status):
-        self.status_timeout(server, server.id, status)
+        self.status_timeout(self.compute_client.servers, server.id, status)
 
     def wait_for_alarm_status(self, alarm_id):
         """
@@ -148,7 +149,7 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         """
         def check_status():
             alarm_state_resp = self.get_state(alarm_id)
-            if alarm_state_resp == 'alarm':
+            if alarm_state_resp == 'alarm' or 'ok':
                 return True  # All good.
             LOG.debug("Waiting for state to get alarm status.")
 
