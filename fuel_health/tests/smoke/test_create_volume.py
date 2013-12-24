@@ -63,7 +63,8 @@ class VolumesTest(nmanager.SmokeChecksTest):
             9. Detach volume from the instance.
             10. Check volume has "available" status.
             11. Delete volume.
-            12. Delete server.
+            12. Verify that volume deleted
+            13. Delete server.
         Duration: 350 s.
         """
 
@@ -106,20 +107,17 @@ class VolumesTest(nmanager.SmokeChecksTest):
                     "volume becoming 'in-use'",
                     volume, 'in-use')
 
-        self.attached = True
 
         # get volume details
-        volume_details = self.verify(20, self.volume_client.volumes.get, 8,
-                                     "Can not retrieve volume "
-                                     "details. ",
-                                     "retreiving volume details",
-                                     volume.id)
+        self.verify(20, self.volume_client.volumes.get, 8,
+                    "Can not retrieve volume details. ",
+                    "retrieving volume details", volume.id)
 
         # detach volume
         self.verify(50, self._detach_volume, 9,
                     'Can not detach volume. ',
                     "volume detachment",
-                    self.volume_client, volume)
+                    instance.id, volume.id)
 
         self.verify(120, self._wait_for_volume_status, 10,
                     'Volume status did not become "available".',
@@ -131,7 +129,12 @@ class VolumesTest(nmanager.SmokeChecksTest):
                     "volume deletion",
                     volume)
 
-        self.verify(30, self._delete_server, 12,
+        self.verify(50, self.verify_volume_deletion, 12,
+                    'Can not delete volume. ',
+                    "volume deletion",
+                    volume)
+
+        self.verify(30, self._delete_server, 13,
                     "Can not delete server. ",
                     "server deletion",
                     instance)
