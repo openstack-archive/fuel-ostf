@@ -15,6 +15,7 @@
 
 
 import logging
+import traceback
 
 from fuel_health.common.utils.data_utils import rand_name
 import fuel_health.nmanager
@@ -28,7 +29,6 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
     @classmethod
     def setUpClass(cls):
         super(CeilometerBaseTest, cls).setUpClass()
-        cls.flavor = cls._create_mini_flavor()
         cls.wait_interval = cls.config.compute.build_interval
         cls.wait_timeout = cls.config.compute.build_timeout
         cls.private_net = 'net04'
@@ -48,6 +48,7 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         self.instance = object()
         self.period = '600'
         self.threshold = '20'
+        self.alarm_list = []
 
     def list_meters(self):
         """
@@ -78,7 +79,15 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         """
         This method provide creation of alarm
         """
-        return self.ceilometer_client.alarms.create(**kwargs)
+        try:
+            alarm = self.ceilometer_client.alarms.create(**kwargs)
+            self.alarm_list.append(alarm)
+            return alarm
+        except:
+            LOG.warning('Can not create alarm')
+            LOG.debug(traceback.format_exc())
+
+        return
 
     def get_alarm_id(self):
         list_alarms_resp = self.list_alarm()
@@ -131,7 +140,7 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         return self.ceilometer_client.alarms.delete(alarm_id=alarm_id)
 
     def _wait_for_instance_metrics(self, server, status):
-        self.status_timeout(self.compute_client.servers, server.id, status)
+        self.status_timeout(server, server.id, status)
 
     def wait_for_alarm_status(self, alarm_id):
         """
@@ -154,7 +163,7 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
             stat_state_resp = self.list_statistics(meter_name)
             if len(stat_state_resp) > 0:
                 return True  # All good.
-            LOG.debug("Waiting for state to get state status.")
+            LOG.debug("Waiting for while metrics will available.")
 
         if not fuel_health.test.call_until_true(check_status, 600, 10):
 
@@ -170,17 +179,8 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         return cls.flavor
 
     @classmethod
-    def _clean_alarms(cls):
-        list_alarms_resp = cls.ceilometer_client.alarms.list()
-        for alarm_list in list_alarms_resp:
-            if alarm_list.name.startswith('ost1_test-'):
-                alarm_id = alarm_list.alarm_id
-                cls.ceilometer_client.alarms.delete(alarm_id)
-
-    @classmethod
     def tearDownClass(cls):
         super(CeilometerBaseTest, cls).tearDownClass()
-        cls._clean_alarms()
         try:
             cls.compute_client.flavors.delete(cls.flavor.id)
         except Exception as exc:
