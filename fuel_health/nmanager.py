@@ -555,19 +555,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                         "configuration" % ip_address)
 
     @classmethod
-    def _verification_of_exceptions(cls):
-        if cls.error_msg:
-            for err in cls.error_msg:
-                if err.__class__.__name__ == 'InternalServerError':
-                    raise cls.failureException('REST API of '
-                                               'OpenStack is inaccessible.'
-                                               ' Please try again')
-                if err.__class__.__name__ == 'ClientException':
-                    raise cls.failureException('REST API of '
-                                               'OpenStack is inaccessible.'
-                                               ' Please try again')
-
-    @classmethod
     def tearDownClass(cls):
         super(NovaNetworkScenarioTest, cls).tearDownClass()
         cls._clean_floating_ips()
@@ -771,16 +758,21 @@ class SmokeChecksTest(OfficialClientTest):
             volume_id=volume.id, server_id=instance, device=device)
         return attached_volume
 
-    def _detach_volume(self, client, volume):
-        volume = client.volumes.detach(volume)
+    def _detach_volume(self, server, volume):
+        volume = self.compute_client.volumes.delete_server_volume(
+            server_id=server, attachment_id=volume)
         return volume
 
-    def is_resource_deleted(self, volume):
-        try:
-            self.client.volumes.get(volume)
-        except exceptions.NotFound:
-            return True
-        return False
+    def verify_volume_deletion(self, volume):
+
+        def is_volume_deleted(self, volume):
+            try:
+                self.client.volumes.get(volume)
+            except exceptions.NotFound:
+                return True
+            return False
+
+        fuel_health.test.call_until_true(is_volume_deleted, 20, 10)
 
     @classmethod
     def tearDownClass(cls):
