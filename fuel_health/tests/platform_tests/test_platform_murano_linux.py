@@ -57,7 +57,7 @@ class MuranoDeployDemoServiceTests(murano.MuranoTest):
         self.verify_response_true(demo_image, fail_msg, 1)
 
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(5, self.create_environment,
+        self.environment = self.verify(15, self.create_environment,
                                        2, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
@@ -145,7 +145,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(5, self.create_environment,
+        self.environment = self.verify(15, self.create_environment,
                                        1, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
@@ -206,7 +206,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(5, self.create_environment,
+        self.environment = self.verify(15, self.create_environment,
                                        1, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
