@@ -57,7 +57,7 @@ class MuranoDeployDemoServiceTests(murano.MuranoTest):
         self.verify_response_true(demo_image, fail_msg, 1)
 
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(5, self.create_environment,
+        self.environment = self.verify(15, self.create_environment,
                                        2, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
@@ -84,7 +84,7 @@ class MuranoDeployDemoServiceTests(murano.MuranoTest):
                                   self.environment.id, session.id)
 
         fail_msg = "Deployment was not completed correctly. "
-        status_env = self.verify(100, self.deploy_check,
+        status_env = self.verify(900, self.deploy_check,
                                  6, fail_msg, 'deployment is going',
                                  self.environment.id)
 
@@ -145,7 +145,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(5, self.create_environment,
+        self.environment = self.verify(15, self.create_environment,
                                        1, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
@@ -173,7 +173,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                                   self.environment.id, session.id)
 
         fail_msg = "Deployment was not completed correctly. "
-        status_env = self.verify(300, self.deploy_check,
+        status_env = self.verify(900, self.deploy_check,
                                  5, fail_msg, 'deployment is going',
                                  self.environment.id)
 
@@ -206,7 +206,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(5, self.create_environment,
+        self.environment = self.verify(15, self.create_environment,
                                        1, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
@@ -234,7 +234,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                                   self.environment.id, session.id)
 
         fail_msg = "Deployment was not completed correctly. "
-        status_env = self.verify(300, self.deploy_check,
+        status_env = self.verify(900, self.deploy_check,
                                  5, fail_msg, 'deployment is going',
                                  self.environment.id)
 

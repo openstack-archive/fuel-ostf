@@ -247,7 +247,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
         infa = self.get_environment(environment_id)
         while infa.status != 'ready':
-            time.sleep(15)
+            time.sleep(5)
             infa = self.get_environment(environment_id)
         return 'OK'
 
