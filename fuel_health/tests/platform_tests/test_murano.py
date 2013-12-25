@@ -60,7 +60,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(5, self.create_environment,
+        self.environment = self.verify(15, self.create_environment,
                                        1, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
@@ -125,7 +125,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(5, self.create_environment,
+        self.environment = self.verify(15, self.create_environment,
                                        1, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
@@ -193,7 +193,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(5, self.create_environment,
+        self.environment = self.verify(15, self.create_environment,
                                        1, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
@@ -271,7 +271,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
             self.fail(msg)
 
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(5, self.create_environment,
+        self.environment = self.verify(15, self.create_environment,
                                        2, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
@@ -349,7 +349,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
             self.fail(msg)
 
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(5, self.create_environment,
+        self.environment = self.verify(15, self.create_environment,
                                        2, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
@@ -374,26 +374,26 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         fail_msg = "User can't create service. "
         self.verify(5, self.create_service,
-                              4, fail_msg, "service creating",
-                              self.environment.id, session.id, post_body)
+                    4, fail_msg, "service creating",
+                    self.environment.id, session.id, post_body)
 
         fail_msg = "User can't deploy session. "
         self.verify(5, self.deploy_session,
-                                  5, fail_msg,
-                                  "sending session on deployment",
-                                  self.environment.id, session.id)
+                    5, fail_msg,
+                    "sending session on deployment",
+                    self.environment.id, session.id)
 
         fail_msg = ("Deployment was not completed correctly, "
                     "please check, that Key Pair 'murano-lb-key' exists "
                     "and virtual machines have Internet access. ")
         self.verify(1800, self.deploy_check,
-                                 6, fail_msg, 'deployment is going',
-                                 self.environment.id)
+                    6, fail_msg, 'deployment is going',
+                    self.environment.id)
 
         self.verify(5, self.deployments_status_check,
-                                        7, fail_msg,
-                                        'Check deployments status',
-                                        self.environment.id)
+                    7, fail_msg,
+                    'Check deployments status',
+                    self.environment.id)
 
         fail_msg = "Can't delete environment. "
         self.verify(5, self.delete_environment,
@@ -419,7 +419,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(5, self.create_environment,
+        self.environment = self.verify(15, self.create_environment,
                                        1, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
@@ -441,24 +441,24 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         fail_msg = "User can't create service. "
         self.verify(5, self.create_service,
-                              3, fail_msg, "service creating",
-                              self.environment.id, session.id, post_body)
+                    3, fail_msg, "service creating",
+                    self.environment.id, session.id, post_body)
 
         fail_msg = "User can't deploy session. "
         self.verify(5, self.deploy_session,
-                                  4, fail_msg,
-                                  "sending session on deployment",
-                                  self.environment.id, session.id)
+                    4, fail_msg,
+                    "sending session on deployment",
+                    self.environment.id, session.id)
 
         fail_msg = "Deployment was not completed correctly. "
         self.verify(1800, self.deploy_check,
-                                 5, fail_msg, 'deployment is going',
-                                 self.environment.id)
+                    5, fail_msg, 'deployment is going',
+                    self.environment.id)
 
         self.verify(5, self.deployments_status_check,
-                                        6, fail_msg,
-                                        'Check deployments status',
-                                        self.environment.id)
+                    6, fail_msg,
+                    'Check deployments status',
+                    self.environment.id)
 
         fail_msg = "Can't delete environment. "
         self.verify(5, self.delete_environment,
@@ -489,7 +489,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(5, self.create_environment,
+        self.environment = self.verify(15, self.create_environment,
                                        1, fail_msg, 'creating environment',
                                        "ost1_test-Murano_env01")
 
