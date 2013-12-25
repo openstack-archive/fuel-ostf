@@ -38,7 +38,7 @@ class MuranoSanityTests(murano.MuranoTest):
         """
 
         fail_msg = "Can't create environment. Murano API isn't available. "
-        self.environment = self.verify(5, self.create_environment,
+        self.environment = self.verify(15, self.create_environment,
                                        1, fail_msg, "creating environment",
                                        "ost1_test-Murano_env01")
 
