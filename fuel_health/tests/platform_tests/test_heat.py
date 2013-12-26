@@ -15,7 +15,6 @@
 # under the License.
 
 import logging
-from nose.plugins.attrib import attr
 
 from fuel_health import heatmanager
 
@@ -30,7 +29,6 @@ class TestStackAction(heatmanager.HeatBaseTest):
         1. Heat component should be installed.
     """
 
-    @attr(type=["fuel", "smoke"])
     def test_stack(self):
         """Create stack, check its details, then update and delete Heat stack
         Target component: Heat
@@ -67,8 +65,11 @@ class TestStackAction(heatmanager.HeatBaseTest):
                   SubnetId: {Ref: Subnet}
             """
 
+        flavor = self._create_nano_flavor()
+        self.heat_flavors.append(flavor.id)
+
         parameters = {
-            "InstanceType": self.testvm_flavor.name,
+            "InstanceType": flavor.name,
             "ImageId": self.config.compute.image_name
         }
         if 'neutron' in self.config.network.network_provider:

@@ -28,27 +28,20 @@ import fuel_health.test
 LOG = logging.getLogger(__name__)
 
 
-class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest,
-                   fuel_health.nmanager.SmokeChecksTest):
+class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
     """
     Base class for Heat openstack sanity and smoke tests.
     """
 
     @classmethod
     def setUpClass(cls):
-        fuel_health.nmanager.NovaNetworkScenarioTest.setUpClass()
+        super(HeatBaseTest, cls).setUpClass()
+        if cls.heat_client is None:
+            cls.fail('Heat is unavailable.')
         cls.wait_interval = cls.config.compute.build_interval
         cls.wait_timeout = cls.config.compute.build_timeout
         cls.testvm_flavor = None
-        cls.flavors = []
-
-    def setUp(self):
-        super(HeatBaseTest, self).setUp()
-        if self.heat_client is None:
-            self.fail('Heat is unavailable.')
-        if not self.testvm_flavor:
-            self.testvm_flavor = self._create_flavors(self.compute_client,
-                                                      64, 1)
+        cls.heat_flavors = []
 
     def list_stacks(self, client):
         return client.stacks.list()
@@ -163,3 +156,9 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest,
         """
         return '\n'.join(line for line in template.splitlines()
                          if 'Ref: Subnet' not in line)
+
+    @classmethod
+    def tearDownClass(cls):
+        super(HeatBaseTest, cls).tearDownClass()
+        for fl in cls.heat_flavors:
+            cls.compute_client.flavors.delete(fl)
