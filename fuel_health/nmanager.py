@@ -670,6 +670,7 @@ class SmokeChecksTest(OfficialClientTest):
         cls.flavors = []
         cls.error_msg = []
         cls.private_net = 'net04'
+        cls.smoke_flavor = ''
 
     def _create_flavors(self, client, ram, disk, vcpus=1):
         name = rand_name('ost1_test-flavor-')
@@ -779,8 +780,9 @@ class SmokeChecksTest(OfficialClientTest):
     def tearDownClass(cls):
         super(SmokeChecksTest, cls).tearDownClass()
         cls._clean_flavors()
-        try:
-            cls.compute_client.flavors.delete(cls.smoke_flavor)
-        except Exception:
-            LOG.debug("OSTF test flavor cannot be deleted.")
-            LOG.debug(traceback.format_exc())
+        if cls.smoke_flavor:
+            try:
+                cls.compute_client.flavors.delete(cls.smoke_flavor)
+            except Exception:
+                LOG.debug("OSTF test flavor cannot be deleted.")
+                LOG.debug(traceback.format_exc())
