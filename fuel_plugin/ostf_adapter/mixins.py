@@ -116,13 +116,21 @@ def _get_cluster_depl_tags(cluster_id):
                              cluster_url)
 
     response = REQ_SES.get(request_url).json()
+    release_id = response.get('release_id', 'failed to get id')
 
     deployment_tags = set()
+
+    release_url = URL.format(
+        URL.format(conf.nailgun.host, conf.nailgun.port,
+                   'api/releases/{release_id}'.format(release_id)))
+
+    release_data = REQ_SES.get(release_url).json()
 
     #info about deployment type and operating system
     mode = 'ha' if 'ha' in response['mode'].lower() else response['mode']
     deployment_tags.add(mode)
-    deployment_tags.add(response['release']['operating_system'])
+    deployment_tags.add(release_data.get(
+        'operating_system', 'failed to get os'))
 
     #networks manager
     network_type = response.get('net_provider', 'nova_network')
