@@ -523,7 +523,13 @@ class NailgunConfig(object):
         cluster_data = self.req_session.get(self.nailgun_url + api_url).json()
         network_provider = cluster_data.get('net_provider', 'nova_network')
         self.network.network_provider = network_provider
-        deployment_os = cluster_data['release']['operating_system']
+        release_id = cluster_data.get('release_id', 'failed to get id')
+        LOG.info('Release id is {0}'.format(release_id))
+        release_data = self.req_session.get(
+            self.nailgun_url + '/api/releases/{0}'.format(release_id)).json()
+        deployment_os = release_data.get(
+            'operating_system', 'failed to get os')
+        LOG.info('Deployment os is {0}'.format(deployment_os))
         if deployment_os != 'RHEL':
             storage = data['editable']['storage']['volumes_ceph']['value']
             self.volume.ceph_exist = storage
@@ -569,7 +575,12 @@ class NailgunConfig(object):
         data = self.req_session.get(self.nailgun_url + api_url).json()
         self.mode = data['mode']
         self.compute.deployment_mode = self.mode
-        self.compute.deployment_os = data['release']['operating_system']
+        release_id = data.get('release_id', 'failed to get id')
+        LOG.info('Release id is {0}'.format(release_id))
+        release_data = self.req_session.get(
+            self.nailgun_url + '/api/releases/{0}'.format(release_id)).json()
+        self.compute.deployment_os = release_data.get(
+            'operating_system', 'failed to get os')
 
     def _parse_networks_configuration(self):
         api_url = '/api/clusters/{0}/network_configuration/{1}'.format(
