@@ -26,5 +26,6 @@ __profile__ = {
     "driver": "nose",
     "test_path": "fuel_health/tests/ha",
     "description": "HA tests. Duration 30 sec - 8 min",
+    "cleanup_path": "fuel_health.cleanup",
     "deployment_tags": ["ha"]
 }
