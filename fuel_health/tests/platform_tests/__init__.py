@@ -27,5 +27,6 @@ __profile__ = {
     "test_path": "fuel_health/tests/platform_tests",
     "description": ("Platform services functional tests."
                     " Duration 3 min - 60 min"),
+    "cleanup_path": "fuel_health.cleanup",
     "deployment_tags": ['additional_components']
 }
