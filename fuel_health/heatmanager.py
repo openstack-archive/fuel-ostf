@@ -82,9 +82,9 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         def check_status():
             stack = self.heat_client.stacks.get(stack_id)
             new_status = stack.stack_status
-            if new_status == 'CREATE_FAILED':
+            if 'FAIL' in new_status:
                 self.fail("Failed to get to expected status. "
-                          "In CREATE_FAILED state.")
+                          "In %s state." % new_status)
             elif new_status == expected_status:
                 return True  # All good.
             LOG.debug("Waiting for %s to get to %s status. "
