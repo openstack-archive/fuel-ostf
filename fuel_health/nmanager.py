@@ -67,22 +67,31 @@ class OfficialClientManager(fuel_health.manager.Manager):
 
     def __init__(self):
         super(OfficialClientManager, self).__init__()
+        self.clients_initialized = False
+        self.traceback = ''
         self.compute_client = self._get_compute_client()
-        self.identity_client = self._get_identity_client()
-        self.volume_client = self._get_volume_client()
-        self.heat_client = self._get_heat_client()
-        self.murano_client = self._get_murano_client()
-        self.savanna_client = self._get_savanna_client()
-        self.ceilometer_client = self._get_ceilometer_client()
-        self.client_attr_names = [
-            'compute_client',
-            'identity_client',
-            'volume_client',
-            'heat_client',
-            'murano_client',
-            'savanna_client',
-            'ceilometer_client'
-        ]
+        try:
+            self.identity_client = self._get_identity_client()
+            self.clients_initialized = True
+        except Exception:
+            LOG.debug(traceback.format_exc())
+            self.traceback = traceback.format_exc()
+
+        if self.clients_initialized:
+            self.volume_client = self._get_volume_client()
+            self.heat_client = self._get_heat_client()
+            self.murano_client = self._get_murano_client()
+            self.savanna_client = self._get_savanna_client()
+            self.ceilometer_client = self._get_ceilometer_client()
+            self.client_attr_names = [
+                'compute_client',
+                'identity_client',
+                'volume_client',
+                'heat_client',
+                'murano_client',
+                'savanna_client',
+                'ceilometer_client'
+            ]
 
     def _get_compute_client(self, username=None, password=None,
                             tenant_name=None):
@@ -282,6 +291,13 @@ class OfficialClientTest(fuel_health.test.TestCase):
 
         self.fail("Instance is not reachable by IP.")
 
+    def check_clients_state(self):
+        if not self.manager.clients_initialized:
+            LOG.debug("Unable to initialize Keystone client: {trace}".format(
+                trace=self.manager.traceback))
+            self.fail("Keystone client is not available. Please,"
+                      " refer to OpenStack logs to fix this problem")
+
     @classmethod
     def tearDownClass(cls):
         cls.error_msg = []
@@ -329,19 +345,24 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     @classmethod
     def setUpClass(cls):
         super(NovaNetworkScenarioTest, cls).setUpClass()
-        cls.host = cls.config.compute.controller_nodes
-        cls.usr = cls.config.compute.controller_node_ssh_user
-        cls.pwd = cls.config.compute.controller_node_ssh_password
-        cls.key = cls.config.compute.path_to_private_key
-        cls.timeout = cls.config.compute.ssh_timeout
-        cls.tenant_id = cls.manager._get_identity_client(
-            cls.config.identity.admin_username,
-            cls.config.identity.admin_password,
-            cls.config.identity.admin_tenant_name).tenant_id
-        cls.network = []
-        cls.floating_ips = []
-        cls.error_msg = []
-        cls.private_net = 'net04'
+        if cls.manager.clients_initialized:
+            cls.host = cls.config.compute.controller_nodes
+            cls.usr = cls.config.compute.controller_node_ssh_user
+            cls.pwd = cls.config.compute.controller_node_ssh_password
+            cls.key = cls.config.compute.path_to_private_key
+            cls.timeout = cls.config.compute.ssh_timeout
+            cls.tenant_id = cls.manager._get_identity_client(
+                cls.config.identity.admin_username,
+                cls.config.identity.admin_password,
+                cls.config.identity.admin_tenant_name).tenant_id
+            cls.network = []
+            cls.floating_ips = []
+            cls.error_msg = []
+            cls.private_net = 'net04'
+
+    def setUp(self):
+        super(NovaNetworkScenarioTest, self).setUp()
+        self.check_clients_state()
 
     def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
         kp_name = rand_name(namestart)
@@ -557,8 +578,9 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     @classmethod
     def tearDownClass(cls):
         super(NovaNetworkScenarioTest, cls).tearDownClass()
-        cls._clean_floating_ips()
-        cls._clear_networks()
+        if cls.manager.clients_initialized:
+            cls._clean_floating_ips()
+            cls._clear_networks()
 
 
 def get_image_from_name():
@@ -598,18 +620,20 @@ class SanityChecksTest(OfficialClientTest):
 
     def setUp(self):
         super(SanityChecksTest, self).setUp()
+        self.check_clients_state()
         if not self._enabled:
             self.fail('Nova Networking is not available')
 
     @classmethod
     def setUpClass(cls):
         super(SanityChecksTest, cls).setUpClass()
-        cls.tenant_id = cls.manager._get_identity_client(
-            cls.config.identity.admin_username,
-            cls.config.identity.admin_password,
-            cls.config.identity.admin_tenant_name).tenant_id
-        cls.network = []
-        cls.floating_ips = []
+        if cls.manager.clients_initialized:
+            cls.tenant_id = cls.manager._get_identity_client(
+                cls.config.identity.admin_username,
+                cls.config.identity.admin_password,
+                cls.config.identity.admin_tenant_name).tenant_id
+            cls.network = []
+            cls.floating_ips = []
 
     @classmethod
     def tearDownClass(cls):
@@ -660,17 +684,23 @@ class SmokeChecksTest(OfficialClientTest):
     @classmethod
     def setUpClass(cls):
         super(SmokeChecksTest, cls).setUpClass()
-        cls.tenant_id = cls.manager._get_identity_client(
-            cls.config.identity.admin_username,
-            cls.config.identity.admin_password,
-            cls.config.identity.admin_tenant_name).tenant_id
-        cls.build_interval = cls.config.volume.build_interval
-        cls.build_timeout = cls.config.volume.build_timeout
+        if cls.manager.clients_initialized:
+            cls.tenant_id = cls.manager._get_identity_client(
+                cls.config.identity.admin_username,
+                cls.config.identity.admin_password,
+                cls.config.identity.admin_tenant_name).tenant_id
+            cls.build_interval = cls.config.volume.build_interval
+            cls.build_timeout = cls.config.volume.build_timeout
+            cls.flavors = []
+            cls.error_msg = []
+            cls.private_net = 'net04'
+            cls.smoke_flavor = ''
+        else:
+            cls.proceed = False
 
-        cls.flavors = []
-        cls.error_msg = []
-        cls.private_net = 'net04'
-        cls.smoke_flavor = ''
+    def setUp(self):
+        super(SmokeChecksTest, self).setUp()
+        self.check_clients_state()
 
     def _create_flavors(self, client, ram, disk, vcpus=1):
         name = rand_name('ost1_test-flavor-')
@@ -779,10 +809,11 @@ class SmokeChecksTest(OfficialClientTest):
     @classmethod
     def tearDownClass(cls):
         super(SmokeChecksTest, cls).tearDownClass()
-        cls._clean_flavors()
-        if cls.smoke_flavor:
-            try:
-                cls.compute_client.flavors.delete(cls.smoke_flavor)
-            except Exception:
-                LOG.debug("OSTF test flavor cannot be deleted.")
-                LOG.debug(traceback.format_exc())
+        if cls.manager.clients_initialized:
+            cls._clean_flavors()
+            if cls.smoke_flavor:
+                try:
+                    cls.compute_client.flavors.delete(cls.smoke_flavor)
+                except Exception:
+                    LOG.debug("OSTF test flavor cannot be deleted.")
+                    LOG.debug(traceback.format_exc())

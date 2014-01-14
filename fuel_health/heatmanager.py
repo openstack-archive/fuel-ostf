@@ -36,12 +36,17 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
     @classmethod
     def setUpClass(cls):
         super(HeatBaseTest, cls).setUpClass()
-        if cls.heat_client is None:
-            cls.fail('Heat is unavailable.')
-        cls.wait_interval = cls.config.compute.build_interval
-        cls.wait_timeout = cls.config.compute.build_timeout
-        cls.testvm_flavor = None
-        cls.heat_flavors = []
+        if cls.manager.clients_initialized:
+            if cls.heat_client is None:
+                cls.fail('Heat is unavailable.')
+            cls.wait_interval = cls.config.compute.build_interval
+            cls.wait_timeout = cls.config.compute.build_timeout
+            cls.testvm_flavor = None
+            cls.heat_flavors = []
+
+    def setUp(self):
+        super(HeatBaseTest, self).setUp()
+        self.check_clients_state()
 
     def list_stacks(self, client):
         return client.stacks.list()
@@ -160,5 +165,6 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
     @classmethod
     def tearDownClass(cls):
         super(HeatBaseTest, cls).tearDownClass()
-        for fl in cls.heat_flavors:
-            cls.compute_client.flavors.delete(fl)
+        if cls.manager.clients_initialized:
+            for fl in cls.heat_flavors:
+                cls.compute_client.flavors.delete(fl)

@@ -36,7 +36,8 @@ class TestImageAction(nmanager.SmokeChecksTest):
     @classmethod
     def setUpClass(cls):
         super(TestImageAction, cls).setUpClass()
-        cls.smoke_flavor = cls._create_nano_flavor()
+        if cls.manager.clients_initialized:
+            cls.smoke_flavor = cls._create_nano_flavor()
 
     @classmethod
     def tearDownClass(cls):
@@ -44,6 +45,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
 
     def setUp(self):
         super(TestImageAction, self).setUp()
+        self.check_clients_state()
         if not self.config.compute.compute_nodes:
             self.fail('There are no compute nodes')
 

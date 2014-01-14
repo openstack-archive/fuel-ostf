@@ -36,12 +36,13 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             after the Murano OSTF tests
         """
         super(MuranoTest, self).tearDown()
-        for env in self.list_environments():
-            if 'ost1_test-Murano_env' in env.name:
-                try:
-                    self.delete_environment(env.id)
-                except:
-                    LOG.warning(traceback.format_exc())
+        if self.manager.clients_initialized:
+            for env in self.list_environments():
+                if 'ost1_test-Murano_env' in env.name:
+                    try:
+                        self.delete_environment(env.id)
+                    except:
+                        LOG.warning(traceback.format_exc())
 
     def find_murano_image(self, image_type):
         """

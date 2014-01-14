@@ -26,6 +26,9 @@ class MuranoDeployDemoServiceTests(murano.MuranoTest):
         1. Murano component should be installed.
         2. Demo image with Murano metadata should be imported.
     """
+    def setUp(self):
+        super(MuranoDeployDemoServiceTests, self).setUp()
+        self.check_clients_state()
 
     def test_deploy_demo_service(self):
         """Check that user can deploy Demo service in Murano environment
@@ -111,6 +114,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
 
     def setUp(self):
         super(MuranoDeployLinuxServicesTests, self).setUp()
+        self.check_clients_state()
         msg = ("Linux image with Murano "
                "tag isn't available. Need to import this image into "
                "glance and mark with Murano metadata tag. Please refer to"

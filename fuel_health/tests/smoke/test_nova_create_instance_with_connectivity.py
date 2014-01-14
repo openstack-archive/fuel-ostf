@@ -37,40 +37,50 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     @classmethod
     def setUpClass(cls):
         super(TestNovaNetwork, cls).setUpClass()
-        cls.nova_netw_flavor = cls._create_nano_flavor()
-        cls.tenant_id = cls.manager._get_identity_client(
-            cls.config.identity.admin_username,
-            cls.config.identity.admin_password,
-            cls.config.identity.admin_tenant_name).tenant_id
-        cls.keypairs = {}
-        cls.security_groups = {}
-        cls.network = []
-        cls.servers = []
-        cls.floating_ips = []
+        if cls.manager.clients_initialized:
+            cls.nova_netw_flavor = cls._create_nano_flavor()
+            cls.tenant_id = cls.manager._get_identity_client(
+                cls.config.identity.admin_username,
+                cls.config.identity.admin_password,
+                cls.config.identity.admin_tenant_name).tenant_id
+            cls.keypairs = {}
+            cls.security_groups = {}
+            cls.network = []
+            cls.servers = []
+            cls.floating_ips = []
 
     def setUp(self):
         super(TestNovaNetwork, self).setUp()
+        # if not self.manager.clients_initialized:
+        #     LOG.debug("Unable to initialize Keystone client: %s"
+        #               % self.manager.traceback)
+        #     self.fail("Keystone is not available. Please,"
+        #               " refer to OpenStack logs to fix this problem.")
+        self.check_clients_state()
         if not self.config.compute.compute_nodes:
             self.fail('There are no compute nodes')
 
     @classmethod
     def tearDownClass(cls):
         super(TestNovaNetwork, cls).tearDownClass()
-        try:
-            cls.compute_client.flavors.delete(cls.nova_netw_flavor.id)
-        except Exception:
-            LOG.debug(traceback.format_exc())
+        if cls.manager.clients_initialized:
+            if cls.manager.clients_initialized:
+                try:
+                    cls.compute_client.flavors.delete(cls.nova_netw_flavor.id)
+                except Exception:
+                    LOG.debug(traceback.format_exc())
 
     def tearDown(self):
         super(TestNovaNetwork, self).tearDown()
-        if self.servers:
-            for server in self.servers:
-                try:
-                    self._delete_server(server)
-                    self.servers.remove(server)
-                except Exception:
-                    LOG.debug(traceback.format_exc())
-                    LOG.debug("Server was already deleted.")
+        if self.manager.clients_initialized:
+            if self.servers:
+                for server in self.servers:
+                    try:
+                        self._delete_server(server)
+                        self.servers.remove(server)
+                    except Exception:
+                        LOG.debug(traceback.format_exc())
+                        LOG.debug("Server was already deleted.")
 
     def test_001_create_keypairs(self):
         """Create keypair
