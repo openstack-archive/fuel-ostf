@@ -29,13 +29,15 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
     @classmethod
     def setUpClass(cls):
         super(CeilometerBaseTest, cls).setUpClass()
-        cls.flavor = cls._create_mini_flavor()
-        cls.wait_interval = cls.config.compute.build_interval
-        cls.wait_timeout = cls.config.compute.build_timeout
-        cls.private_net = 'net04'
+        if cls.manager.clients_initialized:
+            cls.flavor = cls._create_mini_flavor()
+            cls.wait_interval = cls.config.compute.build_interval
+            cls.wait_timeout = cls.config.compute.build_timeout
+            cls.private_net = 'net04'
 
     def setUp(self):
         super(CeilometerBaseTest, self).setUp()
+        self.check_clients_state()
         if not self.ceilometer_client:
             self.fail('Ceilometer is unavailable.')
         if not self.config.compute.compute_nodes:
@@ -182,7 +184,8 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
     @classmethod
     def tearDownClass(cls):
         super(CeilometerBaseTest, cls).tearDownClass()
-        try:
-            cls.compute_client.flavors.delete(cls.flavor.id)
-        except Exception as exc:
-            LOG.debug(exc)
+        if cls.manager.clients_initialized:
+            try:
+                cls.compute_client.flavors.delete(cls.flavor.id)
+            except Exception as exc:
+                LOG.debug(exc)

@@ -34,40 +34,45 @@ class SavannaTest(nmanager.OfficialClientTest):
     @classmethod
     def setUpClass(cls):
         super(SavannaTest, cls).setUpClass()
-        cls.flavors = []
-        cls.node_groups = []
-        cls.cluster_templates = []
-        cls.clusters = []
-        cls.keys = []
-        cls.plugin = 'vanilla'
-        cls.plugin_version = '1.2.1'
-        cls.neutron_floating_ip = 'net04_ext'
-        cls.neutron_net = 'net04'
-        cls.TT_CONFIG = {'Task Tracker Heap Size': 515}
-        cls.DN_CONFIG = {'Data Node Heap Size': 513}
-        cls.CLUSTER_HDFS_CONFIG = {'dfs.replication': 2}
-        cls.CLUSTER_MR_CONFIG = {
-            'mapred.map.tasks.speculative.execution': False,
-            'mapred.child.java.opts': '-Xmx100m'}
-        cls.CLUSTER_GENERAL_CONFIG = {'Enable Swift': True}
-        cls.SNN_CONFIG = {'Name Node Heap Size': 510}
-        cls.NN_CONFIG = {'Name Node Heap Size': 512}
-        cls.JT_CONFIG = {'Job Tracker Heap Size': 514}
-        cls.V_HADOOP_USER = 'hadoop'
-        cls.V_NODE_USERNAME = 'ubuntu'
-        cls.HDP_HADOOP_USER = 'hdfs'
-        cls.HDP_NODE_USERNAME = 'cloud-user'
-        cls.CLUSTER_CREATION_TIMEOUT = '90'
-        cls.USER_KEYPAIR_ID = 'ostf_test-savanna'
-        cls.PLUGIN_NAME = 'vanilla'
-        cls.IMAGE_NAME = 'savanna'
-        cls.CLUSTER_NAME = 'ostf-test-savanna-cluster'
-        cls.SAVANNA_FLAVOR = 'ostf_test-savanna-flavor'
-        cls.JT_PORT = 50030
-        cls.NN_PORT = 50070
-        cls.TT_PORT = 50060
-        cls.DN_PORT = 50075
-        cls.SEC_NN_PORT = 50090
+        if cls.manager.clients_initialized:
+            cls.flavors = []
+            cls.node_groups = []
+            cls.cluster_templates = []
+            cls.clusters = []
+            cls.keys = []
+            cls.plugin = 'vanilla'
+            cls.plugin_version = '1.2.1'
+            cls.neutron_floating_ip = 'net04_ext'
+            cls.neutron_net = 'net04'
+            cls.TT_CONFIG = {'Task Tracker Heap Size': 515}
+            cls.DN_CONFIG = {'Data Node Heap Size': 513}
+            cls.CLUSTER_HDFS_CONFIG = {'dfs.replication': 2}
+            cls.CLUSTER_MR_CONFIG = {
+                'mapred.map.tasks.speculative.execution': False,
+                'mapred.child.java.opts': '-Xmx100m'}
+            cls.CLUSTER_GENERAL_CONFIG = {'Enable Swift': True}
+            cls.SNN_CONFIG = {'Name Node Heap Size': 510}
+            cls.NN_CONFIG = {'Name Node Heap Size': 512}
+            cls.JT_CONFIG = {'Job Tracker Heap Size': 514}
+            cls.V_HADOOP_USER = 'hadoop'
+            cls.V_NODE_USERNAME = 'ubuntu'
+            cls.HDP_HADOOP_USER = 'hdfs'
+            cls.HDP_NODE_USERNAME = 'cloud-user'
+            cls.CLUSTER_CREATION_TIMEOUT = '90'
+            cls.USER_KEYPAIR_ID = 'ostf_test-savanna'
+            cls.PLUGIN_NAME = 'vanilla'
+            cls.IMAGE_NAME = 'savanna'
+            cls.CLUSTER_NAME = 'ostf-test-savanna-cluster'
+            cls.SAVANNA_FLAVOR = 'ostf_test-savanna-flavor'
+            cls.JT_PORT = 50030
+            cls.NN_PORT = 50070
+            cls.TT_PORT = 50060
+            cls.DN_PORT = 50075
+            cls.SEC_NN_PORT = 50090
+
+    def setUp(self):
+        super(SavannaTest, self).setUp()
+        self.check_clients_state()
 
     def _test_image(self):
         tag_version = '_savanna_tag_%s' % self.plugin_version
@@ -615,8 +620,9 @@ class SavannaTest(nmanager.OfficialClientTest):
     @classmethod
     def tearDownClass(cls):
         super(SavannaTest, cls).tearDownClass()
-        cls._clean_clusters()
-        cls._clean_cluster_templates()
-        cls._clean_node_groups_templates()
-        cls._clean_flavors()
-        cls._clean_keys()
+        if cls.manager.clients_initialized:
+            cls._clean_clusters()
+            cls._clean_cluster_templates()
+            cls._clean_node_groups_templates()
+            cls._clean_flavors()
+            cls._clean_keys()

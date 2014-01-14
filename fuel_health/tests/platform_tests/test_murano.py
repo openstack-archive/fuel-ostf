@@ -32,6 +32,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
     def setUp(self):
         super(MuranoDeploymentSmokeTests, self).setUp()
+        self.check_clients_state()
         msg = ("Windows Server 2012 image with Murano "
                "tag isn't available. Need to import this image into "
                "glance and mark with Murano metadata tag. Please "

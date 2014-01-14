@@ -28,13 +28,14 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
 
     def tearDown(self):
         super(CeilometerApiSmokeTests, self).tearDown()
-        if self.alarm_list:
-            for alarm in self.alarm_list:
-                try:
-                    self.ceilometer_client.alarms.delete(alarm.alarm_id)
-                except:
-                    LOG.warning('alarm deletion failed')
-                    LOG.debug(traceback.format_exc())
+        if self.manager.clients_initialized:
+            if self.alarm_list:
+                for alarm in self.alarm_list:
+                    try:
+                        self.ceilometer_client.alarms.delete(alarm.alarm_id)
+                    except:
+                        LOG.warning('alarm deletion failed')
+                        LOG.debug(traceback.format_exc())
 
     def test_create_alarm(self):
         """Ceilometer create, update, check, delete alarm.

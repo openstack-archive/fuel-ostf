@@ -27,10 +27,17 @@ class VolumesTest(nmanager.SmokeChecksTest):
     @classmethod
     def setUpClass(cls):
         super(VolumesTest, cls).setUpClass()
-        cls.smoke_flavor = cls._create_nano_flavor()
+        if cls.manager.clients_initialized:
+            cls.smoke_flavor = cls._create_nano_flavor()
 
     def setUp(self):
         super(VolumesTest, self).setUp()
+        self.check_clients_state()
+        # if not self.manager.clients_initialized:
+        #     LOG.debug("Unable to initialize Keystone client: %s"
+        #               % self.manager.traceback)
+        #     self.fail("Keystone is not available. Please,"
+        #               " refer to OpenStack logs to fix this problem.")
         if (not self.config.volume.cinder_node_exist
                 and not self.config.volume.ceph_exist):
             self.fail('There are no cinder nodes or ceph storage for volume')
