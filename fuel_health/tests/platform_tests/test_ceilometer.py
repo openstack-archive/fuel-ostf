@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2013 Mirantis, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -27,7 +25,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
     TestClass contains tests that check basic Ceilometer functionality.
     """
 
-    def test_check_alarm(self):
+    def test_check_alarm_state(self):
         """Ceilometer test to check the alarm can change status.
         Target component: Ceilometer
 
@@ -76,6 +74,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
                                            self.meter_name)
 
         fail_msg = "Creation alarm failed."
+
         threshold = statistic_meter_resp[0].avg - 1
         create_alarm_resp = self.verify(5, self.create_alarm,
                                         4, fail_msg, "alarm_create",
@@ -92,3 +91,42 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
                     fail_msg,
                     "alarm status becoming 'alarm'",
                     create_alarm_resp.alarm_id)
+
+    def test_create_sample(self):
+        """Ceilometer create, check sample,check statistics  .
+        Target component: Ceilometer
+
+        Scenario:
+        1. Create sample for existing resource (the default image).
+        2. Check that created sample has the expected resource.
+        3. Check that the sample has the statistic.
+        Duration: 40 s.
+        Deployment tags: Ceilometer
+        """
+
+        fail_msg_1 = 'Sample can not be created'
+
+        sample = self.verify(30, self.create_sample, 1,
+                             fail_msg_1,
+                             "Sample creating",
+                             resource_id=nmanager.get_image_from_name(),
+                             counter_name=self.meter_name_image,
+                             counter_type=self.counter_type,
+                             counter_unit=self.counter_unit,
+                             counter_volume=self.counter_volume,
+                             resource_metadata=self.resource_metadata)
+
+        fail_msg_2 = 'Sample resource is absent'
+
+        self.verify_response_body_value(
+            body_structure=sample[0].resource_id,
+            value=nmanager.get_image_from_name(),
+            msg=fail_msg_2,
+            failed_step=2)
+
+        fail_msg_3 = 'Sample statistic list is unavailable.'
+
+        self.verify(5, self.list_statistics,3,
+                    fail_msg_3,
+                    "sample statistic",
+                    sample[0].counter_name)
