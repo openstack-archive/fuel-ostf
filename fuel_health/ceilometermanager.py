@@ -175,6 +175,14 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
             return self.list_statistics(meter_name)
 
     @classmethod
+    def _clean_alarms(cls):
+        list_alarms_resp = cls.ceilometer_client.alarms.list()
+        for alarm_list in list_alarms_resp:
+            if alarm_list.name.startswith('ost1_test-'):
+                alarm_id = alarm_list.alarm_id
+                cls.ceilometer_client.alarms.delete(alarm_id)
+
+    @classmethod
     def _create_mini_flavor(cls):
         name = rand_name('ost1_test-ceilometer')
         cls.flavor = cls.compute_client.flavors.create(
@@ -184,6 +192,7 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
     @classmethod
     def tearDownClass(cls):
         super(CeilometerBaseTest, cls).tearDownClass()
+        cls._clean_alarms()
         if cls.manager.clients_initialized:
             try:
                 cls.compute_client.flavors.delete(cls.flavor.id)
