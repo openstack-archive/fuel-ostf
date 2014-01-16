@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2013 Mirantis, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -18,6 +16,7 @@ import logging
 import traceback
 
 from fuel_health import ceilometermanager
+
 LOG = logging.getLogger(__name__)
 
 
@@ -59,9 +58,9 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = "Creation metrics failed."
 
         self.verify(600, self.wait_for_instance_metrics, 1,
-                                           fail_msg,
-                                           "metrics created",
-                                           self.meter_name_image)
+                    fail_msg,
+                    "metrics created",
+                    self.meter_name_image)
 
         fail_msg = "Creation alarm failed."
 
