@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2013 Mirantis, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -18,6 +16,8 @@ import logging
 import traceback
 
 from fuel_health import ceilometermanager
+from fuel_health import nmanager
+
 LOG = logging.getLogger(__name__)
 
 
@@ -58,9 +58,9 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = "Creation metrics failed."
 
         self.verify(600, self.wait_for_instance_metrics, 1,
-                                           fail_msg,
-                                           "metrics created",
-                                           self.meter_name_image)
+                    fail_msg,
+                    "metrics created",
+                    self.meter_name_image)
 
         fail_msg = "Creation alarm failed."
 
@@ -120,3 +120,41 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
         self.verify(20, self.delete_alarm,
                     7, fail_msg, "Delete_alarm",
                     alarm_id=create_alarm_resp.alarm_id)
+
+    def test_create_sample(self):
+        """Create sample metric
+        Target component: Ceilometer
+
+        Scenario:
+        1. Create sample for existing resource (the default image).
+        2. Check that created sample has the expected resource.
+        3. Check that the sample has the statistic.
+        Duration: 40 s.
+        Deployment tags: Ceilometer
+        """
+
+        fail_msg_1 = 'Sample can not be created'
+
+        sample = self.verify(30, self.create_sample, 1,
+                             fail_msg_1,
+                             "Sample creating",
+                             resource_id=nmanager.get_image_from_name(),
+                             counter_name=self.counter_name,
+                             counter_type=self.counter_type,
+                             counter_unit=self.counter_unit,
+                             counter_volume=self.counter_volume,
+                             resource_metadata=self.resource_metadata)
+
+        fail_msg_2 = 'Sample resource is absent'
+
+        sample_resource = self.verify_response_body_value(
+            body_structure=sample[0].resource_id,
+            value=nmanager.get_image_from_name(),
+            msg=fail_msg_2,
+            failed_step=2)
+
+        fail_msg_3 = 'Sample statistic list is unavailable.'
+
+        sample_statistic = self.verify(5, self.list_statistics,
+                                       3, fail_msg_3, "sample statistic",
+                                       sample[0].counter_name)
