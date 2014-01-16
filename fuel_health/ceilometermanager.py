@@ -25,7 +25,6 @@ LOG = logging.getLogger(__name__)
 
 
 class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
-
     @classmethod
     def setUpClass(cls):
         super(CeilometerBaseTest, cls).setUpClass()
@@ -50,6 +49,10 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         self.period = '600'
         self.threshold = '20'
         self.alarm_list = []
+        self.counter_type = 'gauge'
+        self.counter_unit = 'B'
+        self.counter_volume = 1
+        self.resource_metadata = {"user": "example_metadata"}
 
     def list_meters(self):
         """
@@ -69,6 +72,12 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         This method list resources
         """
         return self.ceilometer_client.resources.list()
+
+    def show_resources(self, resource_id):
+        """
+        This method list resources
+        """
+        return self.ceilometer_client.resources.list(resource_id)
 
     def list_statistics(self, meter_name):
         """
@@ -140,6 +149,23 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         """
         return self.ceilometer_client.alarms.delete(alarm_id=alarm_id)
 
+    def create_sample(self, resource_id,
+                      counter_name,
+                      counter_type,
+                      counter_unit,
+                      counter_volume,
+                      resource_metadata):
+        """
+        This method provide creation of sample
+        """
+        return self.ceilometer_client.samples.create(
+            resource_id=resource_id,
+            counter_name=counter_name,
+            counter_type=counter_type,
+            counter_unit=counter_unit,
+            counter_volume=counter_volume,
+            resource_metadata=resource_metadata)
+
     def _wait_for_instance_metrics(self, server, status):
         self.status_timeout(self.compute_client.servers, server.id, status)
 
@@ -147,6 +173,7 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         """
         The method is a customization of test.status_timeout().
         """
+
         def check_status():
             alarm_state_resp = self.get_state(alarm_id)
             if alarm_state_resp == 'alarm' or 'ok':
@@ -160,6 +187,7 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         """
         The method is a customization of test.status_timeout().
         """
+
         def check_status():
             stat_state_resp = self.list_statistics(meter_name)
             if len(stat_state_resp) > 0:
