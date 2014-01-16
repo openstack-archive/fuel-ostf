@@ -33,11 +33,6 @@ class VolumesTest(nmanager.SmokeChecksTest):
     def setUp(self):
         super(VolumesTest, self).setUp()
         self.check_clients_state()
-        # if not self.manager.clients_initialized:
-        #     LOG.debug("Unable to initialize Keystone client: %s"
-        #               % self.manager.traceback)
-        #     self.fail("Keystone is not available. Please,"
-        #               " refer to OpenStack logs to fix this problem.")
         if (not self.config.volume.cinder_node_exist
                 and not self.config.volume.ceph_exist):
             self.fail('There are no cinder nodes or ceph storage for volume')
@@ -113,7 +108,6 @@ class VolumesTest(nmanager.SmokeChecksTest):
                     'Attached volume status did not become "in-use".',
                     "volume becoming 'in-use'",
                     volume, 'in-use')
-
 
         # get volume details
         self.verify(20, self.volume_client.volumes.get, 8,

@@ -51,11 +51,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
     def setUp(self):
         super(TestNovaNetwork, self).setUp()
-        # if not self.manager.clients_initialized:
-        #     LOG.debug("Unable to initialize Keystone client: %s"
-        #               % self.manager.traceback)
-        #     self.fail("Keystone is not available. Please,"
-        #               " refer to OpenStack logs to fix this problem.")
         self.check_clients_state()
         if not self.config.compute.compute_nodes:
             self.fail('There are no compute nodes')
@@ -344,6 +339,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                     'public connectivity checking from VM',
                     instance_ip, 30, (4, 30), compute)
 
-        self.verify(30, self._delete_server, 5,
+        self.verify(30, self._delete_server, 4,
                     "Server can not be deleted. ",
                     "server deletion", server)
