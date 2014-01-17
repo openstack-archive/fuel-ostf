@@ -271,10 +271,9 @@ class OfficialClientTest(fuel_health.test.TestCase):
             except Exception as e:
                 if e.__class__.__name__ == 'NotFound':
                     return True
-
-        LOG.debug("Server can not be deleted: %s" % server.id)
-        LOG.debug(traceback.format_exc())
-        raise Exception()
+            LOG.debug("Server can not be deleted: %s" % server.id)
+            LOG.debug(traceback.format_exc())
+            raise Exception()
 
     def retry_command(self, retries, timeout, method, *args, **kwargs):
         for i in range(retries):
