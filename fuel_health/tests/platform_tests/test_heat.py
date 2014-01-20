@@ -226,7 +226,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             15. Delete the file with private key.
             16. Delete the stack.
             17. Wait for the stack to be deleted.
-        Duration: 2200 s.
+        Duration: 2600 s.
         """
         image_name = "F17-x86_64-cfntools"
         fail_msg = ("Image with cfntools package wasn't "
@@ -308,10 +308,10 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         vm_connection = "ssh -o StrictHostKeyChecking=no -i %s %s@%s" % (
             path_to_key, "ec2-user", floating_ip.ip)
 
-        self.verify(600, self._wait_for_cloudinit, 10,
+        self.verify(1000, self._wait_for_cloudinit, 10,
                     "Cloud-init script cannot finish within timeout.",
                     "cloud-init script execution on VM",
-                    vm_connection, 600, 15)
+                    vm_connection, 1000, 15)
 
         self.verify(60, self._load_vm_cpu, 11,
                     "Cannot create a process to load VM CPU.",
