@@ -107,3 +107,9 @@ def integration():
 
 def unit():
     local('nosetests fuel_plugin/testing/tests/unit -v')
+
+
+def manage_rabbit():
+    local('sudo rabbitmqctl add_user ostf ostf')
+    local('sudo rabbitmqctl add_vhost ostf')
+    local('sudo rabbitmqctl set_permissions -p ostf ostf ".*" ".*" ".*"')
