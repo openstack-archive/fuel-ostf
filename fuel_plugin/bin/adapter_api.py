@@ -75,11 +75,19 @@ def main():
     log.info('Starting server in PID %s', os.getpid())
     log.info("serving on http://%s:%s", host, port)
 
+    #starting celery workers
+    #TODO: move it to deployment scripts
+    workers_subprocess = mixins.start_celery_workers(cli_args.workers_count)
+
     try:
         signal.signal(signal.SIGCHLD, signal.SIG_IGN)
         srv.serve_forever()
     except KeyboardInterrupt:
-        pass
+        #gracefully shutdown workers
+        #TODO: move it to deployment scripts
+        log.info('Stopping celery workers')
+        for subproc in workers_subprocess:
+            subproc.send_signal(signal.SIGINT)
 
 
 if __name__ == '__main__':

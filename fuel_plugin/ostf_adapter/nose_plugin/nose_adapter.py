@@ -12,112 +12,109 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
 import logging
 
+from celery import chain
+
 from pecan import conf
-from fuel_plugin.ostf_adapter.nose_plugin import nose_storage_plugin
-from fuel_plugin.ostf_adapter.nose_plugin import nose_test_runner
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
-from fuel_plugin.ostf_adapter.storage import storage_utils, engine, models
+from fuel_plugin.ostf_adapter.storage import engine, models
+from fuel_plugin.ostf_adapter.celery_app import ostf_celery_app
 
 
 LOG = logging.getLogger(__name__)
 
 
 class NoseDriver(object):
+
     def __init__(self):
         LOG.warning('Initializing Nose Driver')
-        self._named_threads = {}
+        #StoragePlugin is dependent on this data
+        self.nailgun_credentials = {'host': conf.nailgun.host,
+                                    'port': conf.nailgun.port}
+
+        self.task_registry = dict()
+
+    def run(self, testruns_chains):
         session = engine.get_session()
-        with session.begin(subtransactions=True):
-            storage_utils.update_all_running_test_runs(session)
 
-    def check_current_running(self, unique_id):
-        return unique_id in self._named_threads
+        for cluster_id in testruns_chains:
+            for exec_type in ['dependent_tests', 'independent_tests']:
+                subtasks_list = []
+                for testset_data in testruns_chains[cluster_id][exec_type]:
 
-    def run(self, test_run, test_set, tests=None):
-        tests = tests or test_run.enabled_tests
-        if tests:
-            argv_add = [nose_utils.modify_test_name_for_nose(test) for test in
-                        tests]
+                    test_run = session.query(models.TestRun)\
+                        .filter_by(test_set_id=testset_data['testset'])\
+                        .filter_by(cluster_id=cluster_id)\
+                        .filter_by(status='running')\
+                        .one()
 
-        else:
-            argv_add = [test_set.test_path] + test_set.additional_arguments
+                    tests = testset_data['tests'] or test_run.enabled_tests
+                    if tests:
+                        argv_add = [
+                            nose_utils.modify_test_name_for_nose(test)
+                            for test in tests
+                        ]
 
-        self._named_threads[test_run.id] = nose_utils.run_proc(
-            self._run_tests, test_run.id, test_run.cluster_id, argv_add)
+                    else:
+                        test_set = session.query(models.TestSet)\
+                            .filter_by(id=testset_data['testset'])\
+                            .one()
+                        argv_add = [test_set.test_path] + \
+                            test_set.additional_arguments
 
-    def _run_tests(self, test_run_id, cluster_id, argv_add):
-        session = engine.get_session()
-        try:
-            nose_test_runner.SilentTestProgram(
-                addplugins=[nose_storage_plugin.StoragePlugin(
-                    test_run_id, str(cluster_id))],
-                exit=False,
-                argv=['ostf_tests'] + argv_add)
-            self._named_threads.pop(int(test_run_id), None)
-        except Exception:
-            LOG.exception('Test run ID: %s', test_run_id)
-        finally:
-            models.TestRun.update_test_run(
-                session, test_run_id, status='finished')
+                    subtask = ostf_celery_app.run_test_task.si(
+                        test_run.id, test_run.cluster_id,
+                        self.nailgun_credentials, argv_add
+                    )
+
+                    subtask_data = dict(subtask=subtask,
+                                        test_run_id=test_run.id)
+
+                    subtasks_list.append(subtask_data)
+
+                if exec_type == 'dependent_tests':
+                    self.task_registry.update(
+                        {
+                            tuple([task_data['test_run_id'] for task_data
+                                   in subtasks_list]):
+                            chain(*[task_data['subtask']
+                                    for task_data in subtasks_list])
+                            .apply_async()
+                        }
+                    )
+                elif exec_type == 'independent_tests':
+                    for task_data in subtasks_list:
+                        self.task_registry.update(
+                            {
+                                (task_data['test_run_id'],):
+                                task_data['subtask'].apply_async()
+                            }
+                        )
 
     def kill(self, test_run_id, cluster_id, cleanup=None):
         session = engine.get_session()
-        if test_run_id in self._named_threads:
 
-            try:
-                self._named_threads[test_run_id].terminate()
-            except OSError as e:
-                if e.errno != os.errno.ESRCH:
-                    raise
+        for task_identity in self.task_registry:
+            if test_run_id in task_identity:
+                self.task_registry[task_identity].revoke(signal='SIGTERM',
+                                                         terminate=True)
 
-                LOG.warning(
-                    'There is no process for test_run with following id - %s',
-                    test_run_id
-                )
+                test_run = session.query(models.TestRun)\
+                    .filter_by(id=test_run_id)\
+                    .one()
 
-            self._named_threads.pop(test_run_id, None)
+                if test_run.status == 'running':
+                    if cleanup:
+                        ostf_celery_app.clean_up.delay(
+                            test_run_id, cluster_id,
+                            cleanup, self.nailgun_credentials
+                        )
 
-            if cleanup:
-                nose_utils.run_proc(
-                    self._clean_up,
-                    test_run_id,
-                    cluster_id,
-                    cleanup)
-            else:
-                models.TestRun.update_test_run(
-                    session, test_run_id, status='finished')
+                    models.TestRun.update_test_run(
+                        session, test_run_id, status='finished'
+                    )
 
-            return True
-        return False
-
-    def _clean_up(self, test_run_id, cluster_id, cleanup):
-        session = engine.get_session()
-
-        #need for performing proper cleaning up for current cluster
-        cluster_deployment_info = \
-            session.query(models.ClusterState.deployment_tags)\
-            .filter_by(id=cluster_id)\
-            .scalar()
-
-        try:
-            module_obj = __import__(cleanup, -1)
-
-            os.environ['NAILGUN_HOST'] = str(conf.nailgun.host)
-            os.environ['NAILGUN_PORT'] = str(conf.nailgun.port)
-            os.environ['CLUSTER_ID'] = str(cluster_id)
-
-            module_obj.cleanup.cleanup(cluster_deployment_info)
-
-        except Exception:
-            LOG.exception(
-                'Cleanup error. Test Run ID %s. Cluster ID %s',
-                test_run_id,
-                cluster_id
-            )
-
-        finally:
-            models.TestRun.update_test_run(
-                session, test_run_id, status='finished')
+                    models.Test.update_running_tests(
+                        session, test_run_id, status='stopped'
+                    )

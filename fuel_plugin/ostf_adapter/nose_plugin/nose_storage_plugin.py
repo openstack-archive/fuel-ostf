@@ -16,7 +16,7 @@ from time import time
 import logging
 import os
 from nose import plugins
-from pecan import conf
+#from pecan import conf
 import unittest2
 
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
@@ -32,17 +32,21 @@ class StoragePlugin(plugins.Plugin):
     score = 15000
 
     def __init__(
-            self, test_run_id, cluster_id):
+            self, test_run_id, cluster_id, nailgun_credentials):
         self.test_run_id = test_run_id
         self.cluster_id = cluster_id
+
+        self.nailgun_host = nailgun_credentials['host']
+        self.nailgun_port = nailgun_credentials['port']
+
         super(StoragePlugin, self).__init__()
         self._start_time = None
 
         self.session = engine.get_session()
 
     def options(self, parser, env=os.environ):
-        env['NAILGUN_HOST'] = str(conf.nailgun.host)
-        env['NAILGUN_PORT'] = str(conf.nailgun.port)
+        env['NAILGUN_HOST'] = self.nailgun_host
+        env['NAILGUN_PORT'] = self.nailgun_port
         if self.cluster_id:
             env['CLUSTER_ID'] = str(self.cluster_id)
 
