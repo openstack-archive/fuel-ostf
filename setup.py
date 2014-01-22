@@ -38,7 +38,9 @@ fuel_ostf_reqs = [
     'gevent==0.13.8',
     'pecan>=0.3.0',
     'psycopg2>=2.5.1',
-    'stevedore>=0.10'
+    'stevedore>=0.10',
+    'celery>=3.1.8',
+    'flower>=0.6.0'
 ]
 
 test_requires = [

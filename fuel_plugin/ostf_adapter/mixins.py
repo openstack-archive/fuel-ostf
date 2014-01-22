@@ -13,12 +13,19 @@
 #    under the License.
 
 
+import logging
+import os
 import requests
+import subprocess
 from pecan import conf
 from sqlalchemy.orm import joinedload
 
-from fuel_plugin.ostf_adapter.storage import models, engine
+from fuel_plugin.ostf_adapter.storage import models
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
+
+
+LOG = logging.getLogger(__name__)
+
 
 REQ_SES = requests.Session()
 REQ_SES.trust_env = False
@@ -192,3 +199,44 @@ def _add_cluster_testing_pattern(session, cluster_data):
                 )
 
         session.add_all(to_database)
+
+
+#TODO: move this code to deployment scripts
+def start_celery_workers():
+    '''Starts needed number of celery workers
+    '''
+    #so far eneded up with following solution for
+    #controlling number of workers being spawning
+    number_of_celery_workers = 4
+
+    command = ['/opt/fuel_plugins/ostf/bin/celery',
+               '--app=fuel_plugin.ostf_adapter.celery_app.ostf_celery_app.APP',
+               '--pool=prefork',
+               '--maxtasksperchild=1',
+               'worker']
+
+    worker_args_list = [
+        [
+            '-n ostf_celery_worker_{worker_number}.%h'
+            .format(worker_number=worker_number),
+            '--logfile=/var/log/celery_workers/'
+            'ostf_celery_worker_{worker_number}.log'
+            .format(worker_number=worker_number)
+        ]
+        for worker_number in range(number_of_celery_workers)
+    ]
+
+    #create log directory if not exists
+
+    if not os.path.exists('/var/log/celery_workers'):
+        os.makedirs('/var/log/celery_workers')
+
+    LOG.info('starting workers')
+    with open('/dev/null', 'w') as devnull:
+        workers_pids = [
+            subprocess.Popen(args=args, stdout=devnull, stderr=devnull)
+            for args in
+            [command + worker_args for worker_args in worker_args_list]
+        ]
+
+    return workers_pids

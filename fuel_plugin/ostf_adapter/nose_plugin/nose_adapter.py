@@ -15,53 +15,104 @@
 import os
 import logging
 
+from celery import chain
+
 from pecan import conf
-from fuel_plugin.ostf_adapter.nose_plugin import nose_storage_plugin
-from fuel_plugin.ostf_adapter.nose_plugin import nose_test_runner
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
-from fuel_plugin.ostf_adapter.storage import storage_utils, engine, models
+from fuel_plugin.ostf_adapter.storage import engine, models
+from fuel_plugin.ostf_adapter.celery_app import ostf_celery_app
 
 
 LOG = logging.getLogger(__name__)
 
 
 class NoseDriver(object):
+
     def __init__(self):
         LOG.warning('Initializing Nose Driver')
         self._named_threads = {}
-        session = engine.get_session()
-        with session.begin(subtransactions=True):
-            storage_utils.update_all_running_test_runs(session)
 
     def check_current_running(self, unique_id):
         return unique_id in self._named_threads
 
-    def run(self, test_run, test_set, tests=None):
-        tests = tests or test_run.enabled_tests
-        if tests:
-            argv_add = [nose_utils.modify_test_name_for_nose(test) for test in
-                        tests]
-
-        else:
-            argv_add = [test_set.test_path] + test_set.additional_arguments
-
-        self._named_threads[test_run.id] = nose_utils.run_proc(
-            self._run_tests, test_run.id, test_run.cluster_id, argv_add)
-
-    def _run_tests(self, test_run_id, cluster_id, argv_add):
+    def run(self, testruns_chains):
         session = engine.get_session()
-        try:
-            nose_test_runner.SilentTestProgram(
-                addplugins=[nose_storage_plugin.StoragePlugin(
-                    test_run_id, str(cluster_id))],
-                exit=False,
-                argv=['ostf_tests'] + argv_add)
-            self._named_threads.pop(int(test_run_id), None)
-        except Exception:
-            LOG.exception('Test run ID: %s', test_run_id)
-        finally:
-            models.TestRun.update_test_run(
-                session, test_run_id, status='finished')
+        #StoragePlugin is dependent on this data
+        nailgun_credentials = {'host': conf.nailgun.host,
+                               'port': conf.nailgun.port}
+
+        def _prepare_tasks_args(testruns_chains, exec_type,
+                                session, nailgun_credentials):
+            tasks_args_list = []
+            for cluster_id in testruns_chains:
+                #borders list of args for test runs that
+                #must be executed for particular cluster
+                cluster_testruns_args_list = []
+
+                for testset_data in \
+                        testruns_chains[cluster_id][exec_type]:
+
+                    test_run = session.query(models.TestRun)\
+                        .filter_by(test_set_id=testset_data['testset'])\
+                        .filter_by(cluster_id=cluster_id)\
+                        .filter_by(status='running')\
+                        .one()
+
+                    tests = testset_data['tests'] or test_run.enabled_tests
+                    if tests:
+                        argv_add = [
+                            nose_utils.modify_test_name_for_nose(test)
+                            for test in tests
+                        ]
+
+                    else:
+                        test_set = session.query(models.TestSet)\
+                            .filter_by(id=testset_data['testset'])\
+                            .one()
+                        argv_add = [test_set.test_path] + \
+                            test_set.additional_arguments
+
+                    #built chain of tasks
+                    cluster_testruns_args_list.append(
+                        [test_run.id, test_run.cluster_id,
+                         nailgun_credentials, argv_add]
+                    )
+
+                tasks_args_list.append(cluster_testruns_args_list)
+
+            return tasks_args_list
+
+        #make chains for solo workers
+        dependent_tasks_args = \
+            _prepare_tasks_args(
+                testruns_chains,
+                'dependent_tests',
+                session,
+                nailgun_credentials
+            )
+
+        for cluster_task_args in dependent_tasks_args:
+            chain(
+                *[
+                    ostf_celery_app.run_test_task.si(*args)
+                    for args in cluster_task_args
+                ]
+            ).apply_async()
+
+        #process independent workers
+        independent_tasks_args = \
+            _prepare_tasks_args(
+                testruns_chains,
+                'independent_tests',
+                session,
+                nailgun_credentials
+            )
+
+        for cluster_task_args in independent_tasks_args:
+            for task_args in cluster_task_args:
+                ostf_celery_app.run_test_task.apply_async(
+                    args=task_args
+                )
 
     def kill(self, test_run_id, cluster_id, cleanup=None):
         session = engine.get_session()
