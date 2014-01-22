@@ -354,7 +354,7 @@ class TestRun(BASE):
         return not bool(test_run) or test_run.is_finished()
 
     @classmethod
-    def start(cls, session, test_set, metadata, tests):
+    def create_testrun(cls, session, test_set, metadata, tests):
         '''
         Checks whether system must create new test_run or
         not by calling is_last_running.
@@ -368,7 +368,7 @@ class TestRun(BASE):
         Run tests from newly created test_run
         via neded testing plugin.
         '''
-        plugin = nose_plugin.get_plugin(test_set.driver)
+        #plugin = nose_plugin.get_plugin(test_set.driver)
         if cls.is_last_running(session, test_set.id,
                                metadata['cluster_id']):
 
@@ -379,8 +379,6 @@ class TestRun(BASE):
 
             retvalue = test_run.frontend
             session.close()
-
-            plugin.run(test_run, test_set)
 
             return retvalue
         return {}
@@ -405,10 +403,6 @@ class TestRun(BASE):
         """Stop test run if running
         """
         plugin = nose_plugin.get_plugin(self.test_set.driver)
-        killed = plugin.kill(
-            self.id, self.cluster_id,
-            cleanup=self.test_set.cleanup_path)
-        if killed:
-            Test.update_running_tests(
-                session, self.id, status='stopped')
+        plugin.kill(self.id, self.cluster_id,
+                    cleanup=self.test_set.cleanup_path)
         return self.frontend

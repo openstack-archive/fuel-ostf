@@ -20,6 +20,10 @@ _ENGINE = None
 _MAKER = None
 _REDISINST = None
 
+#in case we instantinate engine in environment where
+#pecan config is unavailable
+DEFAULT_DB_PATH = 'postgresql+psycopg2://ostf:ostf@localhost/ostf'
+
 
 def get_session(autocommit=True, expire_on_commit=False):
     """Return a SQLAlchemy session."""
@@ -38,13 +42,13 @@ def get_session(autocommit=True, expire_on_commit=False):
     return session
 
 
-def get_engine(dbpath=None, pool_type=None):
+def get_engine(pool_type=None):
     """Return a SQLAlchemy engine."""
     global _ENGINE
     engine = _ENGINE
 
     if engine is None:
-        dbpath = dbpath if dbpath is not None else conf.dbpath
+        dbpath = conf.get('dbpath', DEFAULT_DB_PATH)
         engine = create_engine(dbpath,
                                poolclass=pool_type or pool.NullPool)
     _ENGINE = engine

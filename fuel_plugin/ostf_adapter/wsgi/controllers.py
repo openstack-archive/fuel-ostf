@@ -92,6 +92,8 @@ class TestrunsController(BaseRestController):
         'last': ['GET'],
     }
 
+    dependent_testruns = ['sanity', 'platform_tests']
+
     @expose('json')
     def get_all(self):
         with request.session.begin(subtransactions=True):
@@ -126,10 +128,40 @@ class TestrunsController(BaseRestController):
         test_runs = json.loads(request.body)
         res = []
 
+        #data needed to make execution chains
+        testruns_chains = dict(
+            [
+                (
+                    test_run['metadata']['cluster_id'],
+                    dict(dependent_tests=[], independent_tests=[])
+                )
+                for test_run in test_runs
+            ]
+        )
+
+        #for storage of test runner drivers
+        #currentlry is not necessary needed becase all tests
+        #are executed via nose only
+        #TODO: fix code for multiple test drivers processing
+        testrunner_drivers = set()
+
         for test_run in test_runs:
             test_set = test_run['testset']
             metadata = test_run['metadata']
             tests = test_run.get('tests', [])
+
+            if test_set in self.dependent_testruns:
+                testruns_chains[
+                    test_run['metadata']['cluster_id']
+                ]['dependent_tests'].append(
+                    dict(testset=test_set, tests=tests)
+                )
+            else:
+                testruns_chains[
+                    test_run['metadata']['cluster_id']
+                ]['independent_tests'].append(
+                    dict(testset=test_set, tests=tests)
+                )
 
             with request.session.begin(subtransactions=True):
                 test_set = models.TestSet.get_test_set(
@@ -137,7 +169,9 @@ class TestrunsController(BaseRestController):
                     test_set
                 )
 
-            test_run = models.TestRun.start(
+            testrunner_drivers.add(test_set.driver)
+
+            test_run = models.TestRun.create_testrun(
                 request.session,
                 test_set,
                 metadata,
@@ -145,6 +179,13 @@ class TestrunsController(BaseRestController):
             )
 
             res.append(test_run)
+
+        #lets start our testruns
+        #TODO: fix execution when multiple drivers are present
+        from fuel_plugin.ostf_adapter import nose_plugin
+        for driver in testrunner_drivers:
+            plugin = nose_plugin.get_plugin(driver)
+            plugin.run(testruns_chains)
 
         return res
 
