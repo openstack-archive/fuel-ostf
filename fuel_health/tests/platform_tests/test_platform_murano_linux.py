@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2013 Mirantis, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -16,6 +14,7 @@
 
 import logging
 from fuel_health import murano
+
 
 LOG = logging.getLogger(__name__)
 
@@ -72,7 +71,7 @@ class MuranoDeployDemoServiceTests(murano.MuranoTest):
         post_body = {"availabilityZone": "nova", "name": "demo",
                      "unitNamingPattern": "host", "osImage":
                      {"type": "cirros.demo", "name": str(demo_image.name),
-                      "title": "Demo"}, "units": [{}], "flavor": "m1.small",
+                      "title": "Demo"}, "units": [{}], "flavor": "m1.tiny",
                      "configuration": "standalone", "type": "demoService"}
 
         fail_msg = "User can't create service. "
@@ -107,9 +106,8 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
     TestClass contains verifications of full Murano functionality.
     Special requirements:
         1. Murano component should be installed.
-        2. Key Pair 'murano-lb-key'.
-        3. Internet access for virtual machines in OpenStack.
-        4. Linux image with Murano metadata should be imported.
+        2. Internet access for virtual machines in OpenStack.
+        3. Linux image with Murano metadata should be imported.
     """
 
     def setUp(self):
@@ -121,12 +119,6 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                " the Mirantis Open Stack and Murano user documentation. ")
         self.image = self.find_murano_image('linux')
         if not self.image:
-            LOG.debug(msg)
-            self.fail(msg)
-
-        msg = ("Key Pair 'murano-lb-key' does not exist."
-               " Please, add this key pair manually. ")
-        if not self.find_keypair('murano-lb-key'):
             LOG.debug(msg)
             self.fail(msg)
 
@@ -143,7 +135,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
             6. Checking deployments status
             7. Send request to delete environment.
 
-        Duration: 320 s.
+        Duration: 920 s.
 
         Deployment tags: Murano, Heat
         """
@@ -159,8 +151,8 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                               self.environment.id)
 
         post_body = {"availabilityZone": "nova", "name": "LinuxTelnet",
-                     "deployTelnet": True, "unitNamingPattern": "telnet",
-                     "keyPair": "murano-lb-key", "osImage":
+                     "deployTelnet": True,
+                     "keyPair": "", "osImage":
                      {"type": "linux", "name": str(self.image.name),
                       "title": "Linux Image"}, "units": [{}],
                      "flavor": "m1.small", "type": "linuxTelnetService"}
@@ -204,7 +196,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
             6. Checking deployments status
             7. Send request to delete environment.
 
-        Duration: 320 s.
+        Duration: 920 s.
 
         Deployment tags: Murano, Heat
         """
@@ -220,8 +212,8 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                               self.environment.id)
 
         post_body = {"availabilityZone": "nova", "name": "LinuxApache",
-                     "deployApachePHP": True, "unitNamingPattern": "test-host",
-                     "keyPair": "murano-lb-key", "instanceCount": [{}], "osImage":
+                     "deployApachePHP": True,
+                     "keyPair": "", "instanceCount": [{}], "osImage":
                      {"type": "linux", "name": str(self.image.name),
                       "title": "Linux Image"}, "units": [{}],
                      "flavor": "m1.small", "type": "linuxApacheService"}
