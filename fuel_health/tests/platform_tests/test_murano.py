@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2013 Mirantis, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -16,6 +14,7 @@
 
 import logging
 from fuel_health import murano
+
 
 LOG = logging.getLogger(__name__)
 
@@ -241,164 +240,6 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         fail_msg = "Can't delete environment. "
         self.verify(5, self.delete_environment,
                     7, fail_msg, "deleting environment",
-                    self.environment.id)
-
-    def test_deploy_iis_farm(self):
-        """Check user can deploy IIS Servers Farm in Murano environment
-        Target component: Murano
-
-        Special requirements:
-            1. Key Pair 'murano-lb-key'
-
-        Scenario:
-            1. Check that Key Pair 'murano-lb-key' exists.
-            2. Send request to create environment.
-            3. Send request to create session for environment.
-            4. Send request to create service IIS farm.
-            5. Request to deploy session.
-            6. Checking environment status.
-            7. Checking deployments status
-            8. Send request to delete environment.
-
-        Duration: 1830 s.
-
-        Deployment tags: Murano, Heat
-        """
-
-        msg = ("Key Pair 'murano-lb-key' does not exist."
-               " Please, add this key pair manually. ")
-        if not self.find_keypair('murano-lb-key'):
-            LOG.debug(msg)
-            self.fail(msg)
-
-        fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(15, self.create_environment,
-                                       2, fail_msg, 'creating environment',
-                                       "ost1_test-Murano_env01")
-
-        fail_msg = "User can't create session for environment. "
-        session = self.verify(5, self.create_session,
-                              3, fail_msg, "session creating",
-                              self.environment.id)
-
-        creds = {'username': 'Administrator',
-                 'password': 'P@ssw0rd'}
-        post_body = {"type": "webServerFarm", "domain": "",
-                     "availabilityZone": "nova", "name": "someIISFARM",
-                     "adminPassword": "P@ssw0rd", "loadBalancerPort": 80,
-                     "unitNamingPattern": "",
-                     "osImage":
-                     {"type": "ws-2012-std", "name": str(self.image.name),
-                      "title": "Windows Server 2012 Standard"},
-                     "units": [{}, {}],
-                     "credentials": creds, "flavor": "m1.medium"}
-
-        fail_msg = "User can't create service. "
-        self.verify(5, self.create_service,
-                    4, fail_msg, "service creating",
-                    self.environment.id, session.id, post_body)
-
-        fail_msg = "User can't deploy session. "
-        self.verify(5, self.deploy_session,
-                    5, fail_msg,
-                    "sending session on deployment",
-                    self.environment.id, session.id)
-
-        fail_msg = ("Deployment was not completed correctly, "
-                    "please check that Key Pair 'murano-lb-key' exists. ")
-        self.verify(1800, self.deploy_check,
-                    6, fail_msg, 'deployment is going',
-                    self.environment.id)
-
-        self.verify(5, self.deployments_status_check,
-                    7, fail_msg,
-                    'Check deployments status',
-                    self.environment.id)
-
-        fail_msg = "Can't delete environment. "
-        self.verify(5, self.delete_environment,
-                    8, fail_msg, "deleting environment",
-                    self.environment.id)
-
-    def test_deploy_aspnet_farm(self):
-        """Check deployment of ASP.NET Servers Farm in Murano environment
-        Target component: Murano
-
-        Special requirements:
-            1. Key Pair 'murano-lb-key'
-            2. Internet access for virtual machines in OpenStack
-
-        Scenario:
-            1. Check that Key Pair 'murano-lb-key' exists.
-            2. Send request to create environment.
-            3. Send request to create session for environment.
-            4. Send request to create service ASPNet farm.
-            5. Request to deploy session.
-            6. Checking environment status.
-            7. Checking deployments status
-            8. Send request to delete environment.
-
-        Duration: 1830 s.
-
-        Deployment tags: Murano, Heat
-        """
-
-        msg = ("Key Pair 'murano-lb-key' does not exist."
-               " Please, add this key pair manually. ")
-        if not self.find_keypair('murano-lb-key'):
-            LOG.debug(msg)
-            self.fail(msg)
-
-        fail_msg = "Can't create environment. Murano API is not available. "
-        self.environment = self.verify(15, self.create_environment,
-                                       2, fail_msg, 'creating environment',
-                                       "ost1_test-Murano_env01")
-
-        fail_msg = "User can't create session for environment. "
-        session = self.verify(5, self.create_session,
-                              3, fail_msg, "session creating",
-                              self.environment.id)
-
-        creds = {'username': 'Administrator',
-                 'password': 'P@ssw0rd'}
-        asp_repository = "git://github.com/Mirantis/murano-mvc-demo.git"
-        post_body = {"type": "aspNetAppFarm", "domain": "",
-                     "availabilityZone": "nova", "name": "SomeApsFarm",
-                     "repository": asp_repository,
-                     "adminPassword": "P@ssw0rd", "loadBalancerPort": 80,
-                     "unitNamingPattern": "",
-                     "osImage":
-                     {"type": "ws-2012-std", "name": str(self.image.name),
-                      "title": "Windows Server 2012 Standard"},
-                     "units": [{}, {}],
-                     "credentials": creds, "flavor": "m1.medium"}
-
-        fail_msg = "User can't create service. "
-        self.verify(5, self.create_service,
-                              4, fail_msg, "service creating",
-                              self.environment.id, session.id, post_body)
-
-        fail_msg = "User can't deploy session. "
-        self.verify(5, self.deploy_session,
-                                  5, fail_msg,
-                                  "sending session on deployment",
-                                  self.environment.id, session.id)
-
-        fail_msg = ("Deployment was not completed correctly, "
-                    "please check, that Key Pair 'murano-lb-key' exists "
-                    "and virtual machines have Internet access. ")
-        self.verify(1800, self.deploy_check,
-                                 6, fail_msg, 'deployment is going',
-                                 self.environment.id)
-
-        self.verify(5, self.deployments_status_check,
-                                        7, fail_msg,
-                                        'Check deployments status',
-                                        self.environment.id)
-
-        fail_msg = "Can't delete environment. "
-        self.verify(5, self.delete_environment,
-                    8, fail_msg, "deleting environment",
                     self.environment.id)
 
     def test_deploy_sql(self):

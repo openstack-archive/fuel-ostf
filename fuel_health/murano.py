@@ -59,12 +59,6 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
                 if image_type == metadata['type']:
                     return image
 
-    def find_keypair(self, keyname):
-        """
-            Returns True if keypair exists.
-        """
-        return keyname in [k.id for k in self.compute_client.keypairs.list()]
-
     def list_environments(self):
         """
             This method allows to get the list of environments.
