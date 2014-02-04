@@ -69,7 +69,7 @@ class RabbitSmokeTest(BaseTestCase):
                                  ' list for {ctlr} controller.'.format(
                                      ctlr=self.amqp_clients[0].host))
 
-        if len(self._controllers) != len(first_list[-1].split(',')[1:]):
+        if len(self._controllers) != self.amqp_clients[0].list_nodes():
             self.fail('Step 2 failed: Number of controllers is not equal to '
                       'number of cluster nodes.')
 
@@ -86,6 +86,6 @@ class RabbitSmokeTest(BaseTestCase):
                                  ' list for {ctlr} controller.'.format(
                                      ctlr=self.amqp_clients[0].host))
 
-        if len(self._controllers) != len(first_list[-1].split(',')[1:]):
+        if len(self._controllers) != self.amqp_clients[0].list_nodes():
             self.fail('Step 2 failed: Number of controllers is not equal to '
                       'number of cluster nodes.')
