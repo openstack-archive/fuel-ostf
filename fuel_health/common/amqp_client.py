@@ -40,8 +40,11 @@ class RabbitClient(object):
             timeout=self.timeout)
 
     def list_nodes(self):
-        output = self.ssh.exec_command('rabbitmqctl cluster_status')
-        return output.split('\r\n')[1:-2]
+        output = self.ssh.exec_command("rabbitmqctl cluster_status")
+        ind = output.find('{running_nodes,')
+        s = output[ind:]
+        num_node = s.count("rabbit@node")
+        return num_node
 
     def list_queues(self):
         query = self._query('queues?"columns=name&sort=name"', header=False)
