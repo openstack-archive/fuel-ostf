@@ -18,10 +18,11 @@ from bottle import route, run
 cluster_fixture = {
     1: {
         'cluster_meta': {
-            'mode': 'ha',
-            'release': {
-                'operating_system': 'rhel'
-            }
+            'release_id': 1,
+            'mode': 'ha'
+        },
+        'release_data': {
+            'operating_system': 'rhel'
         },
         'cluster_attributes': {
             'editable': {
@@ -31,10 +32,11 @@ cluster_fixture = {
     },
     2: {
         'cluster_meta': {
+            'release_id': 2,
             'mode': 'multinode',
-            'release': {
-                'operating_system': 'ubuntu'
-            }
+        },
+        'release_data': {
+            'operating_system': 'ubuntu'
         },
         'cluster_attributes': {
             'editable': {
@@ -44,10 +46,11 @@ cluster_fixture = {
     },
     3: {
         'cluster_meta': {
-            'mode': 'ha',
-            'release': {
-                'operating_system': 'rhel'
-            }
+            'release_id': 3,
+            'mode': 'ha'
+        },
+        'release_data': {
+            'operating_system': 'rhel'
         },
         'cluster_attributes': {
             'editable': {
@@ -64,10 +67,11 @@ cluster_fixture = {
     },
     4: {
         'cluster_meta': {
-            'mode': 'test_error',
-            'release': {
-                'operating_system': 'none'
-            }
+            'release_id': 4,
+            'mode': 'test_error'
+        },
+        'release_data': {
+            'operating_system': 'none'
         },
         'cluster_attributes': {
             'editable': {
@@ -81,6 +85,11 @@ cluster_fixture = {
 @route('/api/clusters/<id:int>')
 def serve_cluster_meta(id):
     return cluster_fixture[id]['cluster_meta']
+
+
+@route('/api/releases/<id:int>')
+def serve_cluster_release_info(id):
+    return cluster_fixture[id]['release_data']
 
 
 @route('/api/clusters/<id:int>/attributes')
