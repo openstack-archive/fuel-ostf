@@ -18,7 +18,8 @@ __profile__ = {
     "test_path": "fuel_plugin/tests/functional/dummy_tests/test_with_error.py",
     "description": "Test that introduces error while setting up",
     "deployment_tags": ['test_error'],
-    "test_runs_ordering_priority": 6
+    "test_runs_ordering_priority": 6,
+    "exclusive_testsets": []
 }
 
 import unittest
