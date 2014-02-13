@@ -84,6 +84,10 @@ class TestSet(BASE):
     deployment_tags = sa.Column(ARRAY(sa.String(64)))
     test_runs_ordering_priority = sa.Column(sa.Integer)
 
+    #list of test sets that cannot be executed simultaneously
+    #with current test set
+    exclusive_testsets = sa.Column(ARRAY(sa.String(128)))
+
     tests = relationship(
         'Test',
         backref='test_set',
