@@ -19,7 +19,9 @@ __profile__ = {
                   "deployment_types_tests/alternative_depl_tags_test.py"),
     "description": "Fake testset to test alternative deployment tags",
     "deployment_tags": ["alternative | alternative_test"],
-    "test_runs_ordering_priority": 5
+    "test_runs_ordering_priority": 5,
+    "master_testset": None,
+    "slave_testset": None
 }
 
 import unittest

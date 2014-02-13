@@ -84,6 +84,9 @@ class TestSet(BASE):
     deployment_tags = sa.Column(ARRAY(sa.String(64)))
     test_runs_ordering_priority = sa.Column(sa.Integer)
 
+    master_testset = sa.Column(sa.String(128))
+    slave_testset = sa.Column(sa.String(128))
+
     tests = relationship(
         'Test',
         backref='test_set',

@@ -18,7 +18,9 @@ __profile__ = {
     "test_path": "fuel_plugin/tests/functional/dummy_tests/stopped_test.py",
     "description": "Long running 25 secs fake tests",
     "deployment_tags": [],
-    "test_runs_ordering_priority": 2
+    "test_runs_ordering_priority": 2,
+    "master_testset": None,
+    "slave_testset": None
 }
 
 import time

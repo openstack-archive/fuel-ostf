@@ -19,7 +19,9 @@ __profile__ = {
                   "multinode_deployment.py"),
     "description": "Fake tests for multinode deployment on ubuntu",
     "deployment_tags": ["multinode", "ubuntu"],
-    "test_runs_ordering_priority": 4
+    "test_runs_ordering_priority": 4,
+    "master_testset": None,
+    "slave_testset": None
 }
 
 import unittest

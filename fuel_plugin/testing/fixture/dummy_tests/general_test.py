@@ -18,7 +18,9 @@ __profile__ = {
     "test_path": "fuel_plugin/tests/functional/dummy_tests/general_test.py",
     "description": "General fake tests",
     "deployment_tags": [],
-    "test_runs_ordering_priority": 1
+    "test_runs_ordering_priority": 1,
+    "master_testset": None,
+    "slave_testset": None
 }
 
 import time
