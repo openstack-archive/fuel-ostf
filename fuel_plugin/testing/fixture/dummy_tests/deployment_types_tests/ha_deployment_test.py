@@ -19,7 +19,8 @@ __profile__ = {
                   "ha_deployment_test.py"),
     "description": "Fake tests for HA deployment",
     "deployment_tags": ["Ha"],
-    "test_runs_ordering_priority": 3
+    "test_runs_ordering_priority": 3,
+    "exclusive_testsets": []
 }
 
 import unittest
