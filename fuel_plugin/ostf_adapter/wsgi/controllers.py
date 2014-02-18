@@ -17,7 +17,7 @@ import logging
 
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
-from pecan import rest, expose, request
+from pecan import conf, rest, expose, request
 
 from fuel_plugin.ostf_adapter import mixins
 from fuel_plugin.ostf_adapter.storage import models
@@ -136,7 +136,8 @@ class TestrunsController(BaseRestController):
                 request.session,
                 test_set,
                 metadata,
-                tests
+                tests,
+                conf.dbpath
             )
 
             res.append(test_run)
@@ -156,5 +157,7 @@ class TestrunsController(BaseRestController):
                 if status == 'stopped':
                     data.append(test_run.stop(request.session))
                 elif status == 'restarted':
-                    data.append(test_run.restart(request.session, tests=tests))
+                    data.append(test_run.restart(request.session,
+                                                 conf.dbpath,
+                                                 tests=tests))
         return data
