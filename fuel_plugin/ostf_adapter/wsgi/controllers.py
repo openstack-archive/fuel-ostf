@@ -161,5 +161,5 @@ class TestrunsController(BaseRestController):
                 if status == 'stopped':
                     data.append(test_run.stop(request.session))
                 elif status == 'restarted':
-                    data.append(test_run.restart(request.session, tests=tests))
+                    data.append(test_run.restart(tests=tests))
         return data
