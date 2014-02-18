@@ -14,41 +14,62 @@
 
 import os
 import logging
+import signal
 
 from pecan import conf
-from fuel_plugin.ostf_adapter.nose_plugin import nose_storage_plugin
 from fuel_plugin.ostf_adapter.nose_plugin import nose_test_runner
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
-from fuel_plugin.ostf_adapter.storage import storage_utils, engine, models
+from fuel_plugin.ostf_adapter.storage import engine, models
+
+from fuel_plugin.ostf_adapter.nose_plugin import nose_storage_plugin
 
 
 LOG = logging.getLogger(__name__)
 
 
+class InterruptTestRunException(KeyboardInterrupt):
+    ''' Current class exception is used for cleanup action
+    as KeyboardInterrupt is the only exception that is reraised by
+    unittest (and nose correspondingly) into outside environment
+    '''
+    pass
+
+
 class NoseDriver(object):
     def __init__(self):
         LOG.warning('Initializing Nose Driver')
-        self._named_threads = {}
+
+    def run(self, test_run_id, tests=None):
         session = engine.get_session()
+
         with session.begin(subtransactions=True):
-            storage_utils.update_all_running_test_runs(session)
+            test_run = session.query(models.TestRun)\
+                .filter_by(id=test_run_id)\
+                .one()
+            test_set = session.query(models.TestSet)\
+                .filter_by(id=test_run.test_set_id)\
+                .one()
 
-    def check_current_running(self, unique_id):
-        return unique_id in self._named_threads
+            tests = tests or test_run.enabled_tests
+            if tests:
+                argv_add = [nose_utils.modify_test_name_for_nose(test)
+                            for test in tests]
 
-    def run(self, test_run, test_set, tests=None):
-        tests = tests or test_run.enabled_tests
-        if tests:
-            argv_add = [nose_utils.modify_test_name_for_nose(test) for test in
-                        tests]
+            else:
+                argv_add = [test_set.test_path] + test_set.additional_arguments
 
-        else:
-            argv_add = [test_set.test_path] + test_set.additional_arguments
-
-        self._named_threads[test_run.id] = nose_utils.run_proc(
-            self._run_tests, test_run.id, test_run.cluster_id, argv_add)
+            test_run.pid = nose_utils.run_proc(self._run_tests,
+                                               test_run.id,
+                                               test_run.cluster_id,
+                                               argv_add).pid
 
     def _run_tests(self, test_run_id, cluster_id, argv_add):
+        cleanup_flag = False
+
+        def raise_exception_handler(signum, stack_frame):
+            raise InterruptTestRunException()
+
+        signal.signal(signal.SIGUSR1, raise_exception_handler)
         session = engine.get_session()
         try:
             nose_test_runner.SilentTestProgram(
@@ -56,41 +77,41 @@ class NoseDriver(object):
                     test_run_id, str(cluster_id))],
                 exit=False,
                 argv=['ostf_tests'] + argv_add)
-            self._named_threads.pop(int(test_run_id), None)
+
+        except InterruptTestRunException:
+            testset_id = session.query(models.TestRun.test_set_id)\
+                .filter_by(id=test_run_id)\
+                .scalar()
+            cleanup = session.query(models.TestSet.cleanup_path)\
+                .filter_by(id=testset_id)\
+                .scalar()
+
+            if cleanup:
+                cleanup_flag = True
+
         except Exception:
             LOG.exception('Test run ID: %s', test_run_id)
         finally:
+            updated_data = {'status': 'finished',
+                            'pid': None}
+
             models.TestRun.update_test_run(
-                session, test_run_id, status='finished')
+                session, test_run_id, updated_data)
 
-    def kill(self, test_run_id, cluster_id, cleanup=None):
+            if cleanup_flag:
+                self._clean_up(test_run_id, cluster_id, cleanup)
+
+    def kill(self, test_run_id, cluster_id):
         session = engine.get_session()
-        if test_run_id in self._named_threads:
+        pid = session.query(models.TestRun.pid)\
+            .filter(models.TestRun.id == test_run_id)\
+            .scalar()
 
-            try:
-                self._named_threads[test_run_id].terminate()
-            except OSError as e:
-                if e.errno != os.errno.ESRCH:
-                    raise
-
-                LOG.warning(
-                    'There is no process for test_run with following id - %s',
-                    test_run_id
-                )
-
-            self._named_threads.pop(test_run_id, None)
-
-            if cleanup:
-                nose_utils.run_proc(
-                    self._clean_up,
-                    test_run_id,
-                    cluster_id,
-                    cleanup)
-            else:
-                models.TestRun.update_test_run(
-                    session, test_run_id, status='finished')
+        if pid:
+            os.kill(pid, signal.SIGUSR1)
 
             return True
+
         return False
 
     def _clean_up(self, test_run_id, cluster_id, cleanup):
@@ -117,7 +138,3 @@ class NoseDriver(object):
                 test_run_id,
                 cluster_id
             )
-
-        finally:
-            models.TestRun.update_test_run(
-                session, test_run_id, status='finished')
