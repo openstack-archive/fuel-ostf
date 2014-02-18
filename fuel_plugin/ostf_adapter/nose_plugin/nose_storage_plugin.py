@@ -26,6 +26,14 @@ from fuel_plugin.ostf_adapter.storage import models, engine
 LOG = logging.getLogger(__name__)
 
 
+class InterruptTestRunException(KeyboardInterrupt):
+    ''' Current class exception is used for cleanup action
+    as KeyboardInterrupt is the only exception that is reraised by
+    unittest (and nose correspondingly) into outside environment
+    '''
+    pass
+
+
 class StoragePlugin(plugins.Plugin):
     enabled = True
     name = 'storage'
@@ -90,6 +98,8 @@ class StoragePlugin(plugins.Plugin):
         elif issubclass(err[0], unittest2.SkipTest):
             LOG.warning('%s is skipped', test.id())
             self._add_message(test, err=err, status='skipped')
+        elif issubclass(err[0], InterruptTestRunException):
+            raise
         else:
             LOG.error('%s', test.id(), exc_info=err)
             self._add_message(test, err=err, status='error')
