@@ -13,6 +13,7 @@
 #    under the License.
 
 from datetime import datetime
+import logging
 
 import sqlalchemy as sa
 from sqlalchemy import desc
@@ -23,6 +24,9 @@ from sqlalchemy.dialects.postgres import ARRAY
 
 from fuel_plugin.ostf_adapter import nose_plugin
 from fuel_plugin.ostf_adapter.storage import fields, engine
+
+
+LOG = logging.getLogger(__name__)
 
 
 BASE = declarative_base()
@@ -179,7 +183,8 @@ class Test(BASE):
         session.query(cls). \
             filter(cls.name.in_(tests_names),
                    cls.test_run_id == test_run_id). \
-            update({'status': status}, synchronize_session=False)
+            update({'status': status, 'time_taken': None},
+                   synchronize_session=False)
 
     def copy_test(self, test_run, predefined_tests):
         '''
@@ -216,6 +221,7 @@ class TestRun(BASE):
     meta = sa.Column(fields.JsonField())
     started_at = sa.Column(sa.DateTime, default=datetime.utcnow)
     ended_at = sa.Column(sa.DateTime)
+    pid = sa.Column(sa.Integer)
 
     test_set_id = sa.Column(sa.String(128))
     cluster_id = sa.Column(sa.Integer)
@@ -242,11 +248,10 @@ class TestRun(BASE):
         cascade='delete'
     )
 
-    def update(self, session, status):
+    def update(self, status):
         self.status = status
         if status == 'finished':
             self.ended_at = datetime.utcnow()
-        session.add(self)
 
     @property
     def enabled_tests(self):
@@ -332,11 +337,8 @@ class TestRun(BASE):
         return test_run
 
     @classmethod
-    def update_test_run(cls, session, test_run_id, status=None):
-        updated_data = {}
-        if status:
-            updated_data['status'] = status
-        if status in ['finished']:
+    def update_test_run(cls, session, test_run_id, updated_data):
+        if updated_data.get('status') in ['finished']:
             updated_data['ended_at'] = datetime.utcnow()
 
         session.query(cls). \
@@ -378,26 +380,27 @@ class TestRun(BASE):
                     metadata['cluster_id'], tests=tests)
 
             retvalue = test_run.frontend
-            session.close()
-
-            plugin.run(test_run, test_set)
+            plugin.run(test_run.id)
 
             return retvalue
         return {}
 
-    def restart(self, session, tests=None):
+    def restart(self, tests=None):
         """Restart test run with
             if tests given they will be enabled
         """
+        session = engine.get_session()
         if TestRun.is_last_running(session,
                                    self.test_set_id,
                                    self.cluster_id):
             plugin = nose_plugin.get_plugin(self.test_set.driver)
-            self.update(session, 'running')
-            if tests:
-                Test.update_test_run_tests(
-                    session, self.id, tests)
-            plugin.run(self, self.test_set, tests)
+            with session.begin(subtransactions=True):
+                self.update('running')
+                if tests:
+                    Test.update_test_run_tests(
+                        session, self.id, tests)
+
+            plugin.run(self.id, tests)
             return self.frontend
         return {}
 
@@ -405,9 +408,7 @@ class TestRun(BASE):
         """Stop test run if running
         """
         plugin = nose_plugin.get_plugin(self.test_set.driver)
-        killed = plugin.kill(
-            self.id, self.cluster_id,
-            cleanup=self.test_set.cleanup_path)
+        killed = plugin.kill(self.id, self.cluster_id)
         if killed:
             Test.update_running_tests(
                 session, self.id, status='stopped')
