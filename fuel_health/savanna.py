@@ -220,7 +220,8 @@ class SavannaTest(nmanager.OfficialClientTest):
     def _try_port(self, host, port):
         i = 0
         while True:
-            cmd = ('nc -v -z -w 60 %s %s | grep succeeded' % (host, port))
+            cmd = ("timeout 60 bash -c 'echo >/dev/"
+                   "tcp/{0}/{1}'; echo $?".format(host, port))
             output, output_err = ssh_command(cmd)
             print('NC output after %s seconds is "%s"' % (i * 10, output))
             LOG.debug('NC output after %s seconds is "%s"',
