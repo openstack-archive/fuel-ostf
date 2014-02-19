@@ -240,6 +240,9 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             Returns 'OK'.
         """
 
+        # wait while deployment will started
+        environments = self.list_environments()
+
         infa = self.get_environment(environment_id)
         while infa.status != 'ready':
             time.sleep(5)
