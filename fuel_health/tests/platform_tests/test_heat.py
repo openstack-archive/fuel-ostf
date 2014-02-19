@@ -29,6 +29,9 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         1. Fedora-17 image with pre-installed cfntools and cloud-init packages
            should be imported.
     """
+    def setUp(self):
+        super(HeatSmokeTests, self).setUp()
+        self.instance = []
 
     def test_actions(self):
         """Typical stack actions: create, update, delete, show details, etc.
@@ -288,13 +291,20 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     stack.id, 'CREATE_COMPLETE', 600, 15)
 
         # find just created instance
-        for instance in self.compute_client.servers.list():
-            if instance.name.startswith(stack.stack_name):
-                self.instance = instance
-                break
-        else:
-            self.fail("Instance for the %s stack "
-                      "was not created." % stack.stack_name)
+        instance_list = self.compute_client.servers.list()
+        LOG.info('servers list is {0}'.format(instance_list))
+        img_id = self._find_heat_image_id('F17-x86_64-cfntools')[0]
+        LOG.info('expected img_id is {0}'.format(img_id))
+
+        for i in instance_list:
+            details = self.compute_client.servers.get(server=i)
+            LOG.info('instance details is {0}'.format(details.image))
+            if details.image['id'] == img_id:
+                self.instance.append(i)
+
+        if not self.instance:
+            self.fail("Failed step: 7 Instance for the {0} stack "
+                      "was not created.".format(self.instance))
 
         floating_ip = self.verify(10, self._create_floating_ip, 8,
                                   "Floating IP can not be created.",
@@ -303,7 +313,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         self.verify(10, self._assign_floating_ip_to_instance, 9,
                     "Floating IP can not be assigned.",
                     'assigning floating IP',
-                    self.compute_client, self.instance, floating_ip)
+                    self.compute_client, self.instance[0], floating_ip)
 
         vm_connection = "ssh -o StrictHostKeyChecking=no -i %s %s@%s" % (
             path_to_key, "ec2-user", floating_ip.ip)
@@ -323,7 +333,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     "Stack failed to launch the 2nd instance "
                     "per autoscaling alarm.",
                     "launching the new instance per autoscaling alarm",
-                    stack.stack_name, 2, 180, 10)
+                    len(instance_list) + 1, 180, 10)
 
         self.verify(180, self._release_vm_cpu, 13,
                     "Cannot kill the process on VM to turn CPU load off.",
@@ -334,7 +344,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     "Stack failed to terminate the 2nd instance "
                     "per autoscaling alarm.",
                     "terminating the 2nd instance per autoscaling alarm",
-                    stack.stack_name, 1, 300, 10)
+                    len(instance_list), 300, 10)
 
         # delete private key file
         self.verify(10, self._delete_key_file, 15,
