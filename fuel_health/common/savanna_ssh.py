@@ -18,11 +18,9 @@
 import logging
 import paramiko
 
-from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.exceptions import SSHExecCommandFailed
 
 import fuel_health.config
-import fuel_health.nmanager as nmanager
 
 LOG = logging.getLogger(__name__)
 
@@ -46,4 +44,5 @@ def ssh_command(cmd):
     except SSHExecCommandFailed as exc:
         output_msg = "Command failed."
         LOG.debug(exc)
-        self.fail(output_msg)
+        print output_msg
+        raise exc
