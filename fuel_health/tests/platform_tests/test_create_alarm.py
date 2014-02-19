@@ -37,7 +37,7 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
                         LOG.debug(traceback.format_exc())
 
     def test_create_alarm(self):
-        """Ceilometer create, update, check, delete alarm.
+        """Ceilometer create, update, check, delete alarm
         Target component: Ceilometer
 
         Scenario:

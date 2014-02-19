@@ -26,7 +26,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
     """
 
     def test_check_alarm_state(self):
-        """Ceilometer test to check the alarm can change status.
+        """Ceilometer test to check the alarm can change status
         Target component: Ceilometer
 
         Scenario:
@@ -35,7 +35,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
             3. Create metrics for instance.
             4. Create a new alarm.
             5. Verify that status become "alarm".
-        Duration: 1400 s.
+        Duration: 800 s.
 
         Deployment tags: Ceilometer
         """
@@ -93,7 +93,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
                     create_alarm_resp.alarm_id)
 
     def test_create_sample(self):
-        """Ceilometer create, check sample,check statistics  .
+        """Ceilometer create, check sample,check statistics
         Target component: Ceilometer
 
         Scenario:
