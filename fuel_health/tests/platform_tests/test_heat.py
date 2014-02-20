@@ -31,6 +31,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
     """
     def setUp(self):
         super(HeatSmokeTests, self).setUp()
+        if 'ha' in self.config.mode:
+            self.fail('Is not implemented for this deployment mode')
         self.instance = []
 
     def test_actions(self):
