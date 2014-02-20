@@ -126,7 +126,7 @@ class ComputeFault(FuelException):
 
 
 class ImageFault(FuelException):
-    message = "Got image fault"
+    message = "Image for tests not found" 
 
 
 class IdentityError(FuelException):
