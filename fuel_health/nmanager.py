@@ -246,6 +246,20 @@ class OfficialClientTest(fuel_health.test.TestCase):
             LOG.debug(traceback.format_exc())
         return flavor
 
+    def get_image_from_name(self):
+        image_name = self.manager.config.compute.image_name
+        images = self.compute_client.images.list()
+        image_id = ''
+        LOG.debug(images)
+        if images:
+            for im in images:
+                LOG.debug(im.name)
+                if im.name.strip().lower() == image_name.strip().lower():
+                    image_id = im.id
+        else:
+            raise exceptions.ImageFault
+        return image_id
+
     def _delete_server(self, server):
         LOG.debug("Deleting server.")
         self.compute_client.servers.delete(server)
@@ -298,6 +312,17 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 trace=self.manager.traceback))
             self.fail("Keystone client is not available. Please,"
                       " refer to OpenStack logs to fix this problem")
+
+    def check_image_exists(self):
+        try:
+            if not self.get_image_from_name():
+                self.fail(
+                    "Unable to retrieve "
+                    "image for tests. Please, check if you have {0}"
+                    " image in Glance.".format(
+                        self.manager.config.compute.image_name))
+        except exceptions.ImageFault as exc:
+            self.fail("Unable to retrieve any image: {0}".format(exc))
 
     @classmethod
     def tearDownClass(cls):
@@ -446,7 +471,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         return nets
 
     def _create_server(self, client, name, security_groups):
-        base_image_id = get_image_from_name()
+        base_image_id = self.get_image_from_name()
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in
                        self.compute_client.networks.list()
@@ -582,21 +607,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         if cls.manager.clients_initialized:
             cls._clean_floating_ips()
             cls._clear_networks()
-
-
-def get_image_from_name():
-    cfg = config.FuelConfig()
-    image_name = cfg.compute.image_name
-    image_client = OfficialClientManager()._get_compute_client()
-    images = image_client.images.list()
-    LOG.debug(images)
-    if images:
-        for im in images:
-            LOG.debug(im.name)
-            if im.name.strip().lower() == image_name.strip().lower():
-                return im.id
-    else:
-        raise exceptions.ImageFault
 
 
 class SanityChecksTest(OfficialClientTest):
@@ -750,7 +760,7 @@ class SmokeChecksTest(OfficialClientTest):
 
     def _create_server(self, client):
         name = rand_name('ost1_test-volume-instance')
-        base_image_id = get_image_from_name()
+        base_image_id = self.get_image_from_name()
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in
                        self.compute_client.networks.list()
