@@ -40,6 +40,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         Deployment tags: Ceilometer
         """
 
+        self.check_image_exists()
         fail_msg = "Creation instance failed"
 
         create_kwargs = {}

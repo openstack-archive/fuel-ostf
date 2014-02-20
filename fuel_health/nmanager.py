@@ -299,6 +299,17 @@ class OfficialClientTest(fuel_health.test.TestCase):
             self.fail("Keystone client is not available. Please,"
                       " refer to OpenStack logs to fix this problem")
 
+    def check_image_exists(self):
+        try:
+            LOG.debug("Image name: ", get_image_from_name())
+        except Exception:
+            LOG.debug("Image is unavailable.")
+            cfg = config.FuelConfig()
+            image_name = cfg.compute.image_name
+            self.fail("Unable to retrieve "
+                      "image for tests. Please, check "
+                      "if you have %s image in Glance." % image_name)
+
     @classmethod
     def tearDownClass(cls):
         cls.error_msg = []

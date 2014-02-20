@@ -147,6 +147,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Duration: 200 s.
 
         """
+        self.check_image_exists()
         if not self.security_groups:
             self.security_groups[self.tenant_id] = self.verify(
                 25,
@@ -187,6 +188,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Duration: 300 s.
 
         """
+        self.check_image_exists()
         if not self.security_groups:
                 self.security_groups[self.tenant_id] = self.verify(
                     25, self._create_security_group, 1,
@@ -246,6 +248,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Duration: 300 s.
 
         """
+        self.check_image_exists()
         if not self.security_groups:
                 self.security_groups[self.tenant_id] = self.verify(
                     25, self._create_security_group, 1,
@@ -308,6 +311,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
         Deployment tags: nova_network
         """
+        self.check_image_exists()
         if not self.security_groups:
             self.security_groups[self.tenant_id] = self.verify(
                 25, self._create_security_group, 1,
