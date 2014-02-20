@@ -13,10 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import time
 import json
 import logging
+import time
 import traceback
+
+import muranoclient.common.exceptions as exceptions
+
 import fuel_health.nmanager
 
 LOG = logging.getLogger(__name__)
@@ -27,6 +30,15 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
     Manager that provides access to the Murano python client for
     calling Murano API.
     """
+    def setUp(self):
+        super(MuranoTest, self).setUp()
+        self.check_clients_state()
+        self.murano_available = True
+        try:
+            self.murano_client.environments.list()
+        except exceptions.CommunicationError:
+            self.murano_available = False
+            self.fail("Murano service is not available")
 
     def tearDown(self):
         """
@@ -34,7 +46,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             after the Murano OSTF tests
         """
         super(MuranoTest, self).tearDown()
-        if self.manager.clients_initialized:
+        if self.murano_available:
             for env in self.list_environments():
                 if 'ost1_test-Murano_env' in env.name:
                     try:
