@@ -40,6 +40,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         Deployment tags: Ceilometer
         """
 
+        self.check_image_exists()
         fail_msg = "Creation instance failed"
 
         create_kwargs = {}
@@ -50,7 +51,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
 
             create_kwargs = {'nics': [{'net-id': network[0]}]}
 
-        image = nmanager.get_image_from_name()
+        image = self.get_image_from_name()
         name = rand_name('ost1_test-instance-alarm_actions')
         self.instance = self.verify(600, self.compute_client.servers.create, 1,
                                     fail_msg,
@@ -103,13 +104,13 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         Duration: 40 s.
         Deployment tags: Ceilometer
         """
-
+        self.check_image_exists()
         fail_msg_1 = 'Sample can not be created'
 
         sample = self.verify(30, self.create_sample, 1,
                              fail_msg_1,
                              "Sample creating",
-                             resource_id=nmanager.get_image_from_name(),
+                             resource_id=self.get_image_from_name(),
                              counter_name=self.meter_name_image,
                              counter_type=self.counter_type,
                              counter_unit=self.counter_unit,
@@ -120,7 +121,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
 
         self.verify_response_body_value(
             body_structure=sample[0].resource_id,
-            value=nmanager.get_image_from_name(),
+            value=self.get_image_from_name(),
             msg=fail_msg_2,
             failed_step=2)
 
