@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2013 Mirantis, Inc.
 # All Rights Reserved.
 #
@@ -258,5 +256,10 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
         deployments = self.murano_client.deployments.list(environment_id)
         for depl in deployments:
+            # Save the information about all deployments
+            LOG.debug("Environment state: {0}".format(depl.state))
+            r = self.murano_client.deployments.reports(environment_id, depl.id)
+            LOG.debug("Reports: {0}".format(r))
+
             assert depl.state == 'success'
         return 'OK'
