@@ -18,6 +18,7 @@ import json
 import logging
 import traceback
 import fuel_health.nmanager
+import muranoclient.common.exceptions as exceptions
 
 LOG = logging.getLogger(__name__)
 
@@ -27,6 +28,14 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
     Manager that provides access to the Murano python client for
     calling Murano API.
     """
+    def setUp(self):
+        super(MuranoTest, self).setUp()
+        self.murano_available = True
+        try:
+            self.murano_client.environments.list()
+        except exceptions.CommunicationError:
+            self.murano_available = False
+            self.fail("Murano service is not available")
 
     def tearDown(self):
         """
@@ -35,12 +44,13 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         """
         super(MuranoTest, self).tearDown()
         if self.manager.clients_initialized:
-            for env in self.list_environments():
-                if 'ost1_test-Murano_env' in env.name:
-                    try:
-                        self.delete_environment(env.id)
-                    except:
-                        LOG.warning(traceback.format_exc())
+            if self.murano_available:
+                for env in self.list_environments():
+                    if 'ost1_test-Murano_env' in env.name:
+                        try:
+                            self.delete_environment(env.id)
+                        except:
+                            LOG.warning(traceback.format_exc())
 
     def find_murano_image(self, image_type):
         """
