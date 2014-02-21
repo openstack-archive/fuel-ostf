@@ -452,8 +452,11 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                        self.compute_client.networks.list()
                        if net.label == self.private_net]
 
-            create_kwargs = {'nics': [{'net-id': network[0]}],
-                             'security_groups': security_groups}
+            if network:
+                create_kwargs = {'nics': [{'net-id': network[0]}],
+                                 'security_groups': security_groups}
+            else:
+                self.fail('Private network was not created by default')
         else:
             create_kwargs = {'security_groups': security_groups}
 
@@ -755,8 +758,10 @@ class SmokeChecksTest(OfficialClientTest):
             network = [net.id for net in
                        self.compute_client.networks.list()
                        if net.label == self.private_net]
-
-            create_kwargs = {'nics': [{'net-id': network[0]}]}
+            if network:
+                create_kwargs = {'nics': [{'net-id': network[0]}]}
+            else:
+                self.fail('Private network was not created by default')
             server = client.servers.create(
                 name, base_image_id, self.smoke_flavor.id, **create_kwargs)
         else:

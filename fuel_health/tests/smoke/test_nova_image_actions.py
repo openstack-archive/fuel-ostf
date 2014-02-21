@@ -86,12 +86,14 @@ class TestImageAction(nmanager.SmokeChecksTest):
             network = [net.id for net in
                        self.compute_client.networks.list()
                        if net.label == self.private_net]
-
-            create_kwargs = {
-                'nics': [
-                    {'net-id': network[0]},
-                ],
-            }
+            if network:
+                create_kwargs = {
+                    'nics': [
+                        {'net-id': network[0]},
+                    ],
+                }
+            else:
+                self.fail('Private network was not created by default')
             server = client.servers.create(name=name,
                                            image=image_id,
                                            flavor=flavor_id, **create_kwargs)
