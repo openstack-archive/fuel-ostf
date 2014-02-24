@@ -45,19 +45,19 @@ class TestsetsController(BaseRestController):
     @expose('json')
     def get(self, cluster):
         mixins.discovery_check(request.session, cluster)
-        with request.session.begin(subtransactions=True):
-            needed_testsets = request.session\
-                .query(models.ClusterTestingPattern.test_set_id)\
-                .filter_by(cluster_id=cluster)
 
-            test_sets = request.session.query(models.TestSet)\
-                .filter(models.TestSet.id.in_(needed_testsets))\
-                .order_by(models.TestSet.test_runs_ordering_priority)\
-                .all()
+        needed_testsets = request.session\
+            .query(models.ClusterTestingPattern.test_set_id)\
+            .filter_by(cluster_id=cluster)
 
-            if test_sets:
-                return [item.frontend for item in test_sets]
-            return {}
+        test_sets = request.session.query(models.TestSet)\
+            .filter(models.TestSet.id.in_(needed_testsets))\
+            .order_by(models.TestSet.test_runs_ordering_priority)\
+            .all()
+
+        if test_sets:
+            return [item.frontend for item in test_sets]
+        return {}
 
 
 class TestsController(BaseRestController):
@@ -65,25 +65,24 @@ class TestsController(BaseRestController):
     @expose('json')
     def get(self, cluster):
         mixins.discovery_check(request.session, cluster)
-        with request.session.begin(subtransactions=True):
-            needed_tests_list = request.session\
-                .query(models.ClusterTestingPattern.tests)\
-                .filter_by(cluster_id=cluster)
+        needed_tests_list = request.session\
+            .query(models.ClusterTestingPattern.tests)\
+            .filter_by(cluster_id=cluster)
 
-            result = []
-            for tests in needed_tests_list:
-                tests_to_return = request.session.query(models.Test)\
-                    .filter(models.Test.name.in_(tests[0]))\
-                    .all()
+        result = []
+        for tests in needed_tests_list:
+            tests_to_return = request.session.query(models.Test)\
+                .filter(models.Test.name.in_(tests[0]))\
+                .all()
 
-                result.extend(tests_to_return)
+            result.extend(tests_to_return)
 
-            result.sort(key=lambda test: test.name)
+        result.sort(key=lambda test: test.name)
 
-            if result:
-                return [item.frontend for item in result]
+        if result:
+            return [item.frontend for item in result]
 
-            return {}
+        return {}
 
 
 class TestrunsController(BaseRestController):
@@ -94,32 +93,29 @@ class TestrunsController(BaseRestController):
 
     @expose('json')
     def get_all(self):
-        with request.session.begin(subtransactions=True):
-            test_runs = request.session.query(models.TestRun).all()
+        test_runs = request.session.query(models.TestRun).all()
 
-            return [item.frontend for item in test_runs]
+        return [item.frontend for item in test_runs]
 
     @expose('json')
     def get_one(self, test_run_id):
-        with request.session.begin(subtransactions=True):
-            test_run = request.session.query(models.TestRun)\
-                .filter_by(id=test_run_id).first()
-            if test_run and isinstance(test_run, models.TestRun):
-                return test_run.frontend
-            return {}
+        test_run = request.session.query(models.TestRun)\
+            .filter_by(id=test_run_id).first()
+        if test_run and isinstance(test_run, models.TestRun):
+            return test_run.frontend
+        return {}
 
     @expose('json')
     def get_last(self, cluster_id):
-        with request.session.begin(subtransactions=True):
-            test_run_ids = request.session.query(func.max(models.TestRun.id)) \
-                .group_by(models.TestRun.test_set_id)\
-                .filter_by(cluster_id=cluster_id)
+        test_run_ids = request.session.query(func.max(models.TestRun.id)) \
+            .group_by(models.TestRun.test_set_id)\
+            .filter_by(cluster_id=cluster_id)
 
-            test_runs = request.session.query(models.TestRun)\
-                .options(joinedload('tests'))\
-                .filter(models.TestRun.id.in_(test_run_ids))
+        test_runs = request.session.query(models.TestRun)\
+            .options(joinedload('tests'))\
+            .filter(models.TestRun.id.in_(test_run_ids))
 
-            return [item.frontend for item in test_runs]
+        return [item.frontend for item in test_runs]
 
     @expose('json')
     def post(self):
@@ -131,11 +127,10 @@ class TestrunsController(BaseRestController):
             metadata = test_run['metadata']
             tests = test_run.get('tests', [])
 
-            with request.session.begin(subtransactions=True):
-                test_set = models.TestSet.get_test_set(
-                    request.session,
-                    test_set
-                )
+            test_set = models.TestSet.get_test_set(
+                request.session,
+                test_set
+            )
 
             test_run = models.TestRun.start(
                 request.session,
