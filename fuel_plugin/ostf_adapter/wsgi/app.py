@@ -48,7 +48,8 @@ def setup_config(custom_pecan_config):
 
 def setup_app(config=None):
     setup_config(config or {})
-    app_hooks = [hooks.SessionHook(), hooks.ExceptionHandling()]
+    app_hooks = [hooks.SessionHook(dbpath=pecan.conf.dbpath),
+                 hooks.ExceptionHandling()]
     app = pecan.make_app(
         pecan.conf.app.root,
         debug=pecan.conf.debug,
