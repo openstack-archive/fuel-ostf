@@ -12,48 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from pecan import conf
 from sqlalchemy import create_engine, orm, pool
 
 
-_ENGINE = None
-_MAKER = None
-_REDISINST = None
+def get_db_toolkit(dbpath):
+    engine = create_engine(dbpath, poolclass=pool.NullPool)
+    session = orm.Session(bind=engine)
 
-
-def get_session(autocommit=True, expire_on_commit=False):
-    """Return a SQLAlchemy session."""
-    global _MAKER
-    global _SLAVE_MAKER
-    maker = _MAKER
-
-    if maker is None:
-        engine = get_engine()
-        maker = get_maker(engine, autocommit, expire_on_commit)
-
-    else:
-        _MAKER = maker
-
-    session = maker()
-    return session
-
-
-def get_engine(dbpath=None, pool_type=None):
-    """Return a SQLAlchemy engine."""
-    global _ENGINE
-    engine = _ENGINE
-
-    if engine is None:
-        dbpath = dbpath if dbpath is not None else conf.dbpath
-        engine = create_engine(dbpath,
-                               poolclass=pool_type or pool.NullPool)
-    _ENGINE = engine
-    return engine
-
-
-def get_maker(engine, autocommit=True, expire_on_commit=False):
-    """Return a SQLAlchemy sessionmaker using the given engine."""
-    return orm.sessionmaker(
-        bind=engine,
-        autocommit=autocommit,
-        expire_on_commit=expire_on_commit)
+    return {'engine': engine, 'session': session}

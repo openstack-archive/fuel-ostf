@@ -16,9 +16,12 @@
 import requests
 from pecan import conf
 from sqlalchemy.orm import joinedload
+import logging
 
-from fuel_plugin.ostf_adapter.storage import models, engine
+from fuel_plugin.ostf_adapter.storage import models
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
+
+LOG = logging.getLogger(__name__)
 
 REQ_SES = requests.Session()
 REQ_SES.trust_env = False
@@ -40,25 +43,24 @@ def clean_db(eng):
 
 
 def cache_test_repository(session):
-    with session.begin(subtransactions=True):
-        test_repository = session.query(models.TestSet)\
-            .options(joinedload('tests'))\
-            .all()
+    test_repository = session.query(models.TestSet)\
+        .options(joinedload('tests'))\
+        .all()
 
-        crucial_tests_attrs = ['name', 'deployment_tags']
-        for test_set in test_repository:
-            data_elem = dict()
+    crucial_tests_attrs = ['name', 'deployment_tags']
+    for test_set in test_repository:
+        data_elem = dict()
 
-            data_elem['test_set_id'] = test_set.id
-            data_elem['deployment_tags'] = test_set.deployment_tags
-            data_elem['tests'] = []
+        data_elem['test_set_id'] = test_set.id
+        data_elem['deployment_tags'] = test_set.deployment_tags
+        data_elem['tests'] = []
 
-            for test in test_set.tests:
-                test_dict = dict([(attr_name, getattr(test, attr_name))
-                                  for attr_name in crucial_tests_attrs])
-                data_elem['tests'].append(test_dict)
+        for test in test_set.tests:
+            test_dict = dict([(attr_name, getattr(test, attr_name))
+                              for attr_name in crucial_tests_attrs])
+            data_elem['tests'].append(test_dict)
 
-            TEST_REPOSITORY.append(data_elem)
+        TEST_REPOSITORY.append(data_elem)
 
 
 def discovery_check(session, cluster):
@@ -69,44 +71,38 @@ def discovery_check(session, cluster):
         'deployment_tags': cluster_deployment_args
     }
 
-    with session.begin(subtransactions=True):
-        cluster_state = session.query(models.ClusterState)\
-            .filter_by(id=cluster_data['cluster_id'])\
-            .first()
+    cluster_state = session.query(models.ClusterState)\
+        .filter_by(id=cluster_data['cluster_id'])\
+        .first()
 
     if not cluster_state:
-        with session.begin(subtransactions=True):
-            session.add(
-                models.ClusterState(
-                    id=cluster_data['cluster_id'],
-                    deployment_tags=list(cluster_data['deployment_tags'])
-                )
+        session.add(
+            models.ClusterState(
+                id=cluster_data['cluster_id'],
+                deployment_tags=list(cluster_data['deployment_tags'])
             )
+        )
 
-        with session.begin(subtransactions=True):
-            _add_cluster_testing_pattern(session, cluster_data)
+        #flush data to db, cuz _add_cluster_testing_pattern
+        #is dependent on it
+        session.commit()
+
+        _add_cluster_testing_pattern(session, cluster_data)
 
         return
 
     old_deployment_tags = cluster_state.deployment_tags
     if set(old_deployment_tags) != cluster_data['deployment_tags']:
-        with session.begin(subtransactions=True):
-            #delete testruns and their tests if cluster was redeployed
-            session.query(models.ClusterTestingPattern)\
-                .filter_by(cluster_id=cluster_state.id)\
-                .delete()
+        session.query(models.ClusterTestingPattern)\
+            .filter_by(cluster_id=cluster_state.id)\
+            .delete()
 
-        #separate block "with" is need here to resolve
-        #situation where previous deletion blocks table
-        #that is using in following update
-        with session.begin(subtransactions=True):
-            #make "rediscovering" of testsets for redeployed cluster
-            _add_cluster_testing_pattern(session, cluster_data)
+        _add_cluster_testing_pattern(session, cluster_data)
 
-            cluster_state.deployment_tags = \
-                list(cluster_data['deployment_tags'])
+        cluster_state.deployment_tags = \
+            list(cluster_data['deployment_tags'])
 
-            session.merge(cluster_state)
+        session.merge(cluster_state)
 
 
 def _get_cluster_depl_tags(cluster_id):
@@ -166,29 +162,28 @@ def _get_cluster_depl_tags(cluster_id):
 
 
 def _add_cluster_testing_pattern(session, cluster_data):
-    with session.begin(subtransactions=True):
-        to_database = []
-        for test_set in TEST_REPOSITORY:
-            if nose_utils.process_deployment_tags(
-                cluster_data['deployment_tags'],
-                test_set['deployment_tags']
-            ):
+    to_database = []
+    for test_set in TEST_REPOSITORY:
+        if nose_utils.process_deployment_tags(
+            cluster_data['deployment_tags'],
+            test_set['deployment_tags']
+        ):
 
-                testing_pattern = dict()
-                testing_pattern['cluster_id'] = cluster_data['cluster_id']
-                testing_pattern['test_set_id'] = test_set['test_set_id']
-                testing_pattern['tests'] = []
+            testing_pattern = dict()
+            testing_pattern['cluster_id'] = cluster_data['cluster_id']
+            testing_pattern['test_set_id'] = test_set['test_set_id']
+            testing_pattern['tests'] = []
 
-                for test in test_set['tests']:
-                    if nose_utils.process_deployment_tags(
-                        cluster_data['deployment_tags'],
-                        test['deployment_tags']
-                    ):
+            for test in test_set['tests']:
+                if nose_utils.process_deployment_tags(
+                    cluster_data['deployment_tags'],
+                    test['deployment_tags']
+                ):
 
-                        testing_pattern['tests'].append(test['name'])
+                    testing_pattern['tests'].append(test['name'])
 
-                to_database.append(
-                    models.ClusterTestingPattern(**testing_pattern)
-                )
+            to_database.append(
+                models.ClusterTestingPattern(**testing_pattern)
+            )
 
-        session.add_all(to_database)
+    session.add_all(to_database)

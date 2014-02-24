@@ -13,9 +13,10 @@
 #    under the License.
 
 import logging
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 from pecan import hooks
-from fuel_plugin.ostf_adapter.storage import engine
 
 
 LOG = logging.getLogger(__name__)
@@ -28,5 +29,13 @@ class ExceptionHandling(hooks.PecanHook):
 
 class SessionHook(hooks.PecanHook):
 
+    def __init__(self, dbpath):
+        engine = create_engine(dbpath)
+        self.Session = sessionmaker(bind=engine)
+
     def before(self, state):
-        state.request.session = engine.get_session()
+        state.request.session = self.Session()
+
+    def after(self, state):
+        state.request.session.commit()
+        state.request.session.close()

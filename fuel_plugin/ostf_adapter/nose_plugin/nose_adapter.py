@@ -19,7 +19,7 @@ from pecan import conf
 from fuel_plugin.ostf_adapter.nose_plugin import nose_storage_plugin
 from fuel_plugin.ostf_adapter.nose_plugin import nose_test_runner
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
-from fuel_plugin.ostf_adapter.storage import storage_utils, engine, models
+from fuel_plugin.ostf_adapter.storage import engine, models
 
 
 LOG = logging.getLogger(__name__)
@@ -29,9 +29,6 @@ class NoseDriver(object):
     def __init__(self):
         LOG.warning('Initializing Nose Driver')
         self._named_threads = {}
-        session = engine.get_session()
-        with session.begin(subtransactions=True):
-            storage_utils.update_all_running_test_runs(session)
 
     def check_current_running(self, unique_id):
         return unique_id in self._named_threads
@@ -46,14 +43,19 @@ class NoseDriver(object):
             argv_add = [test_set.test_path] + test_set.additional_arguments
 
         self._named_threads[test_run.id] = nose_utils.run_proc(
-            self._run_tests, test_run.id, test_run.cluster_id, argv_add)
+            self._run_tests,
+            conf.dbpath,
+            test_run.id,
+            test_run.cluster_id,
+            argv_add
+        )
 
-    def _run_tests(self, test_run_id, cluster_id, argv_add):
-        session = engine.get_session()
+    def _run_tests(self, dbpath, test_run_id, cluster_id, argv_add):
+        session = engine.get_db_toolkit(dbpath)['session']
         try:
             nose_test_runner.SilentTestProgram(
                 addplugins=[nose_storage_plugin.StoragePlugin(
-                    test_run_id, str(cluster_id))],
+                    session, test_run_id, str(cluster_id))],
                 exit=False,
                 argv=['ostf_tests'] + argv_add)
             self._named_threads.pop(int(test_run_id), None)
@@ -63,8 +65,9 @@ class NoseDriver(object):
             models.TestRun.update_test_run(
                 session, test_run_id, status='finished')
 
-    def kill(self, test_run_id, cluster_id, cleanup=None):
-        session = engine.get_session()
+            session.commit()
+
+    def kill(self, session, test_run_id, cluster_id, cleanup=None):
         if test_run_id in self._named_threads:
 
             try:
@@ -83,6 +86,7 @@ class NoseDriver(object):
             if cleanup:
                 nose_utils.run_proc(
                     self._clean_up,
+                    conf.dbpath,
                     test_run_id,
                     cluster_id,
                     cleanup)
@@ -93,8 +97,8 @@ class NoseDriver(object):
             return True
         return False
 
-    def _clean_up(self, test_run_id, cluster_id, cleanup):
-        session = engine.get_session()
+    def _clean_up(self, dbpath, test_run_id, cluster_id, cleanup):
+        session = engine.get_db_toolkit(dbpath)['session']
 
         #need for performing proper cleaning up for current cluster
         cluster_deployment_info = \
