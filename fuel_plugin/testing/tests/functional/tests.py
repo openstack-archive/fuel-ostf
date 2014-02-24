@@ -385,7 +385,7 @@ class AdapterTests(BaseAdapterTest):
         ])
 
         self.compare(resp, assertions)
-        time.sleep(5)
+        time.sleep(10)
 
         resp = self.client.testruns_last(cluster_id)
 
@@ -420,7 +420,8 @@ class AdapterTests(BaseAdapterTest):
         self.client.run_with_timeout(testset, tests, cluster_id, 70)
         self.client.restart_with_timeout(testset, tests, cluster_id, 10)
 
-        resp = self.client.restart_tests_last(testset, disabled_test, cluster_id)
+        resp = self.client.restart_tests_last(testset, disabled_test,
+                                              cluster_id)
 
         assertions = Response([
             {
