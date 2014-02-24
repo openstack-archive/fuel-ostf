@@ -20,7 +20,7 @@ from pecan import conf
 import unittest2
 
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
-from fuel_plugin.ostf_adapter.storage import models, engine
+from fuel_plugin.ostf_adapter.storage import models
 
 
 LOG = logging.getLogger(__name__)
@@ -31,14 +31,12 @@ class StoragePlugin(plugins.Plugin):
     name = 'storage'
     score = 15000
 
-    def __init__(
-            self, test_run_id, cluster_id):
+    def __init__(self, session, test_run_id, cluster_id):
+        self.session = session
         self.test_run_id = test_run_id
         self.cluster_id = cluster_id
         super(StoragePlugin, self).__init__()
         self._start_time = None
-
-        self.session = engine.get_session()
 
     def options(self, parser, env=os.environ):
         env['NAILGUN_HOST'] = str(conf.nailgun.host)
@@ -64,17 +62,16 @@ class StoragePlugin(plugins.Plugin):
                 data['step'], data['message'] = \
                     nose_utils.format_failure_message(exc_value)
 
-        with self.session.begin(subtransactions=True):
+        tests_to_update = nose_utils.get_tests_ids_to_update(test)
 
-            tests_to_update = nose_utils.get_tests_ids_to_update(test)
-
-            for test_id in tests_to_update:
-                models.Test.add_result(
-                    self.session,
-                    self.test_run_id,
-                    test_id,
-                    data
-                )
+        for test_id in tests_to_update:
+            models.Test.add_result(
+                self.session,
+                self.test_run_id,
+                test_id,
+                data
+            )
+        self.session.commit()
 
     def addSuccess(self, test, capt=None):
         self._add_message(test, status='success')
