@@ -250,13 +250,8 @@ class TestRun(BASE):
 
     @property
     def enabled_tests(self):
-        session = engine.get_session()
-        tests = session.query(Test)\
-            .filter_by(test_run_id=self.id)\
-            .order_by(Test.name)
-
         return [test.name for test
-                in tests if test.status != 'disabled']
+                in self.tests if test.status != 'disabled']
 
     def is_finished(self):
         return self.status == 'finished'
@@ -372,17 +367,16 @@ class TestRun(BASE):
         if cls.is_last_running(session, test_set.id,
                                metadata['cluster_id']):
 
-            with session.begin(subtransactions=True):
-                test_run = cls.add_test_run(
-                    session, test_set.id,
-                    metadata['cluster_id'], tests=tests)
+            test_run = cls.add_test_run(
+                session, test_set.id,
+                metadata['cluster_id'], tests=tests)
 
-            retvalue = test_run.frontend
-            session.close()
+            #flush test_run data to db
+            session.flush()
 
             plugin.run(test_run, test_set)
 
-            return retvalue
+            return test_run.frontend
         return {}
 
     def restart(self, session, tests=None):
@@ -406,7 +400,7 @@ class TestRun(BASE):
         """
         plugin = nose_plugin.get_plugin(self.test_set.driver)
         killed = plugin.kill(
-            self.id, self.cluster_id,
+            session, self.id, self.cluster_id,
             cleanup=self.test_set.cleanup_path)
         if killed:
             Test.update_running_tests(

@@ -68,10 +68,9 @@ class BaseWSGITest(unittest2.TestCase):
         self.Session.configure(
             bind=self.connection
         )
-        self.session = self.Session(autocommit=True)
+        self.session = self.Session()
 
-        with self.session.begin(subtransactions=True):
-            test_sets = self.session.query(models.TestSet).all()
+        test_sets = self.session.query(models.TestSet).all()
 
         #need this if start unit tests in conjuction with integration
         if not test_sets:
@@ -120,23 +119,22 @@ class BaseWSGITest(unittest2.TestCase):
     def is_background_working(self):
         is_working = True
 
-        with self.session.begin(subtransactions=True):
-            cluster_state = self.session.query(models.ClusterState)\
-                .filter_by(id=self.expected['cluster']['id'])\
-                .one()
-            is_working = is_working and set(cluster_state.deployment_tags) == \
-                self.expected['cluster']['deployment_tags']
+        cluster_state = self.session.query(models.ClusterState)\
+            .filter_by(id=self.expected['cluster']['id'])\
+            .one()
+        is_working = is_working and set(cluster_state.deployment_tags) == \
+            self.expected['cluster']['deployment_tags']
 
-            cluster_testing_patterns = self.session\
-                .query(models.ClusterTestingPattern)\
-                .filter_by(cluster_id=self.expected['cluster']['id'])\
-                .all()
+        cluster_testing_patterns = self.session\
+            .query(models.ClusterTestingPattern)\
+            .filter_by(cluster_id=self.expected['cluster']['id'])\
+            .all()
 
-            for testing_pattern in cluster_testing_patterns:
-                is_working = is_working and \
-                    (testing_pattern.test_set_id in self.expected['test_sets'])
+        for testing_pattern in cluster_testing_patterns:
+            is_working = is_working and \
+                (testing_pattern.test_set_id in self.expected['test_sets'])
 
-                is_working = is_working and set(testing_pattern.tests)\
-                    .issubset(set(self.expected['tests']))
+            is_working = is_working and set(testing_pattern.tests)\
+                .issubset(set(self.expected['tests']))
 
         return is_working
