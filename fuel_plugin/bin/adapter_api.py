@@ -56,6 +56,12 @@ def main():
     if getattr(cli_args, 'after_init_hook'):
         return nailgun_hooks.after_initialization_environment_hook()
 
+    #initialize db toolkit
+    engine.instantiate_db_toolkit(cli_args.dbpath,
+                                  {'autocommit': True,
+                                   'expire_on_commit': False}
+                                  )
+
     #performing cleaning of expired data (if any) in db
     mixins.clean_db(engine.get_engine())
 
