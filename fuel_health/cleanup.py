@@ -100,8 +100,9 @@ def cleanup(cluster_deployment_info):
                     if e.name.startswith('ost1_test-'):
                         try:
                             LOG.info('Start environment deletion.')
-                            murano_client.stacks.delete(e.id)
+                            murano_client.environments.delete(e.id)
                         except Exception:
+                            LOG.warning('Failed to delete murano environment')
                             LOG.debug(traceback.format_exc())
         except Exception:
             LOG.warning(traceback.format_exc())
