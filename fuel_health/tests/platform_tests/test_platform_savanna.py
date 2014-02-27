@@ -48,8 +48,8 @@ class PlatformSavannaTests(savanna.SavannaTest):
         """
         fail_msg = ("Savanna image with tags wasn't imported into Glance, "
                     "please check "
-                    "http://docs.mirantis.com/fuel/fuel-4.0/user-guide.html"
-                    "#platform-tests-description")
+                    "http://docs.mirantis.com/fuel/"
+                    "fuel-4.1/user-guide.html#platform-tests-description")
         self.verify_response_true(
             self.verify(
                 30,
