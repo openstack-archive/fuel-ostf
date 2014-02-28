@@ -14,6 +14,7 @@
 
 import logging
 from fuel_health import murano
+from fuel_health.common.utils.data_utils import rand_name
 
 
 LOG = logging.getLogger(__name__)
@@ -59,9 +60,10 @@ class MuranoDeployDemoServiceTests(murano.MuranoTest):
         self.verify_response_true(demo_image, fail_msg, 1)
 
         fail_msg = "Can't create environment. Murano API is not available. "
+        env_name = rand_name(namestart="ost1_test-Murano_env")
         self.environment = self.verify(15, self.create_environment,
                                        2, fail_msg, 'creating environment',
-                                       "ost1_test-Murano_env01")
+                                       env_name)
 
         fail_msg = "User can't create session for environment. "
         session = self.verify(5, self.create_session,
@@ -141,9 +143,10 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
+        env_name = rand_name(namestart="ost1_test-Murano_env")
         self.environment = self.verify(15, self.create_environment,
                                        1, fail_msg, 'creating environment',
-                                       "ost1_test-Murano_env01")
+                                       env_name)
 
         fail_msg = "User can't create session for environment. "
         session = self.verify(5, self.create_session,
@@ -201,9 +204,10 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
+        env_name = rand_name(namestart="ost1_test-Murano_env")
         self.environment = self.verify(15, self.create_environment,
                                        1, fail_msg, 'creating environment',
-                                       "ost1_test-Murano_env01")
+                                       env_name)
 
         fail_msg = "User can't create session for environment. "
         session = self.verify(5, self.create_session,
