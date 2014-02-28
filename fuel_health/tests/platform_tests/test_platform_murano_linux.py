@@ -71,7 +71,8 @@ class MuranoDeployDemoServiceTests(murano.MuranoTest):
         post_body = {"availabilityZone": "nova", "name": "demo",
                      "unitNamingPattern": "host", "osImage":
                      {"type": "cirros.demo", "name": str(demo_image.name),
-                      "title": "Demo"}, "units": [{}], "flavor": "m1.tiny",
+                      "title": "Demo"}, "units": [{}],
+                      "flavor": "murano.flavor",
                      "configuration": "standalone", "type": "demoService"}
 
         fail_msg = "User can't create service. "
@@ -154,7 +155,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                      "deployTelnet": True, "keyPair": "", "osImage":
                      {"type": "linux", "name": str(self.image.name),
                       "title": "Linux Image"}, "units": [{}],
-                     "flavor": "m1.small", "type": "linuxTelnetService"}
+                     "flavor": "murano.flavor", "type": "linuxTelnetService"}
 
         fail_msg = "User can't create service. "
         service = self.verify(5, self.create_service,
@@ -214,7 +215,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                      "deployApachePHP": True, "keyPair": "", "osImage":
                      {"type": "linux", "name": str(self.image.name),
                       "title": "Linux Image"}, "units": [{}],
-                     "flavor": "m1.small", "type": "linuxApacheService"}
+                     "flavor": "murano.flavor", "type": "linuxApacheService"}
 
         fail_msg = "User can't create service. "
         service = self.verify(5, self.create_service,
