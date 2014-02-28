@@ -55,7 +55,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             13. Wait for the stack to be deleted.
         Duration: 440 s.
         """
-
+        self.check_image_exists()
         template = """
             AWSTemplateFormatVersion: "2013-11-01"
             Parameters:
@@ -74,7 +74,6 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                   InstanceType: {Ref: InstanceType}
                   SubnetId: {Ref: Subnet}
             """
-
         parameters = {
             "InstanceType": self.testvm_flavor.name,
             "ImageId": self.config.compute.image_name
@@ -378,7 +377,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             4. Verify the instance of the stack has been deleted.
         Duration: 140 s.
         """
-
+        self.check_image_exists()
         template = """
             HeatTemplateFormatVersion: '2013-11-01'
             Description: Template which creates single EC2 instance

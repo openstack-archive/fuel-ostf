@@ -48,6 +48,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
         self.check_clients_state()
         if not self.config.compute.compute_nodes:
             self.fail('There are no compute nodes')
+        self.check_image_exists()
 
     def _wait_for_server_status(self, server, status):
         self.status_timeout(self.compute_client.servers,
@@ -138,8 +139,8 @@ class TestImageAction(nmanager.SmokeChecksTest):
             7. Delete server.
         Duration: 300 s.
         """
-        image = self.verify(30, nmanager.get_image_from_name, 1,
-                            "Image can not be retreived.",
+        image = self.verify(30, self.get_image_from_name, 1,
+                            "Image can not be retrieved.",
                             "getting image by name")
 
         server = self.verify(180, self._boot_image, 2,
@@ -165,9 +166,9 @@ class TestImageAction(nmanager.SmokeChecksTest):
                     server)
 
         server = self.verify(180, self._boot_image, 6,
-                            "Instance can not be launched from snapshot.",
-                            'booting instance from snapshot',
-                            snapshot_image_id)
+                             "Instance can not be launched from snapshot.",
+                             'booting instance from snapshot',
+                             snapshot_image_id)
 
         self.verify(30, self._delete_server, 7,
                     "Server can not be deleted.",
