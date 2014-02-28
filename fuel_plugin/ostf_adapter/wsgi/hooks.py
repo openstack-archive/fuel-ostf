@@ -21,30 +21,36 @@ from pecan import hooks
 LOG = logging.getLogger(__name__)
 
 
-class ExceptionHandling(hooks.PecanHook):
-    def on_error(self, state, e):
-        LOG.exception('Pecan state %r', state)
-
-
-class SessionHook(hooks.PecanHook):
-
+class CustomTransactionalHook(hooks.TransactionHook):
     def __init__(self, dbpath):
         self.engine = create_engine(dbpath, poolclass=pool.NullPool)
+        self.session = orm.scoped_session(orm.sessionmaker())
+
+        def start():
+            self.session.bind = self.engine
+
+        def commit():
+            self.session.commit()
+
+        def rollback():
+            self.session.rollback()
+
+        def clear():
+            #not all GET controllers doesn't write to db
+            self.session.commit()
+
+            self.session.remove()
+
+        super(CustomTransactionalHook, self).__init__(start,
+                                                      start,
+                                                      commit,
+                                                      rollback,
+                                                      clear)
 
     def before(self, state):
-        state.request.session = orm.Session(bind=self.engine)
+        super(CustomTransactionalHook, self).before(state)
+        state.request.session = self.session
 
-    def after(self, state):
-        try:
-            state.request.session.commit()
-        except Exception:
-            state.request.session.rollback()
-            raise
-        finally:
-            state.request.session.close()
-
-    def on_error(self, state, e):
+    def on_error(self, state, exc):
+        super(CustomTransactionalHook, self).on_error(state, exc)
         LOG.exception('Pecan state %r', state)
-
-        state.session.rollback()
-        state.session.close()
