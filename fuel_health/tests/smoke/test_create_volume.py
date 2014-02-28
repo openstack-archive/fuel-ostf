@@ -38,6 +38,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
             self.fail('There are no cinder nodes or ceph storage for volume')
         if not self.config.compute.compute_nodes:
             self.fail('There are no compute nodes')
+        self.check_image_exists()
 
     @classmethod
     def tearDownClass(cls):
