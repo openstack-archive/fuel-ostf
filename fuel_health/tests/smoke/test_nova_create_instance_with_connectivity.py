@@ -173,66 +173,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                     "Server can not be deleted.",
                     "server deletion", server)
 
-    def test_005_check_public_network_connectivity(self):
-        """Check that VM is accessible via floating IP address
-        Target component: Nova
-
-        Scenario:
-            1. Create a new security group (if it doesn`t exist yet).
-            2. Create an instance using the new security group
-            3. Create a new floating IP
-            4. Assign the new floating IP to the instance.
-            5. Check connectivity to the floating IP using ping command.
-            6. Remove server floating ip.
-            7. Delete server.
-        Duration: 300 s.
-
-        """
-        self.check_image_exists()
-        if not self.security_groups:
-                self.security_groups[self.tenant_id] = self.verify(
-                    25, self._create_security_group, 1,
-                    "Security group can not be created.",
-                    'security group creation',
-                    self.compute_client)
-
-        name = rand_name('ost1_test-server-smoke-')
-        security_groups = [self.security_groups[self.tenant_id].name]
-
-        server = self.verify(200, self._create_server, 2,
-                             "Server can not be created.",
-                             "server creation",
-                             self.compute_client, name, security_groups)
-
-        floating_ip = self.verify(
-            20,
-            self._create_floating_ip,
-            3,
-            "Floating IP can not be created.",
-            'floating IP creation')
-
-        self.verify(10, self._assign_floating_ip_to_instance,
-                    4, "Floating IP can not be assigned.",
-                    'floating IP assignment',
-                    self.compute_client, server, floating_ip)
-
-        self.floating_ips.append(floating_ip)
-
-        self.verify(250, self._check_vm_connectivity, 5,
-                    "VM connectivity doesn`t function properly.",
-                    'VM connectivity checking', floating_ip.ip,
-                    30, (6, 30))
-
-        self.verify(10, self.compute_client.servers.remove_floating_ip,
-                    6, "Floating IP cannot be removed.",
-                    "removing floating IP", server, floating_ip)
-
-        self.floating_ips.remove(floating_ip)
-
-        self.verify(30, self._delete_server, 7,
-                    "Server can not be deleted. ",
-                    "server deletion", server)
-
     def test_008_check_public_instance_connectivity_from_instance(self):
         """Check network connectivity from instance via floating IP
         Target component: Nova
@@ -242,9 +182,11 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             2. Create an instance using the new security group.
             3. Create a new floating IP
             4. Assign the new floating IP to the instance.
-            5. Check that public IP 8.8.8.8 can be pinged from instance.
-            6. Remove server floating ip.
-            7. Delete server.
+            5. Check connectivity to the floating IP using ping command.
+            6. Check that public IP 8.8.8.8 can be pinged from instance.
+            7. Disassociate server floating ip.
+            8. Delete floating ip
+            9. Delete server.
         Duration: 300 s.
 
         """
@@ -279,21 +221,32 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         self.floating_ips.append(floating_ip)
 
         ip_address = floating_ip.ip
-        LOG.info('is address is %s' % ip_address)
+        LOG.info('is address is  {0}'.format(ip_address))
         LOG.debug(ip_address)
+
+        self.verify(250, self._check_vm_connectivity, 5,
+                    "VM connectivity doesn`t function properly.",
+                    'VM connectivity checking', ip_address,
+                    30, (6, 30))
+
         self.verify(250, self._check_connectivity_from_vm,
-                    5, ("Connectivity to 8.8.8.8 from the VM doesn`t "
+                    6, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                     "function properly."),
                     'public connectivity checking from VM', ip_address,
                     30, (6, 30))
 
         self.verify(10, self.compute_client.servers.remove_floating_ip,
-                    6, "Floating IP cannot be removed.",
+                    7, "Floating IP cannot be removed.",
                     "removing floating IP", server, floating_ip)
 
-        self.floating_ips.remove(floating_ip)
+        self.verify(10, self.compute_client.floating_ips.delete,
+                    8, "Floating IP cannot be deleted.",
+                    "floating IP deletion", floating_ip)
 
-        self.verify(30, self._delete_server, 7,
+        if self.floating_ips:
+            self.floating_ips.remove(floating_ip)
+
+        self.verify(30, self._delete_server, 9,
                     "Server can not be deleted. ",
                     "server deletion", server)
 
