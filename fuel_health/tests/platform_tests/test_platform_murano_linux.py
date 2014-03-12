@@ -28,6 +28,8 @@ class MuranoDeployDemoServiceTests(murano.MuranoTest):
     def setUp(self):
         super(MuranoDeployDemoServiceTests, self).setUp()
         self.check_clients_state()
+        if not self.config.compute.compute_nodes:
+            self.fail('There are no compute nodes')
 
     def test_deploy_demo_service(self):
         """Check that user can deploy Demo service in Murano environment
