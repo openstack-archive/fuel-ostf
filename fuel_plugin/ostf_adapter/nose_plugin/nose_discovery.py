@@ -52,51 +52,54 @@ class DiscoveryPlugin(plugins.Plugin):
                 tag.lower() for tag in profile.get('deployment_tags', [])
             ]
 
-            with self.session.begin(subtransactions=True):
-                try:
-                    test_set = models.TestSet(**profile)
-                    self.session.merge(test_set)
-                    self.test_sets[test_set.id] = test_set
-                except Exception as e:
-                    LOG.error(
-                        ('An error has occured while processing'
-                         ' data entity for %s. Error message: %s'),
-                        module.__name__,
-                        e.message
-                    )
-                LOG.info('%s discovered.', module.__name__)
+            try:
+                test_set = models.TestSet(**profile)
+                self.session.merge(test_set)
+                self.test_sets[test_set.id] = test_set
+
+                #flush test_sets data into db
+                self.session.commit()
+            except Exception as e:
+                LOG.error(
+                    ('An error has occured while processing'
+                     ' data entity for %s. Error message: %s'),
+                    module.__name__,
+                    e.message
+                )
+            LOG.info('%s discovered.', module.__name__)
 
     def addSuccess(self, test):
         test_id = test.id()
         for test_set_id in self.test_sets.keys():
             if test_set_id in test_id:
-                with self.session.begin(subtransactions=True):
+                data = dict()
 
-                    data = dict()
+                (data['title'], data['description'],
+                 data['duration'], data['deployment_tags']) = \
+                    nose_utils.get_description(test)
 
-                    (data['title'], data['description'],
-                     data['duration'], data['deployment_tags']) = \
-                        nose_utils.get_description(test)
+                data.update(
+                    {
+                        'test_set_id': test_set_id,
+                        'name': test_id
+                    }
+                )
 
-                    data.update(
-                        {
-                            'test_set_id': test_set_id,
-                            'name': test_id
-                        }
+                try:
+                    test_obj = models.Test(**data)
+                    self.session.merge(test_obj)
+
+                    #flush tests data into db
+                    self.session.commit()
+                except Exception as e:
+                    LOG.error(
+                        ('An error has occured while '
+                         'processing data entity for '
+                         'test with name %s. Error message: %s'),
+                        test_id,
+                        e.message
                     )
-
-                    try:
-                        test_obj = models.Test(**data)
-                        self.session.merge(test_obj)
-                    except Exception as e:
-                        LOG.error(
-                            ('An error has occured while '
-                             'processing data entity for '
-                             'test with name %s. Error message: %s'),
-                            test_id,
-                            e.message
-                        )
-                    LOG.info('%s added for %s', test_id, test_set_id)
+                LOG.info('%s added for %s', test_id, test_set_id)
 
 
 def discovery(path, session):

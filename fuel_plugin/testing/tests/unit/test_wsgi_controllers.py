@@ -140,7 +140,7 @@ class TestTestRunsPostController(TestTestRunsController):
                     self.expected['testrun_post'][key] == res[key]
                 )
 
-        test_run = self.session.query(models.TestRun)\
+        self.session.query(models.TestRun)\
             .filter_by(test_set_id=self.expected['testrun_post']['testset'])\
             .filter_by(cluster_id=self.expected['testrun_post']['cluster_id'])\
             .one()
@@ -164,10 +164,12 @@ class TestTestRunsPutController(TestTestRunsController):
         super(TestTestRunsPutController, self).setUp()
         self.test_run = self.controller.post()[0]
 
-        with self.session.begin(subtransactions=True):
-            self.session.query(models.Test)\
-                .filter_by(test_run_id=int(self.test_run['id']))\
-                .update({'status': 'running'})
+        self.session.query(models.Test)\
+            .filter_by(test_run_id=int(self.test_run['id']))\
+            .update({'status': 'running'})
+
+        #flush data which test is depend on into db
+        self.session.commit()
 
         self.request_mock.body = json.dumps(
             [{
