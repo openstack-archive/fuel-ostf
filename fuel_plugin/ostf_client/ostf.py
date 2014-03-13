@@ -1,21 +1,18 @@
 #!/usr/bin/env python
 """Openstack testing framework client
 
-Usage: ostf.py run <test_set> [-q] [--id=<cluster_id>] [--tests=<tests>]  [--url=<url>]  [--timeout=<timeout>]
-       ostf.py list [<test_set>]
+Usage: ostf.py run <cluster_id> <test_set> [-q] [--tests=<tests>]  [--url=<url>]  [--timeout=<timeout>]
+       ostf.py list <cluster_id> [<test_set>]
 
     -q                          Show test run result only after finish
     -h --help                   Show this screen
     --tests=<tests>             Tests to run
-    --id=<cluster_id>           Cluster id to use, default: OSTF_CLUSTER_ID or "1"
     --url=<url>                 Ostf url, default: OSTF_URL or http://0.0.0.0:8989/v1
     --timeout=<timeout>         Amount of time after which test_run will be stopped [default: 60]
 
 """
-import os
 import sys
 
-from requests import get
 
 from docopt import docopt
 from clint.textui import puts, colored, columns
@@ -23,26 +20,15 @@ from blessings import Terminal
 from fuel_plugin.ostf_client.client import TestingAdapterClient
 
 
-def get_cluster_id():
-    try:
-        r = get('http://localhost:8000/api/clusters').json()
-    except:
-        return 0
-    return next(item['id'] for item in r)
-
-
 def main():
     t = Terminal()
     args = docopt(__doc__, version='0.1')
     test_set = args['<test_set>']
-    cluster_id = args['--id'] or os.environ.get('OSTF_CLUSTER_ID') \
-        or get_cluster_id() or '1'
 
-    tests = args['--tests'] or []
+    cluster_id = args['<cluster_id>']
     timeout = args['--timeout']
     quite = args['-q']
-    url = args['--url'] or os.environ.get('OSTF_URL') \
-        or 'http://0.0.0.0:8989/v1'
+    url = args['--url'] or 'http://0.0.0.0:8989/v1'
 
     client = TestingAdapterClient(url)
 
@@ -60,7 +46,7 @@ def main():
         )
 
         tests = [test['id'].split('.')[-1]
-                 for test in client.tests().json()
+                 for test in client.tests(cluster_id).json()
                  if test['testset'] == test_set]
 
         def print_results(item):
@@ -131,7 +117,7 @@ def main():
         return any(item['status'] != 'success' for item in tests)
 
     def list_tests():
-        result = client.tests().json()
+        result = client.tests(cluster_id).json()
         tests = (test for test in result if test['testset'] == test_set)
 
         col = 60
@@ -145,7 +131,7 @@ def main():
         return 0
 
     def list_test_sets():
-        result = client.testsets().json()
+        result = client.testsets(cluster_id).json()
 
         col = 60
         puts(columns([(colored.red("ID")), col],

@@ -38,7 +38,9 @@ fuel_ostf_reqs = [
     'gevent==0.13.8',
     'pecan>=0.3.0',
     'psycopg2>=2.5.1',
-    'stevedore>=0.10'
+    'stevedore>=0.10',
+    'blessings>=1.5.1',
+    'clint>=0.3.4'
 ]
 
 test_requires = [
@@ -91,7 +93,8 @@ setuptools.setup(
             'ostf-server = fuel_plugin.bin.adapter_api:main',
             ('update-commands = fuel_plugin.tests.'
              'test_utils.update_commands:main'),
-            'ostfctl = adapter_utils.bin.ostf_utils:main'
+            'ostfctl = adapter_utils.bin.ostf_utils:main',
+            'ostf-cli = fuel_plugin.ostf_client.ostf:main'
         ]
     },
 
