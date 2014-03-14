@@ -28,8 +28,8 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
     @classmethod
     def setUpClass(cls):
         super(TestMysqlReplication, cls).setUpClass()
-        cls.controller_ip = cls.config.compute.controller_nodes[0]
-        cls.controllers = cls.config.compute.controller_nodes
+        cls.controller_ip = cls.config.compute.online_controllers[0]
+        cls.controllers = cls.config.compute.online_controllers
         cls.controller_key = cls.config.compute.path_to_private_key
         cls.controller_user = cls.config.compute.ssh_user
         cls.mysql_user = 'root'
@@ -147,6 +147,8 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
                     'Can not delete created database',
                     'database deletion', cmd)
 
+        self.master_ip = []
+
     def test_os_databases(self):
         """Check amount of tables in databases is the same on each node
         Target Service: HA mysql
@@ -161,7 +163,7 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
         for database in dbs:
             LOG.info('Current database name is %s' % database)
             temp_set = set()
-            for node in self.config.compute.controller_nodes:
+            for node in self.config.compute.online_controllers:
                 LOG.info('Current controller node is %s' % node)
                 cmd1 = cmd % {'database': database}
                 LOG.info('Try to execute command %s' % cmd1)
