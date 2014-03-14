@@ -32,7 +32,7 @@ class RabbitSmokeTest(BaseTestCase):
     @classmethod
     def setUpClass(cls):
         cls.config = fuel_health.config.FuelConfig()
-        cls._controllers = cls.config.compute.controller_nodes
+        cls._controllers = cls.config.compute.online_controllers
         cls._usr = cls.config.compute.controller_node_ssh_user
         cls._pwd = cls.config.compute.controller_node_ssh_password
         cls._key = cls.config.compute.path_to_private_key
