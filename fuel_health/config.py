@@ -138,6 +138,9 @@ ComputeGroup = [
     cfg.ListOpt('controller_nodes',
                 default=[],
                 help="IP addresses of controller nodes"),
+    cfg.ListOpt('online_controllers',
+                default=[],
+                help="ips of online controller nodes"),
     cfg.ListOpt('compute_nodes',
                 default=[],
                 help="IP addresses of compute nodes"),
@@ -538,11 +541,15 @@ class NailgunConfig(object):
         data = response.json()
         controller_nodes = filter(lambda node: 'controller' in node['roles'],
                                   data)
+        online_controllers = filter(
+            lambda node: 'controller' in node['roles'] and
+                         node['online'] is True, data)
         cinder_nodes = filter(lambda node: 'cinder' in node['roles'],
                               data)
         controller_ips = []
         conntroller_names = []
         public_ips = []
+        online_controllers_ips = []
         for node in controller_nodes:
             public_network = next(network for network in node['network_data']
                                   if network['name'] == 'public')
@@ -551,8 +558,13 @@ class NailgunConfig(object):
             controller_ips.append(node['ip'])
             conntroller_names.append(node['fqdn'])
         LOG.info("IP %s NAMES %s" % (controller_ips, conntroller_names))
+
+        for node in online_controllers:
+            online_controllers_ips.append(node['ip'])
+
         self.compute.public_ips = public_ips
         self.compute.controller_nodes = controller_ips
+        self.compute.online_controllers = online_controllers_ips
         if not cinder_nodes:
             self.volume.cinder_node_exist = False
 
