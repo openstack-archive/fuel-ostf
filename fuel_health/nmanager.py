@@ -273,21 +273,8 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 LOG.debug(traceback.format_exc())
                 return False
 
-        res = fuel_health.test.call_until_true(
+        fuel_health.test.call_until_true(
             is_deletion_complete, 20, 10)
-
-        if not res:
-            LOG.debug("Reset server state.")
-            try:
-                self.compute_client.servers.reset_state(server)
-                LOG.debug("Deleting server.")
-                self.compute_client.servers.delete(server)
-            except Exception as e:
-                if e.__class__.__name__ == 'NotFound':
-                    return True
-            LOG.debug("Server can not be deleted: %s" % server.id)
-            LOG.debug(traceback.format_exc())
-            raise Exception()
 
     def retry_command(self, retries, timeout, method, *args, **kwargs):
         for i in range(retries):
