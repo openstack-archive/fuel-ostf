@@ -15,6 +15,8 @@
 from datetime import datetime
 import logging
 
+import os
+import signal
 import sqlalchemy as sa
 from sqlalchemy import desc
 from sqlalchemy.ext.declarative import declarative_base
@@ -24,6 +26,7 @@ from sqlalchemy.dialects.postgres import ARRAY
 
 from fuel_plugin.ostf_adapter import nose_plugin
 from fuel_plugin.ostf_adapter.storage import fields, engine
+from fuel_plugin.ostf_adapter.orchestrator import producers
 
 
 LOG = logging.getLogger(__name__)
@@ -356,7 +359,6 @@ class TestRun(BASE):
 
     @classmethod
     def start(cls, session, test_set, metadata, tests, dbpath):
-        plugin = nose_plugin.get_plugin(test_set.driver)
         if cls.is_last_running(session, test_set.id,
                                metadata['cluster_id']):
 
@@ -364,10 +366,16 @@ class TestRun(BASE):
                 session, test_set.id,
                 metadata['cluster_id'], tests=tests)
 
-            plugin.run(test_run, test_set, dbpath)
-
             #flush test_run data to db
-            session.flush()
+            #commit is needed here because default transaction isolation level
+            #is blocking external sessions (i.e. session from subropcess's)
+            #from data retrieving
+            session.commit()
+
+            payload = {'dbpath': dbpath,
+                       'test_run_id': test_run.id,
+                       'tests': tests}
+            producers.send_message(payload)
 
             return test_run.frontend
         return {}
@@ -393,9 +401,15 @@ class TestRun(BASE):
     def stop(self, session):
         """Stop test run if running
         """
-        plugin = nose_plugin.get_plugin(self.test_set.driver)
-        killed = plugin.kill(self)
-        if killed:
+        if self.pid:
+            os.kill(self.pid, signal.SIGUSR1)
             Test.update_running_tests(
                 session, self.id, status='stopped')
+
+            #need here because tied to reqest.session testrun
+            #object has to contain data which is updating in
+            #subprocess for this testrun. And also - this is
+            #very dirty hack.
+            while self.status != 'finished':
+                session.refresh(self)
         return self.frontend
