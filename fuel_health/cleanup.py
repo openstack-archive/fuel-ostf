@@ -94,6 +94,8 @@ def cleanup(cluster_deployment_info):
     if 'murano' in cluster_deployment_info:
         try:
             murano_client = manager._get_murano_client()
+            compute_client = manager._get_compute_client()
+
             if murano_client is not None:
                 environments = murano_client.environments.list()
                 for e in environments:
@@ -104,6 +106,18 @@ def cleanup(cluster_deployment_info):
                         except Exception:
                             LOG.warning('Failed to delete murano environment')
                             LOG.debug(traceback.format_exc())
+
+            if compute_client is not None:
+                flavors = compute_client.flavors.list()
+                for flavor in flavors:
+                    if flavor.name.startswith('ost1_test_Murano'):
+                        try:
+                            LOG.info('Start flavor deletion.')
+                            compute_client.flavors.delete(flavor.id)
+                        except:
+                            LOG.warning('Failed to delete flavor')
+                            LOG.debug(traceback.format_exc())
+
         except Exception:
             LOG.warning(traceback.format_exc())
 
