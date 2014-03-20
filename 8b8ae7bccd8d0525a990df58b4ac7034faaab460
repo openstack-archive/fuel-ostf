@@ -1,0 +1,12 @@
+Verified+2: Jenkins
+Approved+1: tatyana-leontovich <tleontovich@mirantis.com>
+Code-Review+2: tatyana-leontovich <tleontovich@mirantis.com>
+Code-Review+1: Anastasiia Naboikina <anaboikina@mirantis.com>
+Code-Review+1: Dmitry Shulyak <dshulyak@mirantis.com>
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Code-Review+1: Igor Kalnitsky <ikalnitsky@mirantis.com>
+Submitted-by: Jenkins
+Submitted-at: Thu, 20 Mar 2014 11:43:14 +0000
+Reviewed-on: https://review.openstack.org/74693
+Project: stackforge/fuel-ostf
+Branch: refs/heads/master
