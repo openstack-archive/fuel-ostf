@@ -109,6 +109,7 @@ class BaseAdapterTest(TestCase):
                         item
                     )
                     diff.append(msg)
+                    raise AssertionError(msg)
 
             tests = dict([(test['id'], test) for test in tests])
             response_tests = dict(

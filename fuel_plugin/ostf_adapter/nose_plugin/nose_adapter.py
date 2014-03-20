@@ -35,11 +35,15 @@ class InterruptTestRunException(KeyboardInterrupt):
     pass
 
 
-class NoseDriver(object):
-    def __init__(self):
-        LOG.warning('Initializing Nose Driver')
+def start_testrun(dbpath, test_run_id, tests):
+    with engine.contexted_session(dbpath) as session:
+        test_run = session.query(models.TestRun)\
+            .filter_by(id=test_run_id)\
+            .one()
+        test_set = session.query(models.TestSet)\
+            .filter_by(id=test_run.test_set_id)\
+            .one()
 
-    def run(self, test_run, test_set, dbpath, tests=None):
         tests = tests or test_run.enabled_tests
         if tests:
             argv_add = [nose_utils.modify_test_name_for_nose(test)
@@ -47,76 +51,85 @@ class NoseDriver(object):
         else:
             argv_add = [test_set.test_path] + test_set.additional_arguments
 
-        test_run.pid = nose_utils.run_proc(self._run_tests,
-                                           dbpath,
-                                           test_run.id,
-                                           test_run.cluster_id,
-                                           argv_add).pid
+        allow_to_run = not test_set.exclusive_testsets or not bool(
+            session.query(models.TestRun)
+            .filter(models.TestRun.cluster_id == test_run.cluster_id)
+            .filter(models.TestRun.pid is not None)
+            .filter(
+                models.TestRun.test_set_id.in_(test_set.exclusive_testsets)
+            )
+            .first()
+        )
 
-    def _run_tests(self, dbpath, test_run_id, cluster_id, argv_add):
-        cleanup_flag = False
-
-        def raise_exception_handler(signum, stack_frame):
-            raise InterruptTestRunException()
-        signal.signal(signal.SIGUSR1, raise_exception_handler)
-
-        with engine.contexted_session(dbpath) as session:
-            try:
-                nose_test_runner.SilentTestProgram(
-                    addplugins=[nose_storage_plugin.StoragePlugin(
-                        session, test_run_id, str(cluster_id))],
-                    exit=False,
-                    argv=['ostf_tests'] + argv_add)
-
-            except InterruptTestRunException:
-                testset_id = session.query(models.TestRun.test_set_id)\
-                    .filter_by(id=test_run_id)\
-                    .scalar()
-                cleanup = session.query(models.TestSet.cleanup_path)\
-                    .filter_by(id=testset_id)\
-                    .scalar()
-
-                if cleanup:
-                    cleanup_flag = True
-
-            except Exception:
-                LOG.exception('Test run ID: %s', test_run_id)
-            finally:
-                updated_data = {'status': 'finished',
-                                'pid': None}
-
-                models.TestRun.update_test_run(
-                    session, test_run_id, updated_data)
-
-                if cleanup_flag:
-                    self._clean_up(session, test_run_id, cluster_id, cleanup)
-
-    def kill(self, test_run):
-        if test_run.pid:
-            os.kill(test_run.pid, signal.SIGUSR1)
+        if allow_to_run:
+            test_run.pid = nose_utils.run_proc(run_tests,
+                                               dbpath,
+                                               test_run.id,
+                                               test_run.cluster_id,
+                                               argv_add).pid
             return True
+        else:
+            return False
 
-        return False
 
-    def _clean_up(self, session, test_run_id, cluster_id, cleanup):
-        #need for performing proper cleaning up for current cluster
-        cluster_deployment_info = \
-            session.query(models.ClusterState.deployment_tags)\
-            .filter_by(id=cluster_id)\
-            .scalar()
+def run_tests(dbpath, test_run_id, cluster_id, argv_add):
+    cleanup_flag = False
 
+    def raise_exception_handler(signum, stack_frame):
+        raise InterruptTestRunException()
+    signal.signal(signal.SIGUSR1, raise_exception_handler)
+
+    with engine.contexted_session(dbpath) as session:
         try:
-            module_obj = __import__(cleanup, -1)
+            nose_test_runner.SilentTestProgram(
+                addplugins=[nose_storage_plugin.StoragePlugin(
+                    session, test_run_id, str(cluster_id))],
+                exit=False,
+                argv=['ostf_tests'] + argv_add)
 
-            os.environ['NAILGUN_HOST'] = str(conf.nailgun.host)
-            os.environ['NAILGUN_PORT'] = str(conf.nailgun.port)
-            os.environ['CLUSTER_ID'] = str(cluster_id)
+        except InterruptTestRunException:
+            testset_id = session.query(models.TestRun.test_set_id)\
+                .filter_by(id=test_run_id)\
+                .scalar()
+            cleanup = session.query(models.TestSet.cleanup_path)\
+                .filter_by(id=testset_id)\
+                .scalar()
 
-            module_obj.cleanup.cleanup(cluster_deployment_info)
+            if cleanup:
+                cleanup_flag = True
 
         except Exception:
-            LOG.exception(
-                'Cleanup error. Test Run ID %s. Cluster ID %s',
-                test_run_id,
-                cluster_id
-            )
+            LOG.exception('Test run ID: %s', test_run_id)
+        finally:
+            updated_data = {'status': 'finished',
+                            'pid': None}
+
+            models.TestRun.update_test_run(
+                session, test_run_id, updated_data)
+
+            if cleanup_flag:
+                _clean_up(session, test_run_id, cluster_id, cleanup)
+
+
+def _clean_up(session, test_run_id, cluster_id, cleanup):
+    #need for performing proper cleaning up for current cluster
+    cluster_deployment_info = \
+        session.query(models.ClusterState.deployment_tags)\
+        .filter_by(id=cluster_id)\
+        .scalar()
+
+    try:
+        module_obj = __import__(cleanup, -1)
+
+        os.environ['NAILGUN_HOST'] = str(conf.nailgun.host)
+        os.environ['NAILGUN_PORT'] = str(conf.nailgun.port)
+        os.environ['CLUSTER_ID'] = str(cluster_id)
+
+        module_obj.cleanup.cleanup(cluster_deployment_info)
+
+    except Exception:
+        LOG.exception(
+            'Cleanup error. Test Run ID %s. Cluster ID %s',
+            test_run_id,
+            cluster_id
+        )
