@@ -49,7 +49,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         super(MuranoTest, self).tearDown()
         if self.murano_available:
             for env in self.list_environments():
-                if 'ost1_test-Murano_env' in env.name:
+                if self.env_name in env.name:
                     try:
                         self.delete_environment(env.id)
                     except:
