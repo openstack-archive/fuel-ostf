@@ -25,11 +25,6 @@ class MuranoDeployDemoServiceTests(murano.MuranoTest):
         1. Murano component should be installed.
         2. Demo image with Murano metadata should be imported.
     """
-    def setUp(self):
-        super(MuranoDeployDemoServiceTests, self).setUp()
-        self.check_clients_state()
-        if not self.config.compute.compute_nodes:
-            self.fail('There are no compute nodes')
 
     def test_deploy_demo_service(self):
         """Check that user can deploy Demo service in Murano environment
@@ -156,7 +151,8 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                      "deployTelnet": True, "keyPair": "", "osImage":
                      {"type": "linux", "name": str(self.image.name),
                       "title": "Linux Image"}, "units": [{}],
-                     "flavor": "m1.medium", "type": "linuxTelnetService"}
+                     "flavor": str(self.flavor_name),
+                     "type": "linuxTelnetService"}
 
         fail_msg = "User can't create service. "
         service = self.verify(5, self.create_service,
@@ -216,7 +212,8 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                      "deployApachePHP": True, "keyPair": "", "osImage":
                      {"type": "linux", "name": str(self.image.name),
                       "title": "Linux Image"}, "units": [{}],
-                     "flavor": "m1.medium", "type": "linuxApacheService"}
+                     "flavor": str(self.flavor_name),
+                     "type": "linuxApacheService"}
 
         fail_msg = "User can't create service. "
         service = self.verify(5, self.create_service,
