@@ -30,10 +30,20 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
     Manager that provides access to the Murano python client for
     calling Murano API.
     """
+
     def setUp(self):
         super(MuranoTest, self).setUp()
         self.check_clients_state()
         self.env_name = rand_name("ost1_test-Murano_env")
+
+        if not self.config.compute.compute_nodes:
+            self.fail('There are no compute nodes')
+
+        self.flavor_name = rand_name("ost1_test_Murano")
+        self.flavor = self.compute_client.flavors.create(self.flavor_name,
+                                                         disk=60, ram=2,
+                                                         vcpus=1)
+
         self.murano_available = True
         try:
             self.murano_client.environments.list()
@@ -47,6 +57,8 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             after the Murano OSTF tests
         """
         super(MuranoTest, self).tearDown()
+
+        self.compute_client.flavors.delete(self.flavor.id)
         if self.murano_available:
             for env in self.list_environments():
                 if 'ost1_test-Murano_env' in env.name:
