@@ -24,9 +24,8 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
     TestClass contains verifications of full Murano functionality.
     Special requirements:
         1. Murano component should be installed.
-        2. Key Pair 'murano-lb-key'.
-        3. Internet access for virtual machines in OpenStack.
-        4. Windows image with Murano metadata should be imported.
+        2. Internet access for virtual machines in OpenStack.
+        3. Windows image with Murano metadata should be imported.
     """
 
     def setUp(self):
@@ -74,7 +73,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         post_body = {"type": "activeDirectory", "name": "ad.local",
                      "adminPassword": "P@ssw0rd", "domain": "ad.local",
                      "availabilityZone": "nova", "unitNamingPattern": "",
-                     "flavor": "m1.medium", "osImage":
+                     "flavor": "murano.flavor", "osImage":
                      {"type": "ws-2012-std", "name": str(self.image.name),
                       "title": "Windows Server 2012 Standard"},
                      "configuration": "standalone",
@@ -145,7 +144,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                                  "name": str(self.image.name),
                                  "title": "Windows Server 2012 Standard"},
                      "units": [{}], "credentials": creds,
-                     "flavor": "m1.medium"}
+                     "flavor": "murano.flavor"}
 
         fail_msg = "User can't create service. "
         self.verify(5, self.create_service,
@@ -215,7 +214,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                      {"type": "ws-2012-std", "name": str(self.image.name),
                       "title": "Windows Server 2012 Standard"},
                      "units": [{}], "credentials": creds,
-                     "flavor": "m1.medium"}
+                     "flavor": "murano.flavor"}
 
         fail_msg = "User can't create service. "
         self.verify(5, self.create_service,
@@ -281,7 +280,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                       "title": "Windows Server 2012 Standard"}, "units": [{}],
                      "credentials": {"username": "Administrator",
                                      "password": "P@ssw0rd"},
-                     "flavor": "m1.medium"}
+                     "flavor": "murano.flavor"}
 
         fail_msg = "User can't create service. "
         self.verify(5, self.create_service,
@@ -345,7 +344,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         post_body = {"type": "activeDirectory", "name": "ad.local",
                      "adminPassword": "P@ssw0rd", "domain": "ad.local",
                      "availabilityZone": "nova", "unitNamingPattern": "",
-                     "flavor": "m1.medium", "osImage":
+                     "flavor": "murano.flavor", "osImage":
                      {"type": "ws-2012-std", "name": str(self.image.name),
                       "title": "Windows Server 2012 Standard"},
                      "configuration": "standalone",
@@ -391,7 +390,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                      {"type": "ws-2012-std", "name": str(self.image.name),
                       "title": "Windows Server 2012 Standard"},
                      "agListenerName": "SomeSQL_AGListner",
-                     "flavor": "m1.medium",
+                     "flavor": "murano.flavor",
                      "agGroupName": "SomeSQL_AG",
                      "domainAdminUserName": "Administrator",
                      "agListenerIP": AG,

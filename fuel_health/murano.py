@@ -30,6 +30,21 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
     Manager that provides access to the Murano python client for
     calling Murano API.
     """
+
+    @classmethod
+    def setUpClass(cls):
+        super(MuranoTest, cls).setUpClass()
+
+        # Create custom flavor for all tests
+        cls.murano_flavor = cls.compute_client.flavors.create("murano.flavor",
+                                                              disk=60, ram=2,
+                                                              vcpus=1)
+
+    @classmethod
+    def tearDownClass(cls):
+        super(MuranoTest, cls).tearDownClass()
+        cls.compute_client.flavors.delete(cls.murano_flavor.id)
+
     def setUp(self):
         super(MuranoTest, self).setUp()
         self.check_clients_state()
