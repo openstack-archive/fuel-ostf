@@ -16,6 +16,7 @@
 
 import os
 import logging
+import multiprocessing
 import signal
 import pecan
 from gevent import pywsgi
@@ -27,6 +28,7 @@ from fuel_plugin.ostf_adapter.wsgi import app
 from fuel_plugin.ostf_adapter.nose_plugin import nose_discovery
 from fuel_plugin.ostf_adapter.storage import engine
 from fuel_plugin.ostf_adapter import mixins
+from fuel_plugin.ostf_adapter.orchestrator import consumers
 
 
 def main():
@@ -69,6 +71,10 @@ def main():
         #cache needed data from test repository
         mixins.cache_test_repository(session)
 
+    log.info('Starting orchestrator')
+    orchestrator = multiprocessing.Process(target=consumers.basic_consumer)
+    orchestrator.start()
+
     host, port = pecan.conf.server.host, pecan.conf.server.port
     srv = pywsgi.WSGIServer((host, int(port)), root)
 
@@ -79,7 +85,8 @@ def main():
         signal.signal(signal.SIGCHLD, signal.SIG_IGN)
         srv.serve_forever()
     except KeyboardInterrupt:
-        pass
+        log.info('Terminating orchestrator')
+        orchestrator.terminate()
 
 
 if __name__ == '__main__':

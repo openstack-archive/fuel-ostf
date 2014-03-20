@@ -13,6 +13,7 @@
 #    under the License.
 
 import time
+import unittest
 from sqlalchemy import create_engine
 
 from fuel_plugin.testing.tests.functional.base import \
@@ -73,8 +74,7 @@ class AdapterTests(BaseAdapterTest):
         cls.adapter = adapter(url)
         cls.client = cls.init_client(url)
 
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         eng = create_engine(
             'postgresql+psycopg2://ostf:ostf@localhost/ostf'
         )
@@ -295,7 +295,7 @@ class AdapterTests(BaseAdapterTest):
                                'general_test.Dummy_test.test_skip_directly'),
                     }
                 ],
-                'cluster_id': '1',
+                'cluster_id': 1,
             }
         ])
 
@@ -314,6 +314,7 @@ class AdapterTests(BaseAdapterTest):
 
         self.compare(resp, assertions)
 
+    @unittest.skip("Depends on fix for skipped action. Skip until merge")
     def test_single_test_restart(self):
         """Verify that you restart individual tests for given testrun"""
         testset = "general_test"
@@ -380,7 +381,7 @@ class AdapterTests(BaseAdapterTest):
                                'general_test.Dummy_test.test_skip_directly'),
                     }
                 ],
-                'cluster_id': '1',
+                'cluster_id': 1,
             }
         ])
 
@@ -471,7 +472,7 @@ class AdapterTests(BaseAdapterTest):
                                'general_test.Dummy_test.test_skip_directly'),
                     }
                 ],
-                'cluster_id': '1',
+                'cluster_id': 1,
             }
         ])
         self.compare(resp, assertions)
@@ -485,6 +486,7 @@ class AdapterTests(BaseAdapterTest):
                 test['status'] = 'error'
         self.compare(resp, assertions)
 
+    #@unittest.skip("Stop action is not yet supported by testrun orchestrator")
     def test_cant_restart_during_run(self):
         testset = 'general_test'
         tests = [
@@ -508,6 +510,7 @@ class AdapterTests(BaseAdapterTest):
                ' to restart running testset:\n {0}').format(resp.request)
         self.assertTrue(resp.is_empty, msg)
 
+    @unittest.skip("Depends on fix for skipped action. Skip until merge")
     def test_nose_adapter_error_while_running_tests(self):
         testset = 'test_with_error'
         cluster_id = 4
