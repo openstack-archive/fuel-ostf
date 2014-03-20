@@ -24,6 +24,7 @@ from sqlalchemy.dialects.postgres import ARRAY
 
 from fuel_plugin.ostf_adapter import nose_plugin
 from fuel_plugin.ostf_adapter.storage import fields, engine
+from fuel_plugin.ostf_adapter.orchestrator import producers
 
 
 LOG = logging.getLogger(__name__)
@@ -356,7 +357,6 @@ class TestRun(BASE):
 
     @classmethod
     def start(cls, session, test_set, metadata, tests, dbpath):
-        plugin = nose_plugin.get_plugin(test_set.driver)
         if cls.is_last_running(session, test_set.id,
                                metadata['cluster_id']):
 
@@ -364,10 +364,13 @@ class TestRun(BASE):
                 session, test_set.id,
                 metadata['cluster_id'], tests=tests)
 
-            plugin.run(test_run, test_set, dbpath)
-
             #flush test_run data to db
             session.flush()
+
+            payload = {'dbpath': dbpath,
+                       'test_run_id': test_run.id,
+                       'tests': tests}
+            producers.send_message(payload)
 
             return test_run.frontend
         return {}

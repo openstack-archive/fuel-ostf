@@ -151,6 +151,7 @@ class AdapterTests(BaseAdapterTest):
         assertions.general_test['status'] = 'finished'
         assertions.stopped_test['status'] = 'finished'
 
+        print resp.body
         self.compare(resp, assertions)
 
     def test_stop_testset(self):

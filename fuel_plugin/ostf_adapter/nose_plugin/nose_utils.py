@@ -27,6 +27,14 @@ from nose.suite import ContextSuite
 LOG = logging.getLogger(__name__)
 
 
+class InterruptTestRunException(KeyboardInterrupt):
+    ''' Current class exception is used for cleanup action
+    as KeyboardInterrupt is the only exception that is reraised by
+    unittest (and nose correspondingly) into outside environment
+    '''
+    pass
+
+
 def parse_json_file(file_path):
     current_directory = os.path.dirname(os.path.realpath(__file__))
     commands_path = os.path.join(
