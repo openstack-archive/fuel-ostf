@@ -40,6 +40,8 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
         super(TestMysqlReplication, self).setUp()
         if 'ha' not in self.config.compute.deployment_mode:
             self.fail('Cluster is not HA mode, skipping tests')
+        if len(self.controllers) == 1:
+            self.fail('There is only one controller online. Nothing to check')
 
     @classmethod
     def tearDownClass(cls):
