@@ -90,7 +90,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Duration: 100 s.
         """
         if not self.computes:
-            self.fail('Step 1 failed: There are no compute nodes')
+            self.fail('There are no compute nodes')
 
         cmd = "ping -q -c3 -w3 8.8.8.8 | grep 'received' |" \
               " grep -v '0 received'"
@@ -118,7 +118,8 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Duration: 120 s.
         """
         if not self.computes:
-            self.fail('Step 1 failed: There are no compute nodes')
+            self.fail('There are no compute nodes')
+
         ssh_client = SSHClient(self.computes[0],
                                self.usr,
                                self.pwd,
