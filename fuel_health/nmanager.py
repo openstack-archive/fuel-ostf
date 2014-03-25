@@ -690,6 +690,9 @@ class SanityChecksTest(OfficialClientTest):
         networks = client.networks.list()
         return networks
 
+    def _list_stacks(self, client):
+        return client.stacks.list()
+
 
 class SmokeChecksTest(OfficialClientTest):
     """
