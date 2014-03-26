@@ -56,17 +56,17 @@ def main():
     if getattr(cli_args, 'after_init_hook'):
         return nailgun_hooks.after_initialization_environment_hook()
 
-    #performing cleaning of expired data (if any) in db
+    # performing cleaning of expired data (if any) in db
     mixins.clean_db(engine.get_engine())
 
-    #discover testsets and their tests
+    # discover testsets and their tests
     CORE_PATH = pecan.conf.debug_tests if \
         pecan.conf.get('debug_tests') else 'fuel_health'
 
     session = engine.get_session()
     nose_discovery.discovery(path=CORE_PATH, session=session)
 
-    #cache needed data from test repository
+    # cache needed data from test repository
     mixins.cache_test_repository(session)
 
     host, port = pecan.conf.server.host, pecan.conf.server.port

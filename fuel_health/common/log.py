@@ -77,10 +77,10 @@ class TestsAdapter(logging.LoggerAdapter):
             if self.regexp.search(binary_name) and 'self' in frame[0].f_locals:
                 return frame[0].f_locals.get('self').id()
             elif frame[3] == '_run_cleanups':
-                #NOTE(myamazaki): method calling addCleanup
+                # NOTE(myamazaki): method calling addCleanup
                 return frame[0].f_locals.get('self').case.id()
             elif frame[3] in ['setUpClass', 'tearDownClass']:
-                #NOTE(myamazaki): setUpClass or tearDownClass
+                # NOTE(myamazaki): setUpClass or tearDownClass
                 return "%s.%s.%s" % (frame[0].f_locals['cls'].__module__,
                                      frame[0].f_locals['cls'].__name__,
                                      frame[3])

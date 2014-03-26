@@ -96,7 +96,7 @@ class NoseDriver(object):
     def _clean_up(self, test_run_id, cluster_id, cleanup):
         session = engine.get_session()
 
-        #need for performing proper cleaning up for current cluster
+        # need for performing proper cleaning up for current cluster
         cluster_deployment_info = \
             session.query(models.ClusterState.deployment_tags)\
             .filter_by(id=cluster_id)\
