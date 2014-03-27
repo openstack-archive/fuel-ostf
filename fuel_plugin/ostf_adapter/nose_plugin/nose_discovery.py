@@ -57,7 +57,7 @@ class DiscoveryPlugin(plugins.Plugin):
                 self.session.merge(test_set)
                 self.test_sets[test_set.id] = test_set
 
-                #flush test_sets data into db
+                # flush test_sets data into db
                 self.session.commit()
             except Exception as e:
                 LOG.error(
@@ -89,7 +89,7 @@ class DiscoveryPlugin(plugins.Plugin):
                     test_obj = models.Test(**data)
                     self.session.merge(test_obj)
 
-                    #flush tests data into db
+                    # flush tests data into db
                     self.session.commit()
                 except Exception as e:
                     LOG.error(

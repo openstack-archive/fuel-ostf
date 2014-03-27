@@ -168,7 +168,7 @@ class TestTestRunsPutController(TestTestRunsController):
             .filter_by(test_run_id=int(self.test_run['id']))\
             .update({'status': 'running'})
 
-        #flush data which test is depend on into db
+        # flush data which test is depend on into db
         self.session.commit()
 
         self.request_mock.body = json.dumps(
@@ -260,8 +260,8 @@ class TestClusterRedeployment(base.BaseWSGITest):
             ]]
         }
 
-        #patch request_to_nailgun function in orded to emulate
-        #redeployment of cluster
+        # patch request_to_nailgun function in orded to emulate
+        # redeployment of cluster
         cluster_data = set(
             ['multinode', 'ubuntu', 'nova_network']
         )
