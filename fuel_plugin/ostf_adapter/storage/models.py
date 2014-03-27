@@ -88,8 +88,8 @@ class TestSet(BASE):
     deployment_tags = sa.Column(ARRAY(sa.String(64)))
     test_runs_ordering_priority = sa.Column(sa.Integer)
 
-    #list of test sets that cannot be executed simultaneously
-    #with current test set
+    # list of test sets that cannot be executed simultaneously
+    # with current test set
     exclusive_testsets = sa.Column(ARRAY(sa.String(128)))
 
     tests = relationship(
@@ -366,7 +366,7 @@ class TestRun(BASE):
 
             plugin.run(test_run, test_set, dbpath)
 
-            #flush test_run data to db
+            # flush test_run data to db
             session.flush()
 
             return test_run.frontend

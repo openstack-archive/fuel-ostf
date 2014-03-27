@@ -115,7 +115,7 @@ class AdapterTests(BaseAdapterTest):
         testsets = ["general_test", "stopped_test"]
         cluster_id = 1
 
-        #make sure we have data about test_sets in db
+        # make sure we have data about test_sets in db
         self.adapter.testsets(cluster_id)
         for testset in testsets:
             self.client.start_testrun(testset, cluster_id)
@@ -159,8 +159,8 @@ class AdapterTests(BaseAdapterTest):
         testset = "stopped_test"
         cluster_id = 1
 
-        #make sure we have all needed data in db
-        #for this test case
+        # make sure we have all needed data in db
+        # for this test case
         self.adapter.testsets(cluster_id)
 
         self.client.start_testrun(testset, cluster_id)
@@ -242,7 +242,7 @@ class AdapterTests(BaseAdapterTest):
         ]
         cluster_id = 1
 
-        #make sure that we have all needed data in db
+        # make sure that we have all needed data in db
         self.adapter.testsets(cluster_id)
 
         resp = self.client.start_testrun_tests(testset, tests, cluster_id)
@@ -325,7 +325,7 @@ class AdapterTests(BaseAdapterTest):
         ]
         cluster_id = 1
 
-        #make sure we have all needed data in db
+        # make sure we have all needed data in db
         self.adapter.testsets(cluster_id)
 
         self.client.run_testset_with_timeout(testset, cluster_id, 10)
@@ -414,7 +414,7 @@ class AdapterTests(BaseAdapterTest):
         ]
         cluster_id = 1
 
-        #make sure we have all needed data in db
+        # make sure we have all needed data in db
         self.adapter.testsets(cluster_id)
 
         self.client.run_with_timeout(testset, tests, cluster_id, 70)
@@ -497,7 +497,7 @@ class AdapterTests(BaseAdapterTest):
         ]
         cluster_id = 1
 
-        #make sure that we have all needen data in db
+        # make sure that we have all needen data in db
         self.adapter.testsets(cluster_id)
 
         self.client.start_testrun(testset, cluster_id)
@@ -512,7 +512,7 @@ class AdapterTests(BaseAdapterTest):
         testset = 'test_with_error'
         cluster_id = 4
 
-        #make sure we have all needed data in db
+        # make sure we have all needed data in db
         self.adapter.testsets(cluster_id)
 
         self.client.start_testrun(testset, cluster_id)

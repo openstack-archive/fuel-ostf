@@ -281,7 +281,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         else:
             template = self._customize_template(template)
 
-        #create stack
+        # create stack
         fail_msg = "Stack was not created properly."
         stack = self.verify(20, self._create_stack, 6,
                             fail_msg, "stack creation",

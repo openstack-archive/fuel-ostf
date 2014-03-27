@@ -37,7 +37,7 @@ class CustomTransactionalHook(hooks.TransactionHook):
             self.session.rollback()
 
         def clear():
-            #not all GET controllers doesn't write to db
+            # not all GET controllers doesn't write to db
             self.session.commit()
 
             self.session.remove()

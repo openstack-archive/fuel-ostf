@@ -81,8 +81,8 @@ def discovery_check(session, cluster):
             )
         )
 
-        #flush data to db, cuz _add_cluster_testing_pattern
-        #is dependent on it
+        # flush data to db, cuz _add_cluster_testing_pattern
+        # is dependent on it
         session.flush()
 
         _add_cluster_testing_pattern(session, cluster_data)
@@ -120,17 +120,17 @@ def _get_cluster_depl_tags(cluster_id):
 
     release_data = REQ_SES.get(release_url).json()
 
-    #info about deployment type and operating system
+    # info about deployment type and operating system
     mode = 'ha' if 'ha' in response['mode'].lower() else response['mode']
     deployment_tags.add(mode)
     deployment_tags.add(release_data.get(
         'operating_system', 'failed to get os'))
 
-    #networks manager
+    # networks manager
     network_type = response.get('net_provider', 'nova_network')
     deployment_tags.add(network_type)
 
-    #info about murano/savanna clients installation
+    # info about murano/savanna clients installation
     request_url += '/' + 'attributes'
     response = REQ_SES.get(request_url).json()
 
