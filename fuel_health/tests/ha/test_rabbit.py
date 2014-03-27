@@ -50,8 +50,6 @@ class RabbitSmokeTest(BaseTestCase):
         super(RabbitSmokeTest, self).setUp()
         if 'ha' not in self.config.mode:
             self.fail("It is not HA configuration")
-        if not self._controllers:
-            self.fail('There are no controller nodes')
         if not self.amqp_clients:
             self.fail('Cannot create AMQP clients for controllers')
         if len(self._controllers) == 1:
