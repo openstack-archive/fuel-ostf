@@ -54,8 +54,6 @@ class RabbitSmokeTest(BaseTestCase):
             self.fail('There are no controller nodes')
         if not self.amqp_clients:
             self.fail('Cannot create AMQP clients for controllers')
-        if len(self._controllers) == 1:
-            self.fail('There is only one controller online')
 
     def test_001_rabbitmqctl_status(self):
         """Check RabbitMQ is available
