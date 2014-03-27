@@ -73,7 +73,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
 
         msg_s1 = 'Volume was not created.'
 
-        #Create volume
+        # Create volume
         volume = self.verify(120, self._create_volume, 1,
                              msg_s1,
                              "volume creation",

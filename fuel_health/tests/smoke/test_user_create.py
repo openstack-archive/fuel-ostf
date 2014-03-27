@@ -97,7 +97,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                                   'Step 8 failed: {msg}'.format(msg=msg_s7))
 
         try:
-            #Auth in horizon with non-admin user
+            # Auth in horizon with non-admin user
             client = requests.session()
             if self.config.compute.deployment_os == 'Ubuntu':
                 url = self.config.identity.ubuntu_url

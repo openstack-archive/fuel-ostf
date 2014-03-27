@@ -439,7 +439,7 @@ class FileConfig(object):
 
 
 class ConfigGroup(object):
-  # USE SLOTS
+    # USE SLOTS
 
     def __init__(self, opts):
         self.parse_opts(opts)

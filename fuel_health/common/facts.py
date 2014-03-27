@@ -68,7 +68,7 @@ class Facts:
             return None
 
     def _init_parser(self):
-        #Custom YAML constructs for ruby objects for puppet files parsing
+        # Custom YAML constructs for ruby objects for puppet files parsing
         def _construct_ruby_object(loader, suffix, node):
                 return loader.construct_yaml_map(node)
 

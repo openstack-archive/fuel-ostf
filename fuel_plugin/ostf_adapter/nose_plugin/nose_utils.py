@@ -77,9 +77,9 @@ def get_description(test_obj):
                 deployment_tags_pattern
             )
 
-            #if deployment tags is empty or absent
-            #_process_docstring returns None so we
-            #must check this and prevent
+            # if deployment tags is empty or absent
+            # _process_docstring returns None so we
+            # must check this and prevent
             if deployment_tags:
                 deployment_tags = [
                     tag.strip().lower() for tag in deployment_tags.split(',')

@@ -61,7 +61,7 @@ class BaseWSGITest(unittest2.TestCase):
         }
 
     def setUp(self):
-        #orm session wrapping
+        # orm session wrapping
         self.connection = self.engine.connect()
         self.trans = self.connection.begin()
 
@@ -72,14 +72,14 @@ class BaseWSGITest(unittest2.TestCase):
 
         test_sets = self.session.query(models.TestSet).all()
 
-        #need this if start unit tests in conjuction with integration
+        # need this if start unit tests in conjuction with integration
         if not test_sets:
             discovery(path=TEST_PATH, session=self.session)
 
         mixins.cache_test_repository(self.session)
 
-        #mocking
-        #request mocking
+        # mocking
+        # request mocking
         self.request_mock = MagicMock()
 
         self.request_patcher = patch(
@@ -88,7 +88,7 @@ class BaseWSGITest(unittest2.TestCase):
         )
         self.request_patcher.start()
 
-        #pecan conf mocking
+        # pecan conf mocking
         self.pecan_conf_mock = MagicMock()
         self.pecan_conf_mock.nailgun.host = '127.0.0.1'
         self.pecan_conf_mock.nailgun.port = 8888
@@ -99,17 +99,17 @@ class BaseWSGITest(unittest2.TestCase):
         )
         self.pecan_conf_patcher.start()
 
-        #engine.get_session mocking
+        # engine.get_session mocking
         self.request_mock.session = self.session
 
     def tearDown(self):
-        #rollback changes to database
-        #made by tests
+        # rollback changes to database
+        # made by tests
         self.trans.rollback()
         self.session.close()
         self.connection.close()
 
-        #end of test_case patching
+        # end of test_case patching
         self.request_patcher.stop()
         self.pecan_conf_patcher.stop()
 

@@ -103,7 +103,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
                                            image=image_id,
                                            flavor=flavor_id)
         self.set_resource(name, server)
-        #self.addCleanup(self.compute_client.servers.delete, server)
+        # self.addCleanup(self.compute_client.servers.delete, server)
         self.verify_response_body_content(
             name, server.name,
             msg="Please refer to OpenStack logs for more details.")

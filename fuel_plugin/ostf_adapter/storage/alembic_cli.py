@@ -30,5 +30,5 @@ def do_apply_migrations():
                                  'fuel_plugin.ostf_adapter.storage:migrations')
     alembic_conf.set_main_option('sqlalchemy.url', conf.dbpath)
 
-    #apply initial migration
+    # apply initial migration
     command.upgrade(alembic_conf, 'head')
