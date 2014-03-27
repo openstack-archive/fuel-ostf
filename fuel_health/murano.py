@@ -19,7 +19,7 @@ import time
 import traceback
 
 import muranoclient.common.exceptions as exceptions
-
+from fuel_health.common.utils.data_utils import rand_name
 import fuel_health.nmanager
 
 LOG = logging.getLogger(__name__)
@@ -33,6 +33,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
     def setUp(self):
         super(MuranoTest, self).setUp()
         self.check_clients_state()
+        self.env_name = rand_name("ost1_test-Murano_env")
         self.murano_available = True
         try:
             self.murano_client.environments.list()
