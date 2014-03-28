@@ -16,12 +16,12 @@
 
 import logging
 
-from fuel_health import heatmanager
+from fuel_health import nmanager
 
 LOG = logging.getLogger(__name__)
 
 
-class SanityHeatTest(heatmanager.HeatBaseTest):
+class SanityHeatTest(nmanager.SanityChecksTest):
     """
     Class contains tests that check basic Heat functionality.
     Special requirements:
@@ -37,7 +37,7 @@ class SanityHeatTest(heatmanager.HeatBaseTest):
 
         Duration: 20 s.
         """
-        self.verify(10, self._list_stacks, 1,
+        self.verify(20, self._list_stacks, 1,
                     'Stack list is unavailable. ',
                     "stack listing",
                     self.heat_client)
