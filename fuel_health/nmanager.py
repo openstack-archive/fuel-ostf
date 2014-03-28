@@ -69,11 +69,22 @@ class OfficialClientManager(fuel_health.manager.Manager):
         super(OfficialClientManager, self).__init__()
         self.clients_initialized = False
         self.traceback = ''
+        self.keystone_error_message = None
         self.compute_client = self._get_compute_client()
         try:
             self.identity_client = self._get_identity_client()
             self.clients_initialized = True
-        except Exception:
+        except Exception as e:
+            if e.__class__.__name__ == 'Unauthorized':
+                self.keystone_error_message = ('Unable to run test: OpenStack'
+                                               ' Authorization Failure. '
+                                               'If login or '
+                                               'password was changed, '
+                                               'please update '
+                                               'environment settings. '
+                                               'Please refer to Mirantis '
+                                               'OpenStack documentation '
+                                               'for more details.')
             LOG.debug(traceback.format_exc())
             self.traceback = traceback.format_exc()
 
@@ -297,8 +308,11 @@ class OfficialClientTest(fuel_health.test.TestCase):
         if not self.manager.clients_initialized:
             LOG.debug("Unable to initialize Keystone client: {trace}".format(
                 trace=self.manager.traceback))
-            self.fail("Keystone client is not available. Please,"
-                      " refer to OpenStack logs to fix this problem")
+            if self.manager.keystone_error_message:
+                self.fail(self.manager.keystone_error_message)
+            else:
+                self.fail("Keystone client is not available. Please, refer "
+                          "to OpenStack logs to fix this problem")
 
     def check_image_exists(self):
         try:
