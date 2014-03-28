@@ -364,10 +364,10 @@ class TestRun(BASE):
                 session, test_set.id,
                 metadata['cluster_id'], tests=tests)
 
-            plugin.run(test_run, test_set, dbpath)
-
             # flush test_run data to db
-            session.flush()
+            session.commit()
+
+            plugin.run(test_run, test_set, dbpath)
 
             return test_run.frontend
         return {}

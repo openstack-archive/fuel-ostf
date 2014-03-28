@@ -58,8 +58,8 @@ class TestNoseDiscovery(unittest2.TestCase):
 
     def test_discovery(self):
         expected = {
-            'test_sets_count': 6,
-            'tests_count': 22
+            'test_sets_count': 8,
+            'tests_count': 26
         }
 
         self.assertTrue(
