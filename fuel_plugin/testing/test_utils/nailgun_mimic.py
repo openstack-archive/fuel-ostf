@@ -78,6 +78,20 @@ cluster_fixture = {
                 'additional_components': {}
             }
         }
+    },
+    5: {
+        'cluster_meta': {
+            'release_id': 5,
+            'mode': 'dependent_tests'
+        },
+        'release_data': {
+            'operating_system': 'none'
+        },
+        'cluster_attributes': {
+            'editable': {
+                'additional_components': {}
+            }
+        }
     }
 }
 

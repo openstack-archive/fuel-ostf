@@ -12,15 +12,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import fcntl
 import os
 import logging
 import signal
 
 from pecan import conf
+
 from fuel_plugin.ostf_adapter.nose_plugin import nose_test_runner
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
 from fuel_plugin.ostf_adapter.storage import engine, models
-
 from fuel_plugin.ostf_adapter.nose_plugin import nose_storage_plugin
 
 
@@ -47,13 +48,16 @@ class NoseDriver(object):
         else:
             argv_add = [test_set.test_path] + test_set.additional_arguments
 
+        lock_path = conf.lock_dir
         test_run.pid = nose_utils.run_proc(self._run_tests,
+                                           lock_path,
                                            dbpath,
                                            test_run.id,
                                            test_run.cluster_id,
                                            argv_add).pid
 
-    def _run_tests(self, dbpath, test_run_id, cluster_id, argv_add):
+    def _run_tests(self, lock_path, dbpath,
+                   test_run_id, cluster_id, argv_add):
         cleanup_flag = False
 
         def raise_exception_handler(signum, stack_frame):
@@ -61,6 +65,20 @@ class NoseDriver(object):
         signal.signal(signal.SIGUSR1, raise_exception_handler)
 
         with engine.contexted_session(dbpath) as session:
+            testrun = session.query(models.TestRun)\
+                .filter_by(id=test_run_id)\
+                .one()
+
+            if not os.path.exists(lock_path):
+                LOG.error('There is no directory to store locks')
+                raise Exception('There is no directory to store locks')
+
+            aquired_locks = []
+            for serie in testrun.test_set.exclusive_testsets:
+                fd = open(os.path.join(lock_path, serie), 'w')
+                fcntl.flock(fd, fcntl.LOCK_EX)
+                aquired_locks.append(fd)
+
             try:
                 nose_test_runner.SilentTestProgram(
                     addplugins=[nose_storage_plugin.StoragePlugin(
@@ -69,14 +87,8 @@ class NoseDriver(object):
                     argv=['ostf_tests'] + argv_add)
 
             except InterruptTestRunException:
-                testset_id = session.query(models.TestRun.test_set_id)\
-                    .filter_by(id=test_run_id)\
-                    .scalar()
-                cleanup = session.query(models.TestSet.cleanup_path)\
-                    .filter_by(id=testset_id)\
-                    .scalar()
 
-                if cleanup:
+                if testrun.test_set.cleanup_path:
                     cleanup_flag = True
 
             except Exception:
@@ -88,8 +100,15 @@ class NoseDriver(object):
                 models.TestRun.update_test_run(
                     session, test_run_id, updated_data)
 
+                for fd in aquired_locks:
+                    fcntl.flock(fd, fcntl.LOCK_UN)
+                    fd.close()
+
                 if cleanup_flag:
-                    self._clean_up(session, test_run_id, cluster_id, cleanup)
+                    self._clean_up(session,
+                                   test_run_id,
+                                   cluster_id,
+                                   testrun.test_set.cleanup_path)
 
     def kill(self, test_run):
         if test_run.pid:

@@ -41,6 +41,7 @@ def main():
         'dbpath': cli_args.dbpath,
         'debug': cli_args.debug,
         'debug_tests': cli_args.debug_tests,
+        'lock_dir': cli_args.lock_dir,
         'nailgun': {
             'host': cli_args.nailgun_host,
             'port': cli_args.nailgun_port
