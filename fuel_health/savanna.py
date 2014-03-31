@@ -29,7 +29,7 @@ LOG = logging.getLogger(__name__)
 
 class SavannaTest(nmanager.OfficialClientTest):
     """
-    Base class for openstack sanity tests for Savanna
+    Base class for openstack sanity tests for Sahara
     """
     @classmethod
     def setUpClass(cls):
@@ -81,13 +81,13 @@ class SavannaTest(nmanager.OfficialClientTest):
                   tag_plugin, tag_version)
         for image in self.compute_client.images.list():
             if image.name == 'savanna':
-                LOG.debug('Savanna image metadata is %s', image.metadata)
+                LOG.debug('Sahara image metadata is %s', image.metadata)
                 if image.metadata[tag_version] == 'True'\
                     and image.metadata[tag_plugin] == 'True'\
                         and image.metadata['_savanna_username'] is not None:
                             LOG.debug('Correct image for savanna found')
                             return True
-        LOG.debug('Correct image for savanna not found')
+        LOG.debug('Correct image for Sahara not found')
         return False
 
     def _create_node_group_template_and_get_id(

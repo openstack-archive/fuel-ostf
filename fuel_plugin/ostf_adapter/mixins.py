@@ -130,7 +130,7 @@ def _get_cluster_depl_tags(cluster_id):
     network_type = response.get('net_provider', 'nova_network')
     deployment_tags.add(network_type)
 
-    # info about murano/savanna clients installation
+    # info about murano/sahara clients installation
     request_url += '/' + 'attributes'
     response = REQ_SES.get(request_url).json()
 
@@ -139,7 +139,7 @@ def _get_cluster_depl_tags(cluster_id):
 
     additional_depl_tags = set()
 
-    comp_names = ['murano', 'savanna', 'heat', 'ceilometer']
+    comp_names = ['murano', 'sahara', 'heat', 'ceilometer']
 
     def processor(comp):
         if comp in comp_names:

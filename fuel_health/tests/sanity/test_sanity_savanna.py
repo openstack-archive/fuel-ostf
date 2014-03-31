@@ -27,8 +27,8 @@ class SanitySavannaTests(savanna.SavannaTest):
     """
 
     def test_sanity_savanna(self):
-        """Savanna tests to create/list/delete node group and cluster templates
-        Target component: Savanna
+        """Sahara tests to create/list/delete node group and cluster templates
+        Target component: Sahara
 
         Scenario:
             1. Create node group task tracker and data node template
@@ -39,10 +39,10 @@ class SanitySavannaTests(savanna.SavannaTest):
             6. Request the list of cluster templates
             7. Send request to delete cluster template
             8. Send request to delete node templates
-            9. Send request to delete savanna flavor
+            9. Send request to delete sahara flavor
 
         Duration: 100 s.
-        Deployment tags: Savanna
+        Deployment tags: Sahara
         """
         fail_msg = 'Fail create node group tasktracker and datanode templates.'
         create_nodes_templates_tt_dn_resp = self.verify(

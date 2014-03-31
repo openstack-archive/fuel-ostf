@@ -29,11 +29,11 @@ class PlatformSavannaTests(savanna.SavannaTest):
 
     @attr(type=['sanity', 'fuel'])
     def test_platform_savanna(self):
-        """Savanna tests to create, list, start, checks and delete cluster
-        Target component: Savanna
+        """Sahara tests to create, list, start, checks and delete cluster
+        Target component: Sahara
 
         Scenario:
-            1. Savanna image with tags should be imported
+            1. Sahara image with tags should be imported
             2. Send request to create node group template
             3. Send request to create cluster template
             4. Request the list of node group templates
@@ -44,9 +44,9 @@ class PlatformSavannaTests(savanna.SavannaTest):
             9. Send request to delete node group templates
         Duration:  100 m.
 
-        Deployment tags: Savanna
+        Deployment tags: Sahara
         """
-        fail_msg = ("Savanna image with tags wasn't imported into Glance, "
+        fail_msg = ("Sahara image with tags wasn't imported into Glance, "
                     "please check "
                     "http://docs.mirantis.com/fuel/fuel-4.1/"
                     "user-guide.html#platform-tests-description")

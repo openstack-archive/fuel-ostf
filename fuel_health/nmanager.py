@@ -217,7 +217,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         auth_url = self.config.identity.uri
         tenant_name = self.config.identity.admin_tenant_name
         savanna_url = self.config.savanna.api_url
-        LOG.debug('Savana url is %s' % savanna_url)
+        LOG.debug('Sahara url is %s' % savanna_url)
         if not username:
             username = self.config.identity.admin_username
         if not password:
