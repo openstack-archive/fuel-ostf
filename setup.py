@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import multiprocessing
 import setuptools
 
 
@@ -23,7 +22,7 @@ fuel_health_reqs = [
     'python-novaclient>=2.15.0',
     'python-heatclient>=0.2.5',
     'python-muranoclient>=0.2.11',
-    'python-savannaclient>=0.3',
+    'python-saharaclient==0.6.0',
     'paramiko>=1.10.1',
     'requests>=1.1,<1.2.3',
     'unittest2>=0.5.1',
