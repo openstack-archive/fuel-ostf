@@ -156,6 +156,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                      "deployTelnet": True, "keyPair": "", "osImage":
                      {"type": "linux", "name": str(self.image.name),
                       "title": "Linux Image"}, "units": [{}],
+                     "instanceCount": [{}],
                      "flavor": "m1.small", "type": "linuxTelnetService"}
 
         fail_msg = "User can't create service. "
