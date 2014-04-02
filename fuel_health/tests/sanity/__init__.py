@@ -26,5 +26,6 @@ __profile__ = {
     "driver": "nose",
     "test_path": "fuel_health/tests/sanity",
     "cleanup_path": "fuel_health.cleanup",
-    "description": "Sanity tests. Duration 30 sec - 2 min"
+    "description": "Sanity tests. Duration 30 sec - 2 min",
+    "exclusive_testsets": []
 }
