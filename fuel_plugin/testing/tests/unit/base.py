@@ -29,10 +29,9 @@ class BaseWSGITest(unittest2.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.dbpath = 'postgresql+psycopg2://ostf:ostf@localhost/ostf'
         cls.Session = sessionmaker()
-        cls.engine = create_engine(
-            'postgresql+psycopg2://ostf:ostf@localhost/ostf'
-        )
+        cls.engine = create_engine(cls.dbpath)
 
         cls.ext_id = 'fuel_plugin.testing.fixture.dummy_tests.'
         cls.expected = {
@@ -99,6 +98,14 @@ class BaseWSGITest(unittest2.TestCase):
         )
         self.pecan_conf_patcher.start()
 
+        # pecan conf mocking in wsgi.controllers
+        self.wsgi_controllers_pecan_conf_mock = MagicMock()
+        self.controllers_pecan_conf_patcher = patch(
+            'fuel_plugin.ostf_adapter.wsgi.controllers.conf',
+            self.wsgi_controllers_pecan_conf_mock
+        )
+        self.controllers_pecan_conf_patcher.start()
+
         # engine.get_session mocking
         self.request_mock.session = self.session
 
@@ -112,6 +119,7 @@ class BaseWSGITest(unittest2.TestCase):
         # end of test_case patching
         self.request_patcher.stop()
         self.pecan_conf_patcher.stop()
+        self.controllers_pecan_conf_patcher.stop()
 
         mixins.TEST_REPOSITORY = []
 
