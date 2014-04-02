@@ -28,5 +28,6 @@ __profile__ = {
     "description": ("Platform services functional tests."
                     " Duration 3 min - 60 min"),
     "cleanup_path": "fuel_health.cleanup",
-    "deployment_tags": ['additional_components']
+    "deployment_tags": ['additional_components'],
+    "exclusive_testsets": ['smoke_platform']
 }
