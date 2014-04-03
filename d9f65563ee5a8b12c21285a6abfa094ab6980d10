@@ -1,0 +1,9 @@
+Change-Id: Id9f65563ee5a8b12c21285a6abfa094ab6980d10
+Verified+2: Jenkins
+Approved+1: tatyana-leontovich <tleontovich@mirantis.com>
+Code-Review+2: tatyana-leontovich <tleontovich@mirantis.com>
+Submitted-by: Jenkins
+Submitted-at: Thu, 03 Apr 2014 10:01:51 +0000
+Reviewed-on: https://review.openstack.org/84978
+Project: stackforge/fuel-ostf
+Branch: refs/heads/master
