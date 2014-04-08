@@ -25,24 +25,17 @@ import fuel_health.nmanager
 LOG = logging.getLogger(__name__)
 
 
-class MuranoTest(fuel_health.nmanager.OfficialClientTest):
-    """
-    Manager that provides access to the Murano python client for
-    calling Murano API.
-    """
+class SanityMuranoTest(fuel_health.nmanager.OfficialClientTest):
 
     def setUp(self):
-        super(MuranoTest, self).setUp()
+        super(SanityMuranoTest, self).setUp()
+
         self.check_clients_state()
+
         self.env_name = rand_name("ost1_test-Murano_env")
 
         if not self.config.compute.compute_nodes:
             self.fail('There are no compute nodes')
-
-        self.flavor_name = rand_name("ost1_test_Murano")
-        self.flavor = self.compute_client.flavors.create(self.flavor_name,
-                                                         disk=60, ram=2,
-                                                         vcpus=1)
 
         self.murano_available = True
         try:
@@ -52,13 +45,8 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             self.fail("Murano service is not available")
 
     def tearDown(self):
-        """
-            This method allows to clean up the OpenStack environment
-            after the Murano OSTF tests
-        """
-        super(MuranoTest, self).tearDown()
+        super(SanityMuranoTest, self).tearDown()
 
-        self.compute_client.flavors.delete(self.flavor.id)
         if self.murano_available:
             for env in self.list_environments():
                 if self.env_name in env.name:
@@ -66,6 +54,81 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
                         self.delete_environment(env.id)
                     except:
                         LOG.warning(traceback.format_exc())
+
+    def list_environments(self):
+        """
+            This method allows to get the list of environments.
+
+            Returns the list of environments.
+        """
+
+        return self.murano_client.environments.list()
+
+    def list_categories(self):
+        """
+            This method allows to get list of categories
+
+            Returns the list of categories
+        """
+
+        return self.murano_client.packages.categories()
+
+    def list_packages(self):
+        """
+            This method allows to get list of packages
+
+            Returns the list of packages
+        """
+
+        return self.murano_client.packages.list()
+
+    def create_environment(self, name):
+        """
+            This method allows to create environment.
+
+            Input parameters:
+              name - Name of new environment
+
+            Returns new environment.
+        """
+
+        return self.murano_client.environments.create(name)
+
+    def delete_environment(self, environment_id):
+        """
+            This method allows to delete specific environment by ID.
+
+            Input parameters:
+              environment_id - ID of environment
+
+            Returns None.
+        """
+
+        return self.murano_client.environments.delete(environment_id)
+
+
+class MuranoTest(SanityMuranoTest):
+    """
+    Manager that provides access to the Murano python client for
+    calling Murano API.
+    """
+
+    def setUp(self):
+        super(MuranoTest, self).setUp()
+
+        self.flavor_name = rand_name("ost1_test_Murano")
+        self.flavor = self.compute_client.flavors.create(self.flavor_name,
+                                                         disk=60, ram=2,
+                                                         vcpus=1)
+
+    def tearDown(self):
+        """
+            This method allows to clean up the OpenStack environment
+            after the Murano OSTF tests
+        """
+        super(MuranoTest, self).tearDown()
+
+        self.compute_client.flavors.delete(self.flavor.id)
 
     def find_murano_image(self, image_type):
         """
@@ -81,27 +144,6 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
                 metadata = json.loads(image.metadata[tag])
                 if image_type == metadata['type']:
                     return image
-
-    def list_environments(self):
-        """
-            This method allows to get the list of environments.
-
-            Returns the list of environments.
-        """
-
-        return self.murano_client.environments.list()
-
-    def create_environment(self, name):
-        """
-            This method allows to create environment.
-
-            Input parameters:
-              name - Name of new environment
-
-            Returns new environment.
-        """
-
-        return self.murano_client.environments.create(name)
 
     def get_environment(self, environment_id, session_id=None):
         """
@@ -128,18 +170,6 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         """
 
         return self.murano_client.environments.update(environment_id, new_name)
-
-    def delete_environment(self, environment_id):
-        """
-            This method allows to delete specific environment by ID.
-
-            Input parameters:
-              environment_id - ID of environment
-
-            Returns None.
-        """
-
-        return self.murano_client.environments.delete(environment_id)
 
     def create_session(self, environment_id):
         """
