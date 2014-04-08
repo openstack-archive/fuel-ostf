@@ -50,6 +50,8 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         except exceptions.CommunicationError:
             self.murano_available = False
             self.fail("Murano service is not available")
+        if len(self.manager.config.compute.controller_nodes) > 1:
+            self.fail("Murano tests don't work in HA")
 
     def tearDown(self):
         """
