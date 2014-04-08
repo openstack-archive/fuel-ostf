@@ -13,6 +13,8 @@
 # under the License.
 
 import logging
+import uuid
+
 from fuel_health import murano
 
 
@@ -70,34 +72,47 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                               2, fail_msg, "session creating",
                               self.environment.id)
 
-        post_body = {"type": "activeDirectory", "name": "ad.local",
-                     "adminPassword": "P@ssw0rd", "domain": "ad.local",
-                     "availabilityZone": "nova", "unitNamingPattern": "",
-                     "flavor": str(self.flavor_name), "osImage":
-                     {"type": "ws-2012-std", "name": str(self.image.name),
-                      "title": "Windows Server 2012 Standard"},
-                     "configuration": "standalone",
-                     "units": [{"isMaster": True,
-                                "recoveryPassword": "P@ssw0rd",
-                                "location": "west-dc"}]}
+        post_body = {
+            '?': {
+                'type': "io.murano.tests.activeDirectory",
+                'id': uuid.uuid4().hex
+            },
+            "name": "ad.local",
+            "adminPassword": "P@ssw0rd",
+            "domain": "ad.local",
+            "availabilityZone": "nova",
+            "unitNamingPattern": "",
+            "flavor": str(self.flavor_name),
+            "osImage": {
+                "type": "ws-2012-std",
+                "name": str(self.image.name),
+                "title": "Windows Server 2012 Standard"
+            },
+            "configuration": "standalone",
+            "units": [{
+                "isMaster": True,
+                "recoveryPassword": "P@ssw0rd",
+                "location": "west-dc"
+            }]
+        }
 
         fail_msg = "User can't create service. "
-        service = self.verify(5, self.create_service,
+        self.verify(5, self.create_service,
                               3, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = "User can't deploy session. "
-        deploy_sess = self.verify(5, self.deploy_session,
+        self.verify(5, self.deploy_session,
                                   4, fail_msg,
                                   "sending session on deployment",
                                   self.environment.id, session.id)
 
         fail_msg = "Deployment was not completed correctly. "
-        status_env = self.verify(1800, self.deploy_check,
+        self.verify(1800, self.deploy_check,
                                  5, fail_msg, 'deployment is going',
                                  self.environment.id)
 
-        deployment_status = self.verify(5, self.deployments_status_check,
+        self.verify(5, self.deployments_status_check,
                                         6, fail_msg,
                                         'Check deployments status',
                                         self.environment.id)
@@ -137,14 +152,26 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         creds = {'username': 'Administrator',
                  'password': 'P@ssw0rd'}
-        post_body = {"type": "webServer", "domain": "",
-                     "availabilityZone": "nova", "name": "someIIS",
-                     "adminPassword": "P@ssw0rd", "unitNamingPattern": "",
-                     "osImage": {"type": "ws-2012-std",
-                                 "name": str(self.image.name),
-                                 "title": "Windows Server 2012 Standard"},
-                     "units": [{}], "credentials": creds,
-                     "flavor": str(self.flavor_name)}
+
+        post_body = {
+            '?': {
+                'type': "io.murano.tests.webServer",
+                'id': uuid.uuid4().hex
+            },
+            "domain": "",
+            "availabilityZone": "nova",
+            "name": "someIIS",
+            "adminPassword": "P@ssw0rd",
+            "unitNamingPattern": "",
+            "osImage": {
+                "type": "ws-2012-std",
+                "name": str(self.image.name),
+                "title": "Windows Server 2012 Standard"
+            },
+            "units": [{}],
+            "credentials": creds,
+            "flavor": str(self.flavor_name)
+        }
 
         fail_msg = "User can't create service. "
         self.verify(5, self.create_service,
@@ -206,15 +233,27 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         creds = {'username': 'Administrator',
                  'password': 'P@ssw0rd'}
         asp_repository = "git://github.com/Mirantis/murano-mvc-demo.git"
-        post_body = {"type": "aspNetApp", "domain": "",
-                     "availabilityZone": "nova", "name": "someasp",
-                     "repository": asp_repository,
-                     "adminPassword": "P@ssw0rd", "unitNamingPattern": "",
-                     "osImage":
-                     {"type": "ws-2012-std", "name": str(self.image.name),
-                      "title": "Windows Server 2012 Standard"},
-                     "units": [{}], "credentials": creds,
-                     "flavor": str(self.flavor_name)}
+
+        post_body = {
+            '?': {
+                'type': "io.murano.tests.aspNetApp",
+                'id': uuid.uuid4().hex
+            },
+            "domain": "",
+            "availabilityZone": "nova",
+            "name": "someasp",
+            "repository": asp_repository,
+            "adminPassword": "P@ssw0rd",
+            "unitNamingPattern": "",
+            "osImage": {
+                "type": "ws-2012-std",
+                "name": str(self.image.name),
+                "title": "Windows Server 2012 Standard"
+            },
+            "units": [{}],
+            "credentials": creds,
+            "flavor": str(self.flavor_name)
+        }
 
         fail_msg = "User can't create service. "
         self.verify(5, self.create_service,
@@ -271,16 +310,30 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                               2, fail_msg, "session creating",
                               self.environment.id)
 
-        post_body = {"type": "msSqlServer", "domain": "",
-                     "availabilityZone": "nova", "name": "SQLSERVER",
-                     "adminPassword": "P@ssw0rd", "unitNamingPattern": "",
-                     "saPassword": "P@ssw0rd", "mixedModeAuth": "true",
-                     "osImage":
-                     {"type": "ws-2012-std", "name": str(self.image.name),
-                      "title": "Windows Server 2012 Standard"}, "units": [{}],
-                     "credentials": {"username": "Administrator",
-                                     "password": "P@ssw0rd"},
-                     "flavor": str(self.flavor_name)}
+        creds = {'username': 'Administrator',
+                 'password': 'P@ssw0rd'}
+
+        post_body = {
+            '?': {
+                'type': "io.murano.tests.msSqlServer",
+                'id': uuid.uuid4().hex
+            },
+            "domain": "",
+            "availabilityZone": "nova",
+            "name": "SQLSERVER",
+            "adminPassword": "P@ssw0rd",
+            "unitNamingPattern": "",
+            "saPassword": "P@ssw0rd",
+            "mixedModeAuth": True,
+            "osImage": {
+                "type": "ws-2012-std",
+                "name": str(self.image.name),
+                "title": "Windows Server 2012 Standard"
+            },
+            "units": [{}],
+            "credentials": creds,
+            "flavor": str(self.flavor_name)
+        }
 
         fail_msg = "User can't create service. "
         self.verify(5, self.create_service,
@@ -341,16 +394,29 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                               2, fail_msg, "session creating",
                               self.environment.id)
 
-        post_body = {"type": "activeDirectory", "name": "ad.local",
-                     "adminPassword": "P@ssw0rd", "domain": "ad.local",
-                     "availabilityZone": "nova", "unitNamingPattern": "",
-                     "flavor": str(self.flavor_name), "osImage":
-                     {"type": "ws-2012-std", "name": str(self.image.name),
-                      "title": "Windows Server 2012 Standard"},
-                     "configuration": "standalone",
-                     "units": [{"isMaster": True,
-                                "recoveryPassword": "P@ssw0rd",
-                                "location": "west-dc"}]}
+        post_body = {
+            '?': {
+                'type': "io.murano.tests.activeDirectory",
+                'id': uuid.uuid4().hex
+            },
+            "name": "ad.local",
+            "adminPassword": "P@ssw0rd",
+            "domain": "ad.local",
+            "availabilityZone": "nova",
+            "unitNamingPattern": "",
+            "flavor": str(self.flavor_name),
+            "osImage": {
+                "type": "ws-2012-std",
+                "name": str(self.image.name),
+                "title": "Windows Server 2012 Standard"
+            },
+            "configuration": "standalone",
+            "units": [{
+                "isMaster": True,
+                "recoveryPassword": "P@ssw0rd",
+                "location": "west-dc"
+            }]
+        }
 
         fail_msg = "User can't create service. "
         self.verify(5, self.create_service,
@@ -382,27 +448,48 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         AG = self.config.murano.agListnerIP
         clIP = self.config.murano.clusterIP
 
-        post_body = {"domain": "ad.local", "domainAdminPassword": "P@ssw0rd",
-                     "externalAD": False,
-                     "sqlServiceUserName": "Administrator",
-                     "sqlServicePassword": "P@ssw0rd",
-                     "osImage":
-                     {"type": "ws-2012-std", "name": str(self.image.name),
-                      "title": "Windows Server 2012 Standard"},
-                     "agListenerName": "SomeSQL_AGListner",
-                     "flavor": str(self.flavor_name),
-                     "agGroupName": "SomeSQL_AG",
-                     "domainAdminUserName": "Administrator",
-                     "agListenerIP": AG,
-                     "clusterIP": clIP,
-                     "type": "msSqlClusterServer", "availabilityZone": "nova",
-                     "adminPassword": "P@ssw0rd",
-                     "clusterName": "SomeSQL", "mixedModeAuth": True,
-                     "unitNamingPattern": "", "units":
-                     [{"isMaster": True, "name": "node1", "isSync": True},
-                      {"isMaster": False, "name": "node2", "isSync": True}],
-                     "name": "Sqlname", "saPassword": "P@ssw0rd",
-                     "databases": ['murano', 'test']}
+        post_body = {
+            '?': {
+                'type': "io.murano.tests.msSqlClusterServer",
+                'id': uuid.uuid4().hex
+            },
+            "domain": "ad.local",
+            "domainAdminPassword": "P@ssw0rd",
+            "externalAD": False,
+            "sqlServiceUserName": "Administrator",
+            "sqlServicePassword": "P@ssw0rd",
+            "osImage": {
+                "type": "ws-2012-std",
+                "name": str(self.image.name),
+                "title": "Windows Server 2012 Standard"
+            },
+            "agListenerName": "SomeSQL_AGListner",
+            "flavor": str(self.flavor_name),
+            "agGroupName": "SomeSQL_AG",
+            "domainAdminUserName": "Administrator",
+            "agListenerIP": AG,
+            "clusterIP": clIP,
+            "availabilityZone": "nova",
+            "adminPassword": "P@ssw0rd",
+            "clusterName": "SomeSQL",
+            "mixedModeAuth": True,
+            "unitNamingPattern": "",
+            "units": [
+                {
+                    "isMaster": True,
+                    "name": "node1",
+                    "isSync": True
+                },
+                {
+                    "isMaster": False,
+                    "name": "node2",
+                    "isSync": True
+                }
+            ],
+            "name": "Sqlname",
+            "saPassword": "P@ssw0rd",
+            "databases": ['murano', 'test']
+        }
 
         fail_msg = "User can't create service. "
         self.verify(5, self.create_service,
