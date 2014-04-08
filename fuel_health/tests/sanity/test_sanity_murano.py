@@ -24,7 +24,7 @@ class MuranoSanityTests(murano.MuranoTest):
         1. Murano API service should be installed.
     """
 
-    def test_create_and_delete_service(self):
+    def test_create_and_delete_environment(self):
         """Create and delete Murano environment
         Target component: Murano
 
@@ -46,3 +46,33 @@ class MuranoSanityTests(murano.MuranoTest):
                     "or RabbitMQ connectivity broken. ")
         self.verify(5, self.delete_environment, 2, fail_msg,
                     "deleting environment", self.environment.id)
+
+    def test_get_list_categories(self):
+        """Get list Murano categories
+        Target component Murano
+
+        Scenario:
+            1. Send request to get list categories
+
+        Duration: 10 s.
+
+        Deployment tags: Murano
+        """
+        fail_msg = "Can't get list categories. Murano API isn't available. "
+        self.verify(10, self.list_environments, 1, fail_msg,
+                    "getting list of categories")
+
+def test_get_list_categories(self):
+        """Get list Murano packages
+        Target component Murano
+
+        Scenario:
+            1. Send request to get list packages
+
+        Duration: 10 s.
+
+        Deployment tags: Murano
+        """
+        fail_msg = "Can't get list packages. Murano API isn't available. "
+        self.verify(10, self.list_packages, 1, fail_msg,
+                    "getting list of packages")

@@ -91,6 +91,34 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
         return self.murano_client.environments.list()
 
+    def list_categories(self):
+        """
+            This method allows to get list of categories
+
+            Returns the list of categories
+        """
+
+        categories = self.murano_client.packages.categories()
+
+        if not isinstance(categories, list):
+            self.fail('Incorrect type')
+
+        return categories
+
+    def list_packages(self):
+        """
+            This method allows to get list of packages
+
+            Returns the list of packages
+        """
+
+        packages = self.murano_client.packages.list()
+
+        if not isinstance(packages, list):
+            self.fail('Incorrect type')
+
+        return packages
+
     def create_environment(self, name):
         """
             This method allows to create environment.
