@@ -74,7 +74,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         post_body = {"type": "activeDirectory", "name": "ad.local",
                      "adminPassword": "P@ssw0rd", "domain": "ad.local",
                      "availabilityZone": "nova", "unitNamingPattern": "",
-                     "flavor": "m1.medium", "osImage":
+                     "flavor": str(self.flavor_name), "osImage":
                      {"type": "ws-2012-std", "name": str(self.image.name),
                       "title": "Windows Server 2012 Standard"},
                      "configuration": "standalone",
@@ -145,7 +145,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                                  "name": str(self.image.name),
                                  "title": "Windows Server 2012 Standard"},
                      "units": [{}], "credentials": creds,
-                     "flavor": "m1.medium"}
+                     "flavor": str(self.flavor_name)}
 
         fail_msg = "User can't create service. "
         self.verify(5, self.create_service,
@@ -215,7 +215,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                      {"type": "ws-2012-std", "name": str(self.image.name),
                       "title": "Windows Server 2012 Standard"},
                      "units": [{}], "credentials": creds,
-                     "flavor": "m1.medium"}
+                     "flavor": str(self.flavor_name)}
 
         fail_msg = "User can't create service. "
         self.verify(5, self.create_service,
@@ -281,7 +281,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                       "title": "Windows Server 2012 Standard"}, "units": [{}],
                      "credentials": {"username": "Administrator",
                                      "password": "P@ssw0rd"},
-                     "flavor": "m1.medium"}
+                     "flavor": str(self.flavor_name)}
 
         fail_msg = "User can't create service. "
         self.verify(5, self.create_service,
@@ -345,7 +345,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
         post_body = {"type": "activeDirectory", "name": "ad.local",
                      "adminPassword": "P@ssw0rd", "domain": "ad.local",
                      "availabilityZone": "nova", "unitNamingPattern": "",
-                     "flavor": "m1.medium", "osImage":
+                     "flavor": str(self.flavor_name), "osImage":
                      {"type": "ws-2012-std", "name": str(self.image.name),
                       "title": "Windows Server 2012 Standard"},
                      "configuration": "standalone",
@@ -391,7 +391,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
                      {"type": "ws-2012-std", "name": str(self.image.name),
                       "title": "Windows Server 2012 Standard"},
                      "agListenerName": "SomeSQL_AGListner",
-                     "flavor": "m1.medium",
+                     "flavor": str(self.flavor_name),
                      "agGroupName": "SomeSQL_AG",
                      "domainAdminUserName": "Administrator",
                      "agListenerIP": AG,
