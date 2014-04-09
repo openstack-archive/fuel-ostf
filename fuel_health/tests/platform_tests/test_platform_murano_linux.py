@@ -157,7 +157,8 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                      {"type": "linux", "name": str(self.image.name),
                       "title": "Linux Image"}, "units": [{}],
                      "instanceCount": [{}],
-                     "flavor": "m1.small", "type": "linuxTelnetService"}
+                     "flavor": self.flavor_name,
+                     "type": "linuxTelnetService"}
 
         fail_msg = "User can't create service. "
         service = self.verify(5, self.create_service,
@@ -217,7 +218,8 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                      "deployApachePHP": True, "keyPair": "", "osImage":
                      {"type": "linux", "name": str(self.image.name),
                       "title": "Linux Image"}, "units": [{}],
-                     "flavor": "m1.small", "type": "linuxApacheService"}
+                     "flavor": self.flavor_name,
+                     "type": "linuxApacheService"}
 
         fail_msg = "User can't create service. "
         service = self.verify(5, self.create_service,
