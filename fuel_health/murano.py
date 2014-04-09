@@ -35,6 +35,9 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         self.check_clients_state()
         self.env_name = rand_name("ost1_test-Murano_env")
         self.murano_available = True
+        if 'ha' in self.manager.config.compute.deployment_mode:
+            self.murano_available = False
+            self.fail("Test doesn't support HA configuration")
         try:
             self.murano_client.environments.list()
         except exceptions.CommunicationError:
