@@ -33,7 +33,7 @@ fuel_health_reqs = [
 
 fuel_ostf_reqs = [
     'nose>=1.3.0',
-    'SQLAlchemy>=0.8.2',
+    'SQLAlchemy>=0.7.8,<=0.9.99',
     'alembic>=0.5.0',
     'gevent==0.13.8',
     'pecan>=0.3.0',
