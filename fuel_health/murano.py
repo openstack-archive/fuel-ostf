@@ -34,6 +34,18 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         super(MuranoTest, self).setUp()
         self.check_clients_state()
         self.env_name = rand_name("ost1_test-Murano_env")
+
+        self.compute_available = True
+
+        if not self.config.compute.compute_nodes:
+            self.compute_available = False
+            self.fail('There are no compute nodes')
+
+        self.flavor_name = rand_name("ost1_test_Murano")
+        self.flavor = self.compute_client.flavors.create(self.flavor_name,
+                                                         disk=60, ram=2,
+                                                         vcpus=1)
+
         self.murano_available = True
         if 'ha' in self.manager.config.compute.deployment_mode:
             self.murano_available = False
@@ -50,6 +62,10 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             after the Murano OSTF tests
         """
         super(MuranoTest, self).tearDown()
+
+        if self.compute_available:
+            self.compute_client.flavors.delete(self.flavor.id)
+
         if self.murano_available:
             for env in self.list_environments():
                 if self.env_name in env.name:
