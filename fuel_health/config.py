@@ -539,6 +539,9 @@ class NailgunConfig(object):
         response = self.req_session.get(self.nailgun_url + api_url)
         LOG.info('RESPONSE %s STATUS %s' % (api_url, response.status_code))
         data = response.json()
+        # to make backward compatible
+        if 'objects' in data:
+            data = data['objects']
         controller_nodes = filter(lambda node: 'controller' in node['roles'],
                                   data)
         online_controllers = filter(
