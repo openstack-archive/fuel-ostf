@@ -120,6 +120,9 @@ class TestrunsController(BaseRestController):
     @expose('json')
     def post(self):
         test_runs = json.loads(request.body)
+        if 'objects' in test_runs:
+            test_runs = test_runs['objects']
+
         res = []
 
         for test_run in test_runs:
@@ -147,6 +150,9 @@ class TestrunsController(BaseRestController):
     @expose('json')
     def put(self):
         test_runs = json.loads(request.body)
+        if 'objects' in test_runs:
+            test_runs = test_runs['objects']
+
         data = []
         with request.session.begin(subtransactions=True):
             for test_run in test_runs:

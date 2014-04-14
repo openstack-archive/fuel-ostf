@@ -64,10 +64,12 @@ class TestingAdapterClient(object):
                        str(cluster_id)])
         return self._request('GET', url)
 
-    def start_testrun(self, testset, cluster_id):
-        return self.start_testrun_tests(testset, [], cluster_id)
+    def start_testrun(self, testset, cluster_id, use_objects=False):
+        return self.start_testrun_tests(testset, [], cluster_id,
+                                        use_objects=use_objects)
 
-    def start_testrun_tests(self, testset, tests, cluster_id):
+    def start_testrun_tests(self, testset, tests, cluster_id,
+                            use_objects=False):
         url = ''.join([self.url, '/testruns'])
         data = [
             {
@@ -76,9 +78,11 @@ class TestingAdapterClient(object):
                 'metadata': {'cluster_id': str(cluster_id)}
             }
         ]
-        return self._request('POST', url, data=dumps(data))
+        if use_objects:
+            data_to_dump = {'objects': data}
+        return self._request('POST', url, data=dumps(data_to_dump))
 
-    def start_multiple_testruns(self, testsets, cluster_id):
+    def start_multiple_testruns(self, testsets, cluster_id, use_objects=False):
         url = ''.join([self.url, '/testruns'])
         data = [
             {
@@ -88,9 +92,11 @@ class TestingAdapterClient(object):
             }
             for testset in testsets
         ]
-        return self._request('POST', url, data=dumps(data))
+        if use_objects:
+            data_to_dump = {'objects': data}
+        return self._request('POST', url, data=dumps(data_to_dump))
 
-    def stop_testrun(self, testrun_id):
+    def stop_testrun(self, testrun_id, use_objects=False):
         url = ''.join([self.url, '/testruns'])
         data = [
             {
@@ -98,34 +104,39 @@ class TestingAdapterClient(object):
                 "status": "stopped"
             }
         ]
-        return self._request("PUT", url, data=dumps(data))
+        if use_objects:
+            data_to_dump = {'objects': data}
+        return self._request("PUT", url, data=dumps(data_to_dump))
 
-    def stop_testrun_last(self, testset, cluster_id):
+    def stop_testrun_last(self, testset, cluster_id, use_objects=False):
         latest = self.testruns_last(cluster_id).json()
         testrun_id = [
             item['id'] for item in latest
             if item['testset'] == testset
         ][0]
-        return self.stop_testrun(testrun_id)
+        return self.stop_testrun(testrun_id, use_objects=use_objects)
 
-    def restart_tests(self, tests, testrun_id):
+    def restart_tests(self, tests, testrun_id, use_objects=False):
         url = ''.join([self.url, '/testruns'])
-        body = [
+        data = [
             {
                 'id': str(testrun_id),
                 'tests': tests,
                 'status': 'restarted'
             }
         ]
-        return self._request('PUT', url, data=dumps(body))
+        if use_objects:
+            data_to_dump = {'objects': data}
+        return self._request('PUT', url, data=dumps(data_to_dump))
 
-    def restart_tests_last(self, testset, tests, cluster_id):
+    def restart_tests_last(self, testset, tests, cluster_id,
+                           use_objects=False):
         latest = self.testruns_last(cluster_id).json()
         testrun_id = [
             item['id'] for item in latest
             if item['testset'] == testset
         ][0]
-        return self.restart_tests(tests, testrun_id)
+        return self.restart_tests(tests, testrun_id, use_objects=use_objects)
 
     def _with_timeout(self, action, testset, cluster_id,
                       timeout, polling=5, polling_hook=None):
