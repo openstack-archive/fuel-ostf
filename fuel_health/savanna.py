@@ -396,7 +396,7 @@ class SavannaTest(nmanager.OfficialClientTest):
         node_group_template_tt_id = \
             self._create_node_group_template_and_get_id(
                 client,
-                'ostf_test-savanna-dd',
+                'ostf-test-savanna-dd',
                 self.plugin,
                 self.plugin_version,
                 description='test node group template',
