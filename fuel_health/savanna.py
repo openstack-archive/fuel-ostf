@@ -369,7 +369,6 @@ class SavannaTest(nmanager.OfficialClientTest):
                         'HDFS': self.DN_CONFIG,
                         'MapReduce': self.TT_CONFIG
                     },
-                    floating_ip_pool=floating_ip_pool
                 )
         self.node_groups.append(node_group_template_tt_dn_id)
         return node_group_template_tt_dn_id
@@ -396,7 +395,7 @@ class SavannaTest(nmanager.OfficialClientTest):
         node_group_template_tt_id = \
             self._create_node_group_template_and_get_id(
                 client,
-                'ostf_test-savanna-dd',
+                'ostf-test-savanna-dd',
                 self.plugin,
                 self.plugin_version,
                 description='test node group template',

@@ -302,7 +302,7 @@ SavannaConfig = [
                default=8386,
                help="Port of savanna service."),
     cfg.StrOpt('api_version',
-               default='v1.0',
+               default='1.1',
                help="API version of savanna service."),
     cfg.StrOpt('plugin',
                default='vanilla',

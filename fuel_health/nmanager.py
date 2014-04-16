@@ -33,7 +33,7 @@ except:
     LOG.debug(traceback.format_exc())
     LOG.warning('Muranoclient could not be imported.')
 try:
-    import savannaclient.api.client
+    import saharaclient.client
 except:
     LOG.debug(traceback.format_exc())
     LOG.warning('Savanna client could not be imported.')
@@ -222,11 +222,16 @@ class OfficialClientManager(fuel_health.manager.Manager):
             username = self.config.identity.admin_username
         if not password:
             password = self.config.identity.admin_password
-        return savannaclient.api.client.Client(username=username,
-                                               api_key=password,
-                                               project_name=tenant_name,
-                                               auth_url=auth_url,
-                                               savanna_url=savanna_url)
+        tenant_id = [
+            tenant.id for tenant in self.identity_client.tenants.list()
+            if tenant.name == tenant_name][0]
+        return saharaclient.client.Client(self.config.savanna.api_version,
+                                          username=username,
+                                          api_key=password,
+                                          project_name=tenant_name,
+                                          auth_url=auth_url,
+                                          sahara_url="{url}/{id}".format(
+                                              url=savanna_url, id=tenant_id))
 
     def _get_ceilometer_client(self):
         keystone = self._get_identity_client()
