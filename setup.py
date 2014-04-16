@@ -19,6 +19,7 @@ import setuptools
 fuel_health_reqs = [
     'oslo.config>=1.1.1',
     'python-cinderclient>=1.0.6',
+    'python-ceilometerclient>=1.0.5'
     'python-keystoneclient>=0.4.1',
     'python-novaclient>=2.15.0',
     'python-heatclient>=0.2.5',
