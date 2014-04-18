@@ -19,6 +19,9 @@ import logging
 import signal
 import pecan
 from gevent import pywsgi
+import sys
+
+from oslo.config import cfg
 
 from fuel_plugin.ostf_adapter import cli_config
 from fuel_plugin.ostf_adapter import nailgun_hooks
@@ -28,33 +31,159 @@ from fuel_plugin.ostf_adapter.nose_plugin import nose_discovery
 from fuel_plugin.ostf_adapter.storage import engine
 from fuel_plugin.ostf_adapter import mixins
 
+adapter_group = cfg.OptGroup(name='adapter',
+                             title='Adapter Options')
+AdapterGroup = [
+    cfg.StrOpt('server_host',
+                default='0.0.0.0',
+                help="adapter host"),
+    cfg.StrOpt('server_port',
+                default=True,
+                help="Port number"),
+    cfg.StrOpt('db_path',
+               default="",
+               help=""),
+    cfg.StrOpt('debug',
+               default="",
+               help=""),
+    cfg.StrOpt('debug_tests',
+                default=True,
+                help=""),
+    cfg.StrOpt('lock_dir',
+               default='',
+               help=""),
+    cfg.StrOpt('nailgun_host',
+               default='',
+               help=""),
+    cfg.StrOpt('nailgun_port',
+                default='',
+                help=""),
+    cfg.StrOpt('log_file',
+               default='',
+               help=""),
+    cfg.BoolOpt('after_init_hook',
+                 default='False', help='')
+    ]
+
+
+def register_adapter_opts(conf):
+    conf.register_group(adapter_group)
+    for opt in AdapterGroup:
+        conf.register_opt(opt, group='adapter')
+
+
+def process_singleton(cls):
+    """Wrapper for classes... To be instantiated only one time per process"""
+    instances = {}
+
+    def wrapper(*args, **kwargs):
+        pid = os.getpid()
+        if pid not in instances:
+            instances[pid] = cls(*args, **kwargs)
+        return instances[pid]
+
+    return wrapper
+
+@process_singleton
+class FileConfig(object):
+
+    DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(
+        os.path.dirname(__file__)), 'etc')
+
+    DEFAULT_CONFIG_FILE = "fuel_conf.conf"
+
+    def __init__(self):
+        """Initialize a configuration from a conf directory and conf file."""
+        config_files = []
+
+        failsafe_path = "/etc/fuel/" + self.DEFAULT_CONFIG_FILE
+
+        # Environment variables override defaults...
+        custom_config = os.environ.get('CUSTOM_FUEL_CONFIG')
+        if custom_config:
+            path = custom_config
+        else:
+            conf_dir = os.environ.get('FUEL_CONFIG_DIR',
+                                      self.DEFAULT_CONFIG_DIR)
+            conf_file = os.environ.get('FUEL_CONFIG', self.DEFAULT_CONFIG_FILE)
+
+            path = os.path.join(conf_dir, conf_file)
+
+            if not (os.path.isfile(path) or
+                            'FUEL_CONFIG_DIR' in os.environ or
+                            'FUEL_CONFIG' in os.environ):
+                path = failsafe_path
+
+        if not os.path.exists(path):
+            msg = "Config file %(path)s not found" % locals()
+            print >> sys.stderr, RuntimeError(msg)
+        else:
+            config_files.append(path)
+
+        cfg.CONF([], project='fuel', default_config_files=config_files)
+
+        register_adapter_opts(cfg.CONF)
+        self.adapter = cfg.CONF.adapter
+
+
+class ConfigGroup(object):
+    # USE SLOTS
+
+    def __init__(self, opts):
+        self.parse_opts(opts)
+
+    def parse_opts(self, opts):
+        for opt in opts:
+            name = opt.name
+            self.__dict__[name] = opt.default
+
+    def __setattr__(self, key, value):
+        self.__dict__[key] = value
+
+    def __getitem__(self, key):
+        return self.__dict__[key]
+
+    def __setitem(self, key, value):
+        self.__dict__[key] = value
+
+    def __repr__(self):
+        return u"{0} WITH {1}".format(
+            self.__class__.__name__,
+            self.__dict__)
+
 
 def main():
 
-    cli_args = cli_config.parse_cli()
+    settings = FileConfig()
+
+    #cli_args = cli_config.parse_cli()
 
     config = {
         'server': {
-            'host': cli_args.host,
-            'port': cli_args.port
+            'host': settings.adapter.server_host,  # cli_args.host,
+            'port': settings.adapter.server_host   # cli_args.port
         },
-        'dbpath': cli_args.dbpath,
-        'debug': cli_args.debug,
-        'debug_tests': cli_args.debug_tests,
-        'lock_dir': cli_args.lock_dir,
+        'dbpath': settings.adapter.dbpath,    # cli_args.dbpath,
+        'debug': settings.adapter.debug,    # cli_args.debug,
+        'debug_tests': settings.adapter.debug_tests,    # cli_args.debug_tests,
+        'lock_dir': settings.adapter.lock_dir,    # cli_args.lock_dir,
         'nailgun': {
-            'host': cli_args.nailgun_host,
-            'port': cli_args.nailgun_port
+            'host': settings.adapter.nailgun_host,    # cli_args.nailgun_host,
+            'port': settings.adapter.nailgun_port    # cli_args.nailgun_port
         }
     }
 
-    logger.setup(log_file=cli_args.log_file)
+    #logger.setup(log_file=cli_args.log_file)
+    logger.setup(log_file=settings.adapter.log_file)
 
     log = logging.getLogger(__name__)
 
     root = app.setup_app(config=config)
 
-    if getattr(cli_args, 'after_init_hook'):
+    #if getattr(cli_args, 'after_init_hook'):
+    #    return nailgun_hooks.after_initialization_environment_hook()
+
+    if settings.adapter.after_init_hook:
         return nailgun_hooks.after_initialization_environment_hook()
 
     with engine.contexted_session(pecan.conf.dbpath) as session:
