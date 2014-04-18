@@ -13,6 +13,8 @@
 # under the License.
 
 import logging
+import uuid
+
 from fuel_health import murano
 
 
@@ -65,29 +67,41 @@ class MuranoDeployDemoServiceTests(murano.MuranoTest):
                               3, fail_msg, "session creating",
                               self.environment.id)
 
-        post_body = {"availabilityZone": "nova", "name": "demo",
-                     "unitNamingPattern": "host", "osImage":
-                     {"type": "cirros.demo", "name": str(demo_image.name),
-                      "title": "Demo"}, "units": [{}], "flavor": "m1.tiny",
-                     "configuration": "standalone", "type": "demoService"}
+        post_body = {
+            '?': {
+                'type': "io.murano.tests.demoService",
+                'id': uuid.uuid4().hex
+            },
+            "availabilityZone": "nova",
+            "name": "demo",
+            "unitNamingPattern": "host",
+            "osImage": {
+                "type": "cirros.demo",
+                "name": demo_image.name,
+                "title": "Demo"
+            },
+            "units": [{}],
+            "flavor": "m1.tiny",
+            "configuration": "standalone"
+        }
 
         fail_msg = "User can't create service. "
-        service = self.verify(5, self.create_service,
+        self.verify(5, self.create_service,
                               4, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = "User can't deploy session. "
-        deploy_sess = self.verify(5, self.deploy_session,
+        self.verify(5, self.deploy_session,
                                   5, fail_msg,
                                   "sending session on deployment",
                                   self.environment.id, session.id)
 
         fail_msg = "Deployment was not completed correctly. "
-        status_env = self.verify(900, self.deploy_check,
+        self.verify(900, self.deploy_check,
                                  6, fail_msg, 'deployment is going',
                                  self.environment.id)
 
-        deployment_status = self.verify(5, self.deployments_status_check,
+        self.verify(5, self.deployments_status_check,
                                         7, fail_msg,
                                         'Check deployments status',
                                         self.environment.id)
@@ -147,31 +161,42 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                               2, fail_msg, "session creating",
                               self.environment.id)
 
-        post_body = {"availabilityZone": "nova", "name": "LinuxTelnet",
-                     "deployTelnet": True, "keyPair": "", "osImage":
-                     {"type": "linux", "name": str(self.image.name),
-                      "title": "Linux Image"}, "units": [{}],
-                     "flavor": str(self.flavor_name),
-                     "instanceCount": [{}],
-                     "type": "linuxTelnetService"}
+        post_body = {
+            '?': {
+                'type': "io.murano.tests.linuxTelnetService",
+                'id': uuid.uuid4().hex
+            },
+            "availabilityZone": "nova",
+            "name": "LinuxTelnet",
+            "deployTelnet": True,
+            "unitNamingPattern": "telnet",
+            "keyPair": "",
+            "osImage": {
+                "type": "linux",
+                "name": self.image.name,
+                "title": "Linux Image"
+            },
+            "units": [{}],
+            "flavor": self.flavor_name
+        }
 
         fail_msg = "User can't create service. "
-        service = self.verify(5, self.create_service,
+        self.verify(5, self.create_service,
                               3, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = "User can't deploy session. "
-        deploy_sess = self.verify(5, self.deploy_session,
+        self.verify(5, self.deploy_session,
                                   4, fail_msg,
                                   "sending session on deployment",
                                   self.environment.id, session.id)
 
         fail_msg = "Deployment was not completed correctly. "
-        status_env = self.verify(900, self.deploy_check,
+        self.verify(900, self.deploy_check,
                                  5, fail_msg, 'deployment is going',
                                  self.environment.id)
 
-        deployment_status = self.verify(5, self.deployments_status_check,
+        self.verify(5, self.deployments_status_check,
                                         6, fail_msg,
                                         'Check deployments status',
                                         self.environment.id)
@@ -209,30 +234,43 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                               2, fail_msg, "session creating",
                               self.environment.id)
 
-        post_body = {"availabilityZone": "nova", "name": "LinuxApache",
-                     "deployApachePHP": True, "keyPair": "", "osImage":
-                     {"type": "linux", "name": str(self.image.name),
-                      "title": "Linux Image"}, "units": [{}],
-                     "flavor": str(self.flavor_name),
-                     "type": "linuxApacheService"}
+        post_body = {
+            '?': {
+                'type': "io.murano.tests.linuxApacheService",
+                'id': uuid.uuid4().hex
+            },
+            "availabilityZone": "nova",
+            "name": "LinuxApache",
+            "deployApachePHP": True,
+            "unitNamingPattern": "apache",
+            "keyPair": "",
+            "instanceCount": [{}],
+            "osImage": {
+                "type": "linux",
+                "name": self.image.name,
+                "title": "Linux Image"
+            },
+            "units": [{}],
+            "flavor": self.flavor_name
+        }
 
         fail_msg = "User can't create service. "
-        service = self.verify(5, self.create_service,
+        self.verify(5, self.create_service,
                               3, fail_msg, "service creating",
                               self.environment.id, session.id, post_body)
 
         fail_msg = "User can't deploy session. "
-        deploy_sess = self.verify(5, self.deploy_session,
+        self.verify(5, self.deploy_session,
                                   4, fail_msg,
                                   "sending session on deployment",
                                   self.environment.id, session.id)
 
         fail_msg = "Deployment was not completed correctly. "
-        status_env = self.verify(900, self.deploy_check,
+        self.verify(900, self.deploy_check,
                                  5, fail_msg, 'deployment is going',
                                  self.environment.id)
 
-        deployment_status = self.verify(5, self.deployments_status_check,
+        self.verify(5, self.deployments_status_check,
                                         6, fail_msg,
                                         'Check deployments status',
                                         self.environment.id)
