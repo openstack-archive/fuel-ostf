@@ -24,6 +24,9 @@ class TestingAdapterClient(object):
     def _request(self, method, url, data=None):
         headers = {'content-type': 'application/json'}
 
+        if data:
+            data = dumps({'objects': data})
+
         r = requests.request(
             method,
             url,
@@ -64,12 +67,10 @@ class TestingAdapterClient(object):
                        str(cluster_id)])
         return self._request('GET', url)
 
-    def start_testrun(self, testset, cluster_id, use_objects=False):
-        return self.start_testrun_tests(testset, [], cluster_id,
-                                        use_objects=use_objects)
+    def start_testrun(self, testset, cluster_id):
+        return self.start_testrun_tests(testset, [], cluster_id)
 
-    def start_testrun_tests(self, testset, tests, cluster_id,
-                            use_objects=False):
+    def start_testrun_tests(self, testset, tests, cluster_id):
         url = ''.join([self.url, '/testruns'])
         data = [
             {
@@ -78,11 +79,9 @@ class TestingAdapterClient(object):
                 'metadata': {'cluster_id': str(cluster_id)}
             }
         ]
-        if use_objects:
-            data_to_dump = {'objects': data}
-        return self._request('POST', url, data=dumps(data_to_dump))
+        return self._request('POST', url, data)
 
-    def start_multiple_testruns(self, testsets, cluster_id, use_objects=False):
+    def start_multiple_testruns(self, testsets, cluster_id):
         url = ''.join([self.url, '/testruns'])
         data = [
             {
@@ -92,11 +91,9 @@ class TestingAdapterClient(object):
             }
             for testset in testsets
         ]
-        if use_objects:
-            data_to_dump = {'objects': data}
-        return self._request('POST', url, data=dumps(data_to_dump))
+        return self._request('POST', url, data)
 
-    def stop_testrun(self, testrun_id, use_objects=False):
+    def stop_testrun(self, testrun_id):
         url = ''.join([self.url, '/testruns'])
         data = [
             {
@@ -104,19 +101,17 @@ class TestingAdapterClient(object):
                 "status": "stopped"
             }
         ]
-        if use_objects:
-            data_to_dump = {'objects': data}
-        return self._request("PUT", url, data=dumps(data_to_dump))
+        return self._request("PUT", url, data)
 
-    def stop_testrun_last(self, testset, cluster_id, use_objects=False):
+    def stop_testrun_last(self, testset, cluster_id):
         latest = self.testruns_last(cluster_id).json()
         testrun_id = [
             item['id'] for item in latest
             if item['testset'] == testset
         ][0]
-        return self.stop_testrun(testrun_id, use_objects=use_objects)
+        return self.stop_testrun(testrun_id)
 
-    def restart_tests(self, tests, testrun_id, use_objects=False):
+    def restart_tests(self, tests, testrun_id):
         url = ''.join([self.url, '/testruns'])
         data = [
             {
@@ -125,18 +120,15 @@ class TestingAdapterClient(object):
                 'status': 'restarted'
             }
         ]
-        if use_objects:
-            data_to_dump = {'objects': data}
-        return self._request('PUT', url, data=dumps(data_to_dump))
+        return self._request('PUT', url, data)
 
-    def restart_tests_last(self, testset, tests, cluster_id,
-                           use_objects=False):
+    def restart_tests_last(self, testset, tests, cluster_id):
         latest = self.testruns_last(cluster_id).json()
         testrun_id = [
             item['id'] for item in latest
             if item['testset'] == testset
         ][0]
-        return self.restart_tests(tests, testrun_id, use_objects=use_objects)
+        return self.restart_tests(tests, testrun_id)
 
     def _with_timeout(self, action, testset, cluster_id,
                       timeout, polling=5, polling_hook=None):
