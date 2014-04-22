@@ -78,8 +78,7 @@ class TestingAdapterClient(object):
                 'metadata': {'cluster_id': str(cluster_id)}
             }
         ]
-        if use_objects:
-            data_to_dump = {'objects': data}
+        data_to_dump = {'objects': data} if use_objects else data
         return self._request('POST', url, data=dumps(data_to_dump))
 
     def start_multiple_testruns(self, testsets, cluster_id, use_objects=False):
@@ -92,8 +91,7 @@ class TestingAdapterClient(object):
             }
             for testset in testsets
         ]
-        if use_objects:
-            data_to_dump = {'objects': data}
+        data_to_dump = {'objects': data} if use_objects else data
         return self._request('POST', url, data=dumps(data_to_dump))
 
     def stop_testrun(self, testrun_id, use_objects=False):
@@ -104,8 +102,7 @@ class TestingAdapterClient(object):
                 "status": "stopped"
             }
         ]
-        if use_objects:
-            data_to_dump = {'objects': data}
+        data_to_dump = {'objects': data} if use_objects else data
         return self._request("PUT", url, data=dumps(data_to_dump))
 
     def stop_testrun_last(self, testset, cluster_id, use_objects=False):
@@ -125,8 +122,7 @@ class TestingAdapterClient(object):
                 'status': 'restarted'
             }
         ]
-        if use_objects:
-            data_to_dump = {'objects': data}
+        data_to_dump = {'objects': data} if use_objects else data
         return self._request('PUT', url, data=dumps(data_to_dump))
 
     def restart_tests_last(self, testset, tests, cluster_id,

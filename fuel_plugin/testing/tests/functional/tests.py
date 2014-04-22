@@ -14,7 +14,6 @@
 
 import os
 import time
-import unittest
 from sqlalchemy import create_engine
 
 from fuel_plugin.testing.tests.functional.base import \
@@ -27,7 +26,7 @@ class AdapterTests(BaseAdapterTest):
     @classmethod
     def setUpClass(cls):
 
-        url = 'http://0.0.0.0:8989/v1'
+        url = 'http://0.0.0.0:8777/v1'
 
         cls.mapping = {
             ('fuel_plugin.testing.fixture.dummy_tests.'
@@ -326,7 +325,6 @@ class AdapterTests(BaseAdapterTest):
 
         self.compare(resp, assertions)
 
-    @unittest.skip("Depends on fix for skipped action. Skip until merge")
     def test_single_test_restart(self):
         """Verify that you restart individual tests for given testrun"""
         testset = "general_test"
@@ -521,7 +519,6 @@ class AdapterTests(BaseAdapterTest):
                ' to restart running testset:\n {0}').format(resp.request)
         self.assertTrue(resp.is_empty, msg)
 
-    @unittest.skip("Depends on fix for skipped action. Skip until merge")
     def test_nose_adapter_error_while_running_tests(self):
         testset = 'test_with_error'
         cluster_id = 4
