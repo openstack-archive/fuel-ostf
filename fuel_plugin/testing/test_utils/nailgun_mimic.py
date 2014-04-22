@@ -111,4 +111,4 @@ def serve_cluster_attributes(id):
     return cluster_fixture[id]['cluster_attributes']
 
 
-run(host='localhost', port=8888, debug=True)
+run(host='localhost', port=8000, debug=True)
