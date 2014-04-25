@@ -1,0 +1,23 @@
+heat_template_version: '2013-05-23'
+description: |
+  Template which creates single instance
+parameters:
+  InstanceType:
+    type: string
+  ImageId:
+    type: string
+  network:
+    type: string
+  Subnet:
+    type: string
+    default: ""
+resources:
+  Server:
+    type: OS::Nova::Server
+    metadata:
+      Name: ost1-test_heat
+    properties:
+      image: {get_param: ImageId}
+      flavor: {get_param: InstanceType}
+      networks:
+          - uuid: {Ref: network}
