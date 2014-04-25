@@ -58,32 +58,16 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         Duration: 440 s.
         """
         self.check_image_exists()
-        template = """
-            AWSTemplateFormatVersion: "2013-11-01"
-            Parameters:
-              ImageId:
-                Type: String
-              InstanceType:
-                Type: String
-              Subnet:
-                Type: String
-                Default: ''
-            Resources:
-              MyInstance:
-                Type: AWS::EC2::Instance
-                Properties:
-                  ImageId: {Ref: ImageId}
-                  InstanceType: {Ref: InstanceType}
-                  SubnetId: {Ref: Subnet}
-            """
         parameters = {
             "InstanceType": self.testvm_flavor.name,
             "ImageId": self.config.compute.image_name
         }
         if 'neutron' in self.config.network.network_provider:
-            parameters['Subnet'] = self._get_subnet_id()
+            parameters["Subnet"] = self._get_subnet_id()
+            parameters['network'] = self._get_net_uuid()[0]
+            template = self._load_template('heat_create_neutron_stack_tmeplate.yaml')
         else:
-            template = self._customize_template(template)
+            template = self._load_template('heat_create_nova_stack_template.yaml')
 
         fail_msg = "Stack was not created properly."
         # create stack
@@ -122,7 +106,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                                 stack.id)
         self.verify_response_body_content(len(resources), 1, fail_msg, 4)
         resource_id = resources[0].logical_resource_id
-        self.verify_response_body_content("MyInstance", resource_id,
+        self.verify_response_body_content("Server", resource_id,
                                           fail_msg, 4)
 
         # get resource details
@@ -135,7 +119,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         self.verify_response_body_content("CREATE_COMPLETE",
                                           res_details.resource_status,
                                           fail_msg, 5)
-        self.verify_response_body_content("AWS::EC2::Instance",
+        self.verify_response_body_content("OS::Nova::Server",
                                           res_details.resource_type,
                                           fail_msg, 5)
         # get events list
@@ -146,7 +130,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         self.verify_response_body_not_equal(0, len(events), fail_msg, 6)
 
         fail_msg = "Event details contain incorrect values."
-        self.verify_response_body_content("MyInstance",
+        self.verify_response_body_content("Server",
                                           events[0].logical_resource_id,
                                           fail_msg, 6)
         # get event details
@@ -160,10 +144,11 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         self.verify_response_body_content(ev_details.id, event_id,
                                           fail_msg, 7)
         self.verify_response_body_content(ev_details.logical_resource_id,
-                                          "MyInstance", fail_msg, 7)
+                                          "Server", fail_msg, 7)
 
         # update stack
-        template = template.replace("MyInstance", "UpdatedInstance")
+        template = template.replace('Name: ost1-test_heat',
+                                    'Name: ost1-test_updated')
         fail_msg = "Cannot update stack."
         stack = self.verify(20, self._update_stack, 8,
                             fail_msg,
@@ -184,8 +169,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                               "retrieving stack template",
                               stack.id)
 
-        check_content = lambda: ("InstanceType" in act_tpl["Parameters"] and
-                                 "MyInstance" in act_tpl["Resources"])
+        check_content = lambda: ("InstanceType" in act_tpl["parameters"] and
+                                 "Server" in act_tpl["resources"])
         self.verify(10, check_content, 10,
                     fail_msg, "verifying template content")
 
@@ -195,7 +180,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                                 "retrieving list of stack resources",
                                 stack.id)
         resource_id = resources[0].logical_resource_id
-        self.verify_response_body_content("UpdatedInstance", resource_id,
+        self.verify_response_body_content("Server", resource_id,
                                           fail_msg, 11)
 
         # delete stack
@@ -380,53 +365,19 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         Duration: 140 s.
         """
         self.check_image_exists()
-        template = """
-            HeatTemplateFormatVersion: '2013-11-01'
-            Description: Template which creates single EC2 instance
-            Parameters:
-              InstanceType:
-                Type: String
-              ImageId:
-                Type: String
-              Subnet:
-                Type: String
-                Default: ''
-            Resources:
-              WaitHandle:
-                Type: AWS::CloudFormation::WaitConditionHandle
-              WaitCondition:
-                Type: AWS::CloudFormation::WaitCondition
-                DependsOn: SmokeServer
-                Properties:
-                  Handle: {Ref: WaitHandle}
-                  Timeout: '30'
-              SmokeServer:
-                Type: AWS::EC2::Instance
-                Properties:
-                  ImageId: {Ref: ImageId}
-                  InstanceType: {Ref: InstanceType}
-                  SubnetId: {Ref: Subnet}
-                  UserData:
-                    Fn::Base64:
-                      Fn::Join:
-                      - ''
-                      - - '#!/bin/bash -v
-
-                          '
-                        - ' sleep 40
-
-                          '
-        """
 
         parameters = {
-            "InstanceType": self.testvm_flavor.name,
+            "InstanceType": "non-exists",
             "ImageId": self.config.compute.image_name
         }
         if 'neutron' in self.config.network.network_provider:
             parameters['Subnet'] = self._get_subnet_id()
+            parameters['network'] = self._get_net_uuid()[0]
+            template = self._load_template(
+                'heat_create_neutron_stack_tmeplate.yaml')
         else:
-            template = self._customize_template(template)
-
+            template = self._load_template(
+                'heat_create_nova_stack_template.yaml')
         fail_msg = "Stack creation was not started."
         stack = self.verify(20, self._create_stack, 1,
                             fail_msg, "starting stack creation",

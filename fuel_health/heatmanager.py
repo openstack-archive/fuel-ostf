@@ -201,6 +201,13 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest,
     def _release_vm_cpu(self, connection_string):
         return self._run_ssh_cmd(connection_string + " pkill cat")
 
+    def _get_net_uuid(self):
+        if 'neutron' in self.config.network.network_provider:
+            network = [net.id for net in
+                       self.compute_client.networks.list()
+                       if net.label == self.private_net]
+            return network
+
     def _get_subnet_id(self):
         if 'neutron' in self.config.network.network_provider:
             neutron_net_list = ("neutron "
