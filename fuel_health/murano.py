@@ -39,10 +39,18 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         if not self.config.compute.compute_nodes:
             self.fail('There are no compute nodes')
 
+        for hypervisor in self.compute_client.hypervisors.list():
+            if hypervisor.memory_mb >= 2048:
+                self.flavor_reqs = True
+                break
+            else:
+                self.flavor_reqs = False
+
         self.flavor_name = rand_name("ost1_test_Murano")
-        self.flavor = self.compute_client.flavors.create(self.flavor_name,
-                                                         disk=60, ram=2,
-                                                         vcpus=1)
+        if self.flavor_reqs:
+            self.flavor = self.compute_client.flavors.create(self.flavor_name,
+                                                             disk=60, ram=2048,
+                                                             vcpus=1)
 
         self.murano_available = True
         try:
@@ -58,7 +66,8 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         """
         super(MuranoTest, self).tearDown()
 
-        self.compute_client.flavors.delete(self.flavor.id)
+        if self.flavor_reqs:
+            self.compute_client.flavors.delete(self.flavor.id)
         if self.murano_available:
             for env in self.list_environments():
                 if self.env_name in env.name:
