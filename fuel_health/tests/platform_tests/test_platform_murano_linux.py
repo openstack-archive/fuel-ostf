@@ -124,6 +124,11 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
     def setUp(self):
         super(MuranoDeployLinuxServicesTests, self).setUp()
         self.check_clients_state()
+
+        if not self.flavor_reqs:
+            self.fail("This test requires more resources on compute node"
+                      "(>=2048MB of free RAM)")
+
         msg = ("Linux image with Murano "
                "tag isn't available. Need to import this image into "
                "glance and mark with Murano metadata tag. Please refer to"
