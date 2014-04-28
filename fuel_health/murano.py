@@ -41,7 +41,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
         self.flavor_name = rand_name("ost1_test_Murano")
         self.flavor = self.compute_client.flavors.create(self.flavor_name,
-                                                         disk=60, ram=2,
+                                                         disk=60, ram=2048,
                                                          vcpus=1)
 
         self.murano_available = True
