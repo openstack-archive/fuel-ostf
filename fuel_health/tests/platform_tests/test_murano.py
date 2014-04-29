@@ -32,6 +32,11 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
     def setUp(self):
         super(MuranoDeploymentSmokeTests, self).setUp()
         self.check_clients_state()
+
+        if self.flavor_reqs:
+            self.fail("This test requires more resources on compute node"
+                      "(>=2048MB of free RAM)")
+
         if not self.config.compute.compute_nodes:
             self.fail('There are no compute nodes')
         msg = ("Windows Server 2012 image with Murano "
