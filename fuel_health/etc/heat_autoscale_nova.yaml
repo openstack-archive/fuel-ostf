@@ -5,18 +5,12 @@ parameters:
     type: string
   ImageId:
     type: string
-  network:
-    type: string
-  Subnet:
-    type: string
   KeyName:
     type: string
   SecurityGroup:
     type: string
-  network:
-    type: string
 resources:
-  CfnUser: 
+  CfnUser:
     type: AWS::IAM::User
   AKeys:
     type: AWS::IAM::AccessKey
@@ -29,7 +23,7 @@ resources:
       LaunchConfigurationName: {Ref: LaunchConfig}
       MinSize: '1'
       MaxSize: '2'
-      VPCZoneIdentifier: [{Ref: Subnet}]
+      VPCZoneIdentifier: []
   AScaleUpPolicy:
     type: AWS::AutoScaling::ScalingPolicy
     properties:

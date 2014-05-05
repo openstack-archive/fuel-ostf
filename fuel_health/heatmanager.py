@@ -59,6 +59,7 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest,
             LOG.debug("Creating a flavor for Heat tests.")
             self.testvm_flavor = self._create_flavors(self.compute_client,
                                                       64, 1)
+            self.flavors.append(self.testvm_flavor)
 
     @staticmethod
     def _list_stacks(client):
@@ -200,6 +201,13 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest,
 
     def _release_vm_cpu(self, connection_string):
         return self._run_ssh_cmd(connection_string + " pkill cat")
+
+    def _get_net_uuid(self):
+        if 'neutron' in self.config.network.network_provider:
+            network = [net.id for net in
+                       self.compute_client.networks.list()
+                       if net.label == self.private_net]
+            return network
 
     def _get_subnet_id(self):
         if 'neutron' in self.config.network.network_provider:
