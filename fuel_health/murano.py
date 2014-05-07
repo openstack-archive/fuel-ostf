@@ -15,6 +15,7 @@
 
 import json
 import logging
+import requests
 import time
 import traceback
 
@@ -45,8 +46,11 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
                                                          vcpus=1)
 
         self.murano_available = True
+        self.endpoint = self.config.murano.api_url + '/v1/'
+        self.headers = {'X-Auth-Token': self.murano_client.auth_token,
+                        'content-type': 'application/json'}
         try:
-            self.murano_client.environments.list()
+            self.list_environments()
         except exceptions.CommunicationError:
             self.murano_available = False
             self.fail("Murano service is not available")
@@ -60,10 +64,10 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
         self.compute_client.flavors.delete(self.flavor.id)
         if self.murano_available:
-            for env in self.list_environments():
-                if self.env_name in env.name:
+            for env in self.list_environments()["environments"]:
+                if self.env_name in env["name"]:
                     try:
-                        self.delete_environment(env.id)
+                        self.delete_environment(env["id"])
                     except:
                         LOG.warning(traceback.format_exc())
 
@@ -89,7 +93,9 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             Returns the list of environments.
         """
 
-        return self.murano_client.environments.list()
+        resp = requests.get(self.endpoint + 'environments',
+                            headers=self.headers)
+        return resp.json()
 
     def create_environment(self, name):
         """
@@ -101,7 +107,11 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             Returns new environment.
         """
 
-        return self.murano_client.environments.create(name)
+        post_body = {'name': name}
+        resp = requests.post(self.endpoint + 'environments',
+                             data=json.dumps(post_body),
+                             headers=self.headers)
+        return resp.json()
 
     def get_environment(self, environment_id, session_id=None):
         """
@@ -139,7 +149,9 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             Returns None.
         """
 
-        return self.murano_client.environments.delete(environment_id)
+        endpoint = self.endpoint + 'environments/{id}'.format(environment_id)
+        resp = requests.delete(endpoint, headers=self.headers)
+        return resp
 
     def create_session(self, environment_id):
         """
