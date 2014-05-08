@@ -44,7 +44,7 @@ class MuranoDeployDemoServiceTests(murano.MuranoTest):
 
         Duration: 120 s.
 
-        Deployment tags: Murano, Heat
+        Deployment tags: RHEL, Murano, Heat
         """
 
         fail_msg = ("Demo image with Murano tag isn't available. "
@@ -153,7 +153,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
 
         Duration: 920 s.
 
-        Deployment tags: Murano, Heat
+        Deployment tags: RHEL, Murano, Heat
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
@@ -226,7 +226,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
 
         Duration: 920 s.
 
-        Deployment tags: Murano, Heat
+        Deployment tags: RHEL, Murano, Heat
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "

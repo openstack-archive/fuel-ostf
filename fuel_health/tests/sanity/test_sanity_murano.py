@@ -34,7 +34,7 @@ class MuranoSanityTests(murano.MuranoTest):
 
         Duration: 10 s.
 
-        Deployment tags: Murano
+        Deployment tags: RHEL, Murano
         """
 
         fail_msg = "Can't create environment. Murano API isn't available. "
