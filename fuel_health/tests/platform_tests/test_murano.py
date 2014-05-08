@@ -64,7 +64,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         Duration: 1830 s.
 
-        Deployment tags: Murano, Heat
+        Deployment tags: RHEL, Murano, Heat
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
@@ -142,7 +142,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         Duration: 1830 s.
 
-        Deployment tags: Murano, Heat
+        Deployment tags: RHEL, Murano, Heat
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
@@ -222,7 +222,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         Duration: 1830 s.
 
-        Deployment tags: Murano, Heat
+        Deployment tags: RHEL, Murano, Heat
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
@@ -302,7 +302,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         Duration: 1830 s.
 
-        Deployment tags: Murano, Heat
+        Deployment tags: RHEL, Murano, Heat
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
@@ -386,7 +386,7 @@ class MuranoDeploymentSmokeTests(murano.MuranoTest):
 
         Duration: 2200 s.
 
-        Deployment tags: Murano, Heat
+        Deployment tags: RHEL, Murano, Heat
         """
 
         fail_msg = "Can't create environment. Murano API is not available. "
