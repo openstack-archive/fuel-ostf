@@ -113,7 +113,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
                              headers=self.headers)
         return resp.json()
 
-    def get_environment(self, environment_id, session_id=None):
+    def get_environment(self, environment_id):
         """
             This method allows to get specific environment by ID.
 
@@ -124,7 +124,8 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             Returns specific environment.
         """
 
-        return self.murano_client.environments.get(environment_id, session_id)
+        return requests.get(self.endpoint + 'environments/{id}'.format(
+            id=environment_id), headers=self.headers).json()
 
     def update_environment(self, environment_id, new_name):
         """
@@ -149,7 +150,8 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             Returns None.
         """
 
-        endpoint = self.endpoint + 'environments/{id}'.format(environment_id)
+        endpoint = self.endpoint + 'environments/{id}'.format(
+            id=environment_id)
         resp = requests.delete(endpoint, headers=self.headers)
         return resp
 
@@ -163,7 +165,11 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             Returns new session.
         """
 
-        return self.murano_client.sessions.configure(environment_id)
+        post_body = None
+        endpoint = self.endpoint + 'environments/{id}/configure'.format(
+            id=environment_id)
+        return requests.post(endpoint, data=post_body,
+                             headers=self.headers).json()
 
     def get_session(self, environment_id, session_id):
         """
@@ -202,7 +208,10 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             Returns specific session.
         """
 
-        return self.murano_client.sessions.deploy(environment_id, session_id)
+        endpoint = self.endpoint + 'environments/{id}/sessions/{sess_id}/' \
+                                   'deploy'.format(id=environment_id,
+                                                   sess_id=session_id)
+        return requests.post(endpoint, data=None, headers=self.headers)
 
     def create_service(self, environment_id, session_id, json_data):
         """
@@ -215,10 +224,12 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             Returns specific service.
         """
-
-        return self.murano_client.services.post(environment_id, path='/',
-                                                data=json_data,
-                                                session_id=session_id)
+        headers = self.headers.copy()
+        headers.update({{'x-configuration-session': session_id}})
+        endpoint = self.endpoint + 'environments/{id}/services'.format(
+            id=environment_id)
+        return requests.post(endpoint, data=json.dumps(json_data),
+                             headers=self.headers).json()
 
     def list_services(self, environment_id, session_id=None):
         """
@@ -276,7 +287,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         """
 
         infa = self.get_environment(environment_id)
-        while infa.status != 'ready':
+        while infa['status'] != 'ready':
             time.sleep(5)
             infa = self.get_environment(environment_id)
         return 'OK'
@@ -291,12 +302,16 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             Returns 'OK'.
         """
 
-        deployments = self.murano_client.deployments.list(environment_id)
+        endpoint = self.endpoint + 'environments/{id}/deployments'.format(
+            id=environment_id)
+        deployments = requests.get(endpoint,
+                                   headers=self.headers).json()['deployments']
         for depl in deployments:
             # Save the information about all deployments
-            LOG.debug("Environment state: {0}".format(depl.state))
-            r = self.murano_client.deployments.reports(environment_id, depl.id)
+            LOG.debug("Environment state: {0}".format(depl['state']))
+            r = requests.get(endpoint + '/{0}'.format(depl['id']),
+                             headers=self.headers).json()
             LOG.debug("Reports: {0}".format(r))
 
-            assert depl.state == 'success'
+            assert depl['state'] == 'success'
         return 'OK'
