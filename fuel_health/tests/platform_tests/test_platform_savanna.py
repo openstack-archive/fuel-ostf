@@ -46,7 +46,7 @@ class PlatformSavannaTests(savanna.SavannaTest):
         """
         fail_msg = ("Sahara image with tags wasn't imported into Glance, "
                     "please check "
-                    "http://docs.mirantis.com/fuel/fuel-4.1/"
+                    "http://docs.mirantis.com/openstack/fuel/fuel-5.0/"
                     "user-guide.html#platform-tests-description")
         self.verify_response_true(
             self.verify(30, self._test_image, 1, fail_msg,
