@@ -39,20 +39,20 @@ class CeilometerApiTests(ceilometermanager.CeilometerBaseTest):
             2. Request the list of alarms
             3. Request the list of resources.
 
-        Duration: 45 s.
+        Duration: 180 s.
         Deployment tags: Ceilometer
         """
         fail_msg = "Meter list unavailable"
 
-        self.verify(20, self.list_meters,
+        self.verify(60, self.list_meters,
                     1, fail_msg, "Meter listing")
 
         fail_msg = "Alarm list unavailable"
 
-        self.verify(20, self.list_alarm,
+        self.verify(60, self.list_alarm,
                     2, fail_msg, "Alarm listing")
 
         fail_msg = 'Resource list is unavailable. '
 
-        self.verify(20, self.list_resources,
+        self.verify(60, self.list_resources,
                     3, fail_msg, "Resource listing")
