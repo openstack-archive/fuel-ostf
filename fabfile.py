@@ -1,4 +1,5 @@
 from fabric.api import local
+import os
 
 
 def createrole(user='ostf', password='ostf'):
@@ -35,6 +36,9 @@ def startserver():
 
 
 def startdebugserver():
+    if not os.environ.get('OSTF_CONF_DIR'):
+        os.putenv('OSTF_CONFIG_DIR', 'etc/ostf')
+
     local(('ostf-server '
            '--debug '
            '--nailgun-port=8888 '
