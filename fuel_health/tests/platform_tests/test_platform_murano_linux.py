@@ -174,7 +174,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                 "image": self.image.name,
                 "?": {
                     "type": "io.murano.resources.Instance",
-                    "id": uuid.uuid4()
+                    "id": str(uuid.uuid4())
                 },
                 "name": rand_name("testMurano")
             },
@@ -184,7 +184,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                     "name": "Telnet"
                 },
                 "type": "io.murano.apps.linux.Telnet",
-                "id": uuid.uuid4()
+                "id": str(uuid.uuid4())
             }
         }
 
@@ -248,7 +248,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                 "image": self.image.name,
                 "?": {
                     "type": "io.murano.resources.Instance",
-                    "id": uuid.uuid4()
+                    "id": str(uuid.uuid4())
                 },
                 "name": rand_name("testMurano")
             },
@@ -258,7 +258,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                     "name": "Apache"
                 },
                 "type": "io.murano.apps.apache.Apache",
-                "id": uuid.uuid4()
+                "id": str(uuid.uuid4())
             }
         }
 
