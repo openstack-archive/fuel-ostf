@@ -21,6 +21,7 @@ path = os.getcwd()
 sys.path.append(path)
 
 import logging
+import requests
 import traceback
 
 from fuel_health import exceptions
@@ -97,12 +98,17 @@ def cleanup(cluster_deployment_info):
             compute_client = manager._get_compute_client()
 
             if murano_client is not None:
-                environments = murano_client.environments.list()
-                for e in environments:
-                    if e.name.startswith('ost1_test-'):
+                endpoint = manager.config.murano.api_url + '/v1/'
+                headers = {'X-Auth-Token': murano_client.auth_token,
+                           'content-type': 'application/json'}
+                environments = requests.get(endpoint + 'environments',
+                                            headers=headers).json()
+                for e in environments["environments"]:
+                    if e['name'].startswith('ost1_test-'):
                         try:
                             LOG.info('Start environment deletion.')
-                            murano_client.environments.delete(e.id)
+                            requests.delete('{0}environments/{1}'.format(
+                                endpoint, e['id']), headers=headers)
                         except Exception:
                             LOG.warning('Failed to delete murano environment')
                             LOG.debug(traceback.format_exc())
