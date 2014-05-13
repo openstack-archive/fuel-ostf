@@ -1,4 +1,5 @@
 from fabric.api import local
+import os
 
 
 def createrole(user='ostf', password='ostf'):
@@ -35,6 +36,15 @@ def startserver():
 
 
 def startdebugserver():
+    conf_dir = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            'etc/ostf'
+        )
+    )
+    if not os.environ.get('OSTF_CONF_DIR'):
+        os.putenv('OSTF_CONFIG_DIR', conf_dir)
+
     local(('ostf-server '
            '--debug '
            '--debug_tests=fuel_plugin/testing/fixture/dummy_tests'))
@@ -46,8 +56,7 @@ def startnailgunmimic():
 
 
 def createmigration(comment):
-    '''
-    Supply comment for new alembic revision as a value
+    '''Supply comment for new alembic revision as a value
     for comment argument
     '''
     config_path = 'fuel_plugin/ostf_adapter/storage/alembic.ini'
