@@ -1,4 +1,5 @@
 from fabric.api import local
+import os
 
 
 def createrole(user='ostf', password='ostf'):
@@ -35,10 +36,14 @@ def startserver():
 
 
 def startdebugserver():
+    if not os.environ.get('OSTF_CONF_DIR'):
+        os.putenv('OSTF_CONFIG_DIR', 'etc/ostf')
+
     local(('ostf-server '
            '--debug '
            '--nailgun-port=8888 '
-           '--debug_tests=fuel_plugin/testing/fixture/dummy_tests'))
+           '--debug_tests=fuel_plugin/testing/fixture/dummy_tests '
+           '--log_file=etc/ostf/ostf.log'))
 
 
 def startnailgunmimic():
@@ -62,6 +67,7 @@ def migrate(database='ostf'):
     path = 'postgresql+psycopg2://ostf:ostf@localhost/{0}'.format(database)
     local(
         'ostf-server --after-initialization-environment-hook --dbpath {0}'
+        '--log_file=etc/ostf/ostf.log'
         .format(path)
     )
 
