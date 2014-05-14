@@ -71,7 +71,7 @@ class TestingAdapterClient(object):
     def start_testrun_tests(self, testset, tests, cluster_id,
                             use_objects=False):
         url = ''.join([self.url, '/testruns'])
-        data = [
+        data_to_dump = [
             {
                 'testset': testset,
                 'tests': tests,
@@ -79,12 +79,12 @@ class TestingAdapterClient(object):
             }
         ]
         if use_objects:
-            data_to_dump = {'objects': data}
+            data_to_dump = {'objects': data_to_dump}
         return self._request('POST', url, data=dumps(data_to_dump))
 
     def start_multiple_testruns(self, testsets, cluster_id, use_objects=False):
         url = ''.join([self.url, '/testruns'])
-        data = [
+        data_to_dump = [
             {
                 'testset': testset,
                 'tests': [],
@@ -93,19 +93,19 @@ class TestingAdapterClient(object):
             for testset in testsets
         ]
         if use_objects:
-            data_to_dump = {'objects': data}
+            data_to_dump = {'objects': data_to_dump}
         return self._request('POST', url, data=dumps(data_to_dump))
 
     def stop_testrun(self, testrun_id, use_objects=False):
         url = ''.join([self.url, '/testruns'])
-        data = [
+        data_to_dump = [
             {
                 "id": testrun_id,
                 "status": "stopped"
             }
         ]
         if use_objects:
-            data_to_dump = {'objects': data}
+            data_to_dump = {'objects': data_to_dump}
         return self._request("PUT", url, data=dumps(data_to_dump))
 
     def stop_testrun_last(self, testset, cluster_id, use_objects=False):
@@ -118,7 +118,7 @@ class TestingAdapterClient(object):
 
     def restart_tests(self, tests, testrun_id, use_objects=False):
         url = ''.join([self.url, '/testruns'])
-        data = [
+        data_to_dump = [
             {
                 'id': str(testrun_id),
                 'tests': tests,
@@ -126,7 +126,7 @@ class TestingAdapterClient(object):
             }
         ]
         if use_objects:
-            data_to_dump = {'objects': data}
+            data_to_dump = {'objects': data_to_dump}
         return self._request('PUT', url, data=dumps(data_to_dump))
 
     def restart_tests_last(self, testset, tests, cluster_id,
