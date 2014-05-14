@@ -27,7 +27,7 @@ class AdapterTests(BaseAdapterTest):
     @classmethod
     def setUpClass(cls):
 
-        url = 'http://0.0.0.0:8989/v1'
+        url = 'http://0.0.0.0:8777/v1'
 
         cls.mapping = {
             ('fuel_plugin.testing.fixture.dummy_tests.'
