@@ -69,18 +69,18 @@ class NoseDriver(object):
                 .filter_by(id=test_run_id)\
                 .one()
 
-            if not os.path.exists(lock_path):
-                LOG.error('There is no directory to store locks')
-                raise Exception('There is no directory to store locks')
-
-            aquired_locks = []
-            for serie in testrun.test_set.exclusive_testsets:
-                lock_name = serie + str(testrun.cluster_id)
-                fd = open(os.path.join(lock_path, lock_name), 'w')
-                fcntl.flock(fd, fcntl.LOCK_EX)
-                aquired_locks.append(fd)
-
             try:
+                if not os.path.exists(lock_path):
+                    LOG.error('There is no directory to store locks')
+                    raise Exception('There is no directory to store locks')
+
+                aquired_locks = []
+                for serie in testrun.test_set.exclusive_testsets:
+                    lock_name = serie + str(testrun.cluster_id)
+                    fd = open(os.path.join(lock_path, lock_name), 'w')
+                    fcntl.flock(fd, fcntl.LOCK_EX)
+                    aquired_locks.append(fd)
+
                 nose_test_runner.SilentTestProgram(
                     addplugins=[nose_storage_plugin.StoragePlugin(
                         session, test_run_id, str(cluster_id))],
@@ -97,6 +97,9 @@ class NoseDriver(object):
             finally:
                 updated_data = {'status': 'finished',
                                 'pid': None}
+
+                # debug
+                updated_data = {'status': 'finished'}
 
                 models.TestRun.update_test_run(
                     session, test_run_id, updated_data)
