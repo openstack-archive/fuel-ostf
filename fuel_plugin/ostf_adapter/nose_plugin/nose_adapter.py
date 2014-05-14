@@ -69,18 +69,18 @@ class NoseDriver(object):
                 .filter_by(id=test_run_id)\
                 .one()
 
-            if not os.path.exists(lock_path):
-                LOG.error('There is no directory to store locks')
-                raise Exception('There is no directory to store locks')
-
-            aquired_locks = []
-            for serie in testrun.test_set.exclusive_testsets:
-                lock_name = serie + str(testrun.cluster_id)
-                fd = open(os.path.join(lock_path, lock_name), 'w')
-                fcntl.flock(fd, fcntl.LOCK_EX)
-                aquired_locks.append(fd)
-
             try:
+                if not os.path.exists(lock_path):
+                    LOG.error('There is no directory to store locks')
+                    raise Exception('There is no directory to store locks')
+
+                aquired_locks = []
+                for serie in testrun.test_set.exclusive_testsets:
+                    lock_name = serie + str(testrun.cluster_id)
+                    fd = open(os.path.join(lock_path, lock_name), 'w')
+                    fcntl.flock(fd, fcntl.LOCK_EX)
+                    aquired_locks.append(fd)
+
                 nose_test_runner.SilentTestProgram(
                     addplugins=[nose_storage_plugin.StoragePlugin(
                         session, test_run_id, str(cluster_id))],
@@ -88,7 +88,9 @@ class NoseDriver(object):
                     argv=['ostf_tests'] + argv_add)
 
             except InterruptTestRunException:
-
+                # (dshulyak) after process is interrupted we need to
+                # disable existing handler
+                signal.signal(signal.SIGUSR1, lambda *args: signal.SIG_DFL)
                 if testrun.test_set.cleanup_path:
                     cleanup_flag = True
 
@@ -112,10 +114,12 @@ class NoseDriver(object):
                                    testrun.test_set.cleanup_path)
 
     def kill(self, test_run):
-        if test_run.pid:
-            os.kill(test_run.pid, signal.SIGUSR1)
-            return True
-
+        try:
+            if test_run.pid:
+                os.kill(test_run.pid, signal.SIGUSR1)
+                return True
+        except OSError:
+            return False
         return False
 
     def _clean_up(self, session, test_run_id, cluster_id, cleanup):
