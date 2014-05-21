@@ -61,7 +61,7 @@ class SavannaTest(nmanager.OfficialClientTest):
             cls.CLUSTER_CREATION_TIMEOUT = '90'
             cls.USER_KEYPAIR_ID = 'ostf_test-savanna-'
             cls.PLUGIN_NAME = 'vanilla'
-            cls.IMAGE_NAME = 'savanna'
+            cls.IMAGE_NAME = 'sahara'
             cls.CLUSTER_NAME = 'ostf-cluster-'
             cls.SAVANNA_FLAVOR = 'ostf-test-savanna-flavor-'
             cls.JT_PORT = 50030
@@ -81,7 +81,7 @@ class SavannaTest(nmanager.OfficialClientTest):
         LOG.debug('Testing image - plugin - %s version - %s',
                   tag_plugin, tag_version)
         for image in self.compute_client.images.list():
-            if image.name == 'savanna':
+            if image.name == 'sahara':
                 LOG.debug('Sahara image metadata is %s', image.metadata)
                 if image.metadata[tag_version] == 'True'\
                     and image.metadata[tag_plugin] == 'True'\
