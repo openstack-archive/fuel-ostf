@@ -40,11 +40,14 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         if not self.config.compute.compute_nodes:
             self.fail('There are no compute nodes')
 
+        self.max_available_ram = 0
         for hypervisor in self.compute_client.hypervisors.list():
             if hypervisor.free_ram_mb >= 2048:
                 self.flavor_reqs = True
                 break
             else:
+                if hypervisor.free_ram_mb > self.max_available_ram:
+                    self.max_available_ram = hypervisor.free_ram_mb
                 self.flavor_reqs = False
 
         self.flavor_name = rand_name("ost1_test_Murano")
