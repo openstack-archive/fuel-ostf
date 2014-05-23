@@ -231,7 +231,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
         self.verify(250, self._check_connectivity_from_vm,
                     6, ("Connectivity to 8.8.8.8 from the VM doesn`t "
-                    "function properly."),
+                        "function properly."),
                     'public connectivity checking from VM', ip_address,
                     30, (6, 30))
 

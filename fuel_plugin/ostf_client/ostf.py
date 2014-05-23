@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 """Openstack testing framework client
 
-Usage: ostf.py run <test_set> [-q] [--id=<cluster_id>] [--tests=<tests>]  [--url=<url>]  [--timeout=<timeout>]
+Usage: ostf.py run <test_set> [-q] [--id=<cluster_id>] [--tests=<tests>]
+                   [--url=<url>]  [--timeout=<timeout>]
        ostf.py list [<test_set>]
 
     -q                          Show test run result only after finish
     -h --help                   Show this screen
     --tests=<tests>             Tests to run
-    --id=<cluster_id>           Cluster id to use, default: OSTF_CLUSTER_ID or "1"
-    --url=<url>                 Ostf url, default: OSTF_URL or http://0.0.0.0:8989/v1
-    --timeout=<timeout>         Amount of time after which test_run will be stopped [default: 60]
+    --id=<cluster_id>           Cluster id to use
+                                default: OSTF_CLUSTER_ID or "1"
+    --url=<url>                 Ostf url
+                                default: OSTF_URL or or http://0.0.0.0:8989/v1
+    --timeout=<timeout>         Amount of time after which test_run will be
+                                stopped [default: 60]
 
 """
 import os
