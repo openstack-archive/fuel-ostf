@@ -623,7 +623,7 @@ class NailgunConfig(object):
             is processed
         """
         os.environ['http_proxy'] = 'http://{0}:{1}'.format(
-            self.compute.controller_nodes[0], 8888)
+            self.compute.online_controllers[0], 8888)
 
     def set_endpoints(self):
         public_vip = self.network.raw_data.get('public_vip', None)
