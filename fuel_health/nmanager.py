@@ -543,7 +543,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def _ping_ip_address(self, ip_address, timeout, retries):
         def ping():
-            cmd = "ping -q -c3 -w3 %s | grep 'received' |" \
+            cmd = "ping -q -c3 -w10 %s | grep 'received' |" \
                   " grep -v '0 packets received'" % ip_address
 
             if self.host:
@@ -585,7 +585,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             except Exception as exc:
                 LOG.debug(traceback.format_exc())
 
-            command = "ping -q -c3 -w3 8.8.8.8 | grep 'received' |" \
+            command = "ping -q -c3 -w10 8.8.8.8 | grep 'received' |" \
                       " grep -v '0 packets received'"
 
             return self.retry_command(retries[0], retries[1],
