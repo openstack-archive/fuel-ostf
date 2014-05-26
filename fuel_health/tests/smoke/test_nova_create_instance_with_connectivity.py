@@ -224,16 +224,16 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         LOG.info('is address is  {0}'.format(ip_address))
         LOG.debug(ip_address)
 
-        self.verify(400, self._check_vm_connectivity, 5,
+        self.verify(250, self._check_vm_connectivity, 5,
                     "VM connectivity doesn`t function properly.",
                     'VM connectivity checking', ip_address,
-                    30, (6, 60))
+                    30, (6, 30))
 
-        self.verify(400, self._check_connectivity_from_vm,
+        self.verify(250, self._check_connectivity_from_vm,
                     6, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                     "function properly."),
                     'public connectivity checking from VM', ip_address,
-                    30, (6, 60))
+                    30, (6, 30))
 
         self.verify(10, self.compute_client.servers.remove_floating_ip,
                     7, "Floating IP cannot be removed.",

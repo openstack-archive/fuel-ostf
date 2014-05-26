@@ -92,7 +92,8 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         if not self.computes:
             self.fail('There are no compute nodes')
 
-        cmd = "ping -q -c3 -w10 8.8.8.8"
+        cmd = "ping -q -c3 -w3 8.8.8.8 | grep 'received' |" \
+              " grep -v '0 received'"
 
         ssh_client = SSHClient(self.computes[0],
                                self.usr,
