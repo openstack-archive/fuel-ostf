@@ -144,6 +144,9 @@ ComputeGroup = [
     cfg.ListOpt('compute_nodes',
                 default=[],
                 help="IP addresses of compute nodes"),
+    cfg.ListOpt('online_computes',
+                default=[],
+                help="IP addresses of online compute nodes"),
     cfg.ListOpt('ceph_nodes',
                 default=[],
                 help="IP addresses of nodes with ceph-osd role"),
@@ -570,6 +573,10 @@ class NailgunConfig(object):
 
         compute_nodes = filter(lambda node: 'compute' in node['roles'],
                                data)
+        online_computes = filter(
+            lambda node: 'compute' in node['roles']
+            and node['online'] is True, data)
+        self.compute.online_computes = online_computes
         compute_ips = []
         for node in compute_nodes:
             compute_ips.append(node['ip'])
