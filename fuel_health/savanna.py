@@ -19,7 +19,7 @@ import logging
 import time
 import traceback
 
-from fuel_health.common.savanna_ssh import ssh_command
+from fuel_health.common import ssh
 from fuel_health.common.utils.data_utils import rand_name
 import fuel_health.nmanager as nmanager
 
@@ -234,7 +234,7 @@ class SavannaTest(nmanager.OfficialClientTest):
         while True:
             cmd = ("timeout 60 bash -c 'echo >/dev/"
                    "tcp/{0}/{1}'; echo $?".format(host, port))
-            output, output_err = ssh_command(cmd)
+            output, output_err = self._run_ssh_cmd(cmd, True)
             print('NC output after %s seconds is "%s"' % (i * 10, output))
             LOG.debug('NC output after %s seconds is "%s"',
                       i * 10, output)
@@ -253,8 +253,9 @@ class SavannaTest(nmanager.OfficialClientTest):
         cmd_neutron = ('grep -E '
                        '"network_api_class=nova.network.neutronv2.api.API" '
                        '/etc/nova/nova.conf')
-        output_nova, output_nova_err = ssh_command(cmd_nova)
-        output_neutron, output_neutron_err = ssh_command(cmd_neutron)
+        output_nova, output_nova_err = self._run_ssh_cmd(cmd_nova, True)
+        output_neutron, output_neutron_err = self._run_ssh_cmd(cmd_neutron,
+                                                               True)
         if(output_neutron or str(output_neutron_err).find(
                 'network_api_class=nova.network.neutronv2.api.API') > 0):
             LOG.debug('neutron is found')
@@ -500,9 +501,9 @@ class SavannaTest(nmanager.OfficialClientTest):
         elif plugin_name == 'hdp':
             hadoop_user = self.HDP_HADOOP_USER
             node_username = self.HDP_NODE_USERNAME
-        ssh_command('echo "%s" > /tmp/ostf-savanna.pem' %
-                    self.keys[0].private_key)
-        ssh_command('chmod 600  /tmp/ostf-savanna.pem')
+        self._run_ssh_cmd('echo "%s" > /tmp/ostf-savanna.pem' %
+                          self.keys[0].private_key)
+        self._run_ssh_cmd('chmod 600  /tmp/ostf-savanna.pem')
         while True:
             cmd = ('ssh -i /tmp/ostf-savanna.pem -l %s '
                    '-oUserKnownHostsFile=/dev/null '
@@ -511,7 +512,7 @@ class SavannaTest(nmanager.OfficialClientTest):
                    '-list-active-trackers | wc -l"' %
                    (self.V_NODE_USERNAME, node_info['namenode_ip'],
                     hadoop_user))
-            stdout, stderr = ssh_command(cmd)
+            stdout, stderr = self._run_ssh_cmd(cmd, True)
             active_tasktracker_count = int(stdout)
             LOG.debug('active_tasktracker_count:%s',
                       active_tasktracker_count)
@@ -524,7 +525,7 @@ class SavannaTest(nmanager.OfficialClientTest):
                    '\'{print $3}\'' %
                    (self.V_NODE_USERNAME, node_info['namenode_ip'],
                     hadoop_user))
-            stdout, stderr = ssh_command(cmd)
+            stdout, stderr = self._run_ssh_cmd(cmd, True)
             active_datanode_count = int(stdout)
             LOG.debug('active_datanode_count:%s', active_datanode_count)
             print('active_datanode_count:%s' % active_datanode_count)
