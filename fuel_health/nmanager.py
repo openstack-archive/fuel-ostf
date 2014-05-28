@@ -771,6 +771,45 @@ class SmokeChecksTest(OfficialClientTest):
         self.set_resource(display_name, volume)
         return volume
 
+    def _create_boot_volume(self, client):
+        display_name = rand_name('ost1_test-bootable-volume')
+        imageRef = self.get_image_from_name()
+        LOG.debug('Image ref is {0}'.format(imageRef))
+        volume = client.volumes.create(
+            size=1, display_name=display_name, imageRef=imageRef)
+        return volume
+
+    def create_instance_from_volume(self, client, volume):
+        name = rand_name('ost1_test-boot-volume-instance')
+        base_image_id = self.get_image_from_name()
+        bd_map = {'vda': volume.id + ':::0'}
+        if 'neutron' in self.config.network.network_provider:
+            network = [net.id for net in
+                       self.compute_client.networks.list()
+                       if net.label == self.private_net]
+            if network:
+                create_kwargs = {'block_device_mapping': bd_map,
+                                 'nics': [{'net-id': network[0]}]}
+            else:
+                self.fail('Private network was not created by default')
+            server = client.servers.create(
+                name, base_image_id, self.smoke_flavor.id, **create_kwargs)
+        else:
+            create_kwargs = {'block_device_mapping': bd_map}
+            server = client.servers.create(name, base_image_id,
+                                           self.smoke_flavor.id,
+                                           **create_kwargs)
+
+        self.verify_response_body_content(server.name,
+                                          name,
+                                          "Instance creation failed")
+        # The instance retrieved on creation is missing network
+        # details, necessitating retrieval after it becomes active to
+        # ensure correct details.
+        server = self._wait_server_param(client, server, 'addresses', 5, 1)
+        self.set_resource(name, server)
+        return server
+
     def _create_server(self, client):
         name = rand_name('ost1_test-volume-instance')
         base_image_id = self.get_image_from_name()
