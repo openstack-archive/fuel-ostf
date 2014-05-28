@@ -140,3 +140,55 @@ class VolumesTest(nmanager.SmokeChecksTest):
                     "Can not delete server. ",
                     "server deletion",
                     instance)
+
+    def test_create_boot_volume(self):
+        """Create volume and boot instance from it
+        Target component: Compute
+
+        Scenario:
+            1. Create a new small-size volume from image.
+            2. Wait for volume status to become "available".
+            3. Launch instance from created volume.
+            4. Wait for "Active" status.
+            5. Delete instance.
+            6. Delete volume.
+            7. Verify that volume deleted
+        Duration: 350 s.
+        """
+        fail_msg_step_1 = 'Volume was not created'
+        # Create volume
+        volume = self.verify(120, self._create_volume, 1,
+                             fail_msg_step_1,
+                             "volume creation",
+                             self.volume_client, 'TestVM')
+
+        self.verify(200, self._wait_for_volume_status, 2,
+                    fail_msg_step_1,
+                    "volume becoming 'available'",
+                    volume, 'available')
+
+        # create instance
+        instance = self.verify(200, self.create_instance_from_volume, 3,
+                               "Instance creation failed. ",
+                               "server creation",
+                               self.compute_client, volume)
+
+        self.verify(200, self._wait_for_instance_status, 4,
+                    'Instance status did not become "available".',
+                    "instance becoming 'available'",
+                    instance, 'ACTIVE')
+
+        self.verify(30, self._delete_server, 5,
+                    "Can not delete server. ",
+                    "server deletion",
+                    instance)
+
+        self.verify(50, self.volume_client.volumes.delete, 6,
+                    'Can not delete volume. ',
+                    "volume deletion",
+                    volume)
+
+        self.verify(50, self.verify_volume_deletion, 7,
+                    'Can not delete volume. ',
+                    "volume deletion",
+                    volume)
