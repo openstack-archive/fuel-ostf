@@ -87,7 +87,7 @@ class Client(object):
                                         key_filename=self.key_filename)
         return ssh
 
-    def exec_longrun_command(self, cmd):
+    def exec_longrun_command(self, cmd, return_stderr=False):
         """
         Execute the specified command on the server.
 
@@ -100,6 +100,9 @@ class Client(object):
         s = self._get_ssh_connection()
         _, stdout, stderr = s.exec_command(cmd)
         res = stdout.read()
+        if return_stderr:
+            err_res = stderr.read()
+            return res, err_res
         s.close()
         return res
 
