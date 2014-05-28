@@ -129,23 +129,6 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest,
                                                 self.wait_interval):
             self.fail("Timed out waiting for stack to be deleted.")
 
-    def _run_ssh_cmd(self, cmd):
-        """
-        Open SSH session with Controller and and execute command.
-        """
-        if not self.host:
-            self.fail('Wrong tests configuration: '
-                      'controller_nodes parameter is empty ')
-        try:
-            sshclient = fuel_health.common.ssh.Client(
-                self.host[0], self.usr, self.pwd,
-                key_filename=self.key, timeout=self.timeout
-            )
-            return sshclient.exec_longrun_command(cmd)
-        except Exception as exc:
-            LOG.debug(traceback.format_exc())
-            self.fail("%s command failed." % cmd)
-
     def _find_heat_image(self, image_name):
         return image_name in [i.name for i in
                               self.compute_client.images.list()]
@@ -183,24 +166,24 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest,
                " test -f /tmp/vm_ready.txt && echo -ne YES || echo -ne NO")
 
         def check():
-            return self._run_ssh_cmd(cmd) == "YES"
+            return self._run_ssh_cmd(cmd)[0] == "YES"
 
         return fuel_health.test.call_until_true(
             check, timeout, interval)
 
     def _save_key_to_file(self, key):
         return self._run_ssh_cmd(
-            "KEY=`mktemp`; echo '%s' > $KEY; echo -ne $KEY;" % key)
+            "KEY=`mktemp`; echo '%s' > $KEY; echo -ne $KEY;" % key)[0]
 
     def _delete_key_file(self, filepath):
         self._run_ssh_cmd("rm -f %s" % filepath)
 
     def _load_vm_cpu(self, connection_string):
         return self._run_ssh_cmd(
-            connection_string + " cat /dev/urandom | gzip -9 > /dev/null &")
+            connection_string + " cat /dev/urandom | gzip -9 > /dev/null &")[0]
 
     def _release_vm_cpu(self, connection_string):
-        return self._run_ssh_cmd(connection_string + " pkill cat")
+        return self._run_ssh_cmd(connection_string + " pkill cat")[0]
 
     def _get_net_uuid(self):
         if 'neutron' in self.config.network.network_provider:
@@ -226,7 +209,7 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest,
 
             cmd = "echo -ne `%s`" % grep
 
-            subnet = self._run_ssh_cmd(cmd)
+            subnet = self._run_ssh_cmd(cmd)[0]
             if subnet:
                 return subnet
             # if network has no subnets
