@@ -129,23 +129,6 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest,
                                                 self.wait_interval):
             self.fail("Timed out waiting for stack to be deleted.")
 
-    def _run_ssh_cmd(self, cmd):
-        """
-        Open SSH session with Controller and and execute command.
-        """
-        if not self.host:
-            self.fail('Wrong tests configuration: '
-                      'controller_nodes parameter is empty ')
-        try:
-            sshclient = fuel_health.common.ssh.Client(
-                self.host[0], self.usr, self.pwd,
-                key_filename=self.key, timeout=self.timeout
-            )
-            return sshclient.exec_longrun_command(cmd)
-        except Exception as exc:
-            LOG.debug(traceback.format_exc())
-            self.fail("%s command failed." % cmd)
-
     def _find_heat_image(self, image_name):
         return image_name in [i.name for i in
                               self.compute_client.images.list()]
