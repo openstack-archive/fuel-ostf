@@ -396,6 +396,23 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         super(NovaNetworkScenarioTest, self).setUp()
         self.check_clients_state()
 
+    def _run_ssh_cmd(self, cmd):
+        """
+        Open SSH session with Controller and and execute command.
+        """
+        if not self.host:
+            self.fail('Wrong tests configuration: '
+                      'controller_nodes parameter is empty ')
+        try:
+            sshclient = fuel_health.common.ssh.Client(
+                self.host[0], self.usr, self.pwd,
+                key_filename=self.key, timeout=self.timeout
+            )
+            return sshclient.exec_longrun_command(cmd)
+        except Exception:
+            LOG.debug(traceback.format_exc())
+            self.fail("%s command failed." % cmd)
+
     def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
         kp_name = rand_name(namestart)
         keypair = client.keypairs.create(kp_name)

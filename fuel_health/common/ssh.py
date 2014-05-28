@@ -100,8 +100,9 @@ class Client(object):
         s = self._get_ssh_connection()
         _, stdout, stderr = s.exec_command(cmd)
         res = stdout.read()
+        err_res = stderr.read()
         s.close()
-        return res
+        return res, err_res
 
     def _is_timed_out(self, timeout, start_time):
         return (time.time() - timeout) > start_time
