@@ -579,7 +579,11 @@ class NailgunConfig(object):
         online_computes = filter(
             lambda node: 'compute' in node['roles']
             and node['online'] is True, data)
-        self.compute.online_computes = online_computes
+        online_computes_ips = []
+        for node in online_computes:
+            online_computes_ips.append(node['ip'])
+        LOG.info('Online compute ips is {0}'.fromat(online_computes_ips))
+        self.compute.online_computes = online_computes_ips
         compute_ips = []
         for node in compute_nodes:
             compute_ips.append(node['ip'])
