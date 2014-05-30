@@ -19,11 +19,13 @@
 import os
 import sys
 import traceback
+import unittest2
 
 from oslo.config import cfg
 import requests
 
 from fuel_health.common import log as logging
+from fuel_health import exceptions
 
 
 LOG = logging.getLogger(__name__)
@@ -508,7 +510,9 @@ class NailgunConfig(object):
             LOG.info('set proxy successful')
             self._parse_cluster_generated_data()
             LOG.info('parse generated successful')
-        except Exception, e:
+        except exceptions.SetProxy as exc:
+                raise exc
+        except Exception as e:
             LOG.warning('Something wrong with endpoints')
             LOG.debug(traceback.format_exc())
 
@@ -629,8 +633,11 @@ class NailgunConfig(object):
             To behave properly - method must be called after all nailgun params
             is processed
         """
-        os.environ['http_proxy'] = 'http://{0}:{1}'.format(
-            self.compute.online_controllers[0], 8888)
+        if self.compute.online_controllers:
+            os.environ['http_proxy'] = 'http://{0}:{1}'.format(
+                self.compute.online_controllers[0], 8888)
+        else:
+            raise exceptions.SetProxy()
 
     def set_endpoints(self):
         public_vip = self.network.raw_data.get('public_vip', None)
@@ -656,4 +663,7 @@ def FuelConfig():
     if 'CUSTOM_FUEL_CONFIG' in os.environ:
         return FileConfig()
     else:
-        return NailgunConfig()
+        try:
+            return NailgunConfig()
+        except exceptions.SetProxy as e:
+            raise unittest2.TestCase.failureException(str(e))
