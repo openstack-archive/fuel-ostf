@@ -52,6 +52,11 @@ class InvalidConfiguration(FuelException):
     message = "Invalid Configuration"
 
 
+class SetProxy(InvalidConfiguration):
+    message = ("Can not set proxy for Health Check."
+               "Make sure that controllers are online")
+
+
 class RestClientException(FuelException,
                           unittest2.TestCase.failureException):
     pass
