@@ -13,7 +13,6 @@
 #    under the License.
 
 import unittest
-import mock
 
 from fuel_plugin.ostf_adapter import mixins
 
@@ -29,15 +28,6 @@ class TestDeplTagsGetter(unittest.TestCase):
             )
         }
 
-        mocked_pecan_conf = mock.Mock()
-        mocked_pecan_conf.nailgun.host = '127.0.0.1'
-        mocked_pecan_conf.nailgun.port = 8888
-
-        with mock.patch(
-            'fuel_plugin.ostf_adapter.mixins.conf',
-            mocked_pecan_conf
-        ):
-            res = mixins._get_cluster_depl_tags(expected['cluster_id'])
-            print res
+        res = mixins._get_cluster_depl_tags(expected['cluster_id'])
 
         self.assertEqual(res, expected['depl_tags'])
