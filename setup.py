@@ -12,47 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import multiprocessing
 import setuptools
 
 
-fuel_health_reqs = [
-    'oslo.config>=1.1.1',
-    'python-cinderclient>=1.0.7',
-    'python-ceilometerclient>=1.0.9',
-    'python-keystoneclient>=0.4.2',
-    'python-novaclient>=2.17.0',
-    'python-heatclient>=0.2.9',
-    'python-muranoclient>=0.4.1',
-    'python-saharaclient>=0.6.0',
-    'paramiko>=1.10.1',
-    'requests>=1.2.3',
-    'unittest2>=0.5.1',
-    'pyyaml>=3.10',
-    'testresources>=0.2.7'
-]
-
-fuel_ostf_reqs = [
-    'nose>=1.3.0',
-    'SQLAlchemy>=0.7.8,<=0.9.99',
-    'alembic>=0.5.0',
-    'gevent==0.13.8',
-    'pecan>=0.3.0',
-    'psycopg2>=2.5.1',
-    'stevedore>=0.10'
-]
-
-test_requires = [
-    'mock>=1.0.1',
-    'pep8>=1.4.6',
-    'py>=1.4.15',
-    'six>=1.5.2',
-    'tox>=1.5.0',
-    'unittest2',
-    'nose',
-    'requests'
-]
-
+def requirements():
+    return []
 
 setuptools.setup(
 
@@ -81,7 +45,7 @@ setuptools.setup(
 
     packages=setuptools.find_packages(),
 
-    install_requires=fuel_health_reqs+fuel_ostf_reqs,
+    install_requires=requirements(),
 
     entry_points={
         'plugins': [
@@ -89,7 +53,7 @@ setuptools.setup(
              'nose_plugin.nose_adapter:NoseDriver')
         ],
         'console_scripts': [
-            'ostf-server = fuel_plugin.bin.adapter_api:main',
+            'ostf-server = fuel_plugin.ostf_adapter.server:main',
             ('update-commands = fuel_plugin.tests.'
              'test_utils.update_commands:main'),
             'ostfctl = adapter_utils.bin.ostf_utils:main'

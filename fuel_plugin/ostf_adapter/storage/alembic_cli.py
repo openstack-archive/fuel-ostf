@@ -15,8 +15,10 @@
 import os
 import logging
 
-from alembic import command, config
-from pecan import conf
+from oslo.config import cfg
+
+from alembic import command
+from alembic import config
 
 
 log = logging.getLogger(__name__)
@@ -28,7 +30,7 @@ def do_apply_migrations():
     )
     alembic_conf.set_main_option('script_location',
                                  'fuel_plugin.ostf_adapter.storage:migrations')
-    alembic_conf.set_main_option('sqlalchemy.url', conf.dbpath)
+    alembic_conf.set_main_option('sqlalchemy.url', cfg.CONF.adapter.dbpath)
 
     # apply initial migration
     command.upgrade(alembic_conf, 'head')
