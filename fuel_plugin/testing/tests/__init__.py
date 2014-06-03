@@ -37,7 +37,6 @@ def setup():
                     [
                         'ostf-server',
                         '--debug',
-                        '--nailgun-port=8888',
                         ('--debug_tests=fuel_plugin/testing/'
                          'fixture/dummy_tests')
                     ],

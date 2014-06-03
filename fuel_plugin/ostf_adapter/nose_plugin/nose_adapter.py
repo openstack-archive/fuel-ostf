@@ -17,7 +17,7 @@ import os
 import logging
 import signal
 
-from pecan import conf
+from oslo.config import cfg
 
 from fuel_plugin.ostf_adapter.nose_plugin import nose_test_runner
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
@@ -48,7 +48,7 @@ class NoseDriver(object):
         else:
             argv_add = [test_set.test_path] + test_set.additional_arguments
 
-        lock_path = conf.lock_dir
+        lock_path = cfg.CONF.adapter.lock_dir
         test_run.pid = nose_utils.run_proc(self._run_tests,
                                            lock_path,
                                            dbpath,
@@ -132,8 +132,8 @@ class NoseDriver(object):
         try:
             module_obj = __import__(cleanup, -1)
 
-            os.environ['NAILGUN_HOST'] = str(conf.nailgun.host)
-            os.environ['NAILGUN_PORT'] = str(conf.nailgun.port)
+            os.environ['NAILGUN_HOST'] = str(cfg.CONF.adapter.nailgun_host)
+            os.environ['NAILGUN_PORT'] = str(cfg.CONF.adapter.nailgun_port)
             os.environ['CLUSTER_ID'] = str(cluster_id)
 
             module_obj.cleanup.cleanup(cluster_deployment_info)
