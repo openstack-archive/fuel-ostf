@@ -16,10 +16,13 @@ from time import time
 import logging
 import os
 from nose import plugins
-from pecan import conf
+
+from oslo.config import cfg
 
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
 from fuel_plugin.ostf_adapter.storage import models
+
+CONF = cfg.CONF
 
 
 LOG = logging.getLogger(__name__)
@@ -38,8 +41,8 @@ class StoragePlugin(plugins.Plugin):
         self._start_time = None
 
     def options(self, parser, env=os.environ):
-        env['NAILGUN_HOST'] = str(conf.nailgun.host)
-        env['NAILGUN_PORT'] = str(conf.nailgun.port)
+        env['NAILGUN_HOST'] = str(CONF.adapter.nailgun_host)
+        env['NAILGUN_PORT'] = str(CONF.adapter.nailgun_port)
         if self.cluster_id:
             env['CLUSTER_ID'] = str(self.cluster_id)
 

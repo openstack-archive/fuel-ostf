@@ -17,7 +17,6 @@ from mock import patch, MagicMock
 from webtest import TestApp
 
 from fuel_plugin.ostf_adapter.wsgi import app
-from fuel_plugin.ostf_adapter.wsgi.app import PECAN_DEFAULT
 from fuel_plugin.testing.tests.unit import base
 
 
@@ -30,14 +29,7 @@ class WsgiInterfaceTests(base.BaseWSGITest):
     def setUp(self):
         super(WsgiInterfaceTests, self).setUp()
 
-        test_custom_config = PECAN_DEFAULT
-        test_custom_config['nailgun']['port'] = 8888
-
-        with patch(
-            'fuel_plugin.ostf_adapter.wsgi.app.PECAN_DEFAULT',
-            test_custom_config
-        ):
-            self.app = TestApp(app.setup_app())
+        self.app = TestApp(app.setup_app())
 
         self.fixture = {
             'cluster_id': 1
