@@ -14,12 +14,14 @@
 
 
 import requests
-from pecan import conf
 from sqlalchemy.orm import joinedload
 import logging
 
+from oslo.config import cfg
+
 from fuel_plugin.ostf_adapter.storage import models
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
+
 
 LOG = logging.getLogger(__name__)
 
@@ -33,6 +35,7 @@ TEST_REPOSITORY = []
 
 
 def clean_db(session):
+    LOG.info('Starting clean db action.')
     session.query(models.ClusterTestingPattern).delete()
     session.query(models.ClusterState).delete()
     session.query(models.TestSet).delete()
@@ -105,15 +108,15 @@ def discovery_check(session, cluster):
 
 def _get_cluster_depl_tags(cluster_id):
     cluster_url = NAILGUN_API_URL.format(cluster_id)
-    request_url = URL.format(conf.nailgun.host,
-                             conf.nailgun.port,
+    request_url = URL.format(cfg.CONF.adapter.nailgun_host,
+                             cfg.CONF.adapter.nailgun_port,
                              cluster_url)
 
     response = REQ_SES.get(request_url).json()
     release_id = response.get('release_id', 'failed to get id')
 
     release_url = URL.format(
-        conf.nailgun.host, conf.nailgun.port,
+        cfg.CONF.adapter.nailgun_host, cfg.CONF.adapter.nailgun_port,
         'api/releases/{0}'.format(release_id))
 
     deployment_tags = set()
