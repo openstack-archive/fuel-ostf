@@ -1,2 +1,3 @@
 recursive-include fuel_health *
 recursive-include fuel_plugin *
+include requirements.txt
