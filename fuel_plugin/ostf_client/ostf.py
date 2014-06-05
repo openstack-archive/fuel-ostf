@@ -42,7 +42,7 @@ def main():
     cluster_id = args['--id'] or os.environ.get('OSTF_CLUSTER_ID') \
         or get_cluster_id() or '1'
 
-    tests = args['--tests'] or []
+    tests_from_cmd = args['--tests'] or []
     timeout = args['--timeout']
     quite = args['-q']
     url = args['--url'] or os.environ.get('OSTF_URL') \
@@ -63,9 +63,9 @@ def main():
             stopped=colored.red('stopped')
         )
 
-        tests = [test['id'].split('.')[-1]
-                 for test in client.tests().json()
-                 if test['testset'] == test_set]
+        tests = tests_from_cmd or [test['id'].split('.')[-1]
+                                   for test in client.tests().json()
+                                   if test['testset'] == test_set]
 
         def print_results(item):
             if isinstance(item, dict):
@@ -115,21 +115,23 @@ def main():
                 print_results(['General', current_status])
 
         if quite:
-            polling_hook = quite_polling_hook
+            current_polling_hook = quite_polling_hook
         else:
+            current_polling_hook = polling_hook
             for test in tests:
                 print_results([test, 'wait_running'])
             print_results(['General', 'running'])
 
         try:
             r = client.run_testset_with_timeout(test_set, cluster_id,
-                                                timeout, 2, polling_hook)
+                                                timeout, 2,
+                                                current_polling_hook)
         except AssertionError:
             return 1
         except KeyboardInterrupt:
             r = client.stop_testrun_last(test_set, cluster_id)
             print t.move_left + t.move_left,
-            polling_hook(r)
+            current_polling_hook(r)
 
         tests = next(item['tests'] for item in r.json())
         return any(item['status'] != 'success' for item in tests)

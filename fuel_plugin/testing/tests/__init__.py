@@ -16,35 +16,37 @@ import signal
 import subprocess
 import time
 
+processes_pool = None
+
 
 def setup():
     global processes_pool
 
-    with open('fuel_plugin/testing/tests/etc/server.log', 'w') as serverlogs:
-        with open('/dev/null', 'w') as devnull:
-            processes_pool = tuple(
-                [
-                    subprocess.Popen(
-                        [
-                            'python',
-                            'fuel_plugin/testing/test_utils/nailgun_mimic.py'
-                        ],
-                        stdout=devnull,
-                        stderr=devnull
-                    ),
-                    subprocess.Popen(
-                        [
-                            'ostf-server',
-                            '--debug',
-                            '--nailgun-port=8888',
-                            ('--debug_tests=fuel_plugin/testing/'
-                             'fixture/dummy_tests')
-                        ],
-                        stdout=devnull,
-                        stderr=devnull
-                    )
-                ]
-            )
+    with open('/dev/null', 'w') as devnull:
+        processes_pool = tuple(
+            [
+                subprocess.Popen(
+                    [
+                        'python',
+                        'fuel_plugin/testing/test_utils/nailgun_mimic.py'
+                    ],
+                    stdout=devnull,
+                    stderr=devnull
+                ),
+                subprocess.Popen(
+                    [
+                        'ostf-server',
+                        '--debug',
+                        '--nailgun-port=8888',
+                        ('--debug_tests=fuel_plugin/testing/'
+                         'fixture/dummy_tests')
+                    ],
+                    stdout=devnull,
+                    stderr=devnull
+                )
+            ]
+        )
+
     time.sleep(5)
 
 

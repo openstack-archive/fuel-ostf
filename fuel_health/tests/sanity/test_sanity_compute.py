@@ -35,9 +35,9 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         Duration: 20 s.
         """
         fail_msg = 'Instance list is unavailable. '
-        list_instance_resp = self.verify(20, self._list_instances,
-                                         1, fail_msg, "instance listing",
-                                         self.compute_client)
+        self.verify(20, self._list_instances,
+                    1, fail_msg, "instance listing",
+                    self.compute_client)
 
     def test_list_images(self):
         """Request image list
@@ -65,9 +65,9 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         Duration: 20 s.
         """
         fail_msg = 'Volume list is unavailable. '
-        list_volumes_resp = self.verify(20, self._list_volumes,
-                                        1, fail_msg, "volume listing",
-                                        self.volume_client)
+        self.verify(20, self._list_volumes,
+                    1, fail_msg, "volume listing",
+                    self.volume_client)
 
     def test_list_snapshots(self):
         """Request snapshot list
@@ -78,9 +78,9 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         Duration: 20 s.
         """
         fail_msg = 'Snapshots list is unavailable. '
-        list_snapshots_resp = self.verify(20, self._list_snapshots,
-                                          1, fail_msg, "snapshots listing",
-                                          self.volume_client)
+        self.verify(20, self._list_snapshots,
+                    1, fail_msg, "snapshots listing",
+                    self.volume_client)
 
     def test_list_flavors(self):
         """Request flavor list

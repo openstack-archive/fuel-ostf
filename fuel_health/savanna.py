@@ -509,7 +509,7 @@ class SavannaTest(nmanager.OfficialClientTest):
                    '-oStrictHostKeyChecking=no %s '
                    'sudo -u %s -i "hadoop job '
                    '-list-active-trackers | wc -l"' %
-                   (self.V_NODE_USERNAME, node_info['namenode_ip'],
+                   (node_username, node_info['namenode_ip'],
                     hadoop_user))
             stdout, stderr = ssh_command(cmd)
             active_tasktracker_count = int(stdout)
@@ -522,7 +522,7 @@ class SavannaTest(nmanager.OfficialClientTest):
                    'sudo -u %s -i "hadoop dfsadmin -report" '
                    '| grep "Datanodes available:.*" | awk '
                    '\'{print $3}\'' %
-                   (self.V_NODE_USERNAME, node_info['namenode_ip'],
+                   (node_username, node_info['namenode_ip'],
                     hadoop_user))
             stdout, stderr = ssh_command(cmd)
             active_datanode_count = int(stdout)

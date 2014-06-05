@@ -53,7 +53,6 @@ from fuel_health.common.utils.data_utils import rand_int_id
 from fuel_health import exceptions
 import fuel_health.manager
 import fuel_health.test
-from fuel_health import config
 
 
 class OfficialClientManager(fuel_health.manager.Manager):
@@ -549,7 +548,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                     self.usr, self.pwd,
                                     key_filename=self.key,
                                     timeout=timeout)
-                except Exception as exc:
+                except Exception:
                     LOG.debug(traceback.format_exc())
 
                 return self.retry_command(retries[0], retries[1],
@@ -579,7 +578,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                 key_filename=self.key,
                                 timeout=timeout)
 
-            except Exception as exc:
+            except Exception:
                 LOG.debug(traceback.format_exc())
 
             command = "ping -q -c3 -w10 8.8.8.8 | grep 'received' |" \

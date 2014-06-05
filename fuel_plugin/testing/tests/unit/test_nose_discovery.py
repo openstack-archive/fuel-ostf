@@ -12,11 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from mock import patch, Mock
+from mock import Mock
 import unittest2
-from sqlalchemy import create_engine, func
-from sqlalchemy.orm import sessionmaker
-
 from fuel_plugin.ostf_adapter.nose_plugin import nose_discovery
 from fuel_plugin.ostf_adapter.storage import models
 

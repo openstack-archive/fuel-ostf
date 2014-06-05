@@ -40,7 +40,7 @@ def make_requests(claster_id, test_set):
     time.sleep(1)
 
     body = [{'id': _id, 'status': 'stopped'}]
-    update = requests.put(
+    requests.put(
         'http://172.18.164.37:8777/v1/testruns',
         data=json.dumps(body),
         headers=headers

@@ -512,7 +512,7 @@ class NailgunConfig(object):
             LOG.info('parse generated successful')
         except exceptions.SetProxy as exc:
                 raise exc
-        except Exception as e:
+        except Exception:
             LOG.warning('Something wrong with endpoints')
             LOG.debug(traceback.format_exc())
 

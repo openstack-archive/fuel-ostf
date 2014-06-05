@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from os import environ as env
 from unittest import TestCase
 from oslo.config import cfg
 
@@ -23,5 +22,4 @@ opts = [
 
 class Config(TestCase):
     def test_config(self):
-        file_path = env['OSTF_CONF_PATH']
         cfg.CONF
