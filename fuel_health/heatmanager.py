@@ -142,7 +142,7 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest,
                 key_filename=self.key, timeout=self.timeout
             )
             return sshclient.exec_longrun_command(cmd)
-        except Exception as exc:
+        except Exception:
             LOG.debug(traceback.format_exc())
             self.fail("%s command failed." % cmd)
 
