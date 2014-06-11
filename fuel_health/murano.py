@@ -35,7 +35,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
     def setUp(self):
         super(MuranoTest, self).setUp()
         self.check_clients_state()
-        self.env_name = rand_name("ost1_test-Murano_env")
+        self.env_name = rand_name("ostf_test-Murano_env")
 
         if not self.config.compute.compute_nodes:
             self.fail('There are no compute nodes')
@@ -47,7 +47,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             else:
                 self.flavor_reqs = False
 
-        self.flavor_name = rand_name("ost1_test_Murano")
+        self.flavor_name = rand_name("ostf_test_Murano_flavor")
         if self.flavor_reqs:
             self.flavor = self.compute_client.flavors.create(self.flavor_name,
                                                              disk=60, ram=2048,
@@ -66,7 +66,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
     def tearDown(self):
         """
             This method allows to clean up the OpenStack environment
-            after the Murano OSTF tests
+            after the Murano OSTF tests.
         """
         super(MuranoTest, self).tearDown()
 
