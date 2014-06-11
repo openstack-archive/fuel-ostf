@@ -104,7 +104,7 @@ def cleanup(cluster_deployment_info):
                 environments = requests.get(endpoint + 'environments',
                                             headers=headers).json()
                 for e in environments["environments"]:
-                    if e['name'].startswith('ost1_test-'):
+                    if e['name'].startswith('ostf_test-'):
                         try:
                             LOG.info('Start environment deletion.')
                             requests.delete('{0}environments/{1}'.format(
@@ -116,7 +116,7 @@ def cleanup(cluster_deployment_info):
             if compute_client is not None:
                 flavors = compute_client.flavors.list()
                 for flavor in flavors:
-                    if flavor.name.startswith('ost1_test_Murano'):
+                    if 'ostf_test_Murano' in flavor.name:
                         try:
                             LOG.info('Start flavor deletion.')
                             compute_client.flavors.delete(flavor.id)
