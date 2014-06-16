@@ -12,11 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
 from fuel_health import ceilometermanager
 from fuel_health.common.utils.data_utils import rand_name
-
-LOG = logging.getLogger(__name__)
 
 
 class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
@@ -25,110 +22,137 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
     """
 
     def test_check_alarm_state(self):
-        """Ceilometer test to check the alarm can change status
+        """Ceilometer test to check the alarm can change status and Nova
+        notification received.
+
         Target component: Ceilometer
 
         Scenario:
             1. Create a new instance.
             2. Instance become active.
-            3. Create metrics for instance.
-            4. Create a new alarm.
-            5. Verify that status become "alarm".
+            3. Wait Nova notifications.
+            4. Wait Nova statistic.
+            5. Create a new alarm.
+            6. Verify that become status.
         Duration: 800 s.
 
         Deployment tags: Ceilometer
         """
 
         self.check_image_exists()
+
+        name = rand_name('ost1-test-ceilo-instance-')
+
         fail_msg = "Creation instance failed"
+        msg = "Instance was created"
 
-        create_kwargs = {}
-        if 'neutron' in self.config.network.network_provider:
-            network = [net.id for net in
-                       self.compute_client.networks.list()
-                       if net.label == self.private_net]
+        self.instance = self.verify(600, self._create_server, 1,
+                                    fail_msg, msg,
+                                    self.compute_client, name)
 
-            create_kwargs = {'nics': [{'net-id': network[0]}]}
+        fail_msg = "Instance is not available"
+        msg = "instance becoming available"
 
-        image = self.get_image_from_name()
-        name = rand_name('ost1_test-instance-alarm_actions')
-        self.instance = self.verify(600, self.compute_client.servers.create, 1,
-                                    fail_msg,
-                                    "server creation",
-                                    name=name,
-                                    flavor=self.flavor,
-                                    image=image,
-                                    **create_kwargs)
-        self.set_resource(self.instance.id, self.instance)
-
-        self.verify(200, self._wait_for_instance_metrics, 2,
-                    "instance is not available",
-                    "instance becoming 'available'",
+        self.verify(200, self.wait_for_instance_status, 2,
+                    fail_msg, msg,
                     self.instance, 'ACTIVE')
 
-        fail_msg = "Creation metrics failed."
+        fail_msg = "Nova notifications is not received"
+        msg = "Nova notifications is received"
+        query = [{'field': 'resource', 'op': 'eq', 'value': self.instance.id}]
 
-        statistic_meter_resp = self.verify(
-            600, self.wait_for_instance_metrics, 3,
-            fail_msg, "metrics created", self.meter_name
-        )
+        self.verify(600, self.wait_nova_notifications, 3,
+                    fail_msg, msg, query)
 
-        fail_msg = "Creation alarm failed."
+        fail_msg = "Statistic for Nova notification:vcpus is not received"
+        msg = "Statistic for Nova notification:vcpus is received"
 
-        threshold = statistic_meter_resp[0].avg - 1
-        create_alarm_resp = self.verify(
-            5, self.create_alarm,
-            4, fail_msg, "alarm_create",
-            meter_name=self.meter_name,
-            threshold=threshold,
-            name=self.name,
-            period=self.period,
-            statistic=self.statistic,
-            comparison_operator=self.comparison_operator
-        )
+        vcpus_stat = self.verify(60, self.wait_for_statistic_of_metric, 4,
+                                 fail_msg, msg,
+                                 self.nova_notifications[1],
+                                 query)
+
+        fail_msg = "Creation alarm for sum vcpus is failed"
+        msg = "Creation alarm for sum vcpus is successful"
+        threshold = vcpus_stat[0].sum - 1
+
+        alarm = self.verify(10, self.create_alarm, 5,
+                            fail_msg, msg,
+                            meter_name=self.nova_notifications[1],
+                            threshold=threshold,
+                            name=rand_name('ceilometer-alarm'),
+                            period=600,
+                            statistic='sum',
+                            comparison_operator='lt')
 
         fail_msg = "Alarm verify state failed."
+        msg = "Alarm status becoming"
 
-        self.verify(1000, self.wait_for_alarm_status, 5,
-                    fail_msg,
-                    "alarm status becoming 'alarm'",
-                    create_alarm_resp.alarm_id)
+        self.verify(1000, self.wait_for_alarm_status, 6,
+                    fail_msg, msg,
+                    alarm.alarm_id)
 
     def test_create_sample(self):
-        """Ceilometer create, check sample,check statistics
+        """Ceilometer create, check, list samples
         Target component: Ceilometer
 
         Scenario:
-        1. Create sample for existing resource (the default image).
-        2. Check that created sample has the expected resource.
-        3. Check that the sample has the statistic.
+        1. Getting samples for existing resource (the default image).
+        2. Create sample for existing resource (the default image).
+        3. Check that created sample has the expected resource.
+        4. Getting samples after create sample.
+        5. Comparison sample lists before and after create sample.
         Duration: 40 s.
         Deployment tags: Ceilometer
         """
+
         self.check_image_exists()
-        fail_msg_1 = 'Sample can not be created'
+        image_id = self.get_image_from_name()
+        query = [{'field': 'resource', 'op': 'eq', 'value': image_id}]
 
-        sample = self.verify(30, self.create_sample, 1,
-                             fail_msg_1,
-                             "Sample creating",
-                             resource_id=self.get_image_from_name(),
-                             counter_name=self.meter_name_image,
-                             counter_type=self.counter_type,
-                             counter_unit=self.counter_unit,
-                             counter_volume=self.counter_volume,
-                             resource_metadata=self.resource_metadata)
+        fail_msg = 'Getting samples for update image is failed'
+        msg = 'Getting samples for update image is successful'
 
-        fail_msg_2 = 'Sample resource is absent'
+        list_before_create_sample = self.verify(
+            60, self.ceilometer_client.samples.list, 1,
+            fail_msg, msg,
+            self.glance_notifications[0], q=query)
+
+        fail_msg = 'Creation sample for update image is failed'
+        msg = 'Creation sample for update image is successful'
+
+        sample = self.verify(60, self.ceilometer_client.samples.create, 2,
+                             fail_msg, msg,
+                             resource_id=image_id,
+                             counter_name=self.glance_notifications[0],
+                             counter_type='delta',
+                             counter_unit='image',
+                             counter_volume=1,
+                             resource_metadata={"user": "example_metadata"})
+
+        fail_msg = 'Resource of sample is absent or not equal with expected.'
 
         self.verify_response_body_value(
             body_structure=sample[0].resource_id,
-            value=self.get_image_from_name(),
-            msg=fail_msg_2,
-            failed_step=2)
+            value=image_id,
+            msg=fail_msg,
+            failed_step=3)
 
-        fail_msg_3 = 'Sample statistic list is unavailable.'
+        fail_msg = 'Getting samples after create sample is failed'
+        msg = 'Getting samples after create sample is successful'
 
-        self.verify(5, self.list_statistics, 3,
-                    fail_msg_3,
-                    "sample statistic",
-                    sample[0].counter_name)
+        list_after_create_sample = self.verify(
+            60, self.ceilometer_client.samples.list, 4,
+            fail_msg, msg,
+            self.glance_notifications[0], q=query)
+
+        fail_msg = 'Samples list after create sample not greater than ' \
+                   'samples list before create sample'
+        msg = 'Samples list after create sample greater than samples list' \
+              ' before create sample'
+
+        self.verify(1, self.assertGreater, 5,
+                    fail_msg, msg,
+                    len(list_after_create_sample),
+                    len(list_before_create_sample))
+
