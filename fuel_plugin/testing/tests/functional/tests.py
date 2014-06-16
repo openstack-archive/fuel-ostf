@@ -14,7 +14,6 @@
 
 import os
 import time
-import unittest
 from sqlalchemy import create_engine
 
 from fuel_plugin.testing.tests.functional.base import \
@@ -119,7 +118,7 @@ class AdapterTests(BaseAdapterTest):
             )
             self.assertTrue(test in response_tests, msg)
 
-    def test_run_testset(self, use_objects=False):
+    def test_run_testset(self):
         """Verify that test status changes in time from running to success
         """
         testsets = ["general_test", "stopped_test"]
@@ -128,7 +127,7 @@ class AdapterTests(BaseAdapterTest):
         # make sure we have data about test_sets in db
         self.adapter.testsets(cluster_id)
         for testset in testsets:
-            self.client.start_testrun(testset, cluster_id, use_objects)
+            self.client.start_testrun(testset, cluster_id)
 
         time.sleep(5)
 
@@ -163,7 +162,7 @@ class AdapterTests(BaseAdapterTest):
 
         self.compare(resp, assertions)
 
-    def test_stop_testset(self, use_objects=False):
+    def test_stop_testset(self):
         """Verify that long running testrun can be stopped
         """
         testset = "stopped_test"
@@ -173,7 +172,7 @@ class AdapterTests(BaseAdapterTest):
         # for this test case
         self.adapter.testsets(cluster_id)
 
-        self.client.start_testrun(testset, cluster_id, use_objects)
+        self.client.start_testrun(testset, cluster_id)
         time.sleep(20)
 
         resp = self.client.testruns_last(cluster_id)
@@ -190,14 +189,14 @@ class AdapterTests(BaseAdapterTest):
 
         self.compare(resp, assertions)
 
-        self.client.stop_testrun_last(testset, cluster_id, use_objects)
+        self.client.stop_testrun_last(testset, cluster_id)
         time.sleep(5)
         resp = self.client.testruns_last(cluster_id)
 
         assertions.stopped_test['status'] = 'finished'
         self.compare(resp, assertions)
 
-    def test_cant_start_while_running(self, use_objects=False):
+    def test_cant_start_while_running(self):
         """Verify that you can't start new testrun
         for the same cluster_id while previous run
         is running
@@ -211,11 +210,11 @@ class AdapterTests(BaseAdapterTest):
         self.adapter.testsets(cluster_id)
 
         for testset in testsets:
-            self.client.start_testrun(testset, cluster_id, use_objects)
+            self.client.start_testrun(testset, cluster_id)
         self.client.testruns_last(cluster_id)
 
         for testset in testsets:
-            resp = self.client.start_testrun(testset, cluster_id, use_objects)
+            resp = self.client.start_testrun(testset, cluster_id)
 
             msg = (
                 "Response {0} is not empty when you try to start testrun"
@@ -242,7 +241,7 @@ class AdapterTests(BaseAdapterTest):
         5 testruns ended with appropriate status
         '''
 
-    def test_run_single_test(self, use_objects=False):
+    def test_run_single_test(self):
         """Verify that you can run individual tests from given testset"""
         testset = "general_test"
         tests = [
@@ -256,8 +255,7 @@ class AdapterTests(BaseAdapterTest):
         # make sure that we have all needed data in db
         self.adapter.testsets(cluster_id)
 
-        resp = self.client.start_testrun_tests(testset, tests, cluster_id,
-                                               use_objects)
+        resp = self.client.start_testrun_tests(testset, tests, cluster_id)
 
         assertions = Response([
             {
@@ -326,7 +324,6 @@ class AdapterTests(BaseAdapterTest):
 
         self.compare(resp, assertions)
 
-    @unittest.skip("Depends on fix for skipped action. Skip until merge")
     def test_single_test_restart(self):
         """Verify that you restart individual tests for given testrun"""
         testset = "general_test"
@@ -521,7 +518,6 @@ class AdapterTests(BaseAdapterTest):
                ' to restart running testset:\n {0}').format(resp.request)
         self.assertTrue(resp.is_empty, msg)
 
-    @unittest.skip("Depends on fix for skipped action. Skip until merge")
     def test_nose_adapter_error_while_running_tests(self):
         testset = 'test_with_error'
         cluster_id = 4
@@ -627,8 +623,3 @@ class AdapterTests(BaseAdapterTest):
         ])
 
         self.compare(resp, assertions)
-
-    def test_use_objects_data_format(self):
-        self.test_run_testset(use_objects=True)
-        self.test_run_single_test(use_objects=True)
-        self.test_stop_testset(use_objects=True)
