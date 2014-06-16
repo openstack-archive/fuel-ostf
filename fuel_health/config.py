@@ -296,35 +296,35 @@ def register_object_storage_opts(conf):
     for opt in ObjectStoreConfig:
         conf.register_opt(opt, group='object-storage')
 
-savanna = cfg.OptGroup(name='savanna',
-                       title='Savanna Service Options')
+sahara = cfg.OptGroup(name='sahara',
+                      title='Sahara Service Options')
 
-SavannaConfig = [
+SaharaConfig = [
     cfg.StrOpt('api_url',
                default='10.20.0.131',
-               help="IP of savanna service."),
+               help="IP of sahara service."),
     cfg.StrOpt('port',
                default=8386,
-               help="Port of savanna service."),
+               help="Port of sahara service."),
     cfg.StrOpt('api_version',
                default='1.1',
-               help="API version of savanna service."),
+               help="API version of sahara service."),
     cfg.StrOpt('plugin',
                default='vanilla',
-               help="Plugin name of savanna service."),
+               help="Plugin name of sahara service."),
     cfg.StrOpt('pligin_version',
                default='1.1.2',
-               help="Plugin version of savanna service."),
+               help="Plugin version of sahara service."),
     cfg.StrOpt('tt_config',
                default={'Task Tracker Heap Size': 515},
-               help="Task Tracker config  of savanna service."),
+               help="Task Tracker config  of sahara service."),
 ]
 
 
-def register_savanna_opts(conf):
-    conf.register_group(savanna)
-    for opt in SavannaConfig:
-        conf.register_opt(opt, group='savanna')
+def register_sahara_opts(conf):
+    conf.register_group(sahara)
+    for opt in SaharaConfig:
+        conf.register_opt(opt, group='sahara')
 
 
 murano_group = cfg.OptGroup(name='murano',
@@ -433,14 +433,14 @@ class FileConfig(object):
         register_volume_opts(cfg.CONF)
         register_murano_opts(cfg.CONF)
         register_heat_opts(cfg.CONF)
-        register_savanna_opts(cfg.CONF)
+        register_sahara_opts(cfg.CONF)
         self.compute = cfg.CONF.compute
         self.identity = cfg.CONF.identity
         self.network = cfg.CONF.network
         self.volume = cfg.CONF.volume
         self.murano = cfg.CONF.murano
         self.heat = cfg.CONF.heat
-        self.savanna = cfg.CONF.savanna
+        self.sahara = cfg.CONF.sahara
 
 
 class ConfigGroup(object):
@@ -479,7 +479,7 @@ class NailgunConfig(object):
     volume = ConfigGroup(VolumeGroup)
     object_storage = ConfigGroup(ObjectStoreConfig)
     murano = ConfigGroup(MuranoConfig)
-    savanna = ConfigGroup(SavannaConfig)
+    sahara = ConfigGroup(SaharaConfig)
     heat = ConfigGroup(HeatConfig)
 
     def __init__(self, parse=True):
@@ -660,7 +660,7 @@ class NailgunConfig(object):
                 endpoint, 5000, 'v2.0')
             self.murano.api_url = 'http://{0}:{1}'.format(
                 endpoint_mur_sav, 8082)
-            self.savanna.api_url = 'http://{0}:{1}/{2}'.format(
+            self.sahara.api_url = 'http://{0}:{1}/{2}'.format(
                 endpoint_mur_sav, 8386, 'v1.0')
             self.heat.endpoint = 'http://{0}:{1}/{2}'.format(
                 endpoint_mur_sav, 8004, 'v1')

@@ -64,7 +64,7 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
 
         fail_msg = 'Getting alarms failed'
         msg = 'Getting alarms successful'
-        query=[{'field': 'project', 'op': 'eq', 'value': alarm.project_id}]
+        query = [{'field': 'project', 'op': 'eq', 'value': alarm.project_id}]
 
         self.verify(60, self.ceilometer_client.alarms.list, 3,
                     fail_msg, msg, q=query)

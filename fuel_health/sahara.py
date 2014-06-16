@@ -26,13 +26,13 @@ import fuel_health.nmanager as nmanager
 LOG = logging.getLogger(__name__)
 
 
-class SavannaTest(nmanager.NovaNetworkScenarioTest):
+class SaharaTest(nmanager.NovaNetworkScenarioTest):
     """
     Base class for openstack sanity tests for Sahara
     """
     @classmethod
     def setUpClass(cls):
-        super(SavannaTest, cls).setUpClass()
+        super(SaharaTest, cls).setUpClass()
         if cls.manager.clients_initialized:
             cls.flavors = []
             cls.node_groups = []
@@ -58,11 +58,11 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
             cls.HDP_HADOOP_USER = 'hdfs'
             cls.HDP_NODE_USERNAME = 'root'
             cls.CLUSTER_CREATION_TIMEOUT = '90'
-            cls.USER_KEYPAIR_ID = 'ostf_test-savanna-'
+            cls.USER_KEYPAIR_ID = 'ostf_test-sahara-'
             cls.PLUGIN_NAME = 'vanilla'
             cls.IMAGE_NAME = 'sahara'
             cls.CLUSTER_NAME = 'ostf-cluster-'
-            cls.SAVANNA_FLAVOR = 'ostf-test-savanna-flavor-'
+            cls.SAHARA_FLAVOR = 'ostf-test-sahara-flavor-'
             cls.JT_PORT = 50030
             cls.NN_PORT = 50070
             cls.TT_PORT = 50060
@@ -70,7 +70,7 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
             cls.SEC_NN_PORT = 50090
 
     def setUp(self):
-        super(SavannaTest, self).setUp()
+        super(SaharaTest, self).setUp()
         self.check_clients_state()
         self._create_sahara_flavors(self.compute_client)
 
@@ -85,7 +85,7 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
                 if image.metadata[tag_version] == 'True'\
                     and image.metadata[tag_plugin] == 'True'\
                         and image.metadata['_sahara_username'] is not None:
-                            LOG.debug('Correct image for savanna found')
+                            LOG.debug('Correct image for Sahara found')
                             return True
         LOG.debug('Correct image for Sahara not found')
         return False
@@ -94,7 +94,7 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
     def _create_sahara_flavors(cls, client):
         if not cls.flavors:
             cls.sahara_flavor = client.flavors.create(
-                rand_name(cls.SAVANNA_FLAVOR), 700, 1, 20).id
+                rand_name(cls.SAHARA_FLAVOR), 700, 1, 20).id
             cls.flavors.append(cls.sahara_flavor)
 
     @classmethod
@@ -163,7 +163,7 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
 
     def _check_cluster_state(self, cluster_id):
 
-        data = self.savanna_client.clusters.get(cluster_id)
+        data = self.sahara_client.clusters.get(cluster_id)
         i = 1
 
         while str(data.status) != 'Active':
@@ -181,7 +181,7 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
                     'Cluster state != \'Active\', passed {timeout} '
                     'minutes'.format(timeout=self.CLUSTER_CREATION_TIMEOUT))
 
-            data = self.savanna_client.clusters.get(cluster_id)
+            data = self.sahara_client.clusters.get(cluster_id)
             time.sleep(10)
             i += 1
 
@@ -207,7 +207,7 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
             neutron_management_network=None):
 
         body = self._create_cluster(
-            self.compute_client, self.savanna_client, plugin_name,
+            self.compute_client, self.sahara_client, plugin_name,
             plugin_version, cluster_template_id, description, cluster_configs,
             node_groups, anti_affinity, neutron_management_network)
 
@@ -215,7 +215,7 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
 
         node_ip_list_with_node_processes = \
             self._get_cluster_node_ip_list_with_node_processes(
-                self.savanna_client, body.id)
+                self.sahara_client, body.id)
 
         node_info = self._get_node_info(
             node_ip_list_with_node_processes, plugin_name)
@@ -347,8 +347,8 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
             LOG.debug('Creating node group template with floating ip')
 
         return self._create_node_group_template(
-            self.savanna_client,
-            'ostf-test-savanna-tt-dn-',
+            self.sahara_client,
+            'ostf-test-sahara-tt-dn-',
             self.plugin,
             self.plugin_version,
             description='test node group template',
@@ -371,8 +371,8 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
             LOG.debug('Creating node group template with floating ip')
 
         return self._create_node_group_template(
-            self.savanna_client,
-            'ostf-test-savanna-tt-',
+            self.sahara_client,
+            'ostf-test-sahara-tt-',
             self.plugin,
             self.plugin_version,
             description='test node group template',
@@ -394,8 +394,8 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
             LOG.debug('Creating node group template with floating ip')
 
         return self._create_node_group_template(
-            self.savanna_client,
-            'ostf-test-savanna-dn-',
+            self.sahara_client,
+            'ostf-test-sahara-dn-',
             self.plugin,
             self.plugin_version,
             description='test node group template',
@@ -409,8 +409,8 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
 
     def create_cluster_template(self):
         return self._create_cluster_template(
-            self.savanna_client,
-            'ostf-test-savanna-cluster-template-',
+            self.sahara_client,
+            'ostf-test-sahara-cluster-template-',
             self.plugin,
             self.plugin_version,
             description='test cluster template',
@@ -462,8 +462,8 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
             LOG.debug('Creating cluster template with floating ip')
 
         return self._create_cluster_template(
-            self.savanna_client,
-            'ostf-savanna-cl-tmpl-',
+            self.sahara_client,
+            'ostf-sahara-cl-tmpl-',
             self.plugin,
             self.plugin_version,
             description='test cluster template',
@@ -499,11 +499,11 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
         elif plugin_name == 'hdp':
             hadoop_user = self.HDP_HADOOP_USER
             node_username = self.HDP_NODE_USERNAME
-        self._run_ssh_cmd('echo "%s" > /tmp/ostf-savanna.pem' %
+        self._run_ssh_cmd('echo "%s" > /tmp/ostf-sahara.pem' %
                           self.keys[0].private_key)
-        self._run_ssh_cmd('chmod 600  /tmp/ostf-savanna.pem')
+        self._run_ssh_cmd('chmod 600  /tmp/ostf-sahara.pem')
         while True:
-            cmd = ('ssh -i /tmp/ostf-savanna.pem -l %s '
+            cmd = ('ssh -i /tmp/ostf-sahara.pem -l %s '
                    '-oUserKnownHostsFile=/dev/null '
                    '-oStrictHostKeyChecking=no %s '
                    'sudo -u %s -i "hadoop job '
@@ -515,7 +515,7 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
             LOG.debug('active_tasktracker_count:%s',
                       active_tasktracker_count)
             print('active_tasktracker_count:%s' % active_tasktracker_count)
-            cmd = ('ssh -i /tmp/ostf-savanna.pem -l %s '
+            cmd = ('ssh -i /tmp/ostf-sahara.pem -l %s '
                    '-oUserKnownHostsFile=/dev/null '
                    '-oStrictHostKeyChecking=no %s '
                    'sudo -u %s -i "hadoop dfsadmin -report" '
@@ -542,11 +542,11 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
 
     @classmethod
     def _list_node_group_template(cls):
-        return(cls.savanna_client.node_group_templates.list())
+        return(cls.sahara_client.node_group_templates.list())
 
     @classmethod
     def _list_cluster_templates(cls):
-        return(cls.savanna_client.cluster_templates.list())
+        return(cls.sahara_client.cluster_templates.list())
 
     @classmethod
     def _clean_flavors(cls):
@@ -559,15 +559,15 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
     @classmethod
     def _clean_cluster_templates(cls):
         cls._clean(
-            cls.cluster_templates, cls.savanna_client.cluster_templates)
+            cls.cluster_templates, cls.sahara_client.cluster_templates)
 
     @classmethod
     def _clean_clusters(cls):
-        cls._clean(cls.clusters, cls.savanna_client.clusters)
+        cls._clean(cls.clusters, cls.sahara_client.clusters)
 
     @classmethod
     def _clean_node_groups_templates(cls):
-        cls._clean(cls.node_groups, cls.savanna_client.node_group_templates)
+        cls._clean(cls.node_groups, cls.sahara_client.node_group_templates)
 
     @classmethod
     def _clean(cls, items, client):
@@ -588,4 +588,4 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
             cls._clean_node_groups_templates()
             cls._clean_flavors()
             cls._clean_keys()
-        super(SavannaTest, cls).tearDownClass()
+        super(SaharaTest, cls).tearDownClass()

@@ -155,4 +155,3 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
                     fail_msg, msg,
                     len(list_after_create_sample),
                     len(list_before_create_sample))
-

@@ -58,7 +58,7 @@ cluster_fixture = {
                     'murano': {
                         'value': True
                     },
-                    'savanna': {
+                    'sahara': {
                         'value': False
                     }
                 }

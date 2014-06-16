@@ -36,7 +36,7 @@ try:
     import saharaclient.client
 except:
     LOG.debug(traceback.format_exc())
-    LOG.warning('Savanna client could not be imported.')
+    LOG.warning('Sahara client could not be imported.')
 try:
     import ceilometerclient.v2.client
 except:
@@ -91,7 +91,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.volume_client = self._get_volume_client()
             self.heat_client = self._get_heat_client()
             self.murano_client = self._get_murano_client()
-            self.savanna_client = self._get_savanna_client()
+            self.sahara_client = self._get_sahara_client()
             self.ceilometer_client = self._get_ceilometer_client()
             self.client_attr_names = [
                 'compute_client',
@@ -99,7 +99,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                 'volume_client',
                 'heat_client',
                 'murano_client',
-                'savanna_client',
+                'sahara_client',
                 'ceilometer_client'
             ]
 
@@ -212,11 +212,11 @@ class OfficialClientManager(fuel_health.manager.Manager):
             LOG.debug(traceback.format_exc())
             LOG.warning('Can not initialize murano client')
 
-    def _get_savanna_client(self, username=None, password=None):
+    def _get_sahara_client(self, username=None, password=None):
         auth_url = self.config.identity.uri
         tenant_name = self.config.identity.admin_tenant_name
-        savanna_url = self.config.savanna.api_url
-        LOG.debug('Sahara url is %s' % savanna_url)
+        sahara_url = self.config.sahara.api_url
+        LOG.debug('Sahara url is %s' % sahara_url)
         if not username:
             username = self.config.identity.admin_username
         if not password:
@@ -224,13 +224,13 @@ class OfficialClientManager(fuel_health.manager.Manager):
         tenant_id = [
             tenant.id for tenant in self.identity_client.tenants.list()
             if tenant.name == tenant_name][0]
-        return saharaclient.client.Client(self.config.savanna.api_version,
+        return saharaclient.client.Client(self.config.sahara.api_version,
                                           username=username,
                                           api_key=password,
                                           project_name=tenant_name,
                                           auth_url=auth_url,
                                           sahara_url="{url}/{id}".format(
-                                              url=savanna_url, id=tenant_id))
+                                              url=sahara_url, id=tenant_id))
 
     def _get_ceilometer_client(self):
         keystone = self._get_identity_client()
