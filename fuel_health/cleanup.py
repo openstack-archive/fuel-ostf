@@ -76,16 +76,16 @@ def cleanup(cluster_deployment_info):
 
     if 'sahara' in cluster_deployment_info:
         try:
-            savanna_client = manager._get_savanna_client()
-            if savanna_client is not None:
-                _delete_it(client=savanna_client.clusters,
+            sahara_client = manager._get_sahara_client()
+            if sahara_client is not None:
+                _delete_it(client=sahara_client.clusters,
                            log_message='Start sahara cluster deletion',
                            name='ostf-test-', delete_type='id')
-                _delete_it(client=savanna_client.cluster_templates,
+                _delete_it(client=sahara_client.cluster_templates,
                            log_message='Start sahara cluster'
                                        ' template deletion',
                            delete_type='id')
-                _delete_it(client=savanna_client.node_group_templates,
+                _delete_it(client=sahara_client.node_group_templates,
                            log_message='Start sahara node'
                                        ' group template deletion',
                            delete_type='id')

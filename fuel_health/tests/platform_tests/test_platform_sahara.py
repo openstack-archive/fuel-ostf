@@ -16,17 +16,17 @@
 
 import logging
 
-from fuel_health import savanna
+from fuel_health import sahara
 
 LOG = logging.getLogger(__name__)
 
 
-class PlatformSavannaTests(savanna.SavannaTest):
+class PlatformSaharaTests(sahara.SaharaTest):
     """
-    TestClass contains tests that check basic Savanna functionality.
+    TestClass contains tests that check basic Sahara functionality.
     """
 
-    def test_platform_savanna(self):
+    def test_platform_sahara(self):
         """Sahara tests to create, list, start, checks and delete cluster
         Target component: Sahara
 
