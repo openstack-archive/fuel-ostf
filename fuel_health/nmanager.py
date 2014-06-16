@@ -270,7 +270,9 @@ class OfficialClientTest(fuel_health.test.TestCase):
         if images:
             for im in images:
                 LOG.debug(im.name)
-                if im.name.strip().lower() == image_name.strip().lower():
+                if (im.status.lower() == 'active' and
+                        im.name.strip().lower() ==
+                        image_name.strip().lower()):
                     image_id = im.id
         if not image_id:
             raise exceptions.ImageFault
