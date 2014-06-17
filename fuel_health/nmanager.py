@@ -332,16 +332,6 @@ class OfficialClientTest(fuel_health.test.TestCase):
                           image=self.manager.config.compute.image_name))
 
     @classmethod
-    def _clean_flavors(cls):
-        if cls.flavors:
-            for flavor in cls.flavors:
-                try:
-                    cls.compute_client.flavors.delete(flavor)
-                except exceptions.NotFound as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(traceback.format_exc())
-
-    @classmethod
     def tearDownClass(cls):
         cls.error_msg = []
         while cls.os_resources:
@@ -401,8 +391,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             cls.network = []
             cls.floating_ips = []
             cls.error_msg = []
-            cls.servers = []
-            cls.flavors = []
             cls.private_net = 'net04'
 
     def setUp(self):
@@ -489,17 +477,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         nets = self.compute_client.networks.list()
         return nets
 
-    def _create_server(self, client, name, security_groups=None,
-                       flavor_id=None):
+    def _create_server(self, client, name, security_groups):
         base_image_id = self.get_image_from_name()
-        if not flavor_id:
-            flavor = self._create_nano_flavor()
-            flavor_id = flavor.id
-            self.set_resource(flavor.name, flavor)
-            self.flavors.append(flavor_id)
-        if not security_groups:
-            security_groups = [self._create_security_group(
-                self.compute_client).name]
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in
                        self.compute_client.networks.list()
@@ -513,7 +492,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         else:
             create_kwargs = {'security_groups': security_groups}
 
-        server = client.servers.create(name, base_image_id, flavor_id,
+        server = client.servers.create(name, base_image_id,
+                                       self.nova_netw_flavor.id,
                                        **create_kwargs)
         self.verify_response_body_content(server.name,
                                           name,
@@ -637,7 +617,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         if cls.manager.clients_initialized:
             cls._clean_floating_ips()
             cls._clear_networks()
-            cls._clean_flavors()
 
 
 class SanityChecksTest(OfficialClientTest):
@@ -754,6 +733,17 @@ class SmokeChecksTest(OfficialClientTest):
                                        vcpus=vcpus, flavorid=flavorid)
         self.flavors.append(flavor)
         return flavor
+
+    @classmethod
+    def _clean_flavors(cls):
+        if cls.flavors:
+            for flav in cls.flavors:
+                try:
+                    cls.compute_client.flavors.delete(flav)
+                except Exception as exc:
+                    cls.error_msg.append(exc)
+                    LOG.debug(traceback.format_exc())
+                    pass
 
     def _create_tenant(self, client):
         name = rand_name('ost1_test-tenant-')

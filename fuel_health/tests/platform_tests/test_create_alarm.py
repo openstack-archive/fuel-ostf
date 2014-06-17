@@ -12,8 +12,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import logging
+import traceback
+
 from fuel_health import ceilometermanager
-from fuel_health.common.utils.data_utils import rand_name
+
+LOG = logging.getLogger(__name__)
 
 
 class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
@@ -21,102 +25,100 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
     TestClass contains tests that check basic Ceilometer functionality.
     """
 
+    def tearDown(self):
+        super(CeilometerApiSmokeTests, self).tearDown()
+        if self.manager.clients_initialized:
+            if self.alarm_list:
+                for alarm in self.alarm_list:
+                    try:
+                        self.ceilometer_client.alarms.delete(alarm.alarm_id)
+                    except:
+                        LOG.warning('alarm deletion failed')
+                        LOG.debug(traceback.format_exc())
+
     def test_create_alarm(self):
         """Ceilometer create, update, check, delete alarm
         Target component: Ceilometer
 
         Scenario:
-            1. Wait statistic of metric.
+            1. Create metrics.
             2. Create a new alarm.
             3. List alarms
-            4. Wait 'ok' alarm state.
-            5. Update the alarm.
-            6. 4. Wait 'alarm' alarm state.
-            7. Get alarm history.
-            8. Change alarm state to 'ok'.
-            9. Verify state.
+            4. Update the alarm.
+            5. List statistic
+            6. Get alarm history.
+            7. Change alarm state to 'ok'.
+            8. Verify state.
+            9. List meters
             10. Delete the alarm.
-        Duration: 1500 s.
+        Duration: 700 s.
         Deployment tags: Ceilometer
         """
 
-        # TODO(vrovachev): refactor this test suite after resolve bug:
-        # https://bugs.launchpad.net/fuel/+bug/1314196
+        fail_msg = "Creation metrics failed."
 
-        fail_msg = "Getting statistic of metric is failed"
-        msg = "Getting statistic of metric is successful"
+        self.verify(600, self.wait_for_instance_metrics, 1,
+                    fail_msg,
+                    "metrics created",
+                    self.meter_name_image)
 
-        self.verify(600, self.wait_for_statistic_of_metric, 1,
-                    fail_msg, msg,
-                    meter_name='image')
+        fail_msg = "Creation alarm failed."
 
-        fail_msg = "Creation alarm for avg image is failed"
-        msg = "Creation alarm for avg image is successful"
+        create_alarm_resp = self.verify(
+            100, self.create_alarm,
+            2, fail_msg, "alarm_create",
+            meter_name=self.meter_name,
+            threshold=self.threshold,
+            name=self.name,
+            period=self.period,
+            statistic=self.statistic,
+            comparison_operator=self.comparison_operator
+        )
 
-        alarm = self.verify(60, self.create_alarm, 2,
-                            fail_msg, msg,
-                            meter_name='image',
-                            threshold=0.9,
-                            name=rand_name('ceilometer-alarm'),
-                            period=600,
-                            statistic='avg',
-                            comparison_operator='lt')
+        fail_msg = "Alarm list unavailable"
 
-        fail_msg = 'Getting alarms failed'
-        msg = 'Getting alarms successful'
-        query=[{'field': 'project', 'op': 'eq', 'value': alarm.project_id}]
-
-        self.verify(60, self.ceilometer_client.alarms.list, 3,
-                    fail_msg, msg, q=query)
-
-        fail_msg = "Alarm verify state failed."
-        msg = "Alarm status is 'ok'"
-
-        self.verify(1000, self.wait_for_alarm_status, 4,
-                    fail_msg, msg,
-                    alarm.alarm_id, 'ok')
+        self.verify(20, self.list_alarm,
+                    2, fail_msg, "Alarm listing")
 
         fail_msg = "Alarm update failed."
-        msg = "Alarm was updated"
 
-        self.verify(60, self.ceilometer_client.alarms.update, 5,
-                    fail_msg, msg,
-                    alarm_id=alarm.alarm_id,
-                    threshold=1.1)
+        self.verify(20, self.alarm_update,
+                    3, fail_msg, "Alarm_update",
+                    alarm_id=create_alarm_resp.alarm_id,
+                    threshold='50')
+
+        fail_msg = "Alarm list unavailable"
+
+        self.verify(20, self.list_statistics,
+                    2, fail_msg, "Alarm listing",
+                    meter_name=self.meter_name)
+
+        fail_msg = "Get alarm history failed."
+
+        self.verify(20, self.alarm_history,
+                    4, fail_msg, "Alarm_history",
+                    alarm_id=create_alarm_resp.alarm_id)
+
+        fail_msg = "Alarm setting state failed."
+
+        self.verify(20, self.set_state,
+                    5, fail_msg, "Set_state",
+                    alarm_id=create_alarm_resp.alarm_id,
+                    state=self.state_ok)
 
         fail_msg = "Alarm verify state failed."
-        msg = "Alarm status is 'alarm'"
 
-        self.verify(1000, self.wait_for_alarm_status, 6,
-                    fail_msg, msg,
-                    alarm.alarm_id, 'alarm')
+        self.verify(20, self.verify_state,
+                    6, fail_msg, "Verify_state",
+                    alarm_id=create_alarm_resp.alarm_id,
+                    state=self.state_ok)
 
-        fail_msg = "Getting history of alarm failed."
-        msg = 'Getting alarms history is successful'
+        fail_msg = "Meter list unavailable"
 
-        self.verify(60, self.ceilometer_client.alarms.get_history, 7,
-                    fail_msg, msg,
-                    alarm_id=alarm.alarm_id)
+        self.verify(20, self.list_meters,
+                    1, fail_msg, "Meter listing")
 
-        fail_msg = "Setting alarm state failed."
-        msg = "Set alarm state to 'insufficient data'"
-
-        self.verify(60, self.ceilometer_client.alarms.set_state, 8,
-                    fail_msg, msg,
-                    alarm_id=alarm.alarm_id,
-                    state='insufficient data')
-
-        fail_msg = "Alarm state verification failed."
-        msg = "Alarm state verification is successful."
-
-        self.verify(60, self.verify_state, 9,
-                    fail_msg, msg,
-                    alarm_id=alarm.alarm_id,
-                    state='insufficient data')
-
-        fail_msg = "Alarm deleting failure"
-        msg = "Alarm deleted"
-
-        self.verify(60, self.ceilometer_client.alarms.delete, 10,
-                    fail_msg, msg,
-                    alarm_id=alarm.alarm_id)
+        fail_msg = "Alarm delete."
+        self.verify(20, self.delete_alarm,
+                    7, fail_msg, "Delete_alarm",
+                    alarm_id=create_alarm_resp.alarm_id)
