@@ -92,6 +92,11 @@ class TestSet(BASE):
     # with current test set
     exclusive_testsets = sa.Column(ARRAY(sa.String(128)))
 
+    # not crucial field for fuel upgrades testing
+    # see bug #1331446 (https://bugs.launchpad.net/fuel/+bug/1331446)
+    fuel_upgrades = sa.Column(sa.String(64),
+                              default='upgrades_make_this_world_better')
+
     tests = relationship(
         'Test',
         backref='test_set',
@@ -101,7 +106,8 @@ class TestSet(BASE):
 
     @property
     def frontend(self):
-        return {'id': self.id, 'name': self.description}
+        return {'id': self.id, 'name': self.description,
+                'upgrades_testing': self.fuel_upgrades}
 
     @classmethod
     def get_test_set(cls, session, test_set):
