@@ -14,7 +14,6 @@
 
 import logging
 from fuel_health import ceilometermanager
-from fuel_health import nmanager
 from fuel_health.common.utils.data_utils import rand_name
 
 LOG = logging.getLogger(__name__)
