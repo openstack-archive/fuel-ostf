@@ -297,9 +297,6 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 result = method(*args, **kwargs)
                 LOG.debug("Command execution successful.")
                 return result
-            except SSHExecCommandFailed as exc:
-                LOG.debug(traceback.format_exc())
-                self.fail("Command execution failed.")
             except Exception as exc:
                 LOG.debug(traceback.format_exc())
                 LOG.debug("%s. Another"
@@ -556,8 +553,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def _ping_ip_address(self, ip_address, timeout, retries):
         def ping():
-            cmd = "ping -q -c3 -w10 %s | grep 'received' |" \
-                  " grep -v '0 packets received'" % ip_address
+            cmd = "ping -q -c1 -w10 %s" % ip_address
 
             if self.host:
                 try:
@@ -598,8 +594,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             except Exception:
                 LOG.debug(traceback.format_exc())
 
-            command = "ping -q -c3 -w10 8.8.8.8 | grep 'received' |" \
-                      " grep -v '0 packets received'"
+            command = "ping -q -c1 -w10 8.8.8.8"
 
             return self.retry_command(retries[0], retries[1],
                                       ssh.exec_command_on_vm,
