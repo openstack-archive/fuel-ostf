@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2013 Mirantis, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -55,7 +53,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             11. Get the resources list of the updated stack.
             12. Delete the stack.
             13. Wait for the stack to be deleted.
-        Duration: 440 s.
+        Duration: 640 s.
         """
         self.check_image_exists()
         parameters = {
@@ -80,7 +78,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                             template,
                             parameters=parameters)
 
-        self.verify(100, self._wait_for_stack_status, 2,
+        self.verify(600, self._wait_for_stack_status, 2,
                     fail_msg,
                     "stack status becoming 'CREATE_COMPLETE'",
                     stack.id, 'CREATE_COMPLETE')
