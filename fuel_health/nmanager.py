@@ -262,13 +262,16 @@ class OfficialClientTest(fuel_health.test.TestCase):
 
     def get_image_from_name(self):
         image_name = self.manager.config.compute.image_name
-        images = self.compute_client.images.list()
+        images = [i for i in self.compute_client.images.list()
+                  if i.status.lower() == 'active']
         image_id = ''
         LOG.debug(images)
         if images:
             for im in images:
                 LOG.debug(im.name)
-                if im.name.strip().lower() == image_name.strip().lower():
+                if (im.name and
+                        im.name.strip().lower() ==
+                        image_name.strip().lower()):
                     image_id = im.id
         if not image_id:
             raise exceptions.ImageFault
