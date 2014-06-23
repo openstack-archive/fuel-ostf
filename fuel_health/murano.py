@@ -91,8 +91,10 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             image_type should be in [linux, windows.2012, cirros.demo]
         """
+
+        tag = 'murano_image_info'
+
         for image in self.compute_client.images.list():
-            tag = 'murano_image_info'
             if tag in image.metadata:
                 metadata = json.loads(image.metadata[tag])
                 if image_type == metadata['type']:
