@@ -60,7 +60,6 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
             cls.CLUSTER_CREATION_TIMEOUT = '90'
             cls.USER_KEYPAIR_ID = 'ostf_test-savanna-'
             cls.PLUGIN_NAME = 'vanilla'
-            cls.IMAGE_NAME = 'sahara'
             cls.CLUSTER_NAME = 'ostf-cluster-'
             cls.SAVANNA_FLAVOR = 'ostf-test-savanna-flavor-'
             cls.JT_PORT = 50030
@@ -75,20 +74,32 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
         self._create_sahara_flavors(self.compute_client)
 
     def _test_image(self):
-        tag_version = '_sahara_tag_%s' % self.plugin_version
-        tag_plugin = '_sahara_tag_%s' % self.plugin
-        LOG.debug('Testing image - plugin - %s version - %s',
-                  tag_plugin, tag_version)
-        for image in self.compute_client.images.list():
-            if image.name == 'sahara':
-                LOG.debug('Sahara image metadata is %s', image.metadata)
-                if image.metadata[tag_version] == 'True'\
-                    and image.metadata[tag_plugin] == 'True'\
-                        and image.metadata['_sahara_username'] is not None:
-                            LOG.debug('Correct image for savanna found')
-                            return True
-        LOG.debug('Correct image for Sahara not found')
+        LOG.debug('Testing image for plugin "%s" (Hadoop version %s)'
+                  % (self.plugin, self.plugin_version))
+        image = self._find_image_by_tags(self.plugin, self.plugin_version)
+        if (image is not None) and (
+            '_sahara_username' in image.metadata) and (
+                image.metadata['_sahara_username'] is not None):
+            LOG.debug('Image with name "%s" is registered for Sahara with '
+                      'username "%s"' % (image.name,
+                                         image.metadata['_sahara_username']))
+            return True
+        LOG.debug(
+            'Image is not properly registered or it is not registered at all. '
+            'Correct image for Sahara not found. ')
         return False
+
+    def _find_image_by_tags(self, plugin_name, plugin_version):
+        tag_plugin = '_sahara_tag_%s' % plugin_name
+        tag_version = '_sahara_tag_%s' % plugin_version
+        for image in self.compute_client.images.list():
+            if tag_plugin in image.metadata and tag_version in image.metadata:
+                LOG.debug(
+                    'Image with tags "%s" and "%s" found. Image name is "%s"'
+                    % (plugin_name, plugin_version, image.name))
+                return image
+        LOG.debug('Image with tags "%s" and "%s" not found'
+                  % (plugin_name, plugin_version))
 
     @classmethod
     def _create_sahara_flavors(cls, client):
@@ -135,14 +146,12 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
     @classmethod
     def _create_cluster(
             cls, compute_client, sahara_client, plugin_name, plugin_version,
-            cluster_template_id, description, cluster_configs,
+            cluster_template_id, description, image_id, cluster_configs,
             node_groups, anti_affinity, neutron_management_network=None):
 
         key_name = rand_name(cls.USER_KEYPAIR_ID)
         cls.keys.append(
             compute_client.keypairs.create(key_name))
-
-        image_id = str(compute_client.images.find(name=cls.IMAGE_NAME).id)
 
         body = sahara_client.clusters.create(
             name=rand_name(cls.CLUSTER_NAME),
@@ -206,10 +215,14 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
             description, cluster_configs, node_groups, anti_affinity,
             neutron_management_network=None):
 
+        image_name = self._find_image_by_tags(plugin_name, plugin_version).name
+        image_id = self.compute_client.images.find(name=image_name).id
+
         body = self._create_cluster(
             self.compute_client, self.savanna_client, plugin_name,
-            plugin_version, cluster_template_id, description, cluster_configs,
-            node_groups, anti_affinity, neutron_management_network)
+            plugin_version, cluster_template_id, description, image_id,
+            cluster_configs, node_groups, anti_affinity,
+            neutron_management_network)
 
         self._check_cluster_state(body.id)
 
