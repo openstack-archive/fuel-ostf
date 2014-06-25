@@ -40,7 +40,12 @@ class NoseDriver(object):
     def __init__(self):
         LOG.warning('Initializing Nose Driver')
 
-    def run(self, test_run, test_set, dbpath, tests=None):
+    def run(self, test_run, test_set, dbpath, ostf_os_access_creds=None,
+            tests=None):
+
+        if not ostf_os_access_creds:
+            ostf_os_access_creds = dict()
+
         tests = tests or test_run.enabled_tests
         if tests:
             argv_add = [nose_utils.modify_test_name_for_nose(test)
@@ -54,10 +59,11 @@ class NoseDriver(object):
                                            dbpath,
                                            test_run.id,
                                            test_run.cluster_id,
+                                           ostf_os_access_creds,
                                            argv_add).pid
 
-    def _run_tests(self, lock_path, dbpath,
-                   test_run_id, cluster_id, argv_add):
+    def _run_tests(self, lock_path, dbpath, test_run_id, cluster_id,
+                   ostf_os_access_creds, argv_add):
         cleanup_flag = False
 
         def raise_exception_handler(signum, stack_frame):
@@ -83,7 +89,9 @@ class NoseDriver(object):
 
                 nose_test_runner.SilentTestProgram(
                     addplugins=[nose_storage_plugin.StoragePlugin(
-                        session, test_run_id, str(cluster_id))],
+                        session, test_run_id, str(cluster_id),
+                        ostf_os_access_creds
+                    )],
                     exit=False,
                     argv=['ostf_tests'] + argv_add)
 
