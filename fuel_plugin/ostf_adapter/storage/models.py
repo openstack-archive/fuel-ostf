@@ -367,12 +367,13 @@ class TestRun(BASE):
             # flush test_run data to db
             session.commit()
 
-            plugin.run(test_run, test_set, dbpath)
+            plugin.run(test_run, test_set, dbpath,
+                       metadata['ostf_os_access_creds'])
 
             return test_run.frontend
         return {}
 
-    def restart(self, session, dbpath, tests=None):
+    def restart(self, session, dbpath, ostf_os_access_creds, tests=None):
         """Restart test run with
             if tests given they will be enabled
         """
@@ -386,7 +387,8 @@ class TestRun(BASE):
                 Test.update_test_run_tests(
                     session, self.id, tests)
 
-            plugin.run(self, self.test_set, dbpath, tests)
+            plugin.run(self, self.test_set, dbpath,
+                       ostf_os_access_creds, tests)
             return self.frontend
         return {}
 
