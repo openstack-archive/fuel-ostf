@@ -30,10 +30,13 @@ class StoragePlugin(plugins.Plugin):
     name = 'storage'
     score = 15000
 
-    def __init__(self, session, test_run_id, cluster_id):
+    def __init__(self, session, test_run_id, cluster_id,
+                 ostf_os_access_creds):
         self.session = session
         self.test_run_id = test_run_id
         self.cluster_id = cluster_id
+        self.ostf_os_access_creds = ostf_os_access_creds
+
         super(StoragePlugin, self).__init__()
         self._start_time = None
 
@@ -42,6 +45,9 @@ class StoragePlugin(plugins.Plugin):
         env['NAILGUN_PORT'] = str(conf.nailgun.port)
         if self.cluster_id:
             env['CLUSTER_ID'] = str(self.cluster_id)
+
+        for var_name in self.ostf_os_access_creds:
+            env[var_name.upper()] = self.ostf_os_access_creds[var_name]
 
     def configure(self, options, conf):
         self.conf = conf

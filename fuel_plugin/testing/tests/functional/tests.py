@@ -52,7 +52,10 @@ class AdapterTests(BaseAdapterTest):
             ('fuel_plugin.testing.fixture.dummy_tests.deployment_types_tests.'
              'ha_deployment_test.HATest.test_ha_depl'): 'ha_depl',
             ('fuel_plugin.testing.fixture.dummy_tests.deployment_types_tests.'
-             'ha_deployment_test.HATest.test_ha_rhel_depl'): 'ha_rhel_depl'
+             'ha_deployment_test.HATest.test_ha_rhel_depl'): 'ha_rhel_depl',
+            ('fuel_plugin.testing.fixture.dummy_tests.'
+             'test_environment_variables.TestEnvVariables.'
+             'test_os_credentials_env_variables'): 'test_env_vars'
         }
         cls.testsets = {
             "ha_deployment_test": [],
@@ -623,3 +626,48 @@ class AdapterTests(BaseAdapterTest):
         ])
 
         self.compare(resp, assertions)
+
+    def test_env_variables_are_set(self):
+        assertions = Response([
+            {
+                'testset': 'environment_variables',
+                'status': 'finished',
+                'tests': [
+                    {
+                        'id': (
+                            'fuel_plugin.testing.fixture.'
+                            'dummy_tests.test_environment_variables.'
+                            'TestEnvVariables.'
+                            'test_os_credentials_env_variables'
+                        ),
+                        'status': 'success'
+                    },
+                ]
+            },
+        ])
+
+        def check_testrun_res():
+            resp = self.client.testruns()
+            self.compare(resp, assertions)
+
+        cluster_id = 1
+        testset = 'environment_variables'
+        tests = [
+            ('fuel_plugin.testing.fixture.'
+             'dummy_tests.test_environment_variables.'
+             'TestEnvVariables.'
+             'test_os_credentials_env_variables')
+        ]
+
+        # make sure we have all needed data in db
+        self.adapter.testsets(cluster_id)
+
+        self.adapter.start_testrun(testset, cluster_id)
+        time.sleep(5)
+
+        check_testrun_res()
+
+        self.client.restart_tests_last(testset, tests, cluster_id)
+        time.sleep(5)
+
+        check_testrun_res()
