@@ -16,7 +16,7 @@ parameters:
   network:
     type: string
 resources:
-  CfnUser: 
+  CfnUser:
     type: AWS::IAM::User
   AKeys:
     type: AWS::IAM::AccessKey
@@ -85,17 +85,12 @@ resources:
             /etc/cfn/cfn-credentials:
               content:
                 Fn::Join:
-                - ""
+                - ''
                 - - AWSAccessKeyId=
-                  - {Ref: AKeys}
-                  - '
-
-                    '
+                  - '{Ref: AKeys}'
+                  -
                   - AWSSecretKey=
-                  - Fn::GetAtt: [AKeys, SecretAccessKey]
-                  - '
-
-                    '
+                  - 'Fn::GetAtt: [AKeys, SecretAccessKey]'
               mode: '000400'
               owner: root
               group: root
@@ -103,22 +98,15 @@ resources:
               content:
                 Fn::Join:
                 - ''
-                - - 'MAIL=""
-
-                    '
-                  - '
-
-                    '
-                  - '* * * * * /opt/aws/bin/cfn-push-stats --watch '
-                  - {Ref: CPUAlarmHigh}
-                  - ' --cpu-util
-
-                    '
-                  - '* * * * * /opt/aws/bin/cfn-push-stats --watch '
-                  - {Ref: CPUAlarmLow}
-                  - ' --cpu-util
-
-                    '
+                - - MAIL=""
+                  -
+                  - '* * * * * /opt/aws/bin/cfn-push-stats --watch'
+                  - '{Ref: CPUAlarmHigh}'
+                  - '--cpu-util'
+                  -
+                  - '* * * * * /opt/aws/bin/cfn-push-stats --watch'
+                  - '{Ref: CPUAlarmLow}'
+                  - ' --cpu-util'
               mode: '000600'
               owner: root
               group: root
@@ -128,22 +116,9 @@ resources:
       KeyName: {Ref: KeyName}
       SecurityGroups: [{Ref: SecurityGroup}]
       UserData:
-        Fn::Base64:
-          Fn::Join:
-          - ''
-          - - '#!/bin/bash -v
-
-              '
-            - '/opt/aws/bin/cfn-init -s '
-            - ' -r LaunchConfig '
-            - '
-              '
-            - '# install crontab
-
-              '
-            - 'crontab /tmp/stats-crontab.txt
-
-              '
-            - 'touch /tmp/vm_ready.txt
-
-              '
+        Fn::Base64: |
+          #!/bin/bash -v
+          /opt/aws/bin/cfn-init -s -r LaunchConfig
+          # install crontab
+          crontab /tmp/stats-crontab.txt
+          touch /tmp/vm_ready.txt
