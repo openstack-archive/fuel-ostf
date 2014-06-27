@@ -22,18 +22,16 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
     """
 
     def test_check_alarm_state(self):
-        """Ceilometer test to check the alarm can change status and Nova
-        notification received.
-
+        """Ceilometer test to check alarm status and get Nova notifications.
         Target component: Ceilometer
 
         Scenario:
             1. Create a new instance.
             2. Instance become active.
-            3. Wait Nova notifications.
-            4. Wait Nova statistic.
+            3. Wait for Nova notifications.
+            4. Wait for Nova statistic.
             5. Create a new alarm.
-            6. Verify that become status.
+            6. Verify that become status 'alarm' or 'ok'.
         Duration: 800 s.
 
         Deployment tags: Ceilometer
@@ -61,8 +59,8 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         msg = "Nova notifications is received"
         query = [{'field': 'resource', 'op': 'eq', 'value': self.instance.id}]
 
-        self.verify(600, self.wait_nova_notifications, 3,
-                    fail_msg, msg, query)
+        self.verify(600, self.wait_notifications, 3,
+                    fail_msg, msg, self.nova_notifications, query)
 
         fail_msg = "Statistic for Nova notification:vcpus is not received"
         msg = "Statistic for Nova notification:vcpus is received"
@@ -155,3 +153,53 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
                     fail_msg, msg,
                     len(list_after_create_sample),
                     len(list_before_create_sample))
+
+    def test_check_volume_notifications(self):
+        """Ceilometer check volume notifications
+        Target component: Ceilometer
+
+        Scenario:
+        1. Create volume.
+        2. Check volume notifications.
+        Duration: 100 s.
+        Deployment tags: Ceilometer
+        """
+
+        if (not self.config.volume.cinder_node_exist
+                and not self.config.volume.ceph_exist):
+            self.fail('There are no cinder nodes or ceph storage for volume')
+
+        fail_msg = "Creation volume failed"
+        msg = "Volume was created"
+
+        volume = self.verify(60, self._create_volume, 1,
+                             fail_msg, msg,
+                             self.volume_client,
+                             'available')
+
+        query = [{'field': 'resource', 'op': 'eq', 'value': volume.id}]
+        fail_msg = "Volume notifications is not received"
+        msg = "Volume notifications is received"
+
+        self.verify(600, self.wait_notifications, 2,
+                    fail_msg, msg,
+                    self.volume_notifications, query)
+
+    def test_check_glance_notifications(self):
+        """Ceilometer check glance notifications
+        Target component: Ceilometer
+
+        Scenario:
+        1. Check glance notifications.
+        Duration: 100 s.
+        Deployment tags: Ceilometer
+        """
+        query = [{'field': 'resource', 'op': 'eq',
+                  'value': self.get_image_from_name()}]
+
+        fail_msg = "Glance notifications is not received"
+        msg = "Glance notifications is received"
+
+        self.verify(600, self.wait_notifications, 1,
+                    fail_msg, msg,
+                    self.glance_notifications, query)

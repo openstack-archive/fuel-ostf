@@ -26,12 +26,12 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
         Target component: Ceilometer
 
         Scenario:
-            1. Wait statistic of metric.
+            1. Wait for statistic of metric.
             2. Create a new alarm.
             3. List alarms
-            4. Wait 'ok' alarm state.
+            4. Wait for 'ok' alarm state.
             5. Update the alarm.
-            6. 4. Wait 'alarm' alarm state.
+            6. Wait for 'alarm' alarm state.
             7. Get alarm history.
             8. Change alarm state to 'ok'.
             9. Verify state.
@@ -50,8 +50,8 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
                     fail_msg, msg,
                     meter_name='image')
 
-        fail_msg = "Creation alarm for avg image is failed"
-        msg = "Creation alarm for avg image is successful"
+        fail_msg = "Creation of alarm is failed"
+        msg = "Creation of alarm is successful"
 
         alarm = self.verify(60, self.create_alarm, 2,
                             fail_msg, msg,
@@ -69,7 +69,7 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
         self.verify(60, self.ceilometer_client.alarms.list, 3,
                     fail_msg, msg, q=query)
 
-        fail_msg = "Alarm verify state failed."
+        fail_msg = "Alarm status is not equal 'ok'"
         msg = "Alarm status is 'ok'"
 
         self.verify(1000, self.wait_for_alarm_status, 4,
@@ -98,7 +98,7 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
                     fail_msg, msg,
                     alarm_id=alarm.alarm_id)
 
-        fail_msg = "Setting alarm state failed."
+        fail_msg = "Setting alarm state to 'insufficient data' is failed"
         msg = "Set alarm state to 'insufficient data'"
 
         self.verify(60, self.ceilometer_client.alarms.set_state, 8,
