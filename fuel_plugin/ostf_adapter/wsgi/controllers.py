@@ -17,7 +17,9 @@ import logging
 
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
-from pecan import conf, rest, expose, request
+from pecan import rest, expose, request
+
+from oslo.config import cfg
 
 from fuel_plugin.ostf_adapter import mixins
 from fuel_plugin.ostf_adapter.storage import models
@@ -140,7 +142,7 @@ class TestrunsController(BaseRestController):
                 test_set,
                 metadata,
                 tests,
-                conf.dbpath
+                cfg.CONF.adapter.dbpath
             )
 
             res.append(test_run)
@@ -164,6 +166,6 @@ class TestrunsController(BaseRestController):
                     data.append(test_run.stop(request.session))
                 elif status == 'restarted':
                     data.append(test_run.restart(request.session,
-                                                 conf.dbpath,
+                                                 cfg.CONF.adapter.dbpath,
                                                  tests=tests))
         return data

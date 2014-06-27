@@ -18,6 +18,7 @@ from mock import patch, MagicMock
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from fuel_plugin.ostf_adapter import config
 from fuel_plugin.ostf_adapter.nose_plugin.nose_discovery import discovery
 from fuel_plugin.ostf_adapter.storage import models
 from fuel_plugin.ostf_adapter import mixins
@@ -61,6 +62,7 @@ class BaseWSGITest(unittest2.TestCase):
 
     def setUp(self):
         # orm session wrapping
+        config.init_config([])
         self.connection = self.engine.connect()
         self.trans = self.connection.begin()
 
@@ -87,25 +89,6 @@ class BaseWSGITest(unittest2.TestCase):
         )
         self.request_patcher.start()
 
-        # pecan conf mocking
-        self.pecan_conf_mock = MagicMock()
-        self.pecan_conf_mock.nailgun.host = '127.0.0.1'
-        self.pecan_conf_mock.nailgun.port = 8888
-
-        self.pecan_conf_patcher = patch(
-            'fuel_plugin.ostf_adapter.mixins.conf',
-            self.pecan_conf_mock
-        )
-        self.pecan_conf_patcher.start()
-
-        # pecan conf mocking in wsgi.controllers
-        self.wsgi_controllers_pecan_conf_mock = MagicMock()
-        self.controllers_pecan_conf_patcher = patch(
-            'fuel_plugin.ostf_adapter.wsgi.controllers.conf',
-            self.wsgi_controllers_pecan_conf_mock
-        )
-        self.controllers_pecan_conf_patcher.start()
-
         # engine.get_session mocking
         self.request_mock.session = self.session
 
@@ -118,8 +101,6 @@ class BaseWSGITest(unittest2.TestCase):
 
         # end of test_case patching
         self.request_patcher.stop()
-        self.pecan_conf_patcher.stop()
-        self.controllers_pecan_conf_patcher.stop()
 
         mixins.TEST_REPOSITORY = []
 
