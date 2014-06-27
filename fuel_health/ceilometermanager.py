@@ -48,8 +48,9 @@ class CeilometerBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
             cls.glance_notifications = ['image.update', 'image.upload',
                                         'image.delete', 'image.download',
                                         'image.serve']
-            cls.cinder_notifications = ['volume', 'volume.size', 'snapshot',
-                                        'snapshot.size']
+            cls.volume_notifications = ['volume', 'volume.size']
+            cls.glance_notifications = ['image', 'image.size', 'image.update',
+                                        'image.upload']
             cls.swift_notifications = ['storage.objects.incoming.bytes',
                                        'storage.objects.outgoing.bytes',
                                        'storage.api.request']
@@ -162,8 +163,8 @@ class CeilometerBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
             return self.ceilometer_client.statistics.list(meter_name, q=query,
                                                           period=period)
 
-    def wait_nova_notifications(self, query):
-        for sample in self.nova_notifications:
+    def wait_notifications(self, notification_list, query):
+        for sample in notification_list:
             self.wait_for_sample_of_metric(sample, query)
 
     @classmethod
