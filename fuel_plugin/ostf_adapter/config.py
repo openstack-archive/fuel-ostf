@@ -44,7 +44,11 @@ adapter_opts = [
                help=""),
     cfg.StrOpt('log_file',
                default='/var/log/ostf.log',
-               help="")
+               help=""),
+    cfg.BoolOpt('auth_enable',
+                default=False,
+                help="Set True to enable auth.")
+
 ]
 
 cli_opts = [
