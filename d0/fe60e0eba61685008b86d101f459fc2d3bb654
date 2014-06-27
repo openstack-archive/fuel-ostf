@@ -1,0 +1,11 @@
+Verified+2: Jenkins
+Code-Review+2: tatyana-leontovich <tleontovich@mirantis.com>
+Workflow+1: tatyana-leontovich <tleontovich@mirantis.com>
+Code-Review+1: Serg Melikyan <smelikyan@mirantis.com>
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Code-Review+1: Dmitry Ilyin <dilyin@mirantis.com>
+Submitted-by: Jenkins
+Submitted-at: Fri, 27 Jun 2014 11:34:55 +0000
+Reviewed-on: https://review.openstack.org/102846
+Project: stackforge/fuel-ostf
+Branch: refs/heads/stable/5.0
