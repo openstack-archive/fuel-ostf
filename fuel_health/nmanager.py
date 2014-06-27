@@ -401,6 +401,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             cls.error_msg = []
             cls.servers = []
             cls.flavors = []
+            cls.volumes = []
+            cls.volume_snapshots = []
             cls.private_net = 'net04'
 
     def setUp(self):
@@ -542,6 +544,23 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         self.set_resource(name, server)
         self.servers.append(server)
         return server
+
+    def _create_volume(self, client, expected_state=None, **kwargs):
+        if 'display_name' not in kwargs:
+            kwargs['display_name'] = rand_name('ost1_test-volume')
+        if 'size' not in kwargs:
+            kwargs['size'] = 1
+        volume = client.volumes.create(**kwargs)
+        self.set_resource(kwargs['display_name'], volume)
+        if expected_state:
+
+            def await_state():
+                if client.volumes.get(volume.id).status == expected_state:
+                    return True
+
+            fuel_health.test.call_until_true(await_state, 50, 1)
+
+        return volume
 
     def _create_floating_ip(self):
         floating_ips_pool = self.compute_client.floating_ip_pools.list()
@@ -787,12 +806,6 @@ class SmokeChecksTest(OfficialClientTest):
         role = client.roles.create(name)
         self.set_resource(name, role)
         return role
-
-    def _create_volume(self, client):
-        display_name = rand_name('ost1_test-volume')
-        volume = client.volumes.create(size=1, display_name=display_name)
-        self.set_resource(display_name, volume)
-        return volume
 
     def _create_boot_volume(self, client):
         display_name = rand_name('ost1_test-bootable-volume')
