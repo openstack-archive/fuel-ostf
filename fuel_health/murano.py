@@ -328,3 +328,17 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
 
             assert depl['state'] == 'success'
         return 'OK'
+
+    def get_list_packages(self):
+        resp = requests.get(self.endpoint + 'catalog/packages',
+                            headers=self.headers)
+
+        self.assertEqual(200, resp.status_code)
+        self.assertIsInstance(resp.json()['packages'], list)
+
+    def get_list_categories(self):
+        resp = requests.get(self.endpoint + 'catalog/packages/categories',
+                            headers=self.headers)
+
+        self.assertEqual(200, resp.status_code)
+        self.assertIsInstance(resp.json()['categories'], list)
