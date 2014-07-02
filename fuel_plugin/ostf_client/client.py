@@ -20,9 +20,39 @@ import time
 class TestingAdapterClient(object):
     def __init__(self, url):
         self.url = url
+        self.debug = False
+        path_to_config = "/etc/fuel/client/config.yaml"
+        defaults = {
+            "SERVER_ADDRESS": "127.0.0.1",
+            "LISTEN_PORT": "8000",
+            "KEYSTONE_USER": "admin",
+            "KEYSTONE_PASSWORD": "admin",
+            "KEYSTONE_PORT": "5000"
+        }
+        if os.path.exists(path_to_config):
+            with open(path_to_config, "r") as fh:
+                config = yaml.load(fh.read())
+            defaults.update(config)
+        else:
+            defaults.update(os.environ)
+        self.root = "http://{LISTEN_ADDRESS}:{LISTEN_PORT}".format(**defaults)
+        self.keystone_base = "http://{LISTEN_ADDRESS}:{KEYSTONE_PORT}".format(**defaults)
+        self.api_root = self.root + "/api/v1/"
+        self.ostf_root = self.root + "/ostf/"
+        self.user = user or defaults["KEYSTONE_USER"]
+        self.password = password or defaults["KEYSTONE_PASSWORD"]
+        self.client = client.Client(
+                username=self.user,
+                password=self.password,
+                auth_url=self.keystone_base,
+                tenant_name="admin")
+        self.client.authenticate()
 
     def _request(self, method, url, data=None):
-        headers = {'content-type': 'application/json'}
+        headers = {
+            'content-type': 'application/json',
+            'X_AUTH_TOKEN': self.client.auth_token
+        }
 
         if data:
             data = dumps({'objects': data})
