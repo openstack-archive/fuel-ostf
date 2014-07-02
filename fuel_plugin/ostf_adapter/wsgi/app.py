@@ -55,6 +55,7 @@ def setup_app(config=None):
         pecan.conf.app.root,
         debug=pecan.conf.debug,
         force_canonical=True,
-        hooks=[hooks.CustomTransactionalHook(dbpath=pecan.conf.dbpath)]
+        hooks=[hooks.CustomTransactionalHook(dbpath=pecan.conf.dbpath),
+               hooks.AddTokenHook()]
     )
     return access_control.setup(app)

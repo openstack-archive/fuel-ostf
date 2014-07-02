@@ -488,9 +488,12 @@ class NailgunConfig(object):
         self.nailgun_port = os.environ.get('NAILGUN_PORT', None)
         self.nailgun_url = 'http://{0}:{1}'.format(self.nailgun_host,
                                                    self.nailgun_port)
+        token = os.environ.get('NAILGUN_TOKEN')
         self.cluster_id = os.environ.get('CLUSTER_ID', None)
         self.req_session = requests.Session()
         self.req_session.trust_env = False
+        if token:
+            self.req_session.update({'X-Auth-Token': token})
         if parse:
             self.prepare_config()
 

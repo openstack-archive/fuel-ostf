@@ -46,7 +46,7 @@ class TestsetsController(BaseRestController):
 
     @expose('json')
     def get(self, cluster):
-        mixins.discovery_check(request.session, cluster)
+        mixins.discovery_check(request.session, cluster, request.token)
 
         needed_testsets = request.session\
             .query(models.ClusterTestingPattern.test_set_id)\
@@ -66,7 +66,7 @@ class TestsController(BaseRestController):
 
     @expose('json')
     def get(self, cluster):
-        mixins.discovery_check(request.session, cluster)
+        mixins.discovery_check(request.session, cluster, request.token)
         needed_tests_list = request.session\
             .query(models.ClusterTestingPattern.tests)\
             .filter_by(cluster_id=cluster)
@@ -142,7 +142,8 @@ class TestrunsController(BaseRestController):
                 test_set,
                 metadata,
                 tests,
-                cfg.CONF.adapter.dbpath
+                cfg.CONF.adapter.dbpath,
+                token=request.token
             )
 
             res.append(test_run)
@@ -167,5 +168,6 @@ class TestrunsController(BaseRestController):
                 elif status == 'restarted':
                     data.append(test_run.restart(request.session,
                                                  cfg.CONF.adapter.dbpath,
-                                                 tests=tests))
+                                                 tests=tests,
+                                                 token=request.token))
         return data

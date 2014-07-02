@@ -25,11 +25,6 @@ from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
 
 LOG = logging.getLogger(__name__)
 
-REQ_SES = requests.Session()
-REQ_SES.trust_env = False
-
-URL = 'http://{0}:{1}/{2}'
-NAILGUN_API_URL = 'api/clusters/{0}'
 
 TEST_REPOSITORY = []
 
@@ -64,8 +59,8 @@ def cache_test_repository(session):
         TEST_REPOSITORY.append(data_elem)
 
 
-def discovery_check(session, cluster):
-    cluster_deployment_args = _get_cluster_depl_tags(cluster)
+def discovery_check(session, cluster, token=None):
+    cluster_deployment_args = _get_cluster_depl_tags(cluster, token=token)
 
     cluster_data = {
         'cluster_id': cluster,
@@ -106,7 +101,16 @@ def discovery_check(session, cluster):
         session.merge(cluster_state)
 
 
-def _get_cluster_depl_tags(cluster_id):
+def _get_cluster_depl_tags(cluster_id, token):
+    REQ_SES = requests.Session()
+    REQ_SES.trust_env = False
+
+    if token is not None:
+        REQ_SES.headers.update({'X-Auth-Token': token})
+
+    URL = 'http://{0}:{1}/{2}'
+    NAILGUN_API_URL = 'api/clusters/{0}'
+
     cluster_url = NAILGUN_API_URL.format(cluster_id)
     request_url = URL.format(cfg.CONF.adapter.nailgun_host,
                              cfg.CONF.adapter.nailgun_port,

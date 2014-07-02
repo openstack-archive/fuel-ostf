@@ -33,16 +33,19 @@ class StoragePlugin(plugins.Plugin):
     name = 'storage'
     score = 15000
 
-    def __init__(self, session, test_run_id, cluster_id):
+    def __init__(self, session, test_run_id, cluster_id, token):
         self.session = session
         self.test_run_id = test_run_id
         self.cluster_id = cluster_id
         super(StoragePlugin, self).__init__()
         self._start_time = None
+        self.token = token
 
     def options(self, parser, env=os.environ):
         env['NAILGUN_HOST'] = str(CONF.adapter.nailgun_host)
         env['NAILGUN_PORT'] = str(CONF.adapter.nailgun_port)
+        if self.token is not None:
+            env['NAILGUN_TOKEN'] = self.token
         if self.cluster_id:
             env['CLUSTER_ID'] = str(self.cluster_id)
 
