@@ -12,17 +12,45 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
 import requests
-from json import dumps
 import time
+import yaml
+
+from json import dumps
+from keystoneclient import client
 
 
 class TestingAdapterClient(object):
     def __init__(self, url):
         self.url = url
+        self.debug = False
+        path_to_config = "/etc/fuel/client/config.yaml"
+        defaults = {
+            "SERVER_ADDRESS": "127.0.0.1",
+            "KEYSTONE_USER": "admin",
+            "KEYSTONE_PASSWORD": "admin",
+            "KEYSTONE_PORT": "5000"
+        }
+        if os.path.exists(path_to_config):
+            with open(path_to_config, "r") as fh:
+                config = yaml.load(fh.read())
+            defaults.update(config)
+        else:
+            defaults.update(os.environ)
+        self.keystone_base = "http://{SERVER_ADDRESS}:{KEYSTONE_PORT}".format(**defaults)
+        self.client = client.Client(
+            username=defaults["KEYSTONE_USER"],
+            password=defaults["KEYSTONE_PASSWORD"],
+            auth_url=self.keystone_base,
+            tenant_name="admin")
+        self.client.authenticate()
 
     def _request(self, method, url, data=None):
-        headers = {'content-type': 'application/json'}
+        headers = {
+            'content-type': 'application/json',
+            'X_AUTH_TOKEN': self.client.auth_token
+        }
 
         if data:
             data = dumps({'objects': data})
