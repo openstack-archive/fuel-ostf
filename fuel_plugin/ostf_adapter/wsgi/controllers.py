@@ -142,7 +142,8 @@ class TestrunsController(BaseRestController):
                 test_set,
                 metadata,
                 tests,
-                cfg.CONF.adapter.dbpath
+                cfg.CONF.adapter.dbpath,
+                token=request.token
             )
 
             res.append(test_run)
@@ -167,5 +168,6 @@ class TestrunsController(BaseRestController):
                 elif status == 'restarted':
                     data.append(test_run.restart(request.session,
                                                  cfg.CONF.adapter.dbpath,
-                                                 tests=tests))
+                                                 tests=tests,
+                                                 token=request.token))
         return data
