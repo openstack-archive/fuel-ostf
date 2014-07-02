@@ -355,7 +355,7 @@ class TestRun(BASE):
         return not bool(test_run) or test_run.is_finished()
 
     @classmethod
-    def start(cls, session, test_set, metadata, tests, dbpath):
+    def start(cls, session, test_set, metadata, tests, dbpath, token=None):
         plugin = nose_plugin.get_plugin(test_set.driver)
         if cls.is_last_running(session, test_set.id,
                                metadata['cluster_id']):
@@ -368,12 +368,13 @@ class TestRun(BASE):
             session.commit()
 
             plugin.run(test_run, test_set, dbpath,
-                       metadata.get('ostf_os_access_creds'))
+                       metadata.get('ostf_os_access_creds'), token=token)
 
             return test_run.frontend
         return {}
 
-    def restart(self, session, dbpath, ostf_os_access_creds, tests=None):
+    def restart(self, session, dbpath,
+                ostf_os_access_creds, tests=None, token=None):
         """Restart test run with
             if tests given they will be enabled
         """
@@ -388,7 +389,7 @@ class TestRun(BASE):
                     session, self.id, tests)
 
             plugin.run(self, self.test_set, dbpath,
-                       ostf_os_access_creds, tests)
+                       ostf_os_access_creds, tests, token=token)
             return self.frontend
         return {}
 

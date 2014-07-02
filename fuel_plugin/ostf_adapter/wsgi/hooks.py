@@ -55,3 +55,10 @@ class CustomTransactionalHook(hooks.TransactionHook):
     def on_error(self, state, exc):
         super(CustomTransactionalHook, self).on_error(state, exc)
         LOG.exception('Pecan state %r', state)
+
+
+class AddTokenHook(hooks.PecanHook):
+
+    def before(self, state):
+        # (dshulyak) just utility to get token
+        state.request.token = state.request.headers.get('X-Auth-Token', None)
