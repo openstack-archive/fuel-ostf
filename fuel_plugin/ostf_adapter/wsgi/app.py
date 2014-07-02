@@ -15,6 +15,7 @@
 from oslo.config import cfg
 import pecan
 
+from fuel_plugin.ostf_adapter.wsgi import access_control
 from fuel_plugin.ostf_adapter.wsgi import hooks
 
 CONF = cfg.CONF
@@ -56,4 +57,4 @@ def setup_app(config=None):
         force_canonical=True,
         hooks=[hooks.CustomTransactionalHook(dbpath=pecan.conf.dbpath)]
     )
-    return app
+    return access_control.setup(app)
