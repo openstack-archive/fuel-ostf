@@ -218,6 +218,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             16. Delete the stack.
             17. Wait for the stack to be deleted.
         Duration: 2600 s.
+
+        Deployment tags: RHEL
         """
         image_name = "F17-x86_64-cfntools"
         fail_msg = ("Image with cfntools package wasn't "
