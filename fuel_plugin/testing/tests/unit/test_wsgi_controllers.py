@@ -49,7 +49,8 @@ class TestTestSetsController(base.BaseWSGITest):
         self.expected['test_set_description'] = [
             'General fake tests',
             'Long running 25 secs fake tests',
-            'Fake tests for HA deployment'
+            'Fake tests for HA deployment',
+            'Test for presence of env variables inside of testrun subprocess'
         ]
         res = self.controller.get(self.expected['cluster']['id'])
 
@@ -67,7 +68,8 @@ class TestTestSetsController(base.BaseWSGITest):
         test_set_order = {
             'general_test': 0,
             'stopped_test': 1,
-            'ha_deployment_test': 2
+            'ha_deployment_test': 2,
+            'environment_variables': 3
         }
 
         resp_elements = [testset['id'] for testset in res]
@@ -241,7 +243,8 @@ class TestClusterRedeployment(base.BaseWSGITest):
                 'deployment_tags': set(['multinode', 'ubuntu', 'nova_network'])
             },
             'test_sets': ['general_test',
-                          'stopped_test', 'multinode_deployment_test'],
+                          'stopped_test', 'multinode_deployment_test',
+                          'environment_variables'],
             'tests': [self.ext_id + test for test in [
                 ('deployment_types_tests.multinode_deployment_test.'
                  'MultinodeTest.test_multi_novanet_depl'),
@@ -256,7 +259,9 @@ class TestClusterRedeployment(base.BaseWSGITest):
                 'general_test.Dummy_test.test_skip_directly',
                 'stopped_test.dummy_tests_stopped.test_really_long',
                 'stopped_test.dummy_tests_stopped.test_one_no_so_long',
-                'stopped_test.dummy_tests_stopped.test_not_long_at_all'
+                'stopped_test.dummy_tests_stopped.test_not_long_at_all',
+                ('test_environment_variables.TestEnvVariables.'
+                 'test_os_credentials_env_variables')
             ]]
         }
 

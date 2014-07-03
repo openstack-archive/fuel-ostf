@@ -24,7 +24,20 @@ class TestingAdapterClient(object):
     def _request(self, method, url, data=None):
         headers = {'content-type': 'application/json'}
 
+        ostf_os_access_creds = {
+            'ostf_os_username': 'ostf',
+            'ostf_os_password': 'ostf',
+            'ostf_os_tenant_name': 'ostf'
+        }
+
         if data:
+            for data_el in data:
+                if 'metadata' in data_el:
+                    data_el['metadata']['ostf_os_access_creds'] = \
+                        ostf_os_access_creds
+                else:
+                    data_el['ostf_os_access_creds'] = ostf_os_access_creds
+
             data = dumps({'objects': data})
 
         r = requests.request(

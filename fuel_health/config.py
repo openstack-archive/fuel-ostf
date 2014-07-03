@@ -523,9 +523,23 @@ class NailgunConfig(object):
         data = response.json()
         LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
         access_data = data['editable']['access']
-        self.identity.admin_tenant_name = access_data['tenant']['value']
-        self.identity.admin_username = access_data['user']['value']
-        self.identity.admin_password = access_data['password']['value']
+
+        self.identity.admin_tenant_name = \
+            (
+                os.environ.get('OSTF_OS_TENANT_NAME') or
+                access_data['tenant']['value']
+            )
+        self.identity.admin_username = \
+            (
+                os.environ.get('OSTF_OS_USERNAME') or
+                access_data['user']['value']
+            )
+        self.identity.admin_password = \
+            (
+                os.environ.get('OSTF_OS_PASSWORD') or
+                access_data['password']['value']
+            )
+
         api_url = '/api/clusters/%s' % self.cluster_id
         cluster_data = self.req_session.get(self.nailgun_url + api_url).json()
         network_provider = cluster_data.get('net_provider', 'nova_network')

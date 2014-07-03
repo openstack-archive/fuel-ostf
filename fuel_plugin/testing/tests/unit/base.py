@@ -41,7 +41,8 @@ class BaseWSGITest(unittest2.TestCase):
                 'deployment_tags': set(['ha', 'rhel', 'nova_network'])
             },
             'test_sets': ['general_test',
-                          'stopped_test', 'ha_deployment_test'],
+                          'stopped_test', 'ha_deployment_test',
+                          'environment_variables'],
             'tests': [cls.ext_id + test for test in [
                 ('deployment_types_tests.ha_deployment_test.'
                  'HATest.test_ha_depl'),
@@ -56,7 +57,9 @@ class BaseWSGITest(unittest2.TestCase):
                 'general_test.Dummy_test.test_skip_directly',
                 'stopped_test.dummy_tests_stopped.test_really_long',
                 'stopped_test.dummy_tests_stopped.test_one_no_so_long',
-                'stopped_test.dummy_tests_stopped.test_not_long_at_all'
+                'stopped_test.dummy_tests_stopped.test_not_long_at_all',
+                ('test_environment_variables.TestEnvVariables.'
+                 'test_os_credentials_env_variables')
             ]]
         }
 

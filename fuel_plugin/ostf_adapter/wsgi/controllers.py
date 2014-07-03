@@ -160,6 +160,8 @@ class TestrunsController(BaseRestController):
             for test_run in test_runs:
                 status = test_run.get('status')
                 tests = test_run.get('tests', [])
+                ostf_os_access_creds = test_run.get('ostf_os_access_creds')
+
                 test_run = models.TestRun.get_test_run(request.session,
                                                        test_run['id'])
                 if status == 'stopped':
@@ -167,5 +169,6 @@ class TestrunsController(BaseRestController):
                 elif status == 'restarted':
                     data.append(test_run.restart(request.session,
                                                  cfg.CONF.adapter.dbpath,
+                                                 ostf_os_access_creds,
                                                  tests=tests))
         return data
