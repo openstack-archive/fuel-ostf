@@ -52,7 +52,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
 
         image = self.get_image_from_name()
         name = rand_name('ost1_test-instance-alarm_actions')
-        self.instance = self.verify(600, self.compute_client.servers.create, 1,
+        self.instance = self.verify(20, self.compute_client.servers.create, 1,
                                     fail_msg,
                                     "server creation",
                                     name=name,
@@ -61,14 +61,15 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
                                     **create_kwargs)
         self.set_resource(self.instance.id, self.instance)
 
-        self.verify(200, self._wait_for_instance_metrics, 2,
+        self.verify(600, self.wait_for_instance_status, 2,
                     "instance is not available",
                     "instance becoming 'available'",
                     self.instance, 'ACTIVE')
 
         fail_msg = "Creation metrics failed."
-
-        statistic_meter_resp = self.verify(600, self.wait_for_instance_metrics, 3,
+        statistic_meter_resp = self.verify(1000,
+                                           self.wait_for_instance_metrics,
+                                           3,
                                            fail_msg,
                                            "metrics created",
                                            self.meter_name)
@@ -76,7 +77,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = "Creation alarm failed."
 
         threshold = statistic_meter_resp[0].avg - 1
-        create_alarm_resp = self.verify(5, self.create_alarm,
+        create_alarm_resp = self.verify(60, self.create_alarm,
                                         4, fail_msg, "alarm_create",
                                         meter_name=self.meter_name,
                                         threshold=threshold,
@@ -106,7 +107,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         self.check_image_exists()
         fail_msg_1 = 'Sample can not be created'
 
-        sample = self.verify(30, self.create_sample, 1,
+        sample = self.verify(60, self.create_sample, 1,
                              fail_msg_1,
                              "Sample creating",
                              resource_id=self.get_image_from_name(),
@@ -126,7 +127,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
 
         fail_msg_3 = 'Sample statistic list is unavailable.'
 
-        self.verify(5, self.list_statistics, 3,
+        self.verify(60, self.list_statistics, 3,
                     fail_msg_3,
                     "sample statistic",
                     sample[0].counter_name)
