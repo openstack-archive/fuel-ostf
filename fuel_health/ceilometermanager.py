@@ -157,7 +157,7 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         """
         return self.ceilometer_client.samples.create(**kwargs)
 
-    def _wait_for_instance_metrics(self, server, status):
+    def wait_for_instance_status(self, server, status):
         self.status_timeout(self.compute_client.servers, server.id, status)
 
     def wait_for_alarm_status(self, alarm_id):
