@@ -49,11 +49,11 @@ class RabbitSmokeTest(BaseTestCase):
     def setUp(self):
         super(RabbitSmokeTest, self).setUp()
         if 'ha' not in self.config.mode:
-            self.fail("It is not HA configuration")
+            self.skipTest("It is not HA configuration")
         if not self._controllers:
-            self.fail('There are no controller nodes')
+            self.skipTest('There are no controller nodes')
         if not self.amqp_clients:
-            self.fail('Cannot create AMQP clients for controllers')
+            self.skipTest('Cannot create AMQP clients for controllers')
 
     def test_001_rabbitmqctl_status(self):
         """Check RabbitMQ is available

@@ -30,7 +30,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
     def setUp(self):
         super(HeatSmokeTests, self).setUp()
         if not self.config.compute.compute_nodes:
-            self.fail('There are no compute nodes')
+            self.skipTest('There are no compute nodes')
         self.instance = []
 
     def test_actions(self):

@@ -38,7 +38,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         self.env_name = rand_name("ostf_test-Murano_env")
 
         if not self.config.compute.compute_nodes:
-            self.fail('There are no compute nodes')
+            self.skipTest('There are no compute nodes')
 
         self.max_available_ram = 0
         for hypervisor in self.compute_client.hypervisors.list():
@@ -64,7 +64,7 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             self.list_environments()
         except exceptions.CommunicationError:
             self.murano_available = False
-            self.fail("Murano service is not available")
+            self.skipTest("Murano service is not available")
 
     def tearDown(self):
         """

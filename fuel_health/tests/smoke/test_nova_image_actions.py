@@ -47,7 +47,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
         super(TestImageAction, self).setUp()
         self.check_clients_state()
         if not self.config.compute.compute_nodes:
-            self.fail('There are no compute nodes')
+            self.skipTest('There are no compute nodes')
         self.check_image_exists()
 
     def _wait_for_server_status(self, server, status):
