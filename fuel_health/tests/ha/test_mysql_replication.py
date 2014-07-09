@@ -39,9 +39,10 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
     def setUp(self):
         super(TestMysqlReplication, self).setUp()
         if 'ha' not in self.config.compute.deployment_mode:
-            self.fail('Cluster is not HA mode, skipping tests')
+            self.skipTest('Cluster is not HA mode, skipping tests')
         if len(self.controllers) == 1:
-            self.fail('There is only one controller online. Nothing to check')
+            self.skipTest('There is only one controller online. '
+                          'Nothing to check')
 
     @classmethod
     def tearDownClass(cls):
@@ -261,15 +262,15 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
 
                     self.verify_response_body(
                         slave_dict['Slave_IO_Running'],
-                        ' Yes',  msg='Slave_IO_Running state is incorrect',
+                        ' Yes', msg='Slave_IO_Running state is incorrect',
                         failed_step='6')
 
                     self.verify_response_body(
                         slave_dict['Slave_SQL_Running'],
-                        ' Yes',  msg='Slave_SQL_Running state is incorrect',
+                        ' Yes', msg='Slave_SQL_Running state is incorrect',
                         failed_step='7')
         else:
-            self.fail("There is no RHEL deployment")
+            self.skipTest("There is no RHEL deployment")
 
     def test_state_of_galera_cluster(self):
         """Check galera environment state
@@ -320,7 +321,7 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
                         msg='wsrep_connected on %s is not ON' % controller,
                         failed_step='3')
         else:
-            self.fail('There is no CentOs deployment')
+            self.skipTest('There is no CentOs deployment')
 
     def test_state_of_galera_cluster_ubunta(self):
         """Check galera environment state
@@ -372,4 +373,4 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
                         msg='wsrep_connected on %s is not ON' % controller,
                         failed_step='3')
         else:
-            self.fail('There is no Ubuntu deployment')
+            self.skipTest('There is no Ubuntu deployment')
