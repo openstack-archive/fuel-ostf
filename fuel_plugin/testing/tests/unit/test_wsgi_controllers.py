@@ -273,7 +273,7 @@ class TestClusterRedeployment(base.BaseWSGITest):
 
         with patch(
             ('fuel_plugin.ostf_adapter.mixins._get_cluster_depl_tags'),
-            lambda *args: cluster_data
+            lambda *args, **kwargs: cluster_data
         ):
             self.controller.get(self.expected['cluster']['id'])
 
