@@ -41,13 +41,13 @@ resources:
   CPUAlarmHigh:
     type: OS::Heat::CWLiteAlarm
     properties:
-      AlarmDescription: Scale-up if CPU > 90% for 1 minute
+      AlarmDescription: Scale-up if CPU > 50% for 1 minute
       MetricName: CPUUtilization
       Namespace: system/linux
       Statistic: Average
-      Period: '60'
+      Period: '20'
       EvaluationPeriods: '1'
-      Threshold: '90'
+      Threshold: '50'
       AlarmActions:
       - {Ref: AScaleUpPolicy}
       Dimensions:
@@ -57,13 +57,13 @@ resources:
   CPUAlarmLow:
     type: OS::Heat::CWLiteAlarm
     properties:
-      AlarmDescription: Scale-down if CPU < 50% for 1 minute
+      AlarmDescription: Scale-down if CPU < 30% for 1 minute
       MetricName: CPUUtilization
       Namespace: system/linux
       Statistic: Average
-      Period: '60'
+      Period: '20'
       EvaluationPeriods: '1'
-      Threshold: '50'
+      Threshold: '30'
       AlarmActions:
       - {Ref: AScaleDownPolicy}
       Dimensions:
@@ -79,14 +79,14 @@ resources:
             /etc/cfn/cfn-credentials:
               content:
                 Fn::Join:
-                - ""
+                - ''
                 - - AWSAccessKeyId=
                   - {Ref: AKeys}
                   - '
 
                     '
                   - AWSSecretKey=
-                  - Fn::GetAtt: [AKeys, SecretAccessKey]
+                  - get_attr: [AKeys, SecretAccessKey]
                   - '
 
                     '
@@ -122,22 +122,12 @@ resources:
       KeyName: {Ref: KeyName}
       SecurityGroups: [{Ref: SecurityGroup}]
       UserData:
-        Fn::Base64:
-          Fn::Join:
-          - ''
-          - - '#!/bin/bash -v
-
-              '
-            - '/opt/aws/bin/cfn-init -s '
-            - ' -r LaunchConfig '
-            - '
-              '
-            - '# install crontab
-
-              '
-            - 'crontab /tmp/stats-crontab.txt
-
-              '
-            - 'touch /tmp/vm_ready.txt
-
-              '
+        str_replace:
+          template: |
+            #!/bin/bash -v
+            /opt/aws/bin/cfn-init -s $stack_id -r LaunchConfig
+            # install crontab
+            crontab /tmp/stats-crontab.txt
+            touch /tmp/vm_ready.txt
+          params:
+            $stack_id: {get_param: "OS::stack_id"}
