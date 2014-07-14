@@ -132,29 +132,23 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest,
         return image_name in [i.name for i in
                               self.compute_client.images.list()]
 
-    def _find_heat_image_id(self, image_name):
-        image_id = [i.id for i in self.compute_client.images.list()
-                    if i.name == image_name]
-        return image_id
-
     def _wait_for_autoscaling(self, exp_count,
-                              timeout, interval):
-        img_id = self._find_heat_image_id('F17-x86_64-cfntools')[0]
+                              timeout, interval, reduced_stack_name):
+        LOG.info('expected count is {0}'.format(exp_count))
 
-        def count_instances():
+        def count_instances(reduced_stack_name):
             res = []
             _list = self.compute_client.servers.list()
-            for i in _list:
-                details = self.compute_client.servers.get(server=i)
-                LOG.info('instance details is {0}'.format(details.image))
-                if details.image['id'] == img_id:
-                    res.append(i)
+            for server in _list:
+                LOG.info('instance name is {0}'.format(server.name))
+                if server.name.startswith(reduced_stack_name):
+                    res.append(server)
                     LOG.info('!!! current res is {0}'.format(res))
 
             return len(res) == exp_count
 
         return fuel_health.test.call_until_true(
-            count_instances, timeout, interval)
+            count_instances, timeout, interval, reduced_stack_name)
 
     def _wait_for_cloudinit(self, conn_string, timeout, interval):
         """

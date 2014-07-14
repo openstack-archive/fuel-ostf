@@ -260,7 +260,6 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         }
         if 'neutron' in self.config.network.network_provider:
             parameters['Subnet'] = self._get_subnet_id()
-            parameters['network'] = self._get_net_uuid()[0]
             template = self._load_template('heat_autoscaling_template.yaml')
         else:
             template = self._load_template('heat_autoscale_nova.yaml')
@@ -277,17 +276,19 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     "stack status becoming 'CREATE_COMPLETE'",
                     stack.id, 'CREATE_COMPLETE', 600, 15)
 
+        reduced_stack_name = '{0}-{1}'.format(
+            stack.stack_name[:2], stack.stack_name[-4:])
+
         # find just created instance
         instance_list = self.compute_client.servers.list()
         LOG.info('servers list is {0}'.format(instance_list))
-        img_id = self._find_heat_image_id('F17-x86_64-cfntools')[0]
-        LOG.info('expected img_id is {0}'.format(img_id))
+        LOG.info('expected img_name starts with {0}'.format(
+            reduced_stack_name))
 
-        for i in instance_list:
-            details = self.compute_client.servers.get(server=i)
-            LOG.info('instance details is {0}'.format(details.image))
-            if details.image['id'] == img_id:
-                self.instance.append(i)
+        for server in instance_list:
+            LOG.info('instance name is {0}'.format(server.name))
+            if server.name.startswith(reduced_stack_name):
+                self.instance.append(server)
 
         if not self.instance:
             self.fail("Failed step: 7 Instance for the {0} stack "
@@ -315,23 +316,23 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     "loading VM CPU",
                     vm_connection)
 
-        self.verify(180,
+        self.verify(300,
                     self._wait_for_autoscaling, 12,
                     "Stack failed to launch the 2nd instance "
                     "per autoscaling alarm.",
                     "launching the new instance per autoscaling alarm",
-                    len(instance_list) + 1, 180, 10)
+                    len(self.instance) + 1, 300, 10, reduced_stack_name)
 
         self.verify(180, self._release_vm_cpu, 13,
                     "Cannot kill the process on VM to turn CPU load off.",
                     "turning off VM CPU load",
                     vm_connection)
 
-        self.verify(500, self._wait_for_autoscaling, 14,
+        self.verify(300, self._wait_for_autoscaling, 14,
                     "Stack failed to terminate the 2nd instance "
                     "per autoscaling alarm.",
                     "terminating the 2nd instance per autoscaling alarm",
-                    len(instance_list), 300, 10)
+                    len(self.instance), 300, 10, reduced_stack_name)
 
         # delete private key file
         self.verify(10, self._delete_key_file, 15,

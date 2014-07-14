@@ -5,15 +5,11 @@ parameters:
     type: string
   ImageId:
     type: string
-  network:
-    type: string
   Subnet:
     type: string
   KeyName:
     type: string
   SecurityGroup:
-    type: string
-  network:
     type: string
 resources:
   CfnUser:
@@ -47,13 +43,13 @@ resources:
   CPUAlarmHigh:
     type: OS::Heat::CWLiteAlarm
     properties:
-      AlarmDescription: Scale-up if CPU > 90% for 1 minute
+      AlarmDescription: Scale-up if CPU > 50% for 1 minute
       MetricName: CPUUtilization
       Namespace: system/linux
       Statistic: Average
-      Period: '60'
+      Period: '20'
       EvaluationPeriods: '1'
-      Threshold: '90'
+      Threshold: '50'
       AlarmActions:
       - {Ref: AScaleUpPolicy}
       Dimensions:
@@ -63,13 +59,13 @@ resources:
   CPUAlarmLow:
     type: OS::Heat::CWLiteAlarm
     properties:
-      AlarmDescription: Scale-down if CPU < 50% for 1 minute
+      AlarmDescription: Scale-down if CPU < 30% for 1 minute
       MetricName: CPUUtilization
       Namespace: system/linux
       Statistic: Average
-      Period: '60'
+      Period: '20'
       EvaluationPeriods: '1'
-      Threshold: '50'
+      Threshold: '30'
       AlarmActions:
       - {Ref: AScaleDownPolicy}
       Dimensions:
@@ -87,10 +83,15 @@ resources:
                 Fn::Join:
                 - ''
                 - - AWSAccessKeyId=
-                  - '{Ref: AKeys}'
-                  -
+                  - {Ref: AKeys}
+                  - '
+
+                    '
                   - AWSSecretKey=
-                  - 'Fn::GetAtt: [AKeys, SecretAccessKey]'
+                  - get_attr: [AKeys, SecretAccessKey]
+                  - '
+
+                    '
               mode: '000400'
               owner: root
               group: root
@@ -98,15 +99,22 @@ resources:
               content:
                 Fn::Join:
                 - ''
-                - - MAIL=""
-                  -
-                  - '* * * * * /opt/aws/bin/cfn-push-stats --watch'
-                  - '{Ref: CPUAlarmHigh}'
-                  - '--cpu-util'
-                  -
-                  - '* * * * * /opt/aws/bin/cfn-push-stats --watch'
-                  - '{Ref: CPUAlarmLow}'
-                  - ' --cpu-util'
+                - - 'MAIL=""
+
+                    '
+                  - '
+
+                    '
+                  - '* * * * * /opt/aws/bin/cfn-push-stats --watch '
+                  - {Ref: CPUAlarmHigh}
+                  - ' --cpu-util
+
+                    '
+                  - '* * * * * /opt/aws/bin/cfn-push-stats --watch '
+                  - {Ref: CPUAlarmLow}
+                  - ' --cpu-util
+
+                    '
               mode: '000600'
               owner: root
               group: root
@@ -116,9 +124,12 @@ resources:
       KeyName: {Ref: KeyName}
       SecurityGroups: [{Ref: SecurityGroup}]
       UserData:
-        Fn::Base64: |
-          #!/bin/bash -v
-          /opt/aws/bin/cfn-init -s -r LaunchConfig
-          # install crontab
-          crontab /tmp/stats-crontab.txt
-          touch /tmp/vm_ready.txt
+        str_replace:
+          template: |
+            #!/bin/bash -v
+            /opt/aws/bin/cfn-init -s $stack_id -r LaunchConfig
+            # install crontab
+            crontab /tmp/stats-crontab.txt
+            touch /tmp/vm_ready.txt
+          params:
+            $stack_id: {get_param: "OS::stack_id"}
