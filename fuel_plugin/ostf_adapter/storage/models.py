@@ -20,7 +20,7 @@ from sqlalchemy import desc
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import joinedload, relationship, object_mapper
-from sqlalchemy.dialects.postgres import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY
 
 from fuel_plugin.ostf_adapter import nose_plugin
 from fuel_plugin.ostf_adapter.storage import fields, engine
