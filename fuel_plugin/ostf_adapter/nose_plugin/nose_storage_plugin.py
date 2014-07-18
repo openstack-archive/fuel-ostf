@@ -34,12 +34,13 @@ class StoragePlugin(plugins.Plugin):
     score = 15000
 
     def __init__(self, session, test_run_id, cluster_id,
-                 ostf_os_access_creds, token):
+                 ostf_os_access_creds, token, results_log):
 
         self.session = session
         self.test_run_id = test_run_id
         self.cluster_id = cluster_id
         self.ostf_os_access_creds = ostf_os_access_creds
+        self.results_log = results_log
 
         super(StoragePlugin, self).__init__()
         self._start_time = None
@@ -59,8 +60,25 @@ class StoragePlugin(plugins.Plugin):
     def configure(self, options, conf):
         self.conf = conf
 
-    def _add_message(
-            self, test, err=None, status=None):
+    def _add_test_results(self, test, data):
+        test_id = test.id()
+
+        models.Test.add_result(
+            self.session,
+            self.test_run_id,
+            test_id,
+            data
+        )
+        if data['status'] != 'running':
+            test_name = nose_utils.get_description(test)[0]
+            self.results_log.log_results(
+                test_id,
+                test_name=test_name,
+                status=data['status'],
+                message=data['message']
+            )
+
+    def _add_message(self, test, err=None, status=None):
         data = {
             'status': status,
             'time_taken': self.taken,
@@ -74,15 +92,10 @@ class StoragePlugin(plugins.Plugin):
                 data['step'], data['message'] = \
                     nose_utils.format_failure_message(exc_value)
 
-        tests_to_update = nose_utils.get_tests_ids_to_update(test)
+        tests_to_update = nose_utils.get_tests_to_update(test)
 
-        for test_id in tests_to_update:
-            models.Test.add_result(
-                self.session,
-                self.test_run_id,
-                test_id,
-                data
-            )
+        for test in tests_to_update:
+            self._add_test_results(test, data)
         self.session.commit()
 
     def addSuccess(self, test, capt=None):
