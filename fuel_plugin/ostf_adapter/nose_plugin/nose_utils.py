@@ -144,7 +144,7 @@ def get_module(module_path):
     pass
 
 
-def get_tests_ids_to_update(test):
+def get_tests_to_update(test):
     '''
     Sometimes (e.g. unhandles exception is occured in
     setUpClass of test case) tests can be packed in
@@ -154,15 +154,15 @@ def get_tests_ids_to_update(test):
     (which is not good by any means and you are free to
     modify that if you can)
     '''
-    tests_ids = []
+    tests = []
 
     if isinstance(test, case.Test):
-        tests_ids.append(test.id())
+        tests.append(test)
     elif isinstance(test, ContextSuite):
         for sub_test in test._tests:
-            tests_ids.extend(get_tests_ids_to_update(sub_test))
+            tests.extend(get_tests_to_update(sub_test))
 
-    return tests_ids
+    return tests
 
 
 def process_deployment_tags(cluster_depl_tags, test_depl_tags):

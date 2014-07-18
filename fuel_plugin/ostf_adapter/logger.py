@@ -17,10 +17,58 @@ import logging
 import logging.handlers
 
 
+_LOG_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
+class ResultsLogger(object):
+    """Logger used to log results of OSTF tests. Resutls are stored in
+    /var/log/ostf/ dir. Each cluster has one log file per each set of tests.
+    """
+
+    def __init__(self, testset, cluster_id):
+        self.testset = testset
+        self.cluster_id = cluster_id
+        self.filename = self._make_filename()
+        self._logger = self._init_file_logger()
+
+    def _init_file_logger(self):
+        logger = logging.getLogger('ostf-results-log-{0}-{1}'.format(
+            self.cluster_id, self.testset))
+
+        if not logger.handlers:
+            log_dir = '/var/log/ostf'
+            log_file = os.path.join(log_dir, self.filename)
+
+            file_handler = logging.handlers.WatchedFileHandler(log_file)
+            file_handler.setLevel(logging.DEBUG)
+
+            formatter = logging.Formatter(
+                '%(asctime)s %(message)s',
+                _LOG_TIME_FORMAT)
+            file_handler.setFormatter(formatter)
+
+            logger.addHandler(file_handler)
+
+        logger.propagate = 0
+
+        return logger
+
+    def _make_filename(self):
+        return 'cluster_{cluster_id}_{testset}.log'.format(
+            testset=self.testset, cluster_id=self.cluster_id)
+
+    def log_results(self, test_id, test_name, status, message, traceback):
+        status = status.upper()
+        msg = "{status} {test_name} ({test_id}) {message} {traceback}".format(
+            test_name=test_name, test_id=test_id, status=status,
+            message=message, traceback=traceback)
+        self._logger.info(msg)
+
+
 def setup(log_file=None):
     formatter = logging.Formatter(
         '%(asctime)s %(levelname)s (%(module)s) %(message)s',
-        "%Y-%m-%d %H:%M:%S")
+        _LOG_TIME_FORMAT)
     log = logging.getLogger(None)
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.INFO)
