@@ -19,6 +19,7 @@ import signal
 
 from oslo.config import cfg
 
+from fuel_plugin.ostf_adapter.logger import ResultsLogger
 from fuel_plugin.ostf_adapter.nose_plugin import nose_test_runner
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
 from fuel_plugin.ostf_adapter.storage import engine, models
@@ -53,6 +54,8 @@ class NoseDriver(object):
         else:
             argv_add = [test_set.test_path] + test_set.additional_arguments
 
+        results_log = ResultsLogger(test_set.id, test_run.cluster_id)
+
         lock_path = cfg.CONF.adapter.lock_dir
         test_run.pid = nose_utils.run_proc(self._run_tests,
                                            lock_path,
@@ -61,10 +64,12 @@ class NoseDriver(object):
                                            test_run.cluster_id,
                                            ostf_os_access_creds,
                                            argv_add,
-                                           token).pid
+                                           token,
+                                           results_log).pid
 
     def _run_tests(self, lock_path, dbpath, test_run_id,
-                   cluster_id, ostf_os_access_creds, argv_add, token):
+                   cluster_id, ostf_os_access_creds, argv_add, token,
+                   results_log):
         cleanup_flag = False
 
         def raise_exception_handler(signum, stack_frame):
@@ -91,7 +96,7 @@ class NoseDriver(object):
                 nose_test_runner.SilentTestProgram(
                     addplugins=[nose_storage_plugin.StoragePlugin(
                         session, test_run_id, str(cluster_id),
-                        ostf_os_access_creds, token
+                        ostf_os_access_creds, token, results_log
                     )],
                     exit=False,
                     argv=['ostf_tests'] + argv_add)
