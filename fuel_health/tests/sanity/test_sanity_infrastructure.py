@@ -117,7 +117,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Duration: 120 s.
         """
         if not self.computes:
-            self.skipTest('There are no compute nodes')
+            self.skipTest('There are no computes nodes')
 
         ssh_client = SSHClient(self.computes[0],
                                self.usr,
@@ -128,7 +128,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         cmd = "host 8.8.8.8"
         output = self.verify(60, self.retry_command, 1,
                              "'host' command failed. Looks like there is no "
-                             "Internet connection on the compute node.",
+                             "Internet connection on the computes node.",
                              "'ping' command", 10, 5,
                              ssh_client.exec_command, cmd)
         LOG.debug(output)
