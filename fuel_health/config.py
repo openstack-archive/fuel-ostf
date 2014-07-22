@@ -79,6 +79,19 @@ def register_identity_opts(conf):
         conf.register_opt(opt, group='identity')
 
 
+common_group = cfg.OptGroup(name='common',
+                             title='Common Cluster Options')
+CommonGroup = [
+        cfg.StrOpt('libvirt_type',
+               default='qemu',
+               help="Type of hypervisor to use."),
+]
+
+def register_common_opts(conf):
+    conf.register_group(common_group)
+    for opt in CommonGroup:
+        conf.register_opt(opt, group='common')
+
 compute_group = cfg.OptGroup(name='compute',
                              title='Compute Service Options')
 
@@ -473,6 +486,7 @@ class ConfigGroup(object):
 class NailgunConfig(object):
 
     identity = ConfigGroup(IdentityGroup)
+    common = ConfigGroup(CommonGroup)
     compute = ConfigGroup(ComputeGroup)
     image = ConfigGroup(ImageGroup)
     network = ConfigGroup(NetworkGroup)
@@ -526,6 +540,7 @@ class NailgunConfig(object):
         data = response.json()
         LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
         access_data = data['editable']['access']
+        common_data = data['editable']['common']        
 
         self.identity.admin_tenant_name = \
             (
@@ -542,6 +557,7 @@ class NailgunConfig(object):
                 os.environ.get('OSTF_OS_PASSWORD') or
                 access_data['password']['value']
             )
+        self.common.libvirt_type = common_data['libvirt_type']['value']
 
         api_url = '/api/clusters/%s' % self.cluster_id
         cluster_data = self.req_session.get(self.nailgun_url + api_url).json()
