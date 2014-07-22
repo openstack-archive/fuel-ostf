@@ -89,8 +89,9 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             1. Execute ping 8.8.8.8 command from a compute node.
         Duration: 100 s.
         """
-        if not self.computes:
-            self.fail('There are no compute nodes')
+        if not self.config.compute.compute_nodes \
+                and self.config.compute.libvirt_type != 'vcenter':
+            self.skipTest('There are no compute nodes')
 
         cmd = "ping -q -c1 -w10 8.8.8.8"
 
@@ -116,8 +117,9 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             4. Check google.com host was successfully resolved.
         Duration: 120 s.
         """
-        if not self.computes:
-            self.fail('There are no compute nodes')
+        if not self.config.compute.compute_nodes \
+                and self.config.compute.libvirt_type != 'vcenter':
+            self.skipTest('There are no compute nodes')
 
         ssh_client = SSHClient(self.computes[0],
                                self.usr,
@@ -128,7 +130,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         cmd = "host 8.8.8.8"
         output = self.verify(60, self.retry_command, 1,
                              "'host' command failed. Looks like there is no "
-                             "Internet connection on the compute node.",
+                             "Internet connection on the computes node.",
                              "'ping' command", 10, 5,
                              ssh_client.exec_command, cmd)
         LOG.debug(output)

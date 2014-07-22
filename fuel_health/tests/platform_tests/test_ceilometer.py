@@ -68,7 +68,8 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
 
         fail_msg = "Creation metrics failed."
 
-        statistic_meter_resp = self.verify(600, self.wait_for_instance_metrics, 3,
+        statistic_meter_resp = self.verify(600, self.wait_for_instance_metrics,
+                                           3,
                                            fail_msg,
                                            "metrics created",
                                            self.meter_name)
@@ -76,14 +77,15 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = "Creation alarm failed."
 
         threshold = statistic_meter_resp[0].avg - 1
-        create_alarm_resp = self.verify(5, self.create_alarm,
-                                        4, fail_msg, "alarm_create",
-                                        meter_name=self.meter_name,
-                                        threshold=threshold,
-                                        name=self.name,
-                                        period=self.period,
-                                        statistic=self.statistic,
-                                        comparison_operator=self.comparison_operator)
+        create_alarm_resp = self.verify(
+            5, self.create_alarm,
+            4, fail_msg, "alarm_create",
+            meter_name=self.meter_name,
+            threshold=threshold,
+            name=self.name,
+            period=self.period,
+            statistic=self.statistic,
+            comparison_operator=self.comparison_operator)
 
         fail_msg = "Alarm verify state failed."
 
