@@ -171,6 +171,9 @@ ComputeGroup = [
     cfg.IntOpt('flavor_ref',
                default=42,
                help="Valid primary flavor to use in tests."),
+    cfg.StrOpt('libvirt_type',
+               default='qemu',
+               help="Type of hypervisor to use."),
 ]
 
 
@@ -519,9 +522,14 @@ class NailgunConfig(object):
         data = response.json()
         LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
         access_data = data['editable']['access']
+        common_data = data['editable']['common']
+
         self.identity.admin_tenant_name = access_data['tenant']['value']
         self.identity.admin_username = access_data['user']['value']
         self.identity.admin_password = access_data['password']['value']
+
+        self.compute.libvirt_type = common_data['libvirt_type']['value']
+
         api_url = '/api/clusters/%s' % self.cluster_id
         cluster_data = self.req_session.get(self.nailgun_url + api_url).json()
         network_provider = cluster_data.get('net_provider', 'nova_network')

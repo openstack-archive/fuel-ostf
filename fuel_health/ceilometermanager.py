@@ -38,9 +38,10 @@ class CeilometerBaseTest(fuel_health.nmanager.OfficialClientTest):
         super(CeilometerBaseTest, self).setUp()
         self.check_clients_state()
         if not self.ceilometer_client:
-            self.fail('Ceilometer is unavailable.')
-        if not self.config.compute.compute_nodes:
-            self.fail('There are no compute nodes')
+            self.skipTest('Ceilometer is unavailable.')
+        if not self.config.compute.compute_nodes \
+                and self.config.compute.libvirt_type != 'vcenter':
+            self.skipTest('There are no compute nodes')
         self.name = rand_name('ost1_test-alarm_actions')
         self.meter_name = 'cpu'
         self.meter_name_image = 'image'
