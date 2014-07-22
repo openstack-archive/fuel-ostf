@@ -82,44 +82,44 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                 'have not been started.')
 
     def test_002_internet_connectivity_from_compute(self):
-        """Check internet connectivity from a compute
+        """Check internet connectivity from a controller
         Target component: OpenStack
 
         Scenario:
-            1. Execute ping 8.8.8.8 command from a compute node.
+            1. Execute ping 8.8.8.8 command from a controller node.
         Duration: 100 s.
         """
-        if not self.computes:
-            self.skipTest('There are no compute nodes')
+        if not self.controllers:
+            self.skipTest('There are no controller nodes')
 
         cmd = "ping -q -c1 -w10 8.8.8.8"
 
-        ssh_client = SSHClient(self.computes[0],
+        ssh_client = SSHClient(self.controllers[0],
                                self.usr,
                                self.pwd,
                                key_filename=self.key,
                                timeout=self.timeout)
         self.verify(70, self.retry_command, 1,
                     "'ping' command failed. Looks like there is no "
-                    "Internet connection on the compute node.",
+                    "Internet connection on the controller node.",
                     "'ping' command",
                     2, 30, ssh_client.exec_command, cmd)
 
     def test_003_dns_resolution(self):
-        """Check DNS resolution on compute node
+        """Check DNS resolution on controller node
         Target component: OpenStack
 
         Scenario:
-            1. Execute host 8.8.8.8 command from a compute node.
+            1. Execute host 8.8.8.8 command from a controller node.
             2. Check 8.8.8.8 host was successfully resolved
-            3. Check host google.com command from the compute node.
+            3. Check host google.com command from the controller node.
             4. Check google.com host was successfully resolved.
         Duration: 120 s.
         """
-        if not self.computes:
-            self.skipTest('There are no compute nodes')
+        if not self.controllers:
+            self.skipTest('There are no controller nodes')
 
-        ssh_client = SSHClient(self.computes[0],
+        ssh_client = SSHClient(self.controllers[0],
                                self.usr,
                                self.pwd,
                                key_filename=self.key,
@@ -128,7 +128,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         cmd = "host 8.8.8.8"
         output = self.verify(60, self.retry_command, 1,
                              "'host' command failed. Looks like there is no "
-                             "Internet connection on the compute node.",
+                             "Internet connection on the controller node.",
                              "'ping' command", 10, 5,
                              ssh_client.exec_command, cmd)
         LOG.debug(output)
