@@ -64,14 +64,15 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
 
         fail_msg = "Creation alarm failed."
 
-        create_alarm_resp = self.verify(100, self.create_alarm,
-                                        2, fail_msg, "alarm_create",
-                                        meter_name=self.meter_name,
-                                        threshold=self.threshold,
-                                        name=self.name,
-                                        period=self.period,
-                                        statistic=self.statistic,
-                                        comparison_operator=self.comparison_operator)
+        create_alarm_resp = self.verify(
+            100, self.create_alarm,
+            2, fail_msg, "alarm_create",
+            meter_name=self.meter_name,
+            threshold=self.threshold,
+            name=self.name,
+            period=self.period,
+            statistic=self.statistic,
+            comparison_operator=self.comparison_operator)
 
         fail_msg = "Alarm list unavailable"
 
