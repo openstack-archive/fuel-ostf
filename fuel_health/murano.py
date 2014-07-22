@@ -37,7 +37,8 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
         self.check_clients_state()
         self.env_name = rand_name("ostf_test-Murano_env")
 
-        if not self.config.compute.compute_nodes:
+        if not self.config.compute.compute_nodes \
+                and self.config.compute.libvirt_type != 'vcenter':
             self.skipTest('There are no compute nodes')
 
         self.max_available_ram = 0

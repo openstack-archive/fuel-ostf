@@ -29,8 +29,10 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
     """
     def setUp(self):
         super(HeatSmokeTests, self).setUp()
-        if not self.config.compute.compute_nodes:
+        if not self.config.compute.compute_nodes \
+                and self.config.compute.libvirt_type != 'vcenter':
             self.skipTest('There are no compute nodes')
+
         self.instance = []
 
     def test_actions(self):
