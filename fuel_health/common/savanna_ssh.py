@@ -17,6 +17,7 @@
 
 import logging
 import paramiko
+import socket
 
 from fuel_health.exceptions import SSHExecCommandFailed
 
@@ -29,12 +30,21 @@ def ssh_command(cmd):
     config = fuel_health.config.FuelConfig()
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    LOG.debug('Remote ssh commad is "%s"', cmd)
+    LOG.debug('Remote ssh command is "%s"', cmd)
+
+    for controller_node in config.compute.controller_nodes:
+        try:
+            ssh.connect(hostname=controller_node,
+                        username=config.compute.controller_node_ssh_user,
+                        key_filename=config.compute.path_to_private_key,
+                        timeout=300)
+            break
+        except socket.error:
+            LOG.debug('SSH connection to controller node %s is not '
+                      'established. Connection attempt to another '
+                      'controller node.' % controller_node)
+            continue
     try:
-        ssh.connect(hostname=config.compute.controller_nodes[0],
-                    username=config.compute.controller_node_ssh_user,
-                    key_filename=config.compute.path_to_private_key,
-                    timeout=300)
         _, stdout, stderr = ssh.exec_command(cmd)
         output = stdout.read()
         output_err = stderr.read()
