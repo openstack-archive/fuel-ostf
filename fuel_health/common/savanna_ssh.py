@@ -31,7 +31,7 @@ def ssh_command(cmd):
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     LOG.debug('Remote ssh commad is "%s"', cmd)
     try:
-        ssh.connect(hostname=config.compute.controller_nodes[0],
+        ssh.connect(hostname=config.compute.online_controllers[0],
                     username=config.compute.controller_node_ssh_user,
                     key_filename=config.compute.path_to_private_key,
                     timeout=300)
