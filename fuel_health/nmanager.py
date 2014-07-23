@@ -390,7 +390,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def setUpClass(cls):
         super(NovaNetworkScenarioTest, cls).setUpClass()
         if cls.manager.clients_initialized:
-            cls.host = cls.config.compute.controller_nodes
+            cls.host = cls.config.compute.online_controllers
             cls.usr = cls.config.compute.controller_node_ssh_user
             cls.pwd = cls.config.compute.controller_node_ssh_password
             cls.key = cls.config.compute.path_to_private_key
@@ -414,14 +414,15 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         Open SSH session with Controller and and execute command.
         """
         if not self.host:
-            self.fail('Wrong tests configuration: '
-                      'controller_nodes parameter is empty ')
+            self.fail('Wrong test configuration: '
+                      '"online_controllers" parameter is empty.')
+
         try:
-            sshclient = fuel_health.common.ssh.Client(
+            ssh_client = fuel_health.common.ssh.Client(
                 self.host[0], self.usr, self.pwd,
                 key_filename=self.key, timeout=self.timeout
             )
-            return sshclient.exec_longrun_command(cmd)
+            return ssh_client.exec_longrun_command(cmd)
         except Exception:
             LOG.debug(traceback.format_exc())
             self.fail("%s command failed." % cmd)
