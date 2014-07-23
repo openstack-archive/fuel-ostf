@@ -17,6 +17,7 @@
 #    under the License.
 
 import logging
+import socket
 import time
 import traceback
 
@@ -416,15 +417,24 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         if not self.host:
             self.fail('Wrong tests configuration: '
                       'controller_nodes parameter is empty ')
-        try:
-            sshclient = fuel_health.common.ssh.Client(
-                self.host[0], self.usr, self.pwd,
-                key_filename=self.key, timeout=self.timeout
-            )
-            return sshclient.exec_longrun_command(cmd)
-        except Exception:
-            LOG.debug(traceback.format_exc())
-            self.fail("%s command failed." % cmd)
+
+        for controller_node in self.host:
+            try:
+                sshclient = fuel_health.common.ssh.Client(
+                    controller_node, self.usr, self.pwd,
+                    key_filename=self.key, timeout=self.timeout
+                )
+            except socket.error:
+                LOG.debug('SSH connection to controller node %s is not '
+                          'established. Connection attempt to another '
+                          'controller node.' % controller_node)
+                continue
+            else:
+                try:
+                    return sshclient.exec_longrun_command(cmd)
+                except Exception:
+                    LOG.debug(traceback.format_exc())
+                    self.fail("%s command failed." % cmd)
 
     def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
         kp_name = rand_name(namestart)
