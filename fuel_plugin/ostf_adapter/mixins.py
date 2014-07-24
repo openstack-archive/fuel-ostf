@@ -144,6 +144,8 @@ def _get_cluster_depl_tags(cluster_id, token=None):
     additional_components = \
         response['editable'].get('additional_components', dict())
 
+    hyper_type = response['editable']['common']['libvirt_type'].get('value')
+
     additional_depl_tags = set()
 
     comp_names = ['murano', 'sahara', 'heat', 'ceilometer']
@@ -155,6 +157,10 @@ def _get_cluster_depl_tags(cluster_id, token=None):
                is True:
 
                 additional_depl_tags.add(comp)
+        if hyper_type != 'vcenter':
+            additional_depl_tags.add('qemu_kvm')
+        else:
+            additional_depl_tags.add(hyper_type)
 
     for comp in comp_names:
         processor(comp)
