@@ -137,6 +137,8 @@ def _get_cluster_depl_tags(cluster_id):
     additional_components = \
         response['editable'].get('additional_components', dict())
 
+    libvrt_data = response['editable']['common'].get('libvirt_type', None)
+
     additional_depl_tags = set()
 
     comp_names = ['murano', 'sahara', 'heat', 'ceilometer']
@@ -146,7 +148,6 @@ def _get_cluster_depl_tags(cluster_id):
             if additional_components.get(comp)\
                and additional_components.get(comp)['value']\
                is True:
-
                 additional_depl_tags.add(comp)
 
     for comp in comp_names:
@@ -155,6 +156,8 @@ def _get_cluster_depl_tags(cluster_id):
     if additional_depl_tags:
         deployment_tags.add('additional_components')
         deployment_tags.update(additional_depl_tags)
+    if libvrt_data and libvrt_data.get('value'):
+        deployment_tags.add(libvrt_data['value'])
 
     return set([tag.lower() for tag in deployment_tags])
 
