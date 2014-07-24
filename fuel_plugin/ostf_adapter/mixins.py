@@ -148,6 +148,8 @@ def _get_cluster_depl_tags(cluster_id, token=None):
     additional_components = \
         response['editable'].get('additional_components', dict())
 
+    hyper_type = response['editable']['common']['libvirt_type'].get('value')
+
     additional_depl_tags = set()
 
     comp_names = ['murano', 'sahara', 'heat', 'ceilometer']
@@ -157,7 +159,6 @@ def _get_cluster_depl_tags(cluster_id, token=None):
             if additional_components.get(comp)\
                and additional_components.get(comp)['value']\
                is True:
-
                 additional_depl_tags.add(comp)
 
     for comp in comp_names:
@@ -166,6 +167,7 @@ def _get_cluster_depl_tags(cluster_id, token=None):
     if additional_depl_tags:
         deployment_tags.add('additional_components')
         deployment_tags.update(additional_depl_tags)
+        deployment_tags.add(hyper_type)
 
     return set([tag.lower() for tag in deployment_tags])
 
