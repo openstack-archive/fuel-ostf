@@ -125,6 +125,10 @@ def _get_cluster_depl_tags(cluster_id, token=None):
 
     deployment_tags = set()
 
+    fuel_version = response.get('fuel_version')
+    if fuel_version:
+        deployment_tags.add(fuel_version)
+
     release_data = REQ_SES.get(release_url).json()
 
     # info about deployment type and operating system
