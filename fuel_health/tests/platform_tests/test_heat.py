@@ -33,6 +33,9 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                 and self.config.compute.libvirt_type != 'vcenter':
             self.skipTest('There are no compute nodes')
 
+        if 'ha' in self.config.compute.deployment_mode:
+            self.skipTest("This test can't be executed in HA mode.")
+
         self.instance = []
 
     def test_actions(self):
