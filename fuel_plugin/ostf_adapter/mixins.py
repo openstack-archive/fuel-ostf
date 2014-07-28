@@ -142,6 +142,7 @@ def _get_cluster_depl_tags(cluster_id, token=None):
     deployment_tags.add(network_type)
 
     # info about murano/sahara clients installation
+    # added check for libvrt_data
     request_url += '/' + 'attributes'
     response = REQ_SES.get(request_url).json()
 
