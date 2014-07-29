@@ -200,7 +200,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         Target component: Heat
 
         Scenario:
-            1. Image with cfntools package should be imported.
+            1. Check that image with cfntools package is imported.
             2. Create a flavor.
             3. Create a keypair.
             4. Save generated private key to file on Controller node.
@@ -220,10 +220,10 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         Duration: 2600 s.
         """
         image_name = "F17-x86_64-cfntools"
-        fail_msg = ("Image with cfntools package wasn't "
-                    "imported into Glance, please check "
-                    "http://docs.mirantis.com/openstack/fuel/fuel"
-                    "-5.0/user-guide.html#platform-tests-description")
+        msg = ("Image with cfntools package wasn't "
+               "imported into Glance, please check "
+               "http://docs.mirantis.com/openstack/fuel/fuel"
+               "-5.0/user-guide.html#platform-tests-description")
 
         image_available = self.verify(10, self._find_heat_image, 1,
                                       fail_msg,
@@ -231,8 +231,9 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                                       "in Glance" % image_name,
                                       image_name)
 
-        self.verify_response_true(image_available,
-                                  "Step 1 failed: %s." % fail_msg)
+        if not image_available:
+            LOG.debug(msg)
+            self.skipTest(msg)
 
         flavor = self.verify(10, self._create_flavors, 2,
                              "Flavor can not be created.",

@@ -31,7 +31,7 @@ class PlatformSavannaTests(savanna.SavannaTest):
         Target component: Sahara
 
         Scenario:
-            1. Sahara image with tags should be imported
+            1. Check that Sahara image with tags is imported
             2. Send request to create node group template
             3. Send request to create cluster template
             4. Request the list of node group templates
@@ -44,14 +44,14 @@ class PlatformSavannaTests(savanna.SavannaTest):
 
         Deployment tags: Sahara
         """
-        fail_msg = ("Sahara image with tags wasn't imported into Glance, "
-                    "please check "
-                    "http://docs.mirantis.com/openstack/fuel/fuel-5.0/"
-                    "user-guide.html#platform-tests-description")
-        self.verify_response_true(
-            self.verify(30, self._test_image, 1, fail_msg,
-                        "Test images with tags"),
-            "Step 1 failed: {msg}".format(msg=fail_msg))
+        msg = ("Sahara image with tags wasn't imported into Glance, "
+               "please check "
+               "http://docs.mirantis.com/openstack/fuel/fuel-5.0/"
+               "user-guide.html#platform-tests-description")
+
+        if not _test_image():
+           LOG.debug(msg)
+           self.skipTest(msg)
 
         fail_msg = 'Fail create node group template.'
         self.verify(40, self.create_node_group_template_tt_dn, 2, fail_msg,
