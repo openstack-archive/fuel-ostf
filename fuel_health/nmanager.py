@@ -426,6 +426,28 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             LOG.debug(traceback.format_exc())
             self.fail("%s command failed." % cmd)
 
+    def _try_port(self, host, port):
+        start_time = time.time()
+        delta = time.time() - start_time
+
+        while delta < 600:
+            cmd = ("timeout 60 bash -c 'echo >/dev/"
+                   "tcp/{0}/{1}'; echo $?".format(host, port))
+
+            output, output_err = self._run_ssh_cmd(cmd)
+            print('NC output after %s seconds is "%s"' % (delta, output))
+            LOG.debug('NC output after %s seconds is "%s"',
+                      delta, output)
+
+            if output or str(output_err).find(' succeeded!') > 0:
+                return True
+
+            time.sleep(10)
+            delta = time.time() - start_time
+
+        self.fail('On host %s port %s is not opened '
+                  'more then 10 minutes' % (host, port))
+
     def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
         kp_name = rand_name(namestart)
         keypair = client.keypairs.create(kp_name)
