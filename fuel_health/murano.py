@@ -26,7 +26,7 @@ import fuel_health.nmanager
 LOG = logging.getLogger(__name__)
 
 
-class MuranoTest(fuel_health.nmanager.OfficialClientTest):
+class MuranoTest(fuel_health.nmanager.NovaNetworkScenarioTest):
     """
     Manager that provides access to the Murano python client for
     calling Murano API.
@@ -72,7 +72,6 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             This method allows to clean up the OpenStack environment
             after the Murano OSTF tests.
         """
-        super(MuranoTest, self).tearDown()
 
         if self.flavor_reqs:
             self.compute_client.flavors.delete(self.flavor.id)
@@ -83,6 +82,8 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
                         self.delete_environment(env["id"])
                     except:
                         LOG.warning(traceback.format_exc())
+
+        super(MuranoTest, self).tearDown()
 
     def find_murano_image(self, image_type):
         """
@@ -297,14 +298,14 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
             Input parameters:
               environment_id - ID of environment
 
-            Returns 'OK'.
+            Returns environment.
         """
 
-        infa = self.get_environment(environment_id)
-        while infa['status'] != 'ready':
+        environment = self.get_environment(environment_id)
+        while environment['status'] != 'ready':
             time.sleep(5)
-            infa = self.get_environment(environment_id)
-        return 'OK'
+            environment = self.get_environment(environment_id)
+        return environment
 
     def deployments_status_check(self, environment_id):
         """
@@ -327,7 +328,24 @@ class MuranoTest(fuel_health.nmanager.OfficialClientTest):
                              headers=self.headers).json()
             LOG.debug("Reports: {0}".format(r))
 
-            assert depl['state'] == 'success'
+            self.assertEqual('success', depl['state'])
+        return 'OK'
+
+    def ports_check(self, environment, ports):
+        """
+            This method allows to check that needed ports are opened.
+
+            Input parameters:
+              environment - Murano environment
+              ports - list of needed ports
+
+            Returns 'OK'.
+        """
+        check_ip = environment['services'][0]['instance']['floatingIpAddress']
+
+        for port in ports:
+            self.assertTrue(self._try_port(check_ip, port))
+
         return 'OK'
 
     def get_list_packages(self):

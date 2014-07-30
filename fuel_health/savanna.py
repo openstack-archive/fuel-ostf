@@ -241,24 +241,6 @@ class SavannaTest(nmanager.NovaNetworkScenarioTest):
             'node_info': node_info
         }
 
-    def _try_port(self, host, port):
-        i = 0
-        while True:
-            cmd = ("timeout 60 bash -c 'echo >/dev/"
-                   "tcp/{0}/{1}'; echo $?".format(host, port))
-            output, output_err = self._run_ssh_cmd(cmd)
-            print('NC output after %s seconds is "%s"' % (i * 10, output))
-            LOG.debug('NC output after %s seconds is "%s"',
-                      i * 10, output)
-            if output or str(output_err).find(' succeeded!') > 0:
-                break
-            if not output and i > 600:
-                self.fail('On host %s port %s is not opened '
-                          'more then 10 minutes' % (host, port))
-            time.sleep(10)
-            i += 1
-        return True
-
     def _check_auto_assign_floating_ip(self):
         cmd_nova = ('grep auto_assign_floating_ip '
                     '/etc/nova/nova.conf | grep True')
