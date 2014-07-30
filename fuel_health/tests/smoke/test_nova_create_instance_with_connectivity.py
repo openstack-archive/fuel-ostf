@@ -254,11 +254,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
         Deployment tags: nova_network
         """
-        try:
-            self.check_image_exists()
-        except Exception as e:
-            self.fail(e)
-
+        self.check_image_exists()
         if not self.security_groups:
             self.security_groups[self.tenant_id] = self.verify(
                 25, self._create_security_group, 1,
@@ -279,7 +275,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                 if addr.startswith('novanetwork'):
                     instance_ip = server.addresses[addr][0]['addr']
             compute = getattr(server, 'OS-EXT-SRV-ATTR:host')
-        except Exception as e:
+        except Exception:
             LOG.debug(traceback.format_exc())
             self.fail("Step 3 failed: cannot get instance details. "
                       "Please refer to OpenStack logs for more details.")
