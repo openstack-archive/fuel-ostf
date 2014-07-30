@@ -652,6 +652,31 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             cls._clean_flavors()
 
 
+class PlatformServicesBaseClass(NovaNetworkScenarioTest):
+
+    def _try_port(self, host, port):
+        start_time = time.time()
+        delta = time.time() - start_time
+
+        while delta < 600:
+            cmd = ("timeout 60 bash -c 'echo >/dev/"
+                   "tcp/{0}/{1}'; echo $?".format(host, port))
+
+            output, output_err = self._run_ssh_cmd(cmd)
+            print('NC output after %s seconds is "%s"' % (delta, output))
+            LOG.debug('NC output after %s seconds is "%s"',
+                      delta, output)
+
+            if output or str(output_err).find(' succeeded!') > 0:
+                return True
+
+            time.sleep(10)
+            delta = time.time() - start_time
+
+        self.fail('On host %s port %s is not opened '
+                  'more then 10 minutes' % (host, port))
+
+
 class SanityChecksTest(OfficialClientTest):
     """
     Base class for openstack sanity tests

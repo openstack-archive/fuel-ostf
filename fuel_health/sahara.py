@@ -26,7 +26,8 @@ import fuel_health.nmanager as nmanager
 LOG = logging.getLogger(__name__)
 
 
-class SaharaTest(nmanager.NovaNetworkScenarioTest):
+class SaharaTest(nmanager.PlatformServicesBaseClass):
+
     """
     Base class for openstack sanity tests for Sahara
     """
@@ -240,24 +241,6 @@ class SaharaTest(nmanager.NovaNetworkScenarioTest):
             'node_ip_list': node_ip_list_with_node_processes,
             'node_info': node_info
         }
-
-    def _try_port(self, host, port):
-        i = 0
-        while True:
-            cmd = ("timeout 60 bash -c 'echo >/dev/"
-                   "tcp/{0}/{1}'; echo $?".format(host, port))
-            output, output_err = self._run_ssh_cmd(cmd)
-            print('NC output after %s seconds is "%s"' % (i * 10, output))
-            LOG.debug('NC output after %s seconds is "%s"',
-                      i * 10, output)
-            if output or str(output_err).find(' succeeded!') > 0:
-                break
-            if not output and i > 600:
-                self.fail('On host %s port %s is not opened '
-                          'more then 10 minutes' % (host, port))
-            time.sleep(10)
-            i += 1
-        return True
 
     def _check_auto_assign_floating_ip(self):
         cmd_nova = ('grep auto_assign_floating_ip '

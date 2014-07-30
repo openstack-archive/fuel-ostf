@@ -64,9 +64,10 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
             4. Request to deploy session.
             5. Checking environment status.
             6. Checking deployments status
-            7. Send request to delete environment.
+            7. Checking ports
+            8. Send request to delete environment.
 
-        Duration: 920 s.
+        Duration: 1520 s.
 
         Deployment tags: Murano, Heat
         """
@@ -85,6 +86,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
             "instance": {
                 "flavor": self.flavor_name,
                 "image": self.image.name,
+                "assignFloatingIp": True,
                 "?": {
                     "type": "io.murano.resources.Instance",
                     "id": str(uuid.uuid4())
@@ -113,18 +115,23 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                     self.environment['id'], session['id'])
 
         fail_msg = "Deployment was not completed correctly. "
-        self.verify(900, self.deploy_check,
-                    5, fail_msg, 'deployment is going',
-                    self.environment['id'])
+        environment = self.verify(900, self.deploy_check,
+                                  5, fail_msg, 'deployment is going',
+                                  self.environment['id'])
 
         self.verify(5, self.deployments_status_check,
                     6, fail_msg,
                     'Check deployments status',
                     self.environment['id'])
 
+        self.verify(600, self.ports_check,
+                    7, fail_msg,
+                    'Check that needed ports are opened',
+                    environment, ['23'])
+
         fail_msg = "Can't delete environment. "
         self.verify(5, self.delete_environment,
-                    7, fail_msg, "deleting environment",
+                    8, fail_msg, "deleting environment",
                     self.environment['id'])
 
     def test_deploy_apache_service(self):
@@ -138,9 +145,10 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
             4. Request to deploy session.
             5. Checking environment status.
             6. Checking deployments status
-            7. Send request to delete environment.
+            7. Checking ports
+            8. Send request to delete environment.
 
-        Duration: 920 s.
+        Duration: 1520 s.
 
         Deployment tags: Murano, Heat
         """
@@ -159,6 +167,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
             "instance": {
                 "flavor": self.flavor_name,
                 "image": self.image.name,
+                "assignFloatingIp": True,
                 "?": {
                     "type": "io.murano.resources.Instance",
                     "id": str(uuid.uuid4())
@@ -187,16 +196,21 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                     self.environment['id'], session['id'])
 
         fail_msg = "Deployment was not completed correctly. "
-        self.verify(900, self.deploy_check,
-                    5, fail_msg, 'deployment is going',
-                    self.environment['id'])
+        environment = self.verify(900, self.deploy_check,
+                                  5, fail_msg, 'deployment is going',
+                                  self.environment['id'])
 
         self.verify(5, self.deployments_status_check,
                     6, fail_msg,
                     'Check deployments status',
                     self.environment['id'])
 
+        self.verify(600, self.ports_check,
+                    7, fail_msg,
+                    'Check that needed ports are opened',
+                    environment, ['80'])
+
         fail_msg = "Can't delete environment. "
         self.verify(5, self.delete_environment,
-                    7, fail_msg, "deleting environment",
+                    8, fail_msg, "deleting environment",
                     self.environment['id'])
