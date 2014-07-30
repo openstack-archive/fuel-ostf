@@ -254,11 +254,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
         Deployment tags: nova_network
         """
-        try:
-            self.check_image_exists()
-        except Exception as e:
-            self.fail(e)
-
+        self.check_image_exists()
         if not self.security_groups:
             self.security_groups[self.tenant_id] = self.verify(
                 25, self._create_security_group, 1,
