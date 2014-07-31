@@ -788,19 +788,21 @@ class SmokeChecksTest(OfficialClientTest):
         self.set_resource(name, role)
         return role
 
-    def _create_volume(self, client):
-        display_name = rand_name('ost1_test-volume')
-        volume = client.volumes.create(size=1, display_name=display_name)
+    def _create_volume(self, client, display_name=None, **kwargs):
+        if display_name is None:
+            display_name = rand_name('ost1_test-volume')
+        volume = client.volumes.create(
+            size=1, display_name=display_name, **kwargs)
         self.set_resource(display_name, volume)
         return volume
 
     def _create_boot_volume(self, client):
         display_name = rand_name('ost1_test-bootable-volume')
         imageRef = self.get_image_from_name()
-        LOG.debug('Image ref is {0}'.format(imageRef))
-        volume = client.volumes.create(
-            size=1, display_name=display_name, imageRef=imageRef)
-        return volume
+        LOG.debug(
+            'Image ref is {0} for volume {1}'.format(imageRef, display_name))
+        return self._create_volume(
+            client, display_name=display_name, imageRef=imageRef)
 
     def create_instance_from_volume(self, client, volume):
         name = rand_name('ost1_test-boot-volume-instance')
