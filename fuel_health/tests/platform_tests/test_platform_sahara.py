@@ -27,6 +27,13 @@ class PlatformSaharaTests(sahara.SaharaTest):
     """
     def setUp(self):
         super(PlatformSaharaTests, self).setUp()
+
+        if not self.enough_ram:
+            self.skipTest('This test requires more resources on one of '
+                          'the compute nodes (> {0} MB of free RAM), but you '
+                          'have only {1} MB on most appropriate compute node.'
+                          .format(self.min_ram, self.max_available_ram))
+
         msg = ("Sahara image with tags wasn't imported into Glance, "
                "please check "
                "http://docs.mirantis.com/openstack/fuel/fuel-5.0/"

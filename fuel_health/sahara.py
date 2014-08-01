@@ -33,6 +33,17 @@ class SaharaTest(nmanager.NovaNetworkScenarioTest):
     @classmethod
     def setUpClass(cls):
         super(SaharaTest, cls).setUpClass()
+
+        cls.min_ram = 4096
+        cls.max_available_ram = 0
+        for hyper_visor in cls.compute_client.hypervisors.list():
+            if hyper_visor.free_ram_mb >= cls.min_ram:
+                cls.enough_ram = True
+                break
+            else:
+                cls.max_available_ram = hyper_visor.free_ram_mb
+                cls.enough_ram = False
+
         if cls.manager.clients_initialized:
             cls.flavors = []
             cls.node_groups = []
