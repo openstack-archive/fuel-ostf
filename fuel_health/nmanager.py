@@ -695,6 +695,18 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
         self.fail('On host %s port %s is not opened '
                   'more then 10 minutes' % (host, port))
 
+    @classmethod
+    def check_compute_node_ram(cls, min_required_ram):
+        max_available_ram = 0
+        for hyper_visor in cls.compute_client.hypervisors.list():
+            if hyper_visor.free_ram_mb >= min_required_ram:
+                return hyper_visor.free_ram_mb, True
+            else:
+                if hyper_visor.free_ram_mb > max_available_ram:
+                    max_available_ram = hyper_visor.free_ram_mb
+
+        return max_available_ram, False
+
 
 class SanityChecksTest(OfficialClientTest):
     """
