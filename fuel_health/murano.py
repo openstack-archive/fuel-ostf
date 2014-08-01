@@ -41,21 +41,16 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
                 and self.config.compute.libvirt_type != 'vcenter':
             self.skipTest('There are no compute nodes')
 
-        self.max_available_ram = 0
-        for hypervisor in self.compute_client.hypervisors.list():
-            if hypervisor.free_ram_mb >= 2048:
-                self.flavor_reqs = True
-                break
-            else:
-                if hypervisor.free_ram_mb > self.max_available_ram:
-                    self.max_available_ram = hypervisor.free_ram_mb
-                self.flavor_reqs = False
+        self.min_required_ram = 2048
+        self.max_available_ram, self.flavor_reqs = (
+            self.check_compute_node_ram(self.min_required_ram))
 
         self.flavor_name = rand_name("ostf_test_Murano_flavor")
         if self.flavor_reqs:
-            self.flavor = self.compute_client.flavors.create(self.flavor_name,
-                                                             disk=60, ram=2048,
-                                                             vcpus=1)
+            self.flavor = (
+                self.compute_client.flavors.create(self.flavor_name, disk=60,
+                                                   ram=self.min_required_ram,
+                                                   vcpus=1))
 
         self.murano_available = True
         self.endpoint = self.config.murano.api_url + '/v1/'
