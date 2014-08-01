@@ -37,12 +37,11 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
         self.check_clients_state()
 
         if not self.flavor_reqs:
-            self.skipTest("This test requires more resources "
-                          "on one of the compute nodes "
-                          "(>2048MB of free RAM), but you have "
-                          "only {0} MB of free RAM "
-                          "on most appropriate "
-                          "compute node. ".format(self.max_available_ram))
+            self.skipTest("This test requires more resources on one of "
+                          "the compute nodes (> {0} MB of free RAM), but you "
+                          "have only {1} MB on most appropriate compute node."
+                          .format(self.min_required_ram,
+                                  self.max_available_ram))
 
         msg = ("Linux image with Murano "
                "tag isn't available. Need to import this image into "
