@@ -36,6 +36,11 @@ class SaharaTest(nmanager.PlatformServicesBaseClass):
     @classmethod
     def setUpClass(cls):
         super(SaharaTest, cls).setUpClass()
+
+        cls.min_required_ram = 4096
+        cls.max_available_ram, cls.enough_ram = (
+            cls.check_compute_node_ram(cls.min_required_ram))
+
         if cls.manager.clients_initialized:
             cls.sg_rules = []
             cls.flavors = []
