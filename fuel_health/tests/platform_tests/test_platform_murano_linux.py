@@ -115,7 +115,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                     self.environment['id'], session['id'])
 
         fail_msg = "Deployment was not completed correctly. "
-        environment = self.verify(900, self.deploy_check,
+        environment = self.verify(1200, self.deploy_check,
                                   5, fail_msg, 'deployment is going',
                                   self.environment['id'])
 
@@ -124,7 +124,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                     'Check deployments status',
                     self.environment['id'])
 
-        self.verify(600, self.ports_check,
+        self.verify(300, self.ports_check,
                     7, fail_msg,
                     'Check that needed ports are opened',
                     environment, ['23'])
@@ -196,7 +196,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                     self.environment['id'], session['id'])
 
         fail_msg = "Deployment was not completed correctly. "
-        environment = self.verify(900, self.deploy_check,
+        environment = self.verify(1200, self.deploy_check,
                                   5, fail_msg, 'deployment is going',
                                   self.environment['id'])
 
@@ -205,7 +205,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                     'Check deployments status',
                     self.environment['id'])
 
-        self.verify(600, self.ports_check,
+        self.verify(300, self.ports_check,
                     7, fail_msg,
                     'Check that needed ports are opened',
                     environment, ['80'])
