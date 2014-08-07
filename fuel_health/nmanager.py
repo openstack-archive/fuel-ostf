@@ -524,7 +524,9 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 create_kwargs = {'nics': [{'net-id': network[0]}],
                                  'security_groups': security_groups}
             else:
-                self.fail('Private network was not created by default')
+                self.fail("Default private network '{}' isn't present."
+                          "Please verify it is properly created.".
+                          format(self.private_net))
         else:
             create_kwargs = {'security_groups': security_groups}
 
@@ -840,7 +842,9 @@ class SmokeChecksTest(OfficialClientTest):
                 create_kwargs = {'block_device_mapping': bd_map,
                                  'nics': [{'net-id': network[0]}]}
             else:
-                self.fail('Private network was not created by default')
+                self.fail("Default private network '{}' isn't present."
+                          "Please verify it is properly created.".
+                          format(self.private_net))
             server = client.servers.create(
                 name, base_image_id, self.smoke_flavor.id, **create_kwargs)
         else:
@@ -869,7 +873,9 @@ class SmokeChecksTest(OfficialClientTest):
             if network:
                 create_kwargs = {'nics': [{'net-id': network[0]}]}
             else:
-                self.fail('Private network was not created by default')
+                self.fail("Default private network '{}' isn't present."
+                          "Please verify it is properly created.".
+                          format(self.private_net))
             server = client.servers.create(
                 name, base_image_id, self.smoke_flavor.id, **create_kwargs)
         else:
