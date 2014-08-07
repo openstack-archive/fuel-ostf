@@ -95,7 +95,8 @@ class TestImageAction(nmanager.SmokeChecksTest):
                     ],
                 }
             else:
-                self.fail('Private network was not created by default')
+                self.fail("Default private network 'net04' isn't present."
+                          "Please verify it is properly created.")
             server = client.servers.create(name=name,
                                            image=image_id,
                                            flavor=flavor_id, **create_kwargs)
