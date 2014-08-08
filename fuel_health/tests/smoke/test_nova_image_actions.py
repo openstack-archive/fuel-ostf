@@ -80,9 +80,13 @@ class TestImageAction(nmanager.SmokeChecksTest):
         test.call_until_true(is_deletion_complete, 10, 1)
 
     def _boot_image(self, image_id):
+        if not self.smoke_flavor:
+            self.fail("Flavor for tests was not created. Seems that "
+                      "something is wrong with nova services.")
+
+        flavor_id = self.smoke_flavor
         name = rand_name('ost1_test-image')
         client = self.compute_client
-        flavor_id = self.smoke_flavor
         LOG.debug("name:%s, image:%s" % (name, image_id))
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in

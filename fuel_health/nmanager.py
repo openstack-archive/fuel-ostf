@@ -252,6 +252,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
     def _create_nano_flavor(cls):
         name = rand_name('ost1_test-flavor-nano')
         flavorid = rand_int_id(999, 10000)
+        flavor = None
         try:
             flavor = cls.compute_client.flavors.create(
                 name, 64, 1, 1, flavorid)
@@ -510,6 +511,11 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         base_image_id = self.get_image_from_name()
         if not flavor_id:
             flavor = self._create_nano_flavor()
+
+            if not flavor:
+                self.fail("Flavor for tests was not created. Seems that "
+                          "something is wrong with nova services.")
+
             flavor_id = flavor.id
             self.flavors.append(flavor_id)
         if not security_groups:
@@ -831,6 +837,10 @@ class SmokeChecksTest(OfficialClientTest):
             client, display_name=display_name, imageRef=imageRef)
 
     def create_instance_from_volume(self, client, volume):
+        if not self.smoke_flavor:
+            self.fail("Flavor for tests was not created. Seems that "
+                      "something is wrong with nova services.")
+
         name = rand_name('ost1_test-boot-volume-instance')
         base_image_id = self.get_image_from_name()
         bd_map = {'vda': volume.id + ':::0'}
@@ -864,6 +874,10 @@ class SmokeChecksTest(OfficialClientTest):
         return server
 
     def _create_server(self, client):
+        if not self.smoke_flavor:
+            self.fail("Flavor for tests was not created. Seems that "
+                      "something is wrong with nova services.")
+
         name = rand_name('ost1_test-volume-instance')
         base_image_id = self.get_image_from_name()
         if 'neutron' in self.config.network.network_provider:
