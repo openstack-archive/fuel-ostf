@@ -26,7 +26,7 @@ class NetworksTest(nmanager.SanityChecksTest):
     TestClass contains tests check base networking functionality
     """
 
-    def test_list_networks(self):
+    def test_list_networks_nova_network(self):
         """Request list of networks
         Target component: Nova Networking.
 
@@ -34,12 +34,34 @@ class NetworksTest(nmanager.SanityChecksTest):
             1. Request the list of networks.
             2. Confirm that a response is received.
         Duration: 20 s.
+
+        Deployment tags: nova_network
         """
         fail_msg = "Networks list is unavailable. "
         networks = self.verify(20, self._list_networks, 1,
                                fail_msg,
                                "listing networks",
                                self.compute_client)
+
+        self.verify_response_true(networks,
+                                  "Step 2 failed: {msg}".format(msg=fail_msg))
+
+    def test_list_networks_neutron(self):
+        """Request list of networks
+        Target component: Neutron.
+
+        Scenario:
+            1. Request the list of networks.
+            2. Confirm that a response is received.
+        Duration: 20 s.
+
+        Deployment tags: neutron, 6.0
+        """
+        fail_msg = "Networks list is unavailable. "
+        networks = self.verify(20, self._list_networks, 1,
+                               fail_msg,
+                               "listing networks",
+                               self.neutron_client)
 
         self.verify_response_true(networks,
                                   "Step 2 failed: {msg}".format(msg=fail_msg))
