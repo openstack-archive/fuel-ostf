@@ -54,7 +54,6 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
                           key_filename=cls.controller_key).exec_command(cmd)
             except Exception:
                 LOG.debug(traceback.format_exc())
-                pass
 
     def test_mysql_replication(self):
         """Check data replication over mysql

@@ -500,7 +500,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         except Exception as exc:
             cls.error_msg.append(exc)
             LOG.debug(traceback.format_exc())
-            pass
 
     def _list_networks(self):
         nets = self.compute_client.networks.list()
@@ -578,7 +577,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 except Exception as exc:
                     cls.error_msg.append(exc)
                     LOG.debug(traceback.format_exc())
-                    pass
 
     def _ping_ip_address(self, ip_address, timeout, retries):
         def ping():
