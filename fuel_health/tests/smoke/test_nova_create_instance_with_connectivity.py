@@ -179,6 +179,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             9. Delete server.
         Duration: 300 s.
 
+        Deployment tags: nova_network
         """
         self.check_image_exists()
         if not self.security_groups:
