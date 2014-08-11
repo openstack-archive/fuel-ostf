@@ -41,6 +41,10 @@ try:
     import ceilometerclient.v2.client
 except:
     LOG.warning('Ceilometer client could not be imported.')
+try:
+    import neutronclient.neutron.client
+except:
+    LOG.warning('Neutron client could not be imported.')
 
 import cinderclient.client
 import keystoneclient.v2_0.client
@@ -92,6 +96,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.murano_client = self._get_murano_client()
             self.sahara_client = self._get_sahara_client()
             self.ceilometer_client = self._get_ceilometer_client()
+            self.neutron_client = self._get_neutron_client()
             self.client_attr_names = [
                 'compute_client',
                 'identity_client',
@@ -99,7 +104,8 @@ class OfficialClientManager(fuel_health.manager.Manager):
                 'heat_client',
                 'murano_client',
                 'sahara_client',
-                'ceilometer_client'
+                'ceilometer_client',
+                'neutron_client'
             ]
 
     def _get_compute_client(self, username=None, password=None,
@@ -243,6 +249,21 @@ class OfficialClientManager(fuel_health.manager.Manager):
 
         return ceilometerclient.v2.Client(endpoint=endpoint,
                                           token=lambda: keystone.auth_token)
+
+    def _get_neutron_client(self, version='2.0'):
+        token = self._get_identity_client().auth_token
+
+        try:
+            endpoint = keystone.service_catalog.url_for(
+                service_type='network',
+                endpoint_type='publicURL')
+        except keystoneclient.exceptions.EndpointNotFound:
+            LOG.warning('Can not initialize neutron client')
+            return None
+
+        return neutronclient.neutron.client.Client(version,
+                                                   token=token,
+                                                   endpoint_url=endpoint)
 
 
 class OfficialClientTest(fuel_health.test.TestCase):
@@ -506,7 +527,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         return nets
 
     def _create_server(self, client, name, security_groups=None,
-                       flavor_id=None):
+                       flavor_id=None, net_id=None):
         base_image_id = self.get_image_from_name()
         if not flavor_id:
             flavor = self._create_nano_flavor()
@@ -516,9 +537,12 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             security_groups = [self._create_security_group(
                 self.compute_client).name]
         if 'neutron' in self.config.network.network_provider:
-            network = [net.id for net in
-                       self.compute_client.networks.list()
-                       if net.label == self.private_net]
+            if net_id:
+                network = [net_id]
+            else:
+                network = [net.id for net in
+                           self.compute_client.networks.list()
+                           if net.label == self.private_net]
 
             if network:
                 create_kwargs = {'nics': [{'net-id': network[0]}],
