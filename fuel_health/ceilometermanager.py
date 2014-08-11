@@ -88,9 +88,7 @@ class CeilometerBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         This method provides getting state
         """
         alarm_state_resp = self.get_state(alarm_id)
-        if alarm_state_resp == state:
-            pass
-        else:
+        if not alarm_state_resp == state:
             self.fail('State was not setted')
 
     def wait_for_instance_status(self, server, status):
