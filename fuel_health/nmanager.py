@@ -378,7 +378,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def setUpClass(cls):
         super(NovaNetworkScenarioTest, cls).setUpClass()
         if cls.manager.clients_initialized:
-            cls.host = cls.config.compute.controller_nodes
+            cls.host = cls.host = cls.config.compute.online_controllers
             cls.usr = cls.config.compute.controller_node_ssh_user
             cls.pwd = cls.config.compute.controller_node_ssh_password
             cls.key = cls.config.compute.path_to_private_key
