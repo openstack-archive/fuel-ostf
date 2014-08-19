@@ -42,7 +42,8 @@ class RabbitClient(object):
     def list_nodes(self):
         output = self.ssh.exec_command("rabbitmqctl cluster_status")
         substring_ind = output.find('{running_nodes')
-        result_str = output[substring_ind:]
+        sub_end_ind = output.find('cluster_name')
+        result_str = output[substring_ind: sub_end_ind]
         num_node = result_str.count("rabbit@")
         return num_node
 
