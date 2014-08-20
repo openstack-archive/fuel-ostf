@@ -145,6 +145,11 @@ def _get_cluster_depl_tags(cluster_id, token=None):
     request_url += '/' + 'attributes'
     response = REQ_SES.get(request_url).json()
 
+    public_assignment = response['editable'].get('public_network_assignment')
+    public_on_all_nodes = not public_assignment or \
+        public_assignment['assign_to_all_nodes']['value']
+    deployment_tags.add(public_on_all_nodes)
+
     additional_components = \
         response['editable'].get('additional_components', dict())
 

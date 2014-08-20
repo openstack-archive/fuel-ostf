@@ -89,7 +89,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             1. Execute ping 8.8.8.8 command from a compute node.
         Duration: 100 s.
 
-        Deployment tags: qemu | kvm
+        Deployment tags: qemu | kvm, public_on_all_nodes | nova_network
         """
         if not self.computes:
             self.skipTest('There are no compute nodes')
@@ -118,7 +118,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             4. Check google.com host was successfully resolved.
         Duration: 120 s.
 
-        Deployment tags: qemu | kvm
+        Deployment tags: qemu | kvm, public_on_all_nodes | nova_network
         """
         if not self.computes:
             self.skipTest('There are no computes nodes')
