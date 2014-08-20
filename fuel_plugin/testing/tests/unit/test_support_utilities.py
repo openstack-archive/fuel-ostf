@@ -14,17 +14,21 @@
 
 import unittest
 
+from fuel_plugin.ostf_adapter import config
 from fuel_plugin.ostf_adapter import mixins
 
 
 class TestDeplTagsGetter(unittest.TestCase):
+
+    def setUp(self):
+        config.init_config([])
 
     def test_get_cluster_depl_tags(self):
         expected = {
             'cluster_id': 3,
             'depl_tags': set(
                 ['ha', 'rhel', 'additional_components',
-                 'murano', 'nova_network']
+                 'murano', 'nova_network', 'public_on_all_nodes']
             )
         }
 

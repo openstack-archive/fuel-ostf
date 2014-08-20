@@ -38,7 +38,8 @@ class BaseWSGITest(unittest2.TestCase):
         cls.expected = {
             'cluster': {
                 'id': 1,
-                'deployment_tags': set(['ha', 'rhel', 'nova_network'])
+                'deployment_tags': set(['ha', 'rhel', 'nova_network',
+                                        'public_on_all_nodes'])
             },
             'test_sets': ['general_test',
                           'stopped_test', 'ha_deployment_test',

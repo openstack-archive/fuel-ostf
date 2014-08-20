@@ -26,7 +26,8 @@ cluster_fixture = {
         },
         'cluster_attributes': {
             'editable': {
-                'additional_components': {}
+                'additional_components': {},
+                'common': {}
             }
         }
     },
@@ -40,7 +41,8 @@ cluster_fixture = {
         },
         'cluster_attributes': {
             'editable': {
-                'additional_components': {}
+                'additional_components': {},
+                'common': {}
             }
         }
     },
@@ -61,7 +63,8 @@ cluster_fixture = {
                     'sahara': {
                         'value': False
                     }
-                }
+                },
+                'common': {}
             }
         }
     },
@@ -75,7 +78,8 @@ cluster_fixture = {
         },
         'cluster_attributes': {
             'editable': {
-                'additional_components': {}
+                'additional_components': {},
+                'common': {}
             }
         }
     },
@@ -89,7 +93,8 @@ cluster_fixture = {
         },
         'cluster_attributes': {
             'editable': {
-                'additional_components': {}
+                'additional_components': {},
+                'common': {}
             }
         }
     }
