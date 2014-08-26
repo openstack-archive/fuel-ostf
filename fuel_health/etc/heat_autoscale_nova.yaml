@@ -45,7 +45,7 @@ resources:
       MetricName: CPUUtilization
       Namespace: system/linux
       Statistic: Average
-      Period: '20'
+      Period: '60'
       EvaluationPeriods: '1'
       Threshold: '50'
       AlarmActions:
@@ -61,7 +61,7 @@ resources:
       MetricName: CPUUtilization
       Namespace: system/linux
       Statistic: Average
-      Period: '20'
+      Period: '60'
       EvaluationPeriods: '1'
       Threshold: '30'
       AlarmActions:

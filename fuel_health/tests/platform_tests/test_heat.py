@@ -234,7 +234,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         flavor = self.verify(10, self._create_flavors, 2,
                              "Flavor can not be created.",
                              "flavor creation",
-                             self.compute_client, 382, 12)
+                             self.compute_client, 512, 12)
 
         keypair = self.verify(10, self._create_keypair, 3,
                               'Keypair can not be created.',
