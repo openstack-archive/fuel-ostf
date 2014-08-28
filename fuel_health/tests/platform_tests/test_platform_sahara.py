@@ -36,6 +36,17 @@ class PlatformSaharaTests(sahara.SaharaTest):
             LOG.debug(msg)
             self.skipTest(msg)
 
+        if not self.get_tcp_rules_for_default_security_group():
+            LOG.debug('There are no "TCP" rules for the default security '
+                      'group. At a minimum rule for port 22 (SSH) must be '
+                      'added to the security group.')
+            self.skipTest('There are no "TCP" rules for the default security '
+                          'group. Please, refer to the Mirantis OpenStack '
+                          'documentation to find out which "TCP" rules should '
+                          'be added to the security group '
+                          '(http://docs.mirantis.com/openstack/fuel/fuel-5.0/'
+                          'user-guide.html#platform-tests-description).')
+
     def test_platform_sahara(self):
         """Sahara tests to create, list, start, checks and delete cluster
         Target component: Sahara

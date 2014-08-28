@@ -74,6 +74,18 @@ class SaharaTest(nmanager.PlatformServicesBaseClass):
         self.check_clients_state()
         self._create_sahara_flavors(self.compute_client)
 
+    def get_tcp_rules_for_default_security_group(self):
+        # There is always default security group. Sahara always uses this
+        # security group.
+        security_groups = self.compute_client.security_groups.list()
+        for security_group in security_groups:
+            if security_group.name == 'default':
+                rules = []
+                for rule in security_group.rules:
+                    if rule['ip_protocol'] == 'tcp':
+                        rules.append(rule)
+                return rules
+
     def _test_image(self):
         LOG.debug('Testing image for plugin "%s" (Hadoop version %s)'
                   % (self.plugin, self.plugin_version))
