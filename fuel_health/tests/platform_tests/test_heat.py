@@ -219,6 +219,14 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             17. Wait for the stack to be deleted.
         Duration: 2600 s.
         """
+
+        msg = ("Autoscaling with native cloudwatch mechanism does "
+               "not work in Heat when used multi-engine architecture.")
+
+        if 'ha' in self.config.mode:
+            LOG.debug(msg)
+            self.skipTest(msg)
+
         image_name = "F17-x86_64-cfntools"
         msg = ("Image with cfntools package wasn't "
                "imported into Glance, please check "
@@ -315,23 +323,23 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     "loading VM CPU",
                     vm_connection)
 
-        self.verify(300,
+        self.verify(500,
                     self._wait_for_autoscaling, 12,
                     "Stack failed to launch the 2nd instance "
                     "per autoscaling alarm.",
                     "launching the new instance per autoscaling alarm",
-                    len(self.instance) + 1, 300, 10, reduced_stack_name)
+                    len(self.instance) + 1, 500, 10, reduced_stack_name)
 
         self.verify(180, self._release_vm_cpu, 13,
                     "Cannot kill the process on VM to turn CPU load off.",
                     "turning off VM CPU load",
                     vm_connection)
 
-        self.verify(300, self._wait_for_autoscaling, 14,
+        self.verify(500, self._wait_for_autoscaling, 14,
                     "Stack failed to terminate the 2nd instance "
                     "per autoscaling alarm.",
                     "terminating the 2nd instance per autoscaling alarm",
-                    len(self.instance), 300, 10, reduced_stack_name)
+                    len(self.instance), 500, 10, reduced_stack_name)
 
         # delete private key file
         self.verify(10, self._delete_key_file, 15,
