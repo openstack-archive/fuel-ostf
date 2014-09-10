@@ -84,8 +84,6 @@ class TestTestRunsController(base.BaseWSGITest):
     def setUp(self):
         super(TestTestRunsController, self).setUp()
 
-        controllers.TestsetsController().get(self.expected['cluster']['id'])
-
         self.request_mock.body = json.dumps([
             {
                 'testset': 'ha_deployment_test',
