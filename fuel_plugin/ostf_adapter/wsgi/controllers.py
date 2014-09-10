@@ -130,6 +130,9 @@ class TestrunsController(BaseRestController):
         for test_run in test_runs:
             test_set = test_run['testset']
             metadata = test_run['metadata']
+            mixins.discovery_check(request.session,
+                                   metadata['cluster_id'],
+                                   request.token)
             tests = test_run.get('tests', [])
 
             test_set = models.TestSet.get_test_set(
