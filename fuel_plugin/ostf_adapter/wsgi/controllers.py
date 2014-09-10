@@ -17,7 +17,7 @@ import logging
 
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
-from pecan import rest, expose, request
+from pecan import rest, expose, request, abort
 
 from oslo.config import cfg
 
@@ -125,8 +125,24 @@ class TestrunsController(BaseRestController):
         if 'objects' in test_runs:
             test_runs = test_runs['objects']
 
-        res = []
+        # Discover tests for all clusters in request
+        clusters_ids = []
+        nedded_testsets = set()
+        for test_run in test_runs:
+            cluster_id = test_run['metadata']['cluster_id']
+            if cluster_id not in clusters_ids:
+                clusters_ids.append(cluster_id)
+                mixins.discovery_check(request.session,
+                                       cluster_id,
+                                       request.token)
+            nedded_testsets.add(test_run['testset'])
+        # Validate testsets from request
+        test_sets = set([testset.id for testset in request.
+                        session.query(models.TestSet).all()])
+        if nedded_testsets - test_sets:
+            abort(400)
 
+        res = []
         for test_run in test_runs:
             test_set = test_run['testset']
             metadata = test_run['metadata']
