@@ -313,25 +313,25 @@ class OfficialClientTest(fuel_health.test.TestCase):
             LOG.debug("Unable to initialize Keystone client: {trace}".format(
                 trace=self.manager.traceback))
             if self.manager.keystone_error_message:
-                self.skipTest(self.manager.keystone_error_message)
+                self.fail(self.manager.keystone_error_message)
             else:
-                self.skipTest("Keystone client is not available. Please, refer"
-                              " to OpenStack logs to fix this problem")
+                self.fail("Keystone client is not available. Please, refer"
+                          " to OpenStack logs to fix this problem")
 
     def check_image_exists(self):
         try:
             self.get_image_from_name()
         except exceptions.ImageFault as exc:
             LOG.debug(exc)
-            self.skipTest("{image} image not found. Please, download "
-                          "http://download.cirros-cloud.net/0.3.1/"
-                          "cirros-0.3.1-x86_64-disk.img image and "
-                          "register it in Glance with name '{image}' as "
-                          "'admin' tenant."
-                          .format(
-                              image=self.manager.config.compute.image_name
-                          )
-                          )
+            self.fail("{image} image not found. Please, download "
+                      "http://download.cirros-cloud.net/0.3.1/"
+                      "cirros-0.3.1-x86_64-disk.img image and "
+                      "register it in Glance with name '{image}' as "
+                      "'admin' tenant."
+                      .format(
+                          image=self.manager.config.compute.image_name
+                      )
+                      )
 
     @classmethod
     def _clean_flavors(cls):
