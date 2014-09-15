@@ -176,7 +176,11 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest,
             connection_string + " cat /dev/urandom | gzip -9 > /dev/null &")[0]
 
     def _release_vm_cpu(self, connection_string):
-        return self._run_ssh_cmd(connection_string + " pkill cat")[0]
+        pid = self._run_ssh_cmd(connection_string +
+                                " ps -ef | grep \"cat /dev/urandom\" "
+                                "| grep -v grep | awk '{print $2}'")[0]
+        return self._run_ssh_cmd(connection_string +
+                                 " kill -9 %s" % pid.strip())[0]
 
     def _get_net_uuid(self):
         if 'neutron' in self.config.network.network_provider:
