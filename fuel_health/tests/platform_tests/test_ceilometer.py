@@ -95,11 +95,10 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         Target component: Ceilometer
 
         Scenario:
-        1. Getting samples for existing resource (the default image).
-        2. Create sample for existing resource (the default image).
+        1. Request samples list for image resource.
+        2. Create new sample for image resource.
         3. Check that created sample has the expected resource.
-        4. Getting samples after create sample.
-        5. Comparison sample lists before and after create sample.
+        4. Get samples and compare sample lists before and after create sample.
         Duration: 40 s.
         Deployment tags: Ceilometer
         """
@@ -108,8 +107,8 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         image_id = self.get_image_from_name()
         query = [{'field': 'resource', 'op': 'eq', 'value': image_id}]
 
-        fail_msg = 'Getting samples for update image is failed.'
-        msg = 'Getting samples for update image is successful.'
+        fail_msg = 'Get samples for update image is failed.'
+        msg = 'Get samples for update image is successful.'
 
         list_before_create_sample = self.verify(
             60, self.ceilometer_client.samples.list, 1,
@@ -136,23 +135,15 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
             msg=fail_msg,
             failed_step=3)
 
-        fail_msg = 'Getting samples after create sample is failed.'
-        msg = 'Getting samples after create sample is successful.'
+        fail_msg = """List of samples after creating test sample isn't
+        greater than initial list of samples"""
+        msg = 'New test sample was added to the list of samples'
 
-        list_after_create_sample = self.verify(
-            60, self.ceilometer_client.samples.list, 4,
+        self.verify(
+            20, self.wait_samples_count, 4,
             fail_msg, msg,
-            self.glance_notifications[0], q=query)
-
-        fail_msg = 'Samples list after create sample not greater than ' \
-                   'samples list before create sample.'
-        msg = 'Samples list after create sample greater than samples list' \
-              ' before create sample.'
-
-        self.verify(1, self.assertGreater, 5,
-                    fail_msg, msg,
-                    len(list_after_create_sample),
-                    len(list_before_create_sample))
+            self.glance_notifications[0], query,
+            len(list_before_create_sample))
 
     def test_check_volume_notifications(self):
         """Ceilometer test to check get Cinder notifications.
