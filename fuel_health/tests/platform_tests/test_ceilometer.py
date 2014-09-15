@@ -98,8 +98,8 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         1. Getting samples for existing resource (the default image).
         2. Create sample for existing resource (the default image).
         3. Check that created sample has the expected resource.
-        4. Getting samples after create sample.
-        5. Comparison sample lists before and after create sample.
+        4. Getting samples and comparison sample lists
+           before and after create sample.S
         Duration: 40 s.
         Deployment tags: Ceilometer
         """
@@ -136,23 +136,15 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
             msg=fail_msg,
             failed_step=3)
 
-        fail_msg = 'Getting samples after create sample is failed.'
-        msg = 'Getting samples after create sample is successful.'
+        fail_msg = 'List of samples after creating test sample isn\'t ' \
+                   'greater than initial list of samples'
+        msg = 'New test sample was added to the list of samples'
 
-        list_after_create_sample = self.verify(
-            60, self.ceilometer_client.samples.list, 4,
+        self.verify(
+            20, self.wait_samples_count, 4,
             fail_msg, msg,
-            self.glance_notifications[0], q=query)
-
-        fail_msg = 'Samples list after create sample not greater than ' \
-                   'samples list before create sample.'
-        msg = 'Samples list after create sample greater than samples list' \
-              ' before create sample.'
-
-        self.verify(1, self.assertGreater, 5,
-                    fail_msg, msg,
-                    len(list_after_create_sample),
-                    len(list_before_create_sample))
+            self.glance_notifications[0], query,
+            len(list_before_create_sample))
 
     def test_check_volume_notifications(self):
         """Ceilometer test to check get Cinder notifications.
