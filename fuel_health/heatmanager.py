@@ -28,15 +28,14 @@ import fuel_health.test
 LOG = logging.getLogger(__name__)
 
 
-class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest,
-                   fuel_health.nmanager.SmokeChecksTest):
+class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
     """
     Base class for Heat openstack sanity and smoke tests.
     """
 
     @classmethod
     def setUpClass(cls):
-        fuel_health.nmanager.NovaNetworkScenarioTest.setUpClass()
+        super(HeatBaseTest, cls).setUpClass()
         cls.testvm_flavor = None
         cls.flavors = []
         if cls.manager.clients_initialized:
@@ -47,17 +46,19 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest,
 
     @classmethod
     def tearDownClass(cls):
-        fuel_health.nmanager.NovaNetworkScenarioTest.tearDownClass()
         LOG.debug("Deleting flavors created by Heat tests.")
         cls._clean_flavors()
+        super(HeatBaseTest, cls).tearDownClass()
 
     def setUp(self):
         super(HeatBaseTest, self).setUp()
         self.check_clients_state()
         if not self.testvm_flavor:
             LOG.debug("Creating a flavor for Heat tests.")
-            self.testvm_flavor = self._create_flavors(self.compute_client,
-                                                      64, 1)
+            flavor_name = rand_name('ostf-heat-flavor-')
+            self.testvm_flavor = (
+                self.compute_client.flavors.create(flavor_name,
+                                                   disk=1, ram=64, vcpus=1))
             self.flavors.append(self.testvm_flavor)
 
     @staticmethod
