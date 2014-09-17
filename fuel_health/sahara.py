@@ -19,6 +19,8 @@ import logging
 import time
 import traceback
 
+from novaclient import exceptions as nova_exceptions
+
 from fuel_health.common.utils.data_utils import rand_name
 import fuel_health.nmanager as nmanager
 
@@ -35,6 +37,7 @@ class SaharaTest(nmanager.PlatformServicesBaseClass):
     def setUpClass(cls):
         super(SaharaTest, cls).setUpClass()
         if cls.manager.clients_initialized:
+            cls.sg_rules = []
             cls.flavors = []
             cls.node_groups = []
             cls.cluster_templates = []
@@ -68,10 +71,12 @@ class SaharaTest(nmanager.PlatformServicesBaseClass):
             cls.TT_PORT = 50060
             cls.DN_PORT = 50075
             cls.SEC_NN_PORT = 50090
+            cls.allowed_ports = [22, 50030, 50060, 50070, 50075]
 
     def setUp(self):
         super(SaharaTest, self).setUp()
         self.check_clients_state()
+        self._add_rules_to_default_security_group()
         self._create_sahara_flavors(self.compute_client)
 
     def _test_image(self):
@@ -101,6 +106,25 @@ class SaharaTest(nmanager.PlatformServicesBaseClass):
                 return image
         LOG.debug('Image with tags "%s" and "%s" not found'
                   % (plugin_name, plugin_version))
+
+    @classmethod
+    def _add_rules_to_default_security_group(cls):
+        # There is always default security group. Sahara always uses this
+        # security group.
+        for security_group in cls.compute_client.security_groups.list():
+            if security_group.name == 'default':
+                for port in cls.allowed_ports:
+                    try:
+                        rule = cls.compute_client.security_group_rules.create(
+                            parent_group_id=security_group.id, from_port=port,
+                            to_port=port, cidr='0.0.0.0/0', ip_protocol='tcp')
+                    except nova_exceptions.BadRequest as exc:
+                        if 'rule already exists' not in exc.message:
+                            cls.fail('Failed to create rule for port %d '
+                                     'for the default security group.' % port)
+                    else:
+                        cls.sg_rules.append(rule)
+                return
 
     @classmethod
     def _create_sahara_flavors(cls, client):
@@ -538,11 +562,15 @@ class SaharaTest(nmanager.PlatformServicesBaseClass):
 
     @classmethod
     def _list_node_group_template(cls):
-        return(cls.sahara_client.node_group_templates.list())
+        return cls.sahara_client.node_group_templates.list()
 
     @classmethod
     def _list_cluster_templates(cls):
-        return(cls.sahara_client.cluster_templates.list())
+        return cls.sahara_client.cluster_templates.list()
+
+    @classmethod
+    def _clean_security_group_rules(cls):
+        cls._clean(cls.sg_rules, cls.compute_client.security_group_rules)
 
     @classmethod
     def _clean_flavors(cls):
@@ -582,6 +610,7 @@ class SaharaTest(nmanager.PlatformServicesBaseClass):
             cls._clean_clusters()
             cls._clean_cluster_templates()
             cls._clean_node_groups_templates()
+            cls._clean_security_group_rules()
             cls._clean_flavors()
             cls._clean_keys()
         super(SaharaTest, cls).tearDownClass()
