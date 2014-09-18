@@ -44,15 +44,6 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                           "on most appropriate "
                           "compute node. ".format(self.max_available_ram))
 
-        msg = ("Linux image with Murano "
-               "tag isn't available. Need to import this image into "
-               "glance and mark with Murano metadata tag. Please refer to"
-               " the Mirantis Open Stack and Murano user documentation. ")
-        self.image = self.find_murano_image('linux')
-        if not self.image:
-            LOG.debug(msg)
-            self.skipTest(msg)
-
     def test_deploy_telnet_service(self):
         """Check that user can deploy Telnet service in Murano environment
         Target component: Murano
