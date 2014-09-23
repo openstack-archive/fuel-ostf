@@ -51,6 +51,15 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
                     self.max_available_ram = hypervisor.free_ram_mb
                 self.flavor_reqs = False
 
+        msg = ("Linux image with Murano "
+               "tag isn't available. Need to import this image into "
+               "glance and mark with Murano metadata tag. Please refer to"
+               " the Mirantis Open Stack and Murano user documentation. ")
+        self.image = self.find_murano_image('linux')
+        if not self.image:
+            LOG.debug(msg)
+            self.skipTest(msg)
+
         self.flavor_name = rand_name("ostf_test_Murano_flavor")
         if self.flavor_reqs:
             self.flavor = self.compute_client.flavors.create(self.flavor_name,
