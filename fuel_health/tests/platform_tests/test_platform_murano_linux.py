@@ -36,12 +36,37 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
         super(MuranoDeployLinuxServicesTests, self).setUp()
         self.check_clients_state()
 
-        if not self.flavor_reqs:
+        msg = ("Linux image with Murano "
+               "tag isn't available. Need to import this image into "
+               "glance and mark with Murano metadata tag. Please refer to"
+               " the Mirantis Open Stack and Murano user documentation. ")
+        self.image = self.find_murano_image('linux')
+        if not self.image:
+            LOG.debug(msg)
+            self.skipTest(msg)
+
+        self.flavor_name = rand_name("ostf_test_Murano_flavor")
+        if self.flavor_reqs:
+            try:
+                self.flavor = self.compute_client.flavors.create(
+                    self.flavor_name, disk=60, ram=self.min_required_ram,
+                    vcpus=1)
+            except Exception:
+                self.fail('Failed to create flavor "%s" for the test. Please, '
+                          'refer to the Mirantis OpenStack documentation and '
+                          'OpenStack Health Check logs.' % self.flavor_name)
+        else:
             self.skipTest("This test requires more resources on one of "
                           "the compute nodes (> {0} MB of free RAM), but you "
                           "have only {1} MB on most appropriate compute node."
                           .format(self.min_required_ram,
                                   self.max_available_ram))
+
+    def tearDown(self):
+        if self.flavor_reqs:
+            self.compute_client.flavors.delete(self.flavor.id)
+
+        super(MuranoDeployLinuxServicesTests, self).tearDown()
 
     def test_deploy_telnet_service(self):
         """Check that user can deploy Telnet service in Murano environment

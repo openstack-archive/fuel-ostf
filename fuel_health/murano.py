@@ -45,26 +45,6 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         self.max_available_ram, self.flavor_reqs = (
             self.check_compute_node_ram(self.min_required_ram))
 
-        msg = ("Linux image with Murano "
-               "tag isn't available. Need to import this image into "
-               "glance and mark with Murano metadata tag. Please refer to"
-               " the Mirantis Open Stack and Murano user documentation. ")
-        self.image = self.find_murano_image('linux')
-        if not self.image:
-            LOG.debug(msg)
-            self.skipTest(msg)
-
-        self.flavor_name = rand_name("ostf_test_Murano_flavor")
-        if self.flavor_reqs:
-            try:
-                self.flavor = self.compute_client.flavors.create(
-                    self.flavor_name, disk=60, ram=self.min_required_ram,
-                    vcpus=1)
-            except Exception:
-                self.fail('Failed to create flavor "%s" for the test. Please, '
-                          'refer to the Mirantis OpenStack documentation and '
-                          'OpenStack Health Check logs.' % self.flavor_name)
-
         self.murano_available = True
         self.endpoint = self.config.murano.api_url + '/v1/'
         self.headers = {'X-Auth-Token': self.murano_client.auth_token,
@@ -81,8 +61,6 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
             after the Murano OSTF tests.
         """
 
-        if self.flavor_reqs:
-            self.compute_client.flavors.delete(self.flavor.id)
         if self.murano_available:
             for env in self.list_environments()["environments"]:
                 if self.env_name in env["name"]:
