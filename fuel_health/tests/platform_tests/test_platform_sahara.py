@@ -35,61 +35,49 @@ class PlatformSaharaTests(sahara.SaharaTest):
                           .format(self.min_required_ram,
                                   self.max_available_ram))
 
-        msg = ("Sahara image with tags wasn't imported into Glance, "
-               "please check "
-               "http://docs.mirantis.com/openstack/fuel/fuel-5.0/"
-               "user-guide.html#platform-tests-description")
-
-        if not self._test_image():
+        msg = ('Sahara image was not properly registered or '
+               'was not registered at all. Please refer to the Mirantis '
+               'OpenStack documentation (http://docs.mirantis.com/openstack/'
+               'fuel/fuel-5.0/user-guide.html#platform-tests-description)')
+        if not self.check_image():
             LOG.debug(msg)
             self.skipTest(msg)
 
     def test_platform_sahara(self):
-        """Sahara tests to create, list, start, checks and delete cluster
+        """Sahara test for launching a simple cluster by Vanilla plugin 1.2.1
         Target component: Sahara
 
         Scenario:
             1. Send request to create node group template
             2. Send request to create cluster template
-            3. Request the list of node group templates
-            4. Request the list of cluster templates
-            5. Send request to launch cluster
-            6. Send request to delete cluster
-            7. Send request to delete cluster template
-            8. Send request to delete node group templates
+            3. Send request to launch cluster
+            4. Send request to delete cluster
+            5. Send request to delete cluster template
+            6. Send request to delete node group template
         Duration:  100 m.
 
         Deployment tags: Sahara
         """
 
-        fail_msg = 'Fail create node group template.'
-        self.verify(40, self.create_node_group_template_tt_dn, 1, fail_msg,
-                    "Create node group templates")
+        fail_msg = 'Failed to create node group template.'
+        self.verify(40, self.create_node_group_template_tt_dn,
+                    1, fail_msg, 'Create node group template')
 
-        fail_msg = 'Fail create cluster template.'
+        fail_msg = 'Failed to create cluster template.'
         cluster_template = self.verify(40, self.create_tiny_cluster_template,
-                                       2, fail_msg, "Create cluster templates")
+                                       2, fail_msg, 'Create cluster template')
 
-        fail_msg = 'Fail list group templates.'
-        self.verify(40, self._list_node_group_template, 3, fail_msg,
-                    "List group templates")
+        fail_msg = 'Failed to launch cluster.'
+        self.verify(5400, self.create_sahara_cluster,
+                    3, fail_msg, 'Launch cluster', cluster_template.id)
 
-        fail_msg = 'Fail list cluster templates.'
-        self.verify(40, self._list_cluster_templates, 4, fail_msg,
-                    "List cluster templates")
+        fail_msg = 'Failed to delete cluster.'
+        self.verify(40, self._clean_clusters, 4, fail_msg, 'Delete cluster')
 
-        fail_msg = 'Fail launch cluster.'
-        self.verify(5400, self.create_sahara_cluster, 5, fail_msg,
-                    "Launch cluster", cluster_template.id)
+        fail_msg = 'Failed to delete cluster template.'
+        self.verify(40, self._clean_cluster_templates,
+                    5, fail_msg, 'Delete cluster template')
 
-        fail_msg = 'Fail delete cluster.'
-        self.verify(40, self._clean_clusters, 6, fail_msg,
-                    "Delete cluster")
-
-        fail_msg = 'Fail delete cluster template.'
-        self.verify(40, self._clean_cluster_templates, 7, fail_msg,
-                    "Delete cluster template")
-
-        fail_msg = 'Fail delete node group  templates.'
-        self.verify(40, self._clean_node_groups_templates, 8, fail_msg,
-                    "Delete node group templates")
+        fail_msg = 'Failed to delete node group template.'
+        self.verify(40, self._clean_node_groups_templates,
+                    6, fail_msg, 'Delete node group template')
