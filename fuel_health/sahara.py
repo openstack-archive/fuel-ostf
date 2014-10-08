@@ -88,9 +88,8 @@ class SaharaTest(nmanager.PlatformServicesBaseClass):
         self._add_rules_to_default_security_group()
         self._create_sahara_flavors(self.compute_client)
 
-    def _test_image(self):
-        LOG.debug('Testing image for plugin "%s" (Hadoop version %s)'
-                  % (self.plugin, self.plugin_version))
+    def check_image(self):
+        LOG.debug('Checking image for Sahara')
         image = self._find_image_by_tags(self.plugin, self.plugin_version)
         if (image is not None) and (
             '_sahara_username' in image.metadata) and (
