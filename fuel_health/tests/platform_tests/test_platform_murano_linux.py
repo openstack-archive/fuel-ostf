@@ -39,7 +39,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
         msg = ("Linux image with Murano "
                "tag isn't available. Need to import this image into "
                "glance and mark with Murano metadata tag. Please refer to"
-               " the Mirantis Open Stack and Murano user documentation. ")
+               " the Mirantis OpenStack and Murano user documentation. ")
         self.image = self.find_murano_image('linux')
         if not self.image:
             LOG.debug(msg)
