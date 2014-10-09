@@ -15,6 +15,7 @@
 import logging
 
 from fuel_health import heatmanager
+from fuel_health.common.utils import data_utils
 
 
 LOG = logging.getLogger(__name__)
@@ -239,10 +240,11 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             LOG.debug(msg)
             self.skipTest(msg)
 
-        flavor = self.verify(10, self._create_flavors, 2,
-                             "Flavor can not be created.",
-                             "flavor creation",
-                             self.compute_client, 512, 12)
+        flavor_name = data_utils.rand_name('ostf-heat-flavor-')
+        flavor = self.verify(10, self.compute_client.flavors.create, 2,
+                             "Flavor can not be created.", "flavor creation",
+                             flavor_name, 512, 1, 12)
+        self.flavors.append(flavor)
 
         keypair = self.verify(10, self._create_keypair, 3,
                               'Keypair can not be created.',
