@@ -167,6 +167,16 @@ class CeilometerBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         for sample in notification_list:
             self.wait_for_sample_of_metric(sample, query)
 
+    def wait_samples_count(self, sample, query, count):
+
+        def check_count():
+            samples = self.ceilometer_client.samples.list(sample, q=query)
+            return len(samples) > count
+
+        if not fuel_health.test.call_until_true(check_count, 60, 1):
+            self.fail('Count of samples list isn\'t '
+                      'greater than expected value')
+
     @classmethod
     def _clean(cls, items, client):
         if items:
