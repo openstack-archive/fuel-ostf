@@ -20,6 +20,7 @@ import time
 import traceback
 
 from novaclient import exceptions as nova_exceptions
+from saharaclient.api import base as sab
 
 from fuel_health.common.utils.data_utils import rand_name
 import fuel_health.nmanager as nmanager
@@ -67,6 +68,7 @@ class SaharaTest(nmanager.PlatformServicesBaseClass):
             cls.HDP_HADOOP_USER = 'hdfs'
             cls.HDP_NODE_USERNAME = 'root'
             cls.CLUSTER_CREATION_TIMEOUT = '90'
+            cls.DELETE_TIMEOUT = 600  # in seconds
             cls.USER_KEYPAIR_ID = 'ostf_test-sahara-'
             cls.PLUGIN_NAME = 'vanilla'
             cls.CLUSTER_NAME = 'ostf-cluster-'
@@ -610,10 +612,26 @@ class SaharaTest(nmanager.PlatformServicesBaseClass):
             for item in items[:]:
                 try:
                     client.delete(item)
+                    cls._delete_timeout(client, item)
                     items.remove(item)
                 except RuntimeError as exc:
                     cls.error_msg.append(exc)
                     LOG.debug(traceback.format_exc())
+
+    @classmethod
+    def _delete_timeout(cls, client, item):
+        start = time.time()
+        while time.time() - start < cls.DELETE_TIMEOUT:
+            try:
+                client.get(item)
+            except sab.APIException as sahara_api_exception:
+                if 'not found' in sahara_api_exception.message:
+                    return
+                cls.fail(sahara_api_exception.message)
+            except Exception as e:
+                cls.fail(e.message)
+
+            time.sleep(5)
 
     @classmethod
     def tearDownClass(cls):
