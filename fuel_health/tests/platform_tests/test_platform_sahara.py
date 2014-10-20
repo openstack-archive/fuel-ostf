@@ -28,20 +28,24 @@ class PlatformSaharaTests(sahara.SaharaTest):
     def setUp(self):
         super(PlatformSaharaTests, self).setUp()
 
-        if not self.enough_ram:
-            self.skipTest('This test requires more resources on one of '
-                          'the compute nodes (> {0} MB of free RAM), but you '
-                          'have only {1} MB on most appropriate compute node.'
-                          .format(self.min_required_ram,
-                                  self.max_available_ram))
+        doc_link = ('http://docs.mirantis.com/openstack/fuel/'
+                    'fuel-5.0/user-guide.html#platform-tests-description')
 
-        msg = ('Sahara image was not properly registered or '
-               'was not registered at all. Please refer to the Mirantis '
-               'OpenStack documentation (http://docs.mirantis.com/openstack/'
-               'fuel/fuel-5.0/user-guide.html#platform-tests-description)')
+        ram_msg = ('This test requires more resources: at least one of the '
+                   'compute nodes must have >= {0} MB of free RAM, but you '
+                   'have only {1} MB on most appropriate compute node.'
+                   .format(self.min_required_ram, self.max_available_ram))
+        if not self.enough_ram:
+            LOG.debug(ram_msg)
+            self.skipTest(ram_msg)
+
+        image_msg = ('Sahara image was not properly registered or '
+                     'was not registered at all. Please refer to the '
+                     'Mirantis OpenStack documentation (%s) to find out '
+                     'how to register image for Sahara.' % doc_link)
         if not self.check_image():
-            LOG.debug(msg)
-            self.skipTest(msg)
+            LOG.debug(image_msg)
+            self.skipTest(image_msg)
 
     def test_platform_sahara(self):
         """Sahara test for launching a simple cluster
