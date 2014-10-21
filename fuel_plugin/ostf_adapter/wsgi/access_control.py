@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from keystoneclient.middleware import auth_token
+from keystonemiddleware import auth_token
 from oslo.config import cfg
 
 
