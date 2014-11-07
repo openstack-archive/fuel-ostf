@@ -32,7 +32,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
             4. Wait for Nova statistic.
             5. Create a new alarm.
             6. Verify that become status 'alarm' or 'ok'.
-        Duration: 800 s.
+        Duration: 60 s.
 
         Deployment tags: Ceilometer
         """
@@ -99,7 +99,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         2. Create new sample for image resource.
         3. Check that created sample has the expected resource.
         4. Get samples and compare sample lists before and after create sample.
-        Duration: 40 s.
+        Duration: 5 s.
         Deployment tags: Ceilometer
         """
 
@@ -152,7 +152,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         Scenario:
         1. Create volume.
         2. Check volume notifications.
-        Duration: 100 s.
+        Duration: 10 s.
         Deployment tags: Ceilometer
         """
 
@@ -182,7 +182,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
 
         Scenario:
         1. Check glance notifications.
-        Duration: 300 s.
+        Duration: 5 s.
         Deployment tags: Ceilometer
         """
         query = [{'field': 'resource', 'op': 'eq',
@@ -194,3 +194,53 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         self.verify(600, self.wait_notifications, 1,
                     fail_msg, msg,
                     self.glance_notifications, query)
+
+    def test_check_keystone_notifications(self):
+        """Ceilometer test to check get Keystone notifications.
+        Target component: Ceilometer
+
+        Scenario:
+        1. Check keystone project notifications.
+        2. Check keystone user notifications.
+        3. Check keystone role notifications.
+        4. Check keystone group notifications.
+        Duration: 5 s.
+        Deployment tags: Ceilometer, 2014.2-6.0
+        """
+
+        tenant, user, role, group, trust = self.identity_helper()
+
+        fail_msg = "Keystone project notifications are not received."
+        msg = "Keystone project notifications are received."
+        query = [{'field': 'resource', 'op': 'eq', 'value': tenant.id}]
+        self.verify(600, self.wait_notifications, 1,
+                    fail_msg, msg,
+                    self.keystone_project_notifications, query)
+
+        fail_msg = "Keystone user notifications are not received."
+        msg = "Keystone user notifications are received."
+        query = [{'field': 'resource', 'op': 'eq', 'value': user.id}]
+        self.verify(600, self.wait_notifications, 2,
+                    fail_msg, msg,
+                    self.keystone_user_notifications, query)
+
+        fail_msg = "Keystone role notifications are not received."
+        msg = "Keystone role notifications are received."
+        query = [{'field': 'resource', 'op': 'eq', 'value': role.id}]
+        self.verify(600, self.wait_notifications, 3,
+                    fail_msg, msg,
+                    self.keystone_role_notifications, query)
+
+        fail_msg = "Keystone group notifications are not received."
+        msg = "Keystone group notifications are received."
+        query = [{'field': 'resource', 'op': 'eq', 'value': group.id}]
+        self.verify(600, self.wait_notifications, 4,
+                    fail_msg, msg,
+                    self.keystone_group_notifications, query)
+
+        fail_msg = "Keystone trust notifications are not received."
+        msg = "Keystone trust notifications are received."
+        query = [{'field': 'resource', 'op': 'eq', 'value': trust.id}]
+        self.verify(600, self.wait_notifications, 5,
+                    fail_msg, msg,
+                    self.keystone_trust_notifications, query)
