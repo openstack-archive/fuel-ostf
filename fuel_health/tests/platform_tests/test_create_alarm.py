@@ -36,7 +36,7 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
             8. Change alarm state to 'ok'.
             9. Verify state.
             10. Delete the alarm.
-        Duration: 1500 s.
+        Duration: 120 s.
         Deployment tags: Ceilometer
         """
 
