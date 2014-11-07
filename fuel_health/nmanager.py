@@ -43,7 +43,7 @@ except:
     LOG.warning('Ceilometer client could not be imported.')
 
 import cinderclient.client
-import keystoneclient.v2_0.client
+import keystoneclient
 import novaclient.client
 
 from fuel_health.common.ssh import Client as SSHClient
@@ -71,6 +71,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         self.compute_client = self._get_compute_client()
         try:
             self.identity_client = self._get_identity_client()
+            self.identity_v3_client = self._get_identity_client(version=3)
             self.clients_initialized = True
         except Exception as e:
             if e.__class__.__name__ == 'Unauthorized':
@@ -95,6 +96,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.client_attr_names = [
                 'compute_client',
                 'identity_client',
+                'identity_v3_client',
                 'volume_client',
                 'heat_client',
                 'murano_client',
@@ -147,7 +149,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                           auth_url)
 
     def _get_identity_client(self, username=None, password=None,
-                             tenant_name=None):
+                             tenant_name=None, version=None):
         if not username:
             username = self.config.identity.admin_username
         if not password:
@@ -164,11 +166,25 @@ class OfficialClientManager(fuel_health.manager.Manager):
         auth_url = self.config.identity.uri
         dscv = self.config.identity.disable_ssl_certificate_validation
 
-        return keystoneclient.v2_0.client.Client(username=username,
-                                                 password=password,
-                                                 tenant_name=tenant_name,
-                                                 auth_url=auth_url,
-                                                 insecure=dscv)
+        if not version or version == 2:
+            return keystoneclient.v2_0.client.Client(username=username,
+                                                     password=password,
+                                                     tenant_name=tenant_name,
+                                                     auth_url=auth_url,
+                                                     insecure=dscv)
+        elif version == 3:
+            helper_list = auth_url.rstrip("/").split("/")
+            helper_list[-1] = "v3/"
+            auth_url = "/".join(helper_list)
+
+            return keystoneclient.v3.client.Client(username=username,
+                                                   password=password,
+                                                   tenant_name=tenant_name,
+                                                   auth_url=auth_url,
+                                                   insecure=dscv)
+        else:
+            LOG.warning("Version:{0} for keystoneclient is not "
+                        "supported with OSTF".format(version))
 
     def _get_heat_client(self, username=None, password=None,
                          tenant_name=None):
