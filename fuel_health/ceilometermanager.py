@@ -25,6 +25,7 @@ LOG = logging.getLogger(__name__)
 
 
 class CeilometerBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
+
     @classmethod
     def setUpClass(cls):
         super(CeilometerBaseTest, cls).setUpClass()
@@ -32,7 +33,7 @@ class CeilometerBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
             cls.wait_interval = cls.config.compute.build_interval
             cls.wait_timeout = cls.config.compute.build_timeout
             cls.private_net = 'net04'
-            cls.alarm_id_list = []
+            cls.objects_for_delete = []
             cls.nova_notifications = ['memory', 'vcpus', 'disk.root.size',
                                       'disk.ephemeral.size']
             cls.neutron_network_notifications = ['network', 'network.create',
@@ -57,6 +58,23 @@ class CeilometerBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
             cls.heat_notifications = ['stack.create', 'stack.update',
                                       'stack.delete', 'stack.resume',
                                       'stack.suspend']
+            cls.keystone_user_notifications = [
+                'identity.user.created', 'identity.user.deleted',
+                'identity.user.updated']
+            cls.keystone_role_notifications = [
+                'identity.role.created', 'identity.role.updated',
+                'identity.role.deleted']
+            cls.keystone_role_assignment_notifications = [
+                'identity.role_assignment.created',
+                'identity.role_assignment.deleted']
+            cls.keystone_project_notifications = [
+                'identity.project.created', 'identity.project.updated',
+                'identity.project.deleted']
+            cls.keystone_group_notifications = [
+                'identity.group.created', 'identity.group.updated',
+                'identity.group.deleted']
+            cls.keystone_trust_notifications = [
+                'identity.trust.created', 'identity.trust.deleted']
 
     def setUp(self):
         super(CeilometerBaseTest, self).setUp()
@@ -74,9 +92,9 @@ class CeilometerBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         if 'name' in kwargs:
             kwargs['name'] = rand_name(kwargs['name'])
         alarm = self.ceilometer_client.alarms.create(**kwargs)
-        if alarm:
-            self.alarm_id_list.append(alarm.alarm_id)
-            return alarm
+        self.objects_for_delete.append((self.ceilometer_client.alarms.delete,
+                                        alarm.alarm_id))
+        return alarm
 
     def get_state(self, alarm_id):
         """
@@ -177,25 +195,56 @@ class CeilometerBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
             self.fail('Count of samples list isn\'t '
                       'greater than expected value')
 
-    @classmethod
-    def _clean(cls, items, client):
-        if items:
-            for item in items:
-                try:
-                    client.delete(item)
-                except RuntimeError as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(traceback.format_exc())
+    def identity_helper(self):
+        user_pass = rand_name("ceilo-user-pass")
+        tenant = self.identity_client.tenants.create(rand_name("ceilo-tenant"))
+        self.objects_for_delete.append((self.identity_client.tenants.delete,
+                                       tenant))
+        self.identity_client.tenants.update(tenant.id,
+                                            rand_name("ceilo-tenant-update"))
+        user = self.identity_client.users.create(name=rand_name("ceilo-user"),
+                                                 password=user_pass,
+                                                 tenant_id=tenant.id)
+        self.objects_for_delete.append((self.identity_client.users.delete,
+                                       user))
+        self.identity_client.users.update(user,
+                                          name=rand_name("ceilo-user-update"))
+        role = self.identity_v3_client.roles.create(rand_name("ceilo-role"))
+        self.identity_v3_client.roles.update(role, user=user, project=tenant)
+        self.objects_for_delete.append((self.identity_client.roles.delete,
+                                       role))
+        # role_assignment = self.identity_v3_client.role_assignments.create(
+        #     role=role, user=user, project=tenant)
+        # self.objects_for_delete.append(
+        #     (self.identity_client.role_assignments.delete, role_assignment))
+        # trust = self.identity_v3_client.trusts.create(
+        #     next(user for user in self.identity_client.users.list()
+        #          if user.name == "admin"), user, [role.name], tenant)
+        # self.objects_for_delete.append((self.identity_v3_client.trusts.delete,
+        #                                trust))
+        group = self.identity_v3_client.groups.create(rand_name("ceilo-group"))
+        self.objects_for_delete.append((self.identity_v3_client.groups.delete,
+                                        group))
+        self.identity_v3_client.groups.update(
+            group, name=rand_name("ceilo-group-update"))
+        self.identity_v3_client.groups.delete(group)
+        # self.identity_v3_client.trusts.delete(trust)
+        # self.identity_v3_client.role_assignments.delete(role_assignment)
+        self.identity_client.roles.delete(role)
+        self.identity_client.users.delete(user)
+        self.identity_client.tenants.delete(tenant)
+        return tenant, user, role, group  # , trust
 
-    @classmethod
-    def _clean_alarms(cls):
-        cls._clean(cls.alarm_id_list, cls.ceilometer_client.alarms)
+    @staticmethod
+    def cleanup_resources(object_list):
+        for method, resource in object_list:
+            try:
+                method(resource)
+            except Exception:
+                LOG.debug(traceback.format_exc())
 
     @classmethod
     def tearDownClass(cls):
         if cls.manager.clients_initialized:
-            try:
-                cls._clean_alarms()
-            except Exception as exc:
-                LOG.debug(exc)
+            cls.cleanup_resources(cls.objects_for_delete)
         super(CeilometerBaseTest, cls).tearDownClass()
