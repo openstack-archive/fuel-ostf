@@ -180,6 +180,13 @@ def _get_cluster_depl_tags(cluster_id, token=None):
 
 def _add_cluster_testing_pattern(session, cluster_data):
     to_database = []
+
+    global TEST_REPOSITORY
+
+    # populate cache if it's empty
+    if not TEST_REPOSITORY:
+        cache_test_repository(session)
+
     for test_set in TEST_REPOSITORY:
         if nose_utils.process_deployment_tags(
             cluster_data['deployment_tags'],
