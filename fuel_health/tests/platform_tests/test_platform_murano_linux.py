@@ -103,7 +103,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                 "image": self.image.name,
                 "assignFloatingIp": True,
                 "?": {
-                    "type": "io.murano.resources.Instance",
+                    "type": "io.murano.resources.LinuxMuranoInstance",
                     "id": str(uuid.uuid4())
                 },
                 "name": rand_name("testMurano")
@@ -184,7 +184,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                 "image": self.image.name,
                 "assignFloatingIp": True,
                 "?": {
-                    "type": "io.murano.resources.Instance",
+                    "type": "io.murano.resources.LinuxMuranoInstance",
                     "id": str(uuid.uuid4())
                 },
                 "name": rand_name("testMurano")
