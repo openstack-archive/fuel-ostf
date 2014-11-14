@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2013 Mirantis, Inc.
 # All Rights Reserved.
 #
@@ -16,269 +14,107 @@
 #    under the License.
 
 import logging
+import socket
+import telnetlib
 import time
-import traceback
 
-from novaclient import exceptions as nova_exceptions
 from saharaclient.api import base as sab
 
+from fuel_health import nmanager
 from fuel_health.common.utils.data_utils import rand_name
-import fuel_health.nmanager as nmanager
 
 
 LOG = logging.getLogger(__name__)
 
 
-class SaharaTest(nmanager.PlatformServicesBaseClass):
-
-    """
-    Base class for openstack sanity tests for Sahara
-    """
-    @classmethod
-    def setUpClass(cls):
-        super(SaharaTest, cls).setUpClass()
-
-        cls.min_required_ram = 4096
-        cls.max_available_ram, cls.enough_ram = (
-            cls.check_compute_node_ram(cls.min_required_ram))
-
-        if cls.manager.clients_initialized:
-            cls.sg_rules = []
-            cls.flavors = []
-            cls.node_groups = []
-            cls.cluster_templates = []
-            cls.clusters = []
-            cls.keys = []
-            cls.plugin = 'vanilla'
-            cls.plugin_version = '1.2.1'
-            cls.neutron_floating_ip = 'net04_ext'
-            cls.neutron_net = 'net04'
-            cls.TT_CONFIG = {'Task Tracker Heap Size': 515}
-            cls.DN_CONFIG = {'Data Node Heap Size': 513}
-            cls.CLUSTER_HDFS_CONFIG = {'dfs.replication': 2}
-            cls.CLUSTER_MR_CONFIG = {
-                'mapred.map.tasks.speculative.execution': False,
-                'mapred.child.java.opts': '-Xmx100m'}
-            cls.CLUSTER_GENERAL_CONFIG = {'Enable Swift': True}
-            cls.SNN_CONFIG = {'Name Node Heap Size': 510}
-            cls.NN_CONFIG = {'Name Node Heap Size': 512}
-            cls.JT_CONFIG = {'Job Tracker Heap Size': 514}
-            cls.V_HADOOP_USER = 'hadoop'
-            cls.V_NODE_USERNAME = 'ubuntu'
-            cls.HDP_HADOOP_USER = 'hdfs'
-            cls.HDP_NODE_USERNAME = 'root'
-            cls.CLUSTER_CREATION_TIMEOUT = '90'
-            cls.DELETE_TIMEOUT = 600  # in seconds
-            cls.USER_KEYPAIR_ID = 'ostf_test-sahara-'
-            cls.PLUGIN_NAME = 'vanilla'
-            cls.CLUSTER_NAME = 'ostf-cluster-'
-            cls.SAHARA_FLAVOR = 'ostf-test-sahara-flavor-'
-            cls.JT_PORT = 50030
-            cls.NN_PORT = 50070
-            cls.TT_PORT = 50060
-            cls.DN_PORT = 50075
-            cls.SEC_NN_PORT = 50090
-            # Parameters related to security group rules.
-            cls.sg_name = 'default'
-            cls.ip_protocol = 'tcp'
-            cls.cidr = '0.0.0.0/0'
-            cls.allowed_ports = [22, 50030, 50060, 50070, 50075]
+class SaharaManager(nmanager.PlatformServicesBaseClass):
+    """Base class for Sahara sanity tests and platform tests."""
 
     def setUp(self):
-        super(SaharaTest, self).setUp()
-        self.check_clients_state()
-        self._add_rules_to_default_security_group()
-        self._create_sahara_flavors(self.compute_client)
+        super(SaharaManager, self).setUp()
 
-    def check_image(self):
-        LOG.debug('Checking image for Sahara')
-        image = self._find_image_by_tags(self.plugin, self.plugin_version)
+        self.check_clients_state()
+
+        # Timeout (in seconds) to wait for cluster deployment.
+        self.cluster_timeout = 3600
+        # Timeout (in seconds) to wait for cluster deletion.
+        self.delete_timeout = 300
+        # Timeout (in seconds) between status checks.
+        self.request_timeout = 5
+        # Timeout (in seconds) to wait for starting a Hadoop process
+        # on a cluster node.
+        self.process_timeout = 300
+        # Minimal required RAM of one of the compute nodes to run Sahara
+        # platform tests.
+        self.min_required_ram = 4096
+
+        self.public_net = 'net04_ext'  # Name of Neutron public network
+        self.private_net = 'net04'     # Name of Neutron private network
+
+        self.node_group_templates = []
+        self.cluster_templates = []
+        self.clusters = []
+        self.flavors = []
+
+    # Method for creating a flavor for Sahara tests.
+    def create_flavor(self, ram=2048, vcpus=1, disk=20):
+        """This method creates a flavor for Sahara tests.
+
+        All resources created by this method will be automatically deleted.
+        """
+
+        LOG.debug('Creating flavor for Sahara tests...')
+        name = rand_name('sahara-ostf-flavor-')
+        flavor = self.compute_client.flavors.create(name, ram, vcpus, disk)
+        self.flavors.append(flavor.id)
+        LOG.debug('Flavor for Sahara tests has been created.')
+
+        return flavor.id
+
+    # Methods for finding and checking Sahara images.
+    def find_and_check_image(self, tag_plugin_name, tag_hadoop_version):
+        """This method finds a correct image for Sahara platform tests.
+
+        It finds a Sahara image by specific tags and checks whether the image
+        is properly registered or not.
+        """
+
+        LOG.debug('Finding and checking image for Sahara...')
+        image = self._find_image_by_tags(tag_plugin_name, tag_hadoop_version)
         if (image is not None) and (
             '_sahara_username' in image.metadata) and (
                 image.metadata['_sahara_username'] is not None):
             LOG.debug('Image with name "%s" is registered for Sahara with '
-                      'username "%s"' % (image.name,
-                                         image.metadata['_sahara_username']))
-            return True
-        LOG.debug(
-            'Image is not properly registered or it is not registered at all. '
-            'Correct image for Sahara not found')
-        return False
+                      'username "%s".' % (image.name,
+                                          image.metadata['_sahara_username']))
+            return image.id
+        LOG.debug('Image is not properly registered or it is not '
+                  'registered at all. Correct image for Sahara not found.')
 
-    def _find_image_by_tags(self, plugin_name, plugin_version):
-        tag_plugin = '_sahara_tag_%s' % plugin_name
-        tag_version = '_sahara_tag_%s' % plugin_version
+    def _find_image_by_tags(self, tag_plugin_name, tag_hadoop_version):
+        """This method finds a Sahara image by specific tags."""
+
+        tag_plugin = '_sahara_tag_%s' % tag_plugin_name
+        tag_version = '_sahara_tag_%s' % tag_hadoop_version
         for image in self.compute_client.images.list():
             if tag_plugin in image.metadata and tag_version in image.metadata:
                 LOG.debug(
-                    'Image with tags "%s" and "%s" found. Image name is "%s"'
-                    % (plugin_name, plugin_version, image.name))
+                    'Image with tags "%s" and "%s" found. Image name is "%s".'
+                    % (tag_plugin_name, tag_hadoop_version, image.name))
                 return image
-        LOG.debug('Image with tags "%s" and "%s" not found'
-                  % (plugin_name, plugin_version))
+        LOG.debug('Image with tags "%s" and "%s" '
+                  'not found.' % (tag_plugin_name, tag_hadoop_version))
 
-    @classmethod
-    def _add_rules_to_default_security_group(cls):
-        # There is always default security group. Sahara always uses this
-        # security group.
-        for security_group in cls.compute_client.security_groups.list():
-            if security_group.name == cls.sg_name:
-                for port in cls.allowed_ports:
-                    try:
-                        rule = cls.compute_client.security_group_rules.create(
-                            parent_group_id=security_group.id, from_port=port,
-                            to_port=port, ip_protocol=cls.ip_protocol,
-                            cidr=cls.cidr)
-                    except nova_exceptions.BadRequest as exc:
-                        if 'rule already exists' not in exc.message:
-                            cls.fail(
-                                'Failed to create "TCP" rule for port %d for '
-                                'security group "%s".' % (port, cls.sg_name))
-                    else:
-                        cls.sg_rules.append(rule)
-                return
+    # Method for retrieving network info of OpenStack cloud.
+    def retrieve_network_info(self):
+        """This method retrieves network info of OpenStack cloud.
 
-    @classmethod
-    def _create_sahara_flavors(cls, client):
-        if not cls.flavors:
-            cls.sahara_flavor = client.flavors.create(
-                rand_name(cls.SAHARA_FLAVOR), 700, 1, 20).id
-            cls.flavors.append(cls.sahara_flavor)
+        If Neutron is used as network manager, it returns IDs of public and
+        private networks accordingly. If Nova is used as network manager and
+        auto assignment of floating IPs is enabled, it returns None. Otherwise,
+        it returns the name of a floating IP pool and None.
+        """
 
-    @classmethod
-    def _create_node_group_template(
-            cls, client, name, plugin_name, plugin_version, description,
-            volumes_per_node, volume_size, node_processes, node_configs,
-            floating_ip_pool=None):
-
-        body = client.node_group_templates.create(
-            rand_name(name), plugin_name, plugin_version, cls.sahara_flavor,
-            description, volumes_per_node, volume_size, node_processes,
-            node_configs, floating_ip_pool)
-
-        if body:
-            cls.node_groups.append(body.id)
-            return body
-
-    @classmethod
-    def _create_cluster_template(
-            cls, client, name, plugin_name, plugin_version, description,
-            cluster_configs, node_groups,  anti_affinity):
-
-        # TODO(vrovachev): remove this loop after resolve bug:
-        # https://bugs.launchpad.net/sahara/+bug/1314578
-        for node_group in node_groups:
-            if 'floating_ip_pool' in node_group:
-                if not node_group['floating_ip_pool']:
-                    del node_group['floating_ip_pool']
-
-        body = client.cluster_templates.create(
-            rand_name(name), plugin_name, plugin_version, description,
-            cluster_configs, node_groups, anti_affinity)
-
-        if body:
-            cls.cluster_templates.append(body.id)
-            return body
-
-    @classmethod
-    def _create_cluster(
-            cls, compute_client, sahara_client, plugin_name, plugin_version,
-            cluster_template_id, description, image_id, cluster_configs,
-            node_groups, anti_affinity, neutron_management_network=None):
-
-        key_name = rand_name(cls.USER_KEYPAIR_ID)
-        cls.keys.append(
-            compute_client.keypairs.create(key_name))
-
-        body = sahara_client.clusters.create(
-            name=rand_name(cls.CLUSTER_NAME),
-            plugin_name=plugin_name,
-            hadoop_version=plugin_version,
-            cluster_template_id=cluster_template_id,
-            default_image_id=image_id,
-            description=description,
-            cluster_configs=cluster_configs,
-            node_groups=node_groups,
-            user_keypair_id=key_name,
-            anti_affinity=anti_affinity,
-            net_id=neutron_management_network)
-
-        if body:
-            cls.clusters.append(body.id)
-            return body
-
-    def _check_cluster_state(self, cluster_id):
-
-        data = self.sahara_client.clusters.get(cluster_id)
-        i = 1
-
-        while str(data.status) != 'Active':
-            LOG.debug('CLUSTER STATUS:' + str(i * 10) +
-                      ' sec:' + str(data.status))
-            print('CLUSTER STATUS:' + str(i * 10) + ' sec:' + str(data.status))
-
-            if str(data.status) == 'Error':
-                LOG.debug('\n' + str(i * 10) + ' sec:' + str(data) + '\n')
-                self.fail("Cluster state == 'Error'")
-
-            if i > self.CLUSTER_CREATION_TIMEOUT * 6:
-                LOG.debug('\n' + str(i * 10) + ' sec:' + str(data) + '\n')
-                self.fail(
-                    'Cluster state != \'Active\', passed {timeout} '
-                    'minutes'.format(timeout=self.CLUSTER_CREATION_TIMEOUT))
-
-            data = self.sahara_client.clusters.get(cluster_id)
-            time.sleep(10)
-            i += 1
-
-    @classmethod
-    def _get_cluster_node_ip_list_with_node_processes(
-            cls, client, cluster_id):
-        data = client.clusters.get(cluster_id)
-        node_groups = data.node_groups
-        node_ip_list_with_node_processes = {}
-        for node_group in node_groups:
-            instances = node_group['instances']
-            for instance in instances:
-                node_ip = instance['management_ip']
-                node_ip_list_with_node_processes[node_ip] = node_group[
-                    'node_processes']
-        LOG.debug('node_ip_list_with_node_processes:\n%s',
-                  node_ip_list_with_node_processes)
-        return node_ip_list_with_node_processes
-
-    def _create_cluster_and_get_info(
-            self, plugin_name, plugin_version, cluster_template_id,
-            description, cluster_configs, node_groups, anti_affinity,
-            neutron_management_network=None):
-
-        image_name = self._find_image_by_tags(plugin_name, plugin_version).name
-        image_id = self.compute_client.images.find(name=image_name).id
-
-        body = self._create_cluster(
-            self.compute_client, self.sahara_client, plugin_name,
-            plugin_version, cluster_template_id, description, image_id,
-            cluster_configs, node_groups, anti_affinity,
-            neutron_management_network)
-
-        self._check_cluster_state(body.id)
-
-        node_ip_list_with_node_processes = \
-            self._get_cluster_node_ip_list_with_node_processes(
-                self.sahara_client, body.id)
-
-        node_info = self._get_node_info(
-            node_ip_list_with_node_processes, plugin_name)
-
-        self._await_active_workers_for_namenoded(node_info, plugin_name)
-
-        return {
-            'cluster_id': body.id,
-            'node_ip_list': node_ip_list_with_node_processes,
-            'node_info': node_info
-        }
-
-    def _check_auto_assign_floating_ip(self):
         cmd_nova = ('grep auto_assign_floating_ip '
                     '/etc/nova/nova.conf | grep True')
         cmd_neutron = ('grep -E '
@@ -286,364 +122,213 @@ class SaharaTest(nmanager.PlatformServicesBaseClass):
                        '/etc/nova/nova.conf')
         output_nova, output_nova_err = self._run_ssh_cmd(cmd_nova)
         output_neutron, output_neutron_err = self._run_ssh_cmd(cmd_neutron)
-        if(output_neutron or str(output_neutron_err).find(
-                'network_api_class=nova.network.neutronv2.api.API') > 0):
-            LOG.debug('neutron is found')
-            network = self.compute_client.networks.find(
-                label=self.neutron_floating_ip)
-            return ('neutron', network.id)
-        elif output_nova or str(output_nova_err).find(' True') > 0:
-            LOG.debug('auto_assign_floating_ip is found')
-            return ('nova_auto', None)
+
+        if output_neutron or str(output_neutron_err).find(
+                'network_api_class=nova.network.neutronv2.api.API') > 0:
+            LOG.debug('OpenStack network manager is Neutron.')
+            LOG.debug('Neutron public network is "%s".' % self.public_net)
+            LOG.debug('Neutron private network is "%s".' % self.private_net)
+            public_net_id = self.compute_client.networks.find(
+                label=self.public_net).id
+            private_net_id = self.compute_client.networks.find(
+                label=self.private_net).id
+
+            return public_net_id, private_net_id
+
+        if output_nova or str(output_nova_err).find('True') > 0:
+            LOG.debug('OpenStack network manager is Nova. '
+                      'Auto assignment of floating IPs is enabled.')
+
+            return None, None
+
         else:
-            LOG.debug('auto_assign_floating_ip is not found')
-            LOG.debug('floating pool is %s',
-                      self.compute_client.floating_ip_pools.list()[0].name)
-            return ('nova',
-                    self.compute_client.floating_ip_pools.list()[0].name)
+            LOG.debug('OpenStack network manager is Nova. '
+                      'Auto assignment of floating IPs is not enabled.')
+            floating_ip_pool = (
+                self.compute_client.floating_ip_pools.list()[0].name)
+            LOG.debug('Floating IP pool is "%s".' % floating_ip_pool)
 
-    def _get_node_info(self, node_ip_list_with_node_processes, plugin_name):
-        tasktracker_count = 0
-        datanode_count = 0
-        node_count = 0
-        portmap = {
-            'jobtracker': self.JT_PORT,
-            'namenode': self.NN_PORT,
-            'tasktracker': self.TT_PORT,
-            'datanode': self.DN_PORT,
-            'secondary_namenode': self.SEC_NN_PORT
-        }
-        self.tt = 'tasktracker'
-        self.dn = 'datanode'
-        self.nn = 'namenode'
-        if plugin_name == 'hdp':
-            portmap = {
-                'JOBTRACKER': self.JT_PORT,
-                'NAMENODE': self.NN_PORT,
-                'TASKTRACKER': self.TT_PORT,
-                'DATANODE': self.DN_PORT,
-                'SECONDARY_NAMENODE': self.SEC_NN_PORT
-            }
-            self.tt = 'TASKTRACKER'
-            self.dn = 'DATANODE'
-            self.nn = 'NAMENODE'
-        for node_ip, processes in node_ip_list_with_node_processes.items():
-            self._try_port(node_ip, '22')
-            node_count += 1
-            for process in processes:
-                if process in portmap:
-                    self._try_port(node_ip, portmap[process])
-            if self.tt in processes:
-                tasktracker_count += 1
-            if self.dn in processes:
-                datanode_count += 1
-            if self.nn in processes:
-                namenode_ip = node_ip
+            return floating_ip_pool, None
 
-        return {
-            'namenode_ip': namenode_ip,
-            'tasktracker_count': tasktracker_count,
-            'datanode_count': datanode_count,
-            'node_count': node_count
-        }
+    # Methods for creating Sahara resources.
+    def create_cluster_template(self, name, plugin_name, hadoop_version,
+                                node_groups, **kwargs):
+        """This method creates a cluster template.
 
-    def create_sahara_cluster(self, cluster_template_id):
+        It supports passing additional params using **kwargs and returns ID
+        of created resource. All resources created by this method will be
+        automatically deleted.
+        """
 
-        net_type, _ = self._check_auto_assign_floating_ip()
-        LOG.debug('Network type is "%s"', net_type)
+        LOG.debug('Creating cluster template with name "%s"...' % name)
+        # TODO(ylobankov): remove this loop after fixing bug #1314578
+        for node_group in node_groups:
+            if 'floating_ip_pool' in node_group:
+                if node_group['floating_ip_pool'] is None:
+                    del node_group['floating_ip_pool']
 
-        neutron_m_network_id = None
-        if net_type == 'neutron':
-            neutron_m_network_id = \
-                self.compute_client.networks.find(label=self.neutron_net).id
-            LOG.debug('Neutron network - %s', neutron_m_network_id)
-            LOG.debug('Creating cluster for neutron network')
+        cluster_template = self.sahara_client.cluster_templates.create(
+            name, plugin_name, hadoop_version, node_groups=node_groups,
+            **kwargs)
+        self.cluster_templates.append(cluster_template.id)
+        LOG.debug('Cluster template "%s" has been created.' % name)
 
-        return self._create_cluster_and_get_info(
-            self.PLUGIN_NAME,
-            self.plugin_version,
-            cluster_template_id,
-            description='test cluster',
-            cluster_configs={},
-            node_groups=None,
-            anti_affinity=[],
-            neutron_management_network=neutron_m_network_id)
+        return cluster_template.id
 
-    def create_node_group_template_tt_dn(self):
+    def create_cluster(self, name, plugin_name, hadoop_version,
+                       default_image_id, node_groups=None, **kwargs):
+        """This method creates a cluster.
 
-        net_type, floating_ip_pool = self._check_auto_assign_floating_ip()
+        It supports passing additional params using **kwargs and returns ID
+        of created resource. All resources created by this method will be
+        automatically deleted.
+        """
 
-        if net_type == 'nova_auto':
-            LOG.debug('Creating node group template without floating ip')
-        else:
-            LOG.debug('Creating node group template with floating ip')
+        LOG.debug('Creating cluster with name "%s"...' % name)
+        cluster = self.sahara_client.clusters.create(
+            name, plugin_name, hadoop_version,
+            default_image_id=default_image_id,
+            node_groups=node_groups, **kwargs)
+        self.clusters.append(cluster.id)
+        LOG.debug('Cluster "%s" has been created.' % name)
 
-        return self._create_node_group_template(
-            self.sahara_client,
-            'ostf-test-sahara-tt-dn-',
-            self.plugin,
-            self.plugin_version,
-            description='test node group template',
-            volumes_per_node=0,
-            volume_size=1,
-            node_processes=['tasktracker', 'datanode'],
-            node_configs={
-                'HDFS': self.DN_CONFIG,
-                'MapReduce': self.TT_CONFIG
-            },
-            floating_ip_pool=floating_ip_pool)
+        return cluster.id
 
-    def create_node_group_template_tt(self):
+    # Methods for checking cluster deployment.
+    def poll_cluster_status(self, cluster_id):
+        """This method polls cluster status.
 
-        net_type, floating_ip_pool = self._check_auto_assign_floating_ip()
+        It polls cluster every <request_timeout> seconds for some time and
+        waits for when cluster gets to "Active" status.
+        """
 
-        if net_type == 'nova_auto':
-            LOG.debug('Creating node group template without floating ip')
-        else:
-            LOG.debug('Creating node group template with floating ip')
-
-        return self._create_node_group_template(
-            self.sahara_client,
-            'ostf-test-sahara-tt-',
-            self.plugin,
-            self.plugin_version,
-            description='test node group template',
-            volumes_per_node=0,
-            volume_size=0,
-            node_processes=['tasktracker'],
-            node_configs={
-                'MapReduce': self.TT_CONFIG
-            },
-            floating_ip_pool=floating_ip_pool)
-
-    def create_node_group_template_dn(self):
-
-        net_type, floating_ip_pool = self._check_auto_assign_floating_ip()
-
-        if net_type == 'nova_auto':
-            LOG.debug('Creating node group template without floating ip')
-        else:
-            LOG.debug('Creating node group template with floating ip')
-
-        return self._create_node_group_template(
-            self.sahara_client,
-            'ostf-test-sahara-dn-',
-            self.plugin,
-            self.plugin_version,
-            description='test node group template',
-            volumes_per_node=0,
-            volume_size=0,
-            node_processes=['datanode'],
-            node_configs={
-                'MapReduce': self.TT_CONFIG
-            },
-            floating_ip_pool=floating_ip_pool)
-
-    def create_cluster_template(self):
-        return self._create_cluster_template(
-            self.sahara_client,
-            'ostf-test-sahara-cluster-template-',
-            self.plugin,
-            self.plugin_version,
-            description='test cluster template',
-            cluster_configs={
-                'HDFS': self.CLUSTER_HDFS_CONFIG,
-                'MapReduce': self.CLUSTER_MR_CONFIG,
-                'general': self.CLUSTER_GENERAL_CONFIG
-            },
-            node_groups=[
-                dict(
-                    name='ostf-test-master-node-jt-nn',
-                    flavor_id=self.sahara_flavor,
-                    node_processes=['namenode', 'jobtracker'],
-                    node_configs={
-                        'HDFS': self.NN_CONFIG,
-                        'MapReduce': self.JT_CONFIG
-                    },
-                    count=1),
-                dict(
-                    name='ostf-test-master-node-sec-nn',
-                    flavor_id=self.sahara_flavor,
-                    node_processes=['secondarynamenode'],
-                    node_configs={
-                        'HDFS': self.SNN_CONFIG
-                    },
-                    count=1),
-                dict(
-                    name='ostf-test-worker-node-tt-dn',
-                    node_group_template_id=self.node_groups[0],
-                    count=2),
-                dict(
-                    name='ostf-test-worker-node-dn',
-                    node_group_template_id=self.node_groups[1],
-                    count=1),
-                dict(
-                    name='ostf-test-worker-node-tt',
-                    node_group_template_id=self.node_groups[2],
-                    count=1)
-            ],
-            anti_affinity=[])
-
-    def create_tiny_cluster_template(self):
-
-        net_type, floating_ip_pool = self._check_auto_assign_floating_ip()
-
-        if net_type == 'nova_auto':
-            LOG.debug('Creating cluster template without floating ip')
-        else:
-            LOG.debug('Creating cluster template with floating ip')
-
-        return self._create_cluster_template(
-            self.sahara_client,
-            'ostf-sahara-cl-tmpl-',
-            self.plugin,
-            self.plugin_version,
-            description='test cluster template',
-            cluster_configs={
-                'HDFS': self.CLUSTER_HDFS_CONFIG,
-                'MapReduce': self.CLUSTER_MR_CONFIG,
-                'general': self.CLUSTER_GENERAL_CONFIG
-            },
-            node_groups=[
-                dict(
-                    name='ostf-test-master',
-                    flavor_id=self.sahara_flavor,
-                    node_processes=['namenode', 'jobtracker'],
-                    node_configs={
-                        'HDFS': self.NN_CONFIG,
-                        'MapReduce': self.JT_CONFIG
-                    },
-                    floating_ip_pool=floating_ip_pool,
-                    count=1),
-                dict(
-                    name='ostf-test-worker',
-                    node_group_template_id=self.node_groups[0],
-                    count=1),
-            ],
-            anti_affinity=[]
-        )
-
-    def _await_active_workers_for_namenoded(self, node_info, plugin_name):
-        attempt_count = 100
-        if plugin_name == 'vanilla':
-            hadoop_user = self.V_HADOOP_USER
-            node_username = self.V_NODE_USERNAME
-        elif plugin_name == 'hdp':
-            hadoop_user = self.HDP_HADOOP_USER
-            node_username = self.HDP_NODE_USERNAME
-        self._run_ssh_cmd('echo "%s" > /tmp/ostf-sahara.pem' %
-                          self.keys[0].private_key)
-        self._run_ssh_cmd('chmod 600  /tmp/ostf-sahara.pem')
-        while True:
-            cmd = ('ssh -i /tmp/ostf-sahara.pem -l %s '
-                   '-oUserKnownHostsFile=/dev/null '
-                   '-oStrictHostKeyChecking=no %s '
-                   'sudo -u %s -i "hadoop job '
-                   '-list-active-trackers | wc -l"' %
-                   (node_username, node_info['namenode_ip'],
-                    hadoop_user))
-            stdout, stderr = self._run_ssh_cmd(cmd)
-            active_tasktracker_count = int(stdout)
-            LOG.debug('active_tasktracker_count:%s',
-                      active_tasktracker_count)
-            print('active_tasktracker_count:%s' % active_tasktracker_count)
-            cmd = ('ssh -i /tmp/ostf-sahara.pem -l %s '
-                   '-oUserKnownHostsFile=/dev/null '
-                   '-oStrictHostKeyChecking=no %s '
-                   'sudo -u %s -i "hadoop dfsadmin -report" '
-                   '| grep "Datanodes available:.*" | awk '
-                   '\'{print $3}\'' %
-                   (node_username, node_info['namenode_ip'],
-                    hadoop_user))
-            stdout, stderr = self._run_ssh_cmd(cmd)
-            active_datanode_count = int(stdout)
-            LOG.debug('active_datanode_count:%s', active_datanode_count)
-            print('active_datanode_count:%s' % active_datanode_count)
-
-            if (
-                    active_tasktracker_count == node_info['tasktracker_count']
-            ) and (
-                    active_datanode_count == node_info['datanode_count']
-            ):
-                break
-            if attempt_count == 0:
-                self.fail('Tasktracker or datanode cannot be started '
-                          'within 5 minutes.')
-            time.sleep(3)
-            attempt_count -= 1
-
-    @classmethod
-    def _list_node_group_template(cls):
-        return cls.sahara_client.node_group_templates.list()
-
-    @classmethod
-    def _list_cluster_templates(cls):
-        return cls.sahara_client.cluster_templates.list()
-
-    @classmethod
-    def _clean_security_group_rules(cls):
-        cls._clean(cls.sg_rules, cls.compute_client.security_group_rules)
-
-    @classmethod
-    def _clean_flavors(cls):
-        cls._clean(cls.flavors, cls.compute_client.flavors)
-
-    @classmethod
-    def _clean_keys(cls):
-        cls._clean(cls.keys, cls.compute_client.keypairs)
-
-    @classmethod
-    def _clean_cluster_templates(cls):
-        cls._clean(
-            cls.cluster_templates, cls.sahara_client.cluster_templates)
-
-    @classmethod
-    def _clean_clusters(cls):
-        cls._clean(cls.clusters,
-                   cls.sahara_client.clusters, item_is_cluster=True)
-
-    @classmethod
-    def _clean_node_groups_templates(cls):
-        cls._clean(cls.node_groups, cls.sahara_client.node_group_templates)
-
-    @classmethod
-    def _clean(cls, items, client, item_is_cluster=False):
-        if items:
-            for item in items[:]:
-                try:
-                    client.delete(item)
-                    if item_is_cluster:
-                        cls._delete_timeout(client, item)
-                    items.remove(item)
-                except RuntimeError as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(traceback.format_exc())
-
-    @classmethod
-    def _delete_timeout(cls, client, item):
+        LOG.debug('Waiting for cluster to build and get to "Active" status...')
+        previous_cluster_status = 'An unknown cluster status'
         start = time.time()
-        while time.time() - start < cls.DELETE_TIMEOUT:
+        while time.time() - start < self.cluster_timeout:
+            cluster = self.sahara_client.clusters.get(cluster_id)
+            if cluster.status != previous_cluster_status:
+                LOG.debug(
+                    'Currently cluster is in "%s" status.' % cluster.status)
+                previous_cluster_status = cluster.status
+            if cluster.status == 'Active':
+                return
+            if cluster.status == 'Error':
+                self.fail('Cluster failed to build and is in "Error" status.')
+            time.sleep(self.request_timeout)
+
+        self.fail('Cluster failed to get to "Active" '
+                  'status within %d seconds.' % self.cluster_timeout)
+
+    def check_hadoop_services(self, cluster_id, processes_map):
+        """This method checks Hadoop services on cluster.
+
+        It checks whether all Hadoop processes are running on cluster nodes
+        or not.
+        """
+
+        LOG.debug('Checking Hadoop services on cluster...')
+        node_ips_and_processes = self._get_node_ips_and_processes(cluster_id)
+        for node_ip, processes in node_ips_and_processes.items():
+            LOG.debug('Checking Hadoop processes on node %s...' % node_ip)
+            for process in processes:
+                if process in processes_map:
+                    LOG.debug('Checking process "%s"...' % process)
+                    for port in processes_map[process]:
+                        self._check_port(node_ip, port)
+                        LOG.debug('Process "%s" is running and '
+                                  'listening to port %d.' % (process, port))
+            LOG.debug('All Hadoop processes are running on node %s.' % node_ip)
+        LOG.debug('All Hadoop services are running on cluster.')
+
+    def _check_port(self, node_ip, port):
+        """This method checks accessibility of specific port on cluster node.
+
+        It tries to establish connection to the process on specific port every
+        second for some time.
+        """
+
+        start = time.time()
+        while time.time() - start < self.process_timeout:
             try:
-                client.get(item)
+                telnet_connection = telnetlib.Telnet(node_ip, port)
+                if telnet_connection:
+                    telnet_connection.close()
+                    return
+            except socket.error:
+                pass
+            time.sleep(1)
+
+        self.fail('Port %d on node %s is unreachable '
+                  'for %d seconds.' % (port, node_ip, self.process_timeout))
+
+    # Methods for retrieving information of cluster.
+    def _get_node_ips_and_processes(self, cluster_id):
+        """This method makes dictionary with information of cluster nodes.
+
+        Each key of dictionary is IP of cluster node, value is list of Hadoop
+        processes that must be started on node.
+        """
+
+        data = self.sahara_client.clusters.get(cluster_id)
+        node_ips_and_processes = {}
+        for node_group in data.node_groups:
+            for instance in node_group['instances']:
+                node_ip = instance['management_ip']
+                node_ips_and_processes[node_ip] = node_group['node_processes']
+
+        # For example:
+        #   node_ips_and_processes = {
+        #       '172.18.168.181': ['tasktracker'],
+        #       '172.18.168.94': ['secondarynamenode', 'oozie'],
+        #       '172.18.168.208': ['jobtracker', 'namenode'],
+        #       '172.18.168.93': ['tasktracker', 'datanode'],
+        #       '172.18.168.44': ['tasktracker', 'datanode'],
+        #       '172.18.168.233': ['datanode']
+        #   }
+
+        return node_ips_and_processes
+
+    # Methods for deleting resources.
+    def delete_resources(self, resources,
+                         resource_client, resource_is_cluster=False):
+        for resource in resources[:]:
+            try:
+                resource_client.delete(resource)
+            except Exception as e:
+                self.fail('Failed while deleting '
+                          'one of the test resources. ' + str(e))
+            if resource_is_cluster:
+                self._delete_timeout(resource_client, resource)
+            resources.remove(resource)
+
+    def _delete_timeout(self, resource_client, resource):
+        """This method checks whether resource is really deleted or not."""
+
+        timeout = self.delete_timeout
+        start = time.time()
+        while time.time() - start < timeout:
+            try:
+                resource_client.get(resource)
             except sab.APIException as sahara_api_exception:
                 if 'not found' in sahara_api_exception.message:
                     return
-                cls.fail(sahara_api_exception.message)
+                self.fail(sahara_api_exception.message)
             except Exception as e:
-                cls.fail(e.message)
+                self.fail(e.message)
 
-            time.sleep(5)
+            time.sleep(self.request_timeout)
 
-        cls.fail('Request timed out. Timed out while waiting for resource "%s"'
-                 ' to delete within %d seconds.' % (item, cls.DELETE_TIMEOUT))
+        self.fail('Request timed out. Timed out while waiting for one of '
+                  'the test resources to delete within %d seconds.' % timeout)
 
-    @classmethod
-    def tearDownClass(cls):
-        if cls.manager.clients_initialized:
-            cls._clean_clusters()
-            cls._clean_cluster_templates()
-            cls._clean_node_groups_templates()
-            cls._clean_security_group_rules()
-            cls._clean_flavors()
-            cls._clean_keys()
-        super(SaharaTest, cls).tearDownClass()
+    def tearDown(self):
+        self.delete_resources(self.clusters, self.sahara_client.clusters,
+                              resource_is_cluster=True)
+        self.delete_resources(self.cluster_templates,
+                              self.sahara_client.cluster_templates)
+        self.delete_resources(self.node_group_templates,
+                              self.sahara_client.node_group_templates)
+        self.delete_resources(self.flavors, self.compute_client.flavors)
+
+        super(SaharaManager, self).tearDown()
