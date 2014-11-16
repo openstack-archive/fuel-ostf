@@ -101,7 +101,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                self.pwd,
                                key_filename=self.key,
                                timeout=self.timeout)
-        self.verify(70, self.retry_command, 1,
+        self.verify(100, self.retry_command, 1,
                     "'ping' command failed. Looks like there is no "
                     "Internet connection on the compute node.",
                     "'ping' command",
@@ -130,7 +130,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                                timeout=self.timeout)
         expected_output = "google"
         cmd = "host 8.8.8.8"
-        output = self.verify(60, self.retry_command, 1,
+        output = self.verify(100, self.retry_command, 1,
                              "'host' command failed. Looks like there is no "
                              "Internet connection on the computes node.",
                              "'ping' command", 10, 5,
@@ -143,7 +143,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
         expected_output = "google.com has address"
         cmd = "host google.com"
-        output = self.verify(60, self.retry_command, 3,
+        output = self.verify(100, self.retry_command, 3,
                              "'host' command failed. "
                              "DNS name cannot be resolved.",
                              "'host' command", 10, 5,
