@@ -238,10 +238,60 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
                     fail_msg, msg,
                     self.keystone_group_notifications, query)
 
-        # TODO(vrovachev): uncomment after resolve bug #1392326
-        # fail_msg = "Keystone trust notifications are not received."
-        # msg = "Keystone trust notifications are received."
-        # query = [{'field': 'resource', 'op': 'eq', 'value': trust.id}]
-        # self.verify(600, self.wait_notifications, 5,
-        #             fail_msg, msg,
-        #             self.keystone_trust_notifications, query)
+        fail_msg = "Keystone trust notifications are not received."
+        msg = "Keystone trust notifications are received."
+        query = [{'field': 'resource', 'op': 'eq', 'value': trust.id}]
+        self.verify(600, self.wait_notifications, 5,
+                    fail_msg, msg,
+                    self.keystone_trust_notifications, query)
+
+    def test_check_neutron_notifications(self):
+        """Ceilometer test to check get Neutron notifications.
+        Target component: Ceilometer
+
+        Scenario:
+        1. Check neutron network notifications.
+        2. Check neutron subnet notifications.
+        3. Check neutron port notifications.
+        4. Check neutron router notifications.
+        5. Check neutron floating ip notifications.
+        Duration: 40 s.
+        Deployment tags: Ceilometer, neutron
+        """
+
+        net, subnet, port, router, flip = self.neutron_helper()
+
+        fail_msg = "Neutron network notifications are not received."
+        msg = "Neutron network notifications are received."
+        query = [{'field': 'resource', 'op': 'eq', 'value': net["id"]}]
+        self.verify(60, self.wait_notifications, 1,
+                    fail_msg, msg,
+                    self.neutron_network_notifications, query)
+
+        fail_msg = "Neutron subnet notifications are not received."
+        msg = "Neutron subnet notifications are received."
+        query = [{'field': 'resource', 'op': 'eq', 'value': subnet["id"]}]
+        self.verify(60, self.wait_notifications, 2,
+                    fail_msg, msg,
+                    self.neutron_subnet_notifications, query)
+
+        fail_msg = "Neutron port notifications are not received."
+        msg = "Neutron port notifications are received."
+        query = [{'field': 'resource', 'op': 'eq', 'value': port["id"]}]
+        self.verify(60, self.wait_notifications, 3,
+                    fail_msg, msg,
+                    self.neutron_port_notifications, query)
+
+        fail_msg = "Neutron router notifications are not received."
+        msg = "Neutron router notifications are received."
+        query = [{'field': 'resource', 'op': 'eq', 'value': router["id"]}]
+        self.verify(60, self.wait_notifications, 4,
+                    fail_msg, msg,
+                    self.neutron_router_notifications, query)
+
+        fail_msg = "Neutron floating ip notifications are not received."
+        msg = "Neutron floating ip notifications are received."
+        query = [{'field': 'resource', 'op': 'eq', 'value': flip["id"]}]
+        self.verify(60, self.wait_notifications, 5,
+                    fail_msg, msg,
+                    self.neutron_floatingip_notifications, query)
