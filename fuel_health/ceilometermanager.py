@@ -234,6 +234,57 @@ class CeilometerBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         self.identity_client.tenants.delete(tenant)
         return tenant, user, role, group, trust
 
+    def neutron_helper(self):
+        net = self.neutron_client.create_network(
+            {"network": {"name": rand_name("ceilo-net")}})["network"]
+        self.objects_for_delete.append(self.neutron_client.delete_network,
+                                       net["id"])
+        self.neutron_client.update_network(
+            net["id"], {"network": {"name": rand_name("ceilo-net-update")}})
+        subnet = self.neutron_client.create_subnet(
+            {"subnet": {"name": rand_name("ceilo-subnet"),
+                        "network_id": net["id"],
+                        "ip_version": 4,
+                        "cidr": "10.0.7.0/24"}})
+        self.objects_for_delete.append(self.neutron_client.delete_subnet,
+                                       subnet["id"])
+        self.neutron_client.update_subnet(
+            subnet["id"], {"subnet": {"name": rand_name("ceilo-subnet")}})
+
+        port = self.neutron_client.create_port({
+            "port": {"name": rand_name("ceilo-port"),
+                     "network_id": net["id"]}})['port']
+        self.objects_for_delete.append(self.neutron_client.delete_port,
+                                       port["id"])
+        self.neutron_client.update_port(
+            port["id"], {"port": {"name": rand_name("ceilo-port-update")}})
+        router = self.neutron_client.create_router(
+            {"router": {"name": rand_name("ceilo-router")}})['router']
+        self.objects_for_delete.append(self.neutron_client.delete_router,
+                                       router["id"])
+        self.neutron_client.update_router(
+            router["id"],
+            {"router": {"name": rand_name("ceilo-router-update")}})
+        external_network = None
+        for network in self.neutron_client.list_networks()["networks"]:
+            if network.get("router:external"):
+                external_network = network
+        if not external_network:
+            self.fail('Can not find external network')
+        flip = self.neutron_client.create_floatingip(
+            {"floatingip": {
+                "floating_network_id": external_network["id"]}})["floatingip"]
+        self.objects_for_delete.append(self.neutron_client.delete_floatingip,
+                                       flip["id"])
+        self.neutron_client.update_floatingip(
+            flip["id"], {"floatingip": {"port_id": None}})
+        self.neutron_client.delete_floatingip(flip["id"])
+        self.neutron_client.delete_router(router["id"])
+        self.neutron_client.delete_port(port["id"])
+        self.neutron_client.delete_subnet(subnet["id"])
+        self.neutron_client.delete_network(net["id"])
+        return net, subnet, port, router, flip
+
     @staticmethod
     def cleanup_resources(object_list):
         for method, resource in object_list:
