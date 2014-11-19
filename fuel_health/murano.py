@@ -291,6 +291,13 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         while environment['status'] != 'ready':
             time.sleep(5)
             environment = self.get_environment(environment_id)
+            if environment['status'] == 'deploy failure':
+                LOG.error(
+                    'Environment has incorrect status'
+                    ' %s' % environment['status'])
+                self.fail(
+                    'Environment has incorrect status'
+                    ' %s .' % environment['status'])
         return environment
 
     def deployments_status_check(self, environment_id):
