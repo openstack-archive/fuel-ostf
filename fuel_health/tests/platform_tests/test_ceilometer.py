@@ -296,3 +296,22 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         self.verify(60, self.wait_notifications, 5,
                     fail_msg, msg,
                     self.neutron_floatingip_notifications, query)
+
+    def test_check_sahara_notifications(self):
+        """Ceilometer test to check get Sahara notifications.
+        Target component: Ceilometer
+
+        Scenario:
+        1. Check Sahara cluster notifications.
+        Duration: 5 s.
+        Deployment tags: Ceilometer, Sahara
+        """
+
+        cluster = self.sahara_helper()
+
+        fail_msg = "Sahara cluster notifications are not received."
+        msg = "Sahara cluster notifications are received."
+        query = [{'field': 'resource', 'op': 'eq', 'value': cluster.id}]
+        self.verify(60, self.wait_notifications, 1,
+                    fail_msg, msg,
+                    self.sahara_cluster_notifications, query)
