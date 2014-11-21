@@ -192,7 +192,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         name = rand_name('ost1_test-server-smoke-')
         security_groups = [self.security_groups[self.tenant_id].name]
 
-        server = self.verify(200, self._create_server, 2,
+        server = self.verify(250, self._create_server, 2,
                              "Server can not be created.",
                              "server creation",
                              self.compute_client, name, security_groups)
@@ -215,12 +215,12 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         LOG.info('is address is  {0}'.format(ip_address))
         LOG.debug(ip_address)
 
-        self.verify(400, self._check_vm_connectivity, 5,
+        self.verify(600, self._check_vm_connectivity, 5,
                     "VM connectivity doesn`t function properly.",
                     'VM connectivity checking', ip_address,
                     30, (6, 60))
 
-        self.verify(400, self._check_connectivity_from_vm,
+        self.verify(600, self._check_connectivity_from_vm,
                     6, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                         "function properly."),
                     'public connectivity checking from VM', ip_address,
@@ -266,7 +266,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         security_groups = [self.security_groups[self.tenant_id].name]
 
         server = self.verify(
-            200, self._create_server, 2,
+            250, self._create_server, 2,
             "Server can not be created.",
             'server creation',
             self.compute_client, name, security_groups)
@@ -281,7 +281,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.fail("Step 3 failed: cannot get instance details. "
                       "Please refer to OpenStack logs for more details.")
 
-        self.verify(250, self._check_connectivity_from_vm,
+        self.verify(400, self._check_connectivity_from_vm,
                     3, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                         "function properly."),
                     'public connectivity checking from VM',
