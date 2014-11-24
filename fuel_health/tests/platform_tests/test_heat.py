@@ -24,9 +24,6 @@ LOG = logging.getLogger(__name__)
 class HeatSmokeTests(heatmanager.HeatBaseTest):
     """
     Test class verifies Heat API calls, rollback and autoscaling use-cases.
-    Special requirements:
-        1. Fedora-17 image with pre-installed cfntools and cloud-init packages
-           should be imported.
     """
     def setUp(self):
         super(HeatSmokeTests, self).setUp()
@@ -196,91 +193,72 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     "deleting stack",
                     stack.id)
 
-    def test_autoscaling(self):
+def test_autoscaling(self):
         """Check stack autoscaling
         Target component: Heat
 
         Scenario:
-            1. Check that image with cfntools package is imported.
-            2. Create a flavor.
-            3. Create a keypair.
-            4. Save generated private key to file on Controller node.
-            5. Create a security group.
-            6. Create a stack.
-            7. Wait for the stack status to change to 'CREATE_COMPLETE'.
-            8. Create a floating ip.
-            9. Assign the floating ip to the instance of the stack.
-            10. Wait for cloud_init procedure to be completed on the instance.
-            11. Load the instance CPU to initiate the stack scaling up.
-            12. Wait for the 2nd instance to be launched.
-            13. Release the instance CPU to initiate the stack scaling down.
-            14. Wait for the 2nd instance to be terminated.
-            15. Delete the file with private key.
-            16. Delete the stack.
-            17. Wait for the stack to be deleted.
-        Duration: 3000 s.
+            1. Create a keypair.
+            2. Save generated private key to file on Controller node.
+            3. Create a security group.
+            4. Create a stack.
+            5. Wait for the stack status to change to 'CREATE_COMPLETE'.
+            6. Create a floating IP.
+            7. Assign the floating IP to the instance of the stack.
+            8. Wait for instance is ready for load.
+            9. Load the instance CPU to initiate the stack scaling up.
+            10. Wait for the 2nd instance to be launched.
+            11. Release the instance CPU to initiate the stack scaling down.
+            12. Wait for the 2nd instance to be terminated.
+            13. Delete the file with private key.
+            14. Delete the stack.
+            15. Wait for the stack to be deleted.
+        Duration: 2100 s.
         """
 
-        msg = ("Autoscaling with native cloudwatch mechanism does "
-               "not work in Heat when used multi-engine architecture.")
+        if not self.ceilometer_client:
+            self.skipTest("This test can't be run in current configuration. "
+                          "It checks Heat autoscaling using "
+                          "Ceilometer resources, so Ceilometer "
+                          "needs to be installed.")
 
-        if 'ha' in self.config.mode:
-            LOG.debug(msg)
-            self.skipTest(msg)
-
-        image_name = "F17-x86_64-cfntools"
-        msg = ("Image with cfntools package wasn't "
-               "imported into Glance, please check "
-               "http://docs.mirantis.com/openstack/fuel/fuel"
-               "-5.0/user-guide.html#platform-tests-description")
-
-        image_available = self._find_heat_image(image_name)
-
-        if not image_available:
-            LOG.debug(msg)
-            self.skipTest(msg)
-
-        flavor_name = data_utils.rand_name('ostf-heat-flavor-')
-        flavor = self.verify(10, self.compute_client.flavors.create, 2,
-                             "Flavor can not be created.", "flavor creation",
-                             flavor_name, 512, 1, 12)
-        self.flavors.append(flavor)
-
-        keypair = self.verify(10, self._create_keypair, 3,
+        self.check_image_exists()
+        
+        keypair = self.verify(10, self._create_keypair, 1,
                               'Keypair can not be created.',
                               'keypair creation',
                               self.compute_client)
 
-        path_to_key = self.verify(10, self._save_key_to_file, 4,
+        path_to_key = self.verify(10, self._save_key_to_file, 2,
                                   "Private key can not be saved to file.",
                                   "saving private key to the file",
                                   keypair.private_key)
 
-        sec_group = self.verify(10, self._create_security_group, 5,
+        sec_group = self.verify(10, self._create_security_group, 3,
                                 'Security group can not be created.',
                                 'security group creation',
                                 self.compute_client, 'ost1_test-sgroup')
 
         parameters = {
             "KeyName": keypair.name,
-            "InstanceType": flavor.name,
-            "ImageId": image_name,
+            "InstanceType": self.testvm_flavor.name,
+            "ImageId": self.config.compute.image_name,
             "SecurityGroup": sec_group.name
         }
-        if 'neutron' in self.config.network.network_provider:
-            parameters['Subnet'] = self._get_subnet_id()
-            template = self._load_template('heat_autoscaling_template.yaml')
-        else:
-            template = self._load_template('heat_autoscale_nova.yaml')
 
-        # create stack
+        if 'neutron' in self.config.network.network_provider:
+            parameters['Subnet'] = self.private_net
+            template = self._load_template('heat_autoscaling_neutron.yaml')
+        else:
+            template = self._load_template('heat_autoscaling_nova.yaml')
+
         fail_msg = "Stack was not created properly."
-        stack = self.verify(20, self._create_stack, 6,
+        stack = self.verify(20, self._create_stack, 4,
                             fail_msg, "stack creation",
                             self.heat_client, template,
                             parameters=parameters)
 
-        self.verify(600, self._wait_for_stack_status, 7,
+        self.verify(600, self._wait_for_stack_status, 5,
                     fail_msg,
                     "stack status becoming 'CREATE_COMPLETE'",
                     stack.id, 'CREATE_COMPLETE', 600, 15)
@@ -291,7 +269,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # find just created instance
         instance_list = self.compute_client.servers.list()
         LOG.info('servers list is {0}'.format(instance_list))
-        LOG.info('expected img_name starts with {0}'.format(
+        LOG.info('expected instance name starts with {0}'.format(
             reduced_stack_name))
 
         for server in instance_list:
@@ -300,63 +278,61 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                 self.instance.append(server)
 
         if not self.instance:
-            self.fail("Failed step: 7 Instance for the {0} stack "
+            self.fail("Failed step: 5 Instance for the {0} stack "
                       "was not created.".format(self.instance))
 
-        floating_ip = self.verify(10, self._create_floating_ip, 8,
+        floating_ip = self.verify(10, self._create_floating_ip, 6,
                                   "Floating IP can not be created.",
                                   'floating IP creation')
 
-        self.verify(10, self._assign_floating_ip_to_instance, 9,
+        self.verify(10, self._assign_floating_ip_to_instance, 7,
                     "Floating IP can not be assigned.",
                     'assigning floating IP',
                     self.compute_client, self.instance[0], floating_ip)
 
         vm_connection = "ssh -o StrictHostKeyChecking=no -i %s %s@%s" % (
-            path_to_key, "ec2-user", floating_ip.ip)
+            path_to_key, "cirros", floating_ip.ip)
 
-        self.verify(1000, self._wait_for_cloudinit, 10,
-                    "Cloud-init script cannot finish within timeout.",
-                    "cloud-init script execution on VM",
-                    vm_connection, 1000, 15)
+        self.verify(120, self._wait_for_vm_ready_for_load, 8,
+                    "VM is not ready or connection can't be established",
+                    "test script execution on VM",
+                    vm_connection, 120, 15)
 
-        self.verify(60, self._load_vm_cpu, 11,
+        self.verify(60, self._load_vm_cpu, 9,
                     "Cannot create a process to load VM CPU.",
                     "loading VM CPU",
                     vm_connection)
 
-        self.verify(500,
-                    self._wait_for_autoscaling, 12,
+        self.verify(480,
+                    self._wait_for_autoscaling, 10,
                     "Stack failed to launch the 2nd instance "
                     "per autoscaling alarm.",
                     "launching the new instance per autoscaling alarm",
-                    len(self.instance) + 1, 500, 10, reduced_stack_name)
+                    len(self.instance) + 1, 480, 10, reduced_stack_name)
 
-        self.verify(180, self._release_vm_cpu, 13,
+        self.verify(180, self._release_vm_cpu, 11,
                     "Cannot kill the process on VM to turn CPU load off.",
                     "turning off VM CPU load",
                     vm_connection)
 
-        self.verify(500, self._wait_for_autoscaling, 14,
+        self.verify(480, self._wait_for_autoscaling, 12,
                     "Stack failed to terminate the 2nd instance "
                     "per autoscaling alarm.",
                     "terminating the 2nd instance per autoscaling alarm",
-                    len(self.instance), 500, 10, reduced_stack_name)
+                    len(self.instance), 480, 10, reduced_stack_name)
 
-        # delete private key file
-        self.verify(10, self._delete_key_file, 15,
+        self.verify(10, self._delete_key_file, 13,
                     "The file with private key cannot be deleted.",
                     "deleting the file with private key",
                     path_to_key)
 
-        fail_msg = "Cannot delete stack."
-        self.verify(20, self.heat_client.stacks.delete, 16,
-                    fail_msg,
+        self.verify(20, self.heat_client.stacks.delete, 14,
+                    "Cannot delete stack.",
                     "deleting stack",
                     stack.id)
 
-        self.verify(100, self._wait_for_stack_deleted, 17,
-                    fail_msg,
+        self.verify(100, self._wait_for_stack_deleted, 15,
+                    "Cannot delete stack.",
                     "deleting stack",
                     stack.id)
 

@@ -129,10 +129,6 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
                                                 self.wait_interval):
             self.fail("Timed out waiting for stack to be deleted.")
 
-    def _find_heat_image(self, image_name):
-        return image_name in [i.name for i in
-                              self.compute_client.images.list()]
-
     def _wait_for_autoscaling(self, exp_count,
                               timeout, interval, reduced_stack_name):
         LOG.info('expected count is {0}'.format(exp_count))
@@ -151,13 +147,14 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         return fuel_health.test.call_until_true(
             count_instances, timeout, interval, reduced_stack_name)
 
-    def _wait_for_cloudinit(self, conn_string, timeout, interval):
+    def _wait_for_vm_ready_for_load(self, conn_string, timeout, interval):
         """
-        Wait for fake file (described in the stack template) to be created
-        on the instance to make sure cloud-init procedure is completed.
+        Wait for fake file to be created on the instance
+        to make sure that vm is ready.
         """
         cmd = (conn_string +
-               " test -f /tmp/vm_ready.txt && echo -ne YES || echo -ne NO")
+               " 'touch /tmp/ostf-heat.txt"
+               "test -f /tmp/ostf-heat.txt && echo -ne YES || echo -ne NO'")
 
         def check():
             return self._run_ssh_cmd(cmd)[0] == "YES"
@@ -167,19 +164,20 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
     def _save_key_to_file(self, key):
         return self._run_ssh_cmd(
-            "KEY=`mktemp`; echo '%s' > $KEY; echo -ne $KEY;" % key)[0]
+            "KEY=`mktemp`; echo '%s' > $KEY; chmod 600 $KEY; echo -ne $KEY;" % key)[0]
 
     def _delete_key_file(self, filepath):
         self._run_ssh_cmd("rm -f %s" % filepath)
 
     def _load_vm_cpu(self, connection_string):
         return self._run_ssh_cmd(
-            connection_string + " cat /dev/urandom | gzip -9 > /dev/null &")[0]
+            connection_string + " 'cat /dev/urandom | gzip -9 > /dev/null &'")[0]
 
     def _release_vm_cpu(self, connection_string):
         pid = self._run_ssh_cmd(connection_string +
-                                " ps -ef | grep \"cat /dev/urandom\" "
-                                "| grep -v grep | awk '{print $2}'")[0]
+                                ' ps -ef | grep \"cat /dev/urandom\" '
+                                '| grep -v grep | awk \"{print $1}\"')[0]
+
         return self._run_ssh_cmd(connection_string +
                                  " kill -9 %s" % pid.strip())[0]
 
@@ -235,3 +233,4 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         """
         return '\n'.join(line for line in template.splitlines()
                          if 'Ref: Subnet' not in line)
+
