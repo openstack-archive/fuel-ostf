@@ -136,7 +136,8 @@ def _get_cluster_depl_tags(cluster_id, token=None):
     deployment_tags.add(mode)
     deployment_tags.add(release_data.get(
         'operating_system', 'failed to get os'))
-
+    if 'version' in release_data:
+        deployment_tags.add(release_data['version'])
     # networks manager
     network_type = response.get('net_provider', 'nova_network')
     deployment_tags.add(network_type)
