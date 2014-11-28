@@ -194,7 +194,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                 "_{id}".format(id=uuid.uuid4().hex): {
                     "name": "Apache"
                 },
-                "type": "io.murano.apps.apache.Apache",
+                "type": "io.murano.apps.apache.ApacheHttpServer",
                 "id": str(uuid.uuid4())
             }
         }
