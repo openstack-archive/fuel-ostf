@@ -29,7 +29,7 @@ class PlatformSaharaTests(sahara.SaharaTest):
         super(PlatformSaharaTests, self).setUp()
 
         doc_link = ('http://docs.mirantis.com/openstack/fuel/'
-                    'fuel-5.0/user-guide.html#platform-tests-description')
+                    'fuel-6.0/user-guide.html#platform-tests-description')
 
         ram_msg = ('This test requires more resources: at least one of the '
                    'compute nodes must have >= {0} MB of free RAM, but you '
