@@ -54,6 +54,7 @@ def setup_app(config=None):
     app = pecan.make_app(
         pecan.conf.app.root,
         debug=pecan.conf.debug,
+        is_transactional=True,
         force_canonical=True,
         hooks=[hooks.CustomTransactionalHook(dbpath=pecan.conf.dbpath),
                hooks.AddTokenHook()]
