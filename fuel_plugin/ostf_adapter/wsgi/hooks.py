@@ -24,11 +24,11 @@ LOG = logging.getLogger(__name__)
 class CustomTransactionalHook(hooks.TransactionHook):
     def __init__(self, dbpath):
         engine = create_engine(dbpath)
-        self.session = orm.scoped_session(orm.sessionmaker())
-        self.session.configure(bind=engine)
+        Session = orm.scoped_session(orm.sessionmaker())
+        Session.configure(bind=engine)
 
         def start():
-            pass
+            self.session = Session()
 
         def commit():
             self.session.commit()
