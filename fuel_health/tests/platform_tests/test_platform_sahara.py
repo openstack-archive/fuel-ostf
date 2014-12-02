@@ -29,7 +29,7 @@ class PlatformSaharaTests(sahara.SaharaTest):
         super(PlatformSaharaTests, self).setUp()
         msg = ("Sahara image with tags wasn't imported into Glance, "
                "please check "
-               "http://docs.mirantis.com/openstack/fuel/fuel-5.0/"
+               "http://docs.mirantis.com/openstack/fuel/fuel-5.1/"
                "user-guide.html#platform-tests-description")
 
         if not self._test_image():
