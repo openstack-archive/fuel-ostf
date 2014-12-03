@@ -224,6 +224,10 @@ class timeout(object):
         if exc_type is not TimeOutError:
             return False  # never swallow other exceptions
         else:
+            LOG.info("Timeout {timeout}s exceeded for {call}".format(
+                call=self.action,
+                timeout=self.timeout
+            ))
             msg = ("Time limit exceeded while waiting for {call} to "
                    "finish.").format(call=self.action)
             raise AssertionError(msg)
