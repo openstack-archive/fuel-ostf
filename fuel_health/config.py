@@ -111,7 +111,7 @@ ComputeGroup = [
                default=10,
                help="Time in seconds between build status checks."),
     cfg.IntOpt('build_timeout',
-               default=160,
+               default=500,
                help="Timeout in seconds to wait for an instance to build."),
     cfg.BoolOpt('run_ssh',
                 default=False,

@@ -144,7 +144,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
             5. Wait while instance deleted
             6. Launch another instance from the snapshot created in step 2.
             7. Delete server.
-        Duration: 300 s.
+        Duration: 700 s.
         """
         image = self.verify(30, self.get_image_from_name, 1,
                             "Image can not be retrieved.",
@@ -156,7 +156,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
                              image)
 
         # snapshot the instance
-        snapshot_image_id = self.verify(180, self._create_image, 3,
+        snapshot_image_id = self.verify(700, self._create_image, 3,
                                         "Snapshot of an"
                                         " instance can not be created.",
                                         'snapshotting an instance',
@@ -172,7 +172,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
                     'Wait for instance deletion complete',
                     server)
 
-        server = self.verify(180, self._boot_image, 6,
+        server = self.verify(700, self._boot_image, 6,
                              "Instance can not be launched from snapshot.",
                              'booting instance from snapshot',
                              snapshot_image_id)
