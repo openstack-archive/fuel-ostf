@@ -99,6 +99,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         2. Create new sample for image resource.
         3. Check that created sample has the expected resource.
         4. Get samples and compare sample lists before and after create sample.
+        5. Get resource of sample
         Duration: 5 s.
         Deployment tags: Ceilometer
         """
@@ -144,6 +145,12 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
             fail_msg, msg,
             self.glance_notifications[0], query,
             len(list_before_create_sample))
+
+        fail_msg = 'Getting resource of sample is failed.'
+        msg = 'Getting resource of sample is successful.'
+
+        self.verify(self.ceilometer_client.resources.get, 5,
+                    fail_msg, msg, sample.resource_id)
 
     def test_check_volume_notifications(self):
         """Ceilometer test to check get Cinder notifications.
