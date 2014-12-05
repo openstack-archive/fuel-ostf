@@ -46,12 +46,11 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                                                 'router.update']
             cls.neutron_floatingip_notifications = ['ip.floating.create',
                                                     'ip.floating.update']
-            cls.glance_notifications = ['image.update', 'image.upload',
-                                        'image.delete', 'image.download',
-                                        'image.serve']
             cls.volume_notifications = ['volume', 'volume.size']
+            cls.snapshot_notifications = ['snapshot', 'snapshot.size']
             cls.glance_notifications = ['image', 'image.size', 'image.update',
-                                        'image.upload']
+                                        'image.upload', 'image.download',
+                                        'image.serve', 'image.delete']
             cls.swift_notifications = ['storage.objects.incoming.bytes',
                                        'storage.objects.outgoing.bytes',
                                        'storage.api.request']
@@ -337,6 +336,19 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                                         cluster.id))
         self.sahara_client.clusters.delete(cluster.id)
         return cluster
+
+    def glance_helper(self):
+        image = self.glance_client.images.create(
+            name=rand_name('ostf-ceilo-image'))
+        self.objects_for_delete.append((self.glance_client.images.delete,
+                                        image.id))
+        self.glance_client.images.update(image.id, data='data',
+                                         disk_format='qcow2',
+                                         container_format='bare')
+        self.glance_client.images.upload(image.id, 'upload_data')
+        self.glance_client.images.data(image.id)
+        self.glance_client.images.delete(image.id)
+        return image
 
     @staticmethod
     def cleanup_resources(object_list):
