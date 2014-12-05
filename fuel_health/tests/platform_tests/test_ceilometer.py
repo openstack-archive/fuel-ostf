@@ -160,7 +160,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         1. Create volume.
         2. Check volume notifications.
         Duration: 10 s.
-        Deployment tags: Ceilometer
+        Deployment tags: Ceilometer, Cinder
         """
 
         if (not self.config.volume.cinder_node_exist
@@ -175,6 +175,14 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
                              self.volume_client,
                              'available')
 
+        fail_msg = "Creation volume snapshot failed"
+        msg = "Volume snapshot was created"
+
+        snapshot = self.verify(60, self._create_snapshot, 1,
+                               fail_msg, msg,
+                               self.volume_client,
+                               volume.id, 'available')
+
         query = [{'field': 'resource', 'op': 'eq', 'value': volume.id}]
         fail_msg = "Volume notifications are not received."
         msg = "Volume notifications are received."
@@ -182,6 +190,14 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         self.verify(600, self.wait_notifications, 2,
                     fail_msg, msg,
                     self.volume_notifications, query)
+
+        query = [{'field': 'resource', 'op': 'eq', 'value': snapshot.id}]
+        fail_msg = "Volume snapshot notifications are not received."
+        msg = "Volume snapshot notifications are received."
+
+        self.verify(600, self.wait_notifications, 2,
+                    fail_msg, msg,
+                    self.snapshot_notifications, query)
 
     def test_check_glance_notifications(self):
         """Ceilometer test to check get Glance notifications.
@@ -192,8 +208,8 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         Duration: 5 s.
         Deployment tags: Ceilometer
         """
-        query = [{'field': 'resource', 'op': 'eq',
-                  'value': self.get_image_from_name()}]
+        image = self.glance_helper()
+        query = [{'field': 'resource', 'op': 'eq', 'value': image.id}]
 
         fail_msg = "Glance notifications are not received."
         msg = "Glance notifications are received."
