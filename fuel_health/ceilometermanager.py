@@ -50,8 +50,10 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                                         'image.delete', 'image.download',
                                         'image.serve']
             cls.volume_notifications = ['volume', 'volume.size']
+            cls.snapshot_notifications = ['snapshot', 'snapshot.size']
             cls.glance_notifications = ['image', 'image.size', 'image.update',
-                                        'image.upload']
+                                        'image.upload', 'image.download',
+                                        'image.serve', 'image.delete']
             cls.swift_notifications = ['storage.objects.incoming.bytes',
                                        'storage.objects.outgoing.bytes',
                                        'storage.api.request']
@@ -289,31 +291,44 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         return net, subnet, port, router, flip
 
     def sahara_helper(self):
+        #  Find Sahara image
         image_id = None
         for image in self.compute_client.images.list():
             if ('_sahara_tag_vanilla' in image.metadata
                     and '_sahara_tag_1.2.1' in image.metadata):
                 image_id = image.id
+
+        # Find flavor id for sahara instances
         flavor_id = next(
             flavor.id for flavor in
             self.compute_client.flavors.list() if flavor.name == 'm1.small')
+
+        #  Create json for node group
         node_group = {'name': 'allinone',
                       'flavor_id': flavor_id,
                       'node_processes': ['namenode', 'jobtracker',
                                          'tasktracker', 'datanode'],
                       'count': 1}
+
+        #  Find floating ip pool for neutron and nova net
         if self.neutron_external_network_id:
             node_group['floating_ip_pool'] = self.neutron_external_network_id
+
         if self.floating_ip_pool:
             node_group['floating_ip_pool'] = self.floating_ip_pool
+
+        # Create json for Sahara cluster
         cluster_json = {'name': rand_name("ceilo-cluster"),
                         'plugin_name': "vanilla",
                         'hadoop_version': "1.2.1",
                         'default_image_id': image_id,
                         'cluster_configs': {},
                         'node_groups': [node_group]}
+
         if self.neutron_private_network_id:
             cluster_json['net_id'] = self.neutron_private_network_id
+
+        #  Create Sahara cluster
         cluster = self.sahara_client.clusters.create(**cluster_json)
 
         #  Wait for change cluster state for metric: cluster.update
@@ -326,6 +341,18 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                                         cluster.id))
         self.sahara_client.clusters.delete(cluster.id)
         return cluster
+
+    def glance_helper(self):
+        image = self.glance_client.images.create(
+            name=rand_name('ostf-ceilo-image'))
+        self.objects_for_delete.append((self.glance_client.images.delete,
+                                        image.id))
+        self.glance_client.images.update(image.id, data='data',
+                                         disk_format='qcow2',
+                                         container_format='bare')
+        self.glance_client.images.data(image.id)
+        self.glance_client.images.delete(image.id)
+        return image
 
     @staticmethod
     def cleanup_resources(object_list):
