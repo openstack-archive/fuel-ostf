@@ -2,7 +2,7 @@
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
+#    not use this file except in compliance with the License. You may obtaindis
 #    a copy of the License at
 #
 #         http://www.apache.org/licenses/LICENSE-2.0
@@ -354,3 +354,9 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
         self.assertEqual(200, resp.status_code)
         self.assertIsInstance(resp.json()['categories'], list)
+
+    def check_route(self, environment, route):
+        check_ip = environment['services'][0]['instance']['floatingIpAddress']
+        resp = requests.get('http://' + '%s/%s' % (check_ip, str(route)))
+
+        self.assertEqual(200, resp.status_code)
