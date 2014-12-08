@@ -1,7 +1,7 @@
 # Copyright 2013 Mirantis, Inc.
 # All Rights Reserved.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
 #
@@ -354,3 +354,10 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
         self.assertEqual(200, resp.status_code)
         self.assertIsInstance(resp.json()['categories'], list)
+
+    def check_path(self, environment, path):
+        floating_ip = environment['services'][0]['instance'][
+            'floatingIpAddress']
+        resp = requests.get('http://{0}/{1}'.format(floating_ip, path))
+
+        self.assertEqual(200, resp.status_code)
