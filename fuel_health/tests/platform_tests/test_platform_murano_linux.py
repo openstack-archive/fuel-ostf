@@ -148,3 +148,137 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
         self.verify(5, self.delete_environment,
                     8, fail_msg, "deleting environment",
                     self.environment['id'])
+
+    def test_deploy_wordpress_app(self):
+        """Check that user can deploy Wordpress application in Murano environment
+        Target component: Murano
+
+        Scenario:
+            1. Send request to create environment.
+            2. Send request to create session for environment.
+            3. Send request to create Linux-based service Apache.
+            4. Send request to create MySQL
+            5. Send request to create Wordpress
+            6. Request to deploy session.
+            7. Checking environment status.
+            8. Checking deployments status
+            9. Checking routes
+            10. Send request to delete environment.
+
+        Duration: 2140 s.
+
+        Deployment tags: Murano, Heat
+        """
+        fail_msg = "Can't create environment. Murano API is not available. "
+        self.environment = self.verify(15, self.create_environment,
+                                       1, fail_msg, 'creating environment',
+                                       self.env_name)
+
+        fail_msg = "User can't create session for environment. "
+        session = self.verify(5, self.create_session,
+                              2, fail_msg, "session creating",
+                              self.environment['id'])
+
+        post_body = {
+            "instance": {
+                "flavor": self.flavor_name,
+                "image": self.image.name,
+                "assignFloatingIp": True,
+                "?": {
+                    "type": "io.murano.resources.LinuxMuranoInstance",
+                    "id": str(uuid.uuid4())
+                },
+                "name": rand_name("testMurano")
+            },
+            "name": rand_name("teMurano"),
+            "?": {
+                "_{id}".format(id=uuid.uuid4().hex): {
+                    "name": "Apache"
+                },
+                "type": "io.murano.apps.apache.ApacheHttpServer",
+                "id": str(uuid.uuid4())
+            }
+        }
+
+        fail_msg = "User can't create service Apache. "
+        self.apache = self.verify(5, self.create_service,
+                                  3, fail_msg, "service creating",
+                                  self.environment['id'], session['id'],
+                                  post_body)
+
+        post_body = {
+            "instance": {
+                "flavor": self.flavor_name,
+                "image": self.image.name,
+                "assignFloatingIp": True,
+                "?": {
+                    "type": "io.murano.resources.LinuxMuranoInstance",
+                    "id": str(uuid.uuid4())
+                },
+                "name": rand_name("testMurano")
+            },
+            "name": rand_name("teMuranoApache"),
+            "database": "mybase",
+            "username": "user",
+            "password": "U0yleh@c",
+            "?": {
+                "_{id}".format(id=uuid.uuid4().hex): {
+                    "name": "MySQL"
+                },
+                "type": "io.murano.databases.MySql",
+                "id": str(uuid.uuid4())
+            }
+        }
+
+        fail_msg = "User can't create service MySQL. "
+        self.mysql = self.verify(5, self.create_service,
+                                 4, fail_msg, "service creating",
+                                 self.environment['id'], session['id'],
+                                 post_body)
+
+        post_body = {
+            "name": rand_name("teMuranoSQL"),
+            "server": self.apache,
+            "database": self.mysql,
+            "dbName": "wordpress",
+            "dbUser": "wp_user",
+            "dbPassword": "U0yleh@c",
+            "?": {
+                "_{id}".format(id=uuid.uuid4().hex): {
+                    "name": "WordPress"
+                },
+                "type": "io.murano.apps.WordPress",
+                "id": str(uuid.uuid4())
+            }
+        }
+
+        fail_msg = "User can't create service WordPress. "
+        self.verify(5, self.create_service,
+                    5, fail_msg, "service creating",
+                    self.environment['id'], session['id'], post_body)
+
+        fail_msg = "User can't deploy session. "
+        self.verify(5, self.deploy_session,
+                    6, fail_msg,
+                    "sending session on deployment",
+                    self.environment['id'], session['id'])
+
+        fail_msg = "Deployment was not completed correctly. "
+        environment = self.verify(1800, self.deploy_check,
+                                  7, fail_msg, 'deployment is going',
+                                  self.environment['id'])
+
+        self.verify(5, self.deployments_status_check,
+                    8, fail_msg,
+                    'Check deployments status',
+                    self.environment['id'])
+
+        fail_msg = "No route to wordpress"
+        self.verify(10, self.check_route,
+                    9, fail_msg, 'checking route',
+                    environment, 'wordpress')
+
+        fail_msg = "Can't delete environment. "
+        self.verify(5, self.delete_environment,
+                    10, fail_msg, "deleting environment",
+                    self.environment['id'])
