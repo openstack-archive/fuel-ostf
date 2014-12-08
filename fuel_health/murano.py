@@ -354,3 +354,9 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
         self.assertEqual(200, resp.status_code)
         self.assertIsInstance(resp.json()['categories'], list)
+
+    def check_route(self, environment, route):
+        check_ip = environment['services'][0]['instance']['floatingIpAddress']
+        resp = requests.get('http://' + '%s/%s' % (check_ip, str(route)))
+
+        self.assertEqual(200, resp.status_code)
