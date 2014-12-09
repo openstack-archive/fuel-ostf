@@ -39,7 +39,9 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
         msg = ("Linux image with Murano "
                "tag isn't available. Need to import this image into "
                "glance and mark with Murano metadata tag. Please refer to"
-               " the Mirantis OpenStack and Murano user documentation. ")
+               " the Mirantis OpenStack and Murano user documentation. "
+               "You can find Murano OSTF documentation by following this link:"
+               " https://github.com/stackforge/fuel-ostf ")
         self.image = self.find_murano_image('linux')
         if not self.image:
             LOG.debug(msg)
