@@ -36,10 +36,13 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
         super(MuranoDeployLinuxServicesTests, self).setUp()
         self.check_clients_state()
 
-        msg = ("Linux image with Murano "
-               "tag isn't available. Need to import this image into "
-               "glance and mark with Murano metadata tag. Please refer to"
-               " the Mirantis OpenStack and Murano user documentation. ")
+        doc_link = ('http://docs.mirantis.com/openstack/fuel/'
+                    'fuel-6.0/user-guide.html#platform-tests-description')
+
+        msg = ('Murano image was not properly registered or '
+               'was not registered at all. Please refer to the '
+               'Mirantis OpenStack documentation ({0}) to find out '
+               'how to register image for Murano.'.format(doc_link))
         self.image = self.find_murano_image('linux')
         if not self.image:
             LOG.debug(msg)
