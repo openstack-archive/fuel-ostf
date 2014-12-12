@@ -6,17 +6,14 @@ parameters:
     type: string
   ImageId:
     type: string
-  network:
-    type: string
-  Subnet:
-    type: string
-    default: ""
 resources:
-  Server:
+  Server1:
     type: OS::Nova::Server
     properties:
-      name: ost1-test_heat
       image: {get_param: ImageId}
       flavor: {get_param: InstanceType}
-      networks:
-          - uuid: {Ref: network}
+  Server2:
+    type: OS::Nova::Server
+    properties:
+      image: {get_param: ImageId}
+      flavor: {get_param: InstanceType}
