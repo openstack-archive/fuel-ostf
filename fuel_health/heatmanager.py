@@ -236,3 +236,19 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         """
         return '\n'.join(line for line in template.splitlines()
                          if 'Ref: Subnet' not in line)
+
+    def _get_stack_instances(self, mask_name):
+        self.instances = []
+
+        # find just created instance
+        instance_list = self.compute_client.servers.list()
+        LOG.info('Instances list is {0}'.format(instance_list))
+        LOG.info('Expected instance name includes {0}'.format(mask_name))
+
+        for inst in instance_list:
+            LOG.info('Instance name is {0}'.format(inst.name))
+            if inst.name.startswith(mask_name):
+                self.instances.append(inst)
+
+        return self.instances
+

@@ -15,6 +15,7 @@
 import logging
 
 from fuel_health import heatmanager
+from fuel_health.common.utils import data_utils
 
 
 LOG = logging.getLogger(__name__)
@@ -30,10 +31,9 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                 and self.config.compute.libvirt_type != 'vcenter':
             self.skipTest('There are no compute nodes')
 
-        self.instance = []
 
     def test_actions(self):
-        """Typical stack actions: create, update, delete, show details, etc.
+        """Typical stack actions: create, delete, show details, etc.
         Target component: Heat
 
         Scenario:
@@ -44,13 +44,11 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             5. Get the details of the stack resource.
             6. Get the events list of the created stack.
             7. Get the details of the stack event.
-            8. Update the stack.
-            9. Wait for the stack to update.
-            10. Get the stack template details.
-            11. Get the resources list of the updated stack.
-            12. Delete the stack.
-            13. Wait for the stack to be deleted.
-        Duration: 640 s.
+            8. Get the stack template details.
+            9. Get the resources list of the updated stack.
+            10. Delete the stack.
+            11. Wait for the stack to be deleted.
+        Duration: 800 s.
         """
         self.check_image_exists()
         parameters = {
@@ -67,13 +65,12 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                 'heat_create_nova_stack_template.yaml')
 
         fail_msg = "Stack was not created properly."
+
         # create stack
         stack = self.verify(20, self._create_stack, 1,
-                            fail_msg,
-                            "stack creation",
+                            fail_msg, "stack creation",
                             self.heat_client,
-                            template,
-                            parameters=parameters)
+                            template, parameters=parameters)
 
         self.verify(600, self._wait_for_stack_status, 2,
                     fail_msg,
@@ -143,53 +140,188 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         self.verify_response_body_content(ev_details.logical_resource_id,
                                           "Server", fail_msg, 7)
 
-        # update stack
-        template = template.replace('Name: ost1-test_heat',
-                                    'Name: ost1-test_updated')
-        fail_msg = "Cannot update stack."
-        stack = self.verify(20, self._update_stack, 8,
-                            fail_msg,
-                            "updating stack.",
-                            self.heat_client, stack.id,
-                            template,
-                            parameters=parameters)
-        self.verify(100, self._wait_for_stack_status, 9,
-                    fail_msg,
-                    "stack status becoming 'UPDATE_COMPLETE'",
-                    stack.id, 'UPDATE_COMPLETE')
-
         # show template
         fail_msg = "Cannot retrieve template of the stack."
-        act_tpl = self.verify(10, self.heat_client.stacks.template,
-                              10,
-                              fail_msg,
-                              "retrieving stack template",
+        act_tpl = self.verify(10, self.heat_client.stacks.template, 8,
+                              fail_msg, "retrieving stack template",
                               stack.id)
 
         check_content = lambda: ("InstanceType" in act_tpl["parameters"] and
                                  "Server" in act_tpl["resources"])
-        self.verify(10, check_content, 10,
+        self.verify(10, check_content, 8,
                     fail_msg, "verifying template content")
 
         # get updated resources list
-        resources = self.verify(10, self.heat_client.resources.list, 11,
+        resources = self.verify(10, self.heat_client.resources.list, 9,
                                 "Cannot retrieve list of stack resources.",
                                 "retrieving list of stack resources",
                                 stack.id)
         resource_id = resources[0].logical_resource_id
         self.verify_response_body_content("Server", resource_id,
-                                          fail_msg, 11)
+                                          fail_msg, 9)
 
         # delete stack
         fail_msg = "Cannot delete stack."
-        self.verify(20, self.heat_client.stacks.delete, 12,
-                    fail_msg,
-                    "deleting stack",
+        self.verify(20, self.heat_client.stacks.delete, 10,
+                    fail_msg, "deleting stack",
                     stack.id)
 
-        self.verify(100, self._wait_for_stack_deleted, 13,
+        self.verify(100, self._wait_for_stack_deleted, 10,
+                    fail_msg, "deleting stack",
+                    stack.id)
+
+    def test_update(self):
+        """Update stack actions: inplace, replace and update whole template.
+        Target component: Heat
+
+        Scenario:
+            1. Create a stack.
+            2. Wait for the stack status to change to 'CREATE_COMPLETE'.
+            3. Change instance name, update stack.
+            4. Wait for the stack status to change to 'UPDATE_COMPLETE'.
+            5. Check that instance name was changed.
+            6. Create one more test flavor.
+            7. Change instance flavor to just created.
+            8. Wait for the stack status to change to 'UPDATE_COMPLETE'.
+            9. Check that instance flavor was changed.
+            10. Change stack template.
+            11. Wait for the stack status to change to 'UPDATE_COMPLETE'.
+            12. Check that there are only two newly created stack instances.
+            13. Delete the stack.
+            15. Wait for the stack to be deleted.
+        Duration: 900 s.
+        """
+        self.check_image_exists()
+        parameters = {
+            "InstanceType": self.testvm_flavor.name,
+            "ImageId": self.config.compute.image_name
+        }
+        if 'neutron' in self.config.network.network_provider:
+            parameters["Subnet"] = self._get_subnet_id()
+            parameters['network'] = self._get_net_uuid()[0]
+            template = self._load_template(
+                'heat_create_neutron_stack_template.yaml')
+        else:
+            template = self._load_template(
+                'heat_create_nova_stack_template.yaml')
+
+        fail_msg = "Stack wasn't created properly."
+
+        # create stack
+        stack = self.verify(20, self._create_stack, 1,
+                            fail_msg,
+                            "stack creation",
+                            self.heat_client,
+                            template, parameters=parameters)
+
+        self.verify(300, self._wait_for_stack_status, 2,
                     fail_msg,
-                    "deleting stack",
+                    "stack status becoming 'CREATE_COMPLETE'",
+                    stack.id, 'CREATE_COMPLETE')
+
+        instances = self._get_stack_instances("ost1-test_heat")
+
+        if not instances:
+            self.fail("Failed step: 2 Instance for the {0} stack "
+                      "was not created.".format(stack.stack_name))
+
+        fail_msg = "Can't update stack."
+
+        # update inplace
+        template = template.replace('name: ost1-test_heat',
+                                    'name: ost1-test_updated')
+
+        stack = self.verify(20, self._update_stack, 3,
+                            fail_msg,
+                            "updating stack, changing resource name",
+                            self.heat_client, stack.id,
+                            template, parameters=parameters)
+
+        self.verify(100, self._wait_for_stack_status, 4,
+                    fail_msg,
+                    "stack status becoming 'UPDATE_COMPLETE'",
+                    stack.id, 'UPDATE_COMPLETE')
+
+        new_instance_name = self.compute_client.servers.get(
+            instances[0].id).name
+  
+        if new_instance_name != "ost1-test_updated":
+            self.fail("Failed step: 5 Stack update inplace wasn't "
+                      "finished, instance name wasn't changed.")
+
+        # update replace
+        flavor_name = data_utils.rand_name('ostf-heat-flavor-')
+        flavor = self.verify(10, self.compute_client.flavors.create, 6,
+                             "Flavor can not be created.", "flavor creation",
+                             flavor_name, 512, 1, 12)
+        self.flavors.append(flavor)
+
+        parameters["InstanceType"] = flavor.name
+
+        stack = self.verify(20, self._update_stack, 7,
+                            fail_msg,
+                            "updating stack, changing instance flavor",
+                            self.heat_client, stack.id,
+                            template, parameters=parameters)
+
+        self.verify(100, self._wait_for_stack_status, 8,
+                    fail_msg,
+                    "stack status becoming 'UPDATE_COMPLETE'",
+                    stack.id, 'UPDATE_COMPLETE')
+
+        instances = self._get_stack_instances("ost1-test_updated")
+      
+        new_instance_flavor = instances[0].flavor['id']
+        if new_instance_flavor != flavor.id:
+            self.fail("Failed step: 9 Stack update replace wasn't "
+                      "finished, instance flavor wasn't changed.")
+
+        # update the whole template, add new resource
+
+        parameters = {
+            "InstanceType": self.testvm_flavor.name,
+            "ImageId": self.config.compute.image_name
+        }
+        if 'neutron' in self.config.network.network_provider:
+            parameters["Subnet"] = self._get_subnet_id()
+            parameters['network'] = self._get_net_uuid()[0]
+            template = self._load_template(
+                'heat_update_neutron_stack_template.yaml')
+        else:
+            template = self._load_template(
+                'heat_update_nova_stack_template.yaml')
+
+        stack = self.verify(20, self._update_stack, 10,
+                            fail_msg,
+                            "updating stack, changing template",
+                            self.heat_client, stack.id,
+                            template, parameters=parameters)
+
+        self.verify(180, self._wait_for_stack_status, 11,
+                    fail_msg,
+                    "stack status becoming 'UPDATE_COMPLETE'",
+                    stack.id, 'UPDATE_COMPLETE')
+
+        instances = self._get_stack_instances(stack.stack_name)
+       
+        if len(instances) != 2:
+           self.fail("Failed step: 12 There are more then two expected "
+                     "instances belonging test stack.")
+
+        instances = self._get_stack_instances("ost1-test_updated")
+
+        if instances:
+           self.fail("Failed step: 12 Previously create instance "
+                     "wasn't deleted during stack update.")
+
+        # delete stack
+        fail_msg = "Cannot delete stack."
+        self.verify(20, self.heat_client.stacks.delete, 13,
+                    fail_msg, "deleting stack",
+                    stack.id)
+
+        self.verify(100, self._wait_for_stack_deleted, 14,
+                    fail_msg, "deleting stack",
                     stack.id)
 
     def test_autoscaling(self):
@@ -265,20 +397,11 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         reduced_stack_name = '{0}-{1}'.format(
             stack.stack_name[:2], stack.stack_name[-4:])
 
-        # find just created instance
-        instance_list = self.compute_client.servers.list()
-        LOG.info('servers list is {0}'.format(instance_list))
-        LOG.info('expected instance name starts with {0}'.format(
-            reduced_stack_name))
+        instances = self._get_stack_instances(reduced_stack_name)
 
-        for server in instance_list:
-            LOG.info('instance name is {0}'.format(server.name))
-            if server.name.startswith(reduced_stack_name):
-                self.instance.append(server)
-
-        if not self.instance:
+        if not instances:
             self.fail("Failed step: 5 Instance for the {0} stack "
-                      "was not created.".format(self.instance))
+                      "was not created.".format(stack.stack_name))
 
         floating_ip = self.verify(10, self._create_floating_ip, 6,
                                   "Floating IP can not be created.",
@@ -287,7 +410,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         self.verify(10, self._assign_floating_ip_to_instance, 7,
                     "Floating IP can not be assigned.",
                     'assigning floating IP',
-                    self.compute_client, self.instance[0], floating_ip)
+                    self.compute_client, instances[0], floating_ip)
 
         vm_connection = "ssh -o StrictHostKeyChecking=no -i %s %s@%s" % (
             path_to_key, "cirros", floating_ip.ip)
@@ -307,7 +430,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     "Stack failed to launch the 2nd instance "
                     "per autoscaling alarm.",
                     "launching the new instance per autoscaling alarm",
-                    len(self.instance) + 1, 480, 10, reduced_stack_name)
+                    len(instances) + 1, 480, 10, reduced_stack_name)
 
         self.verify(180, self._release_vm_cpu, 11,
                     "Cannot kill the process on VM to turn CPU load off.",
@@ -318,7 +441,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     "Stack failed to terminate the 2nd instance "
                     "per autoscaling alarm.",
                     "terminating the 2nd instance per autoscaling alarm",
-                    len(self.instance), 480, 10, reduced_stack_name)
+                    len(instances), 480, 10, reduced_stack_name)
 
         self.verify(10, self._delete_key_file, 13,
                     "The file with private key cannot be deleted.",
