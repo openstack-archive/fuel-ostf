@@ -232,7 +232,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         msg = ("Image with cfntools package wasn't "
                "imported into Glance, please check "
                "http://docs.mirantis.com/openstack/fuel/fuel"
-               "-5.0/user-guide.html#platform-tests-description")
+               "-6.0/user-guide.html#platform-tests-description")
 
         image_available = self._find_heat_image(image_name)
 
