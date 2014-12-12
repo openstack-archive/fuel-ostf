@@ -9,8 +9,8 @@ parameters:
 resources:
   Server:
     type: OS::Nova::Server
-    metadata:
-      Name: ost1-test_heat
     properties:
+      name: ost1-test_heat
       image: {get_param: ImageId}
       flavor: {get_param: InstanceType}
+      flavor_update_policy: REPLACE
