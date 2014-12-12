@@ -1,0 +1,19 @@
+heat_template_version: '2013-05-23'
+description: |
+  Template which creates single instance
+parameters:
+  InstanceType:
+    type: string
+  ImageId:
+    type: string
+resources:
+  Server1:
+    type: OS::Nova::Server
+    properties:
+      image: {get_param: ImageId}
+      flavor: {get_param: InstanceType}
+  Server2:
+    type: OS::Nova::Server
+    properties:
+      image: {get_param: ImageId}
+      flavor: {get_param: InstanceType}

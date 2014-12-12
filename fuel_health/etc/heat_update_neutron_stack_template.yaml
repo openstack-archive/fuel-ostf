@@ -1,0 +1,29 @@
+heat_template_version: '2013-05-23'
+description: |
+  Template which creates two instances
+parameters:
+  InstanceType:
+    type: string
+  ImageId:
+    type: string
+  network:
+    type: string
+  Subnet:
+    type: string
+    default: ""
+resources:
+  Server1:
+    type: OS::Nova::Server
+    properties:
+      image: {get_param: ImageId}
+      flavor: {get_param: InstanceType}
+      networks:
+          - uuid: {Ref: network}
+
+  Server2:
+    type: OS::Nova::Server
+    properties:
+      image: {get_param: ImageId}
+      flavor: {get_param: InstanceType}
+      networks:
+          - uuid: {Ref: network}
