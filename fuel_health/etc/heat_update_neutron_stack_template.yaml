@@ -1,6 +1,6 @@
 heat_template_version: '2013-05-23'
 description: |
-  Template which creates single instance
+  Template which creates two instances
 parameters:
   InstanceType:
     type: string
@@ -9,12 +9,18 @@ parameters:
   network:
     type: string
 resources:
-  Server:
+  Server1:
     type: OS::Nova::Server
     properties:
-      name: ost1-test_heat
       image: {get_param: ImageId}
       flavor: {get_param: InstanceType}
-      flavor_update_policy: REPLACE
+      networks:
+          - network: {Ref: network}
+
+  Server2:
+    type: OS::Nova::Server
+    properties:
+      image: {get_param: ImageId}
+      flavor: {get_param: InstanceType}
       networks:
           - network: {Ref: network}
