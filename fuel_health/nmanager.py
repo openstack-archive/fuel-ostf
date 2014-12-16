@@ -4,7 +4,7 @@
 # Copyright 2013 Mirantis, Inc.
 # All Rights Reserved.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
 #
@@ -45,9 +45,13 @@ try:
     import neutronclient.neutron.client
 except:
     LOG.warning('Neutron client could not be imported.')
+try:
+    import glanceclient
+except:
+    LOG.warning('Glance client could not be imported')
 
 import cinderclient.client
-import keystoneclient
+import keystoneclient.v2_0.client
 import novaclient.client
 
 from fuel_health.common.ssh import Client as SSHClient
@@ -75,7 +79,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
         self.compute_client = self._get_compute_client()
         try:
             self.identity_client = self._get_identity_client()
-            self.identity_v3_client = self._get_identity_client(version=3)
             self.clients_initialized = True
         except Exception as e:
             if e.__class__.__name__ == 'Unauthorized':
@@ -98,16 +101,17 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.sahara_client = self._get_sahara_client()
             self.ceilometer_client = self._get_ceilometer_client()
             self.neutron_client = self._get_neutron_client()
+            self.glance_client = self._get_glance_client()
             self.client_attr_names = [
                 'compute_client',
                 'identity_client',
-                'identity_v3_client',
                 'volume_client',
                 'heat_client',
                 'murano_client',
                 'sahara_client',
                 'ceilometer_client',
-                'neutron_client'
+                'neutron_client',
+                'glance_client'
             ]
 
     def _get_compute_client(self, username=None, password=None,
@@ -155,7 +159,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                           auth_url)
 
     def _get_identity_client(self, username=None, password=None,
-                             tenant_name=None, version=None):
+                             tenant_name=None):
         if not username:
             username = self.config.identity.admin_username
         if not password:
@@ -172,25 +176,11 @@ class OfficialClientManager(fuel_health.manager.Manager):
         auth_url = self.config.identity.uri
         dscv = self.config.identity.disable_ssl_certificate_validation
 
-        if not version or version == 2:
-            return keystoneclient.v2_0.client.Client(username=username,
-                                                     password=password,
-                                                     tenant_name=tenant_name,
-                                                     auth_url=auth_url,
-                                                     insecure=dscv)
-        elif version == 3:
-            helper_list = auth_url.rstrip("/").split("/")
-            helper_list[-1] = "v3/"
-            auth_url = "/".join(helper_list)
-
-            return keystoneclient.v3.client.Client(username=username,
-                                                   password=password,
-                                                   project_name=tenant_name,
-                                                   auth_url=auth_url,
-                                                   insecure=dscv)
-        else:
-            LOG.warning("Version:{0} for keystoneclient is not "
-                        "supported with OSTF".format(version))
+        return keystoneclient.v2_0.client.Client(username=username,
+                                                 password=password,
+                                                 tenant_name=tenant_name,
+                                                 auth_url=auth_url,
+                                                 insecure=dscv)
 
     def _get_heat_client(self, username=None, password=None,
                          tenant_name=None):
@@ -280,6 +270,20 @@ class OfficialClientManager(fuel_health.manager.Manager):
         return neutronclient.neutron.client.Client(version,
                                                    token=keystone.auth_token,
                                                    endpoint_url=endpoint)
+
+    def _get_glance_client(self, version='1'):
+        keystone = self._get_identity_client()
+
+        try:
+            endpoint = keystone.service_catalog.url_for(
+                service_type='image',
+                endpoint_type='publicURL')
+        except keystoneclient.exceptions.EndpointNotFound:
+            LOG.warning('Can not initialize glance client')
+            return None
+
+        return glanceclient.Client(version, token=keystone.auth_token,
+                                   endpoint=endpoint)
 
 
 class OfficialClientTest(fuel_health.test.TestCase):
@@ -379,9 +383,9 @@ class OfficialClientTest(fuel_health.test.TestCase):
                       "register it in Glance with name '{image}' as "
                       "'admin' tenant."
                       .format(
-                          image=self.manager.config.compute.image_name
-                      )
-                      )
+                image=self.manager.config.compute.image_name
+            )
+            )
 
     @classmethod
     def _clean_flavors(cls):
@@ -389,6 +393,16 @@ class OfficialClientTest(fuel_health.test.TestCase):
             for flavor in cls.flavors:
                 try:
                     cls.compute_client.flavors.delete(flavor)
+                except Exception as exc:
+                    cls.error_msg.append(exc)
+                    LOG.debug(traceback.format_exc())
+
+    @classmethod
+    def _clean_images(cls):
+        if cls.images:
+            for image in cls.images:
+                try:
+                    cls.glance_client.images.delete(image)
                 except Exception as exc:
                     cls.error_msg.append(exc)
                     LOG.debug(traceback.format_exc())
@@ -454,6 +468,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             cls.floating_ips = []
             cls.error_msg = []
             cls.flavors = []
+            cls.images = []
             cls.private_net = 'net04'
 
     def setUp(self):
@@ -712,7 +727,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
 
 class PlatformServicesBaseClass(NovaNetworkScenarioTest):
-
     def _try_port(self, host, port):
         start_time = time.time()
         delta = time.time() - start_time
@@ -792,10 +806,6 @@ class SanityChecksTest(OfficialClientTest):
     def _list_instances(self, client):
         instances = client.servers.list()
         return instances
-
-    def _list_images(self, client):
-        images = client.images.list()
-        return images
 
     def _list_volumes(self, client):
         volumes = client.volumes.list(detailed=False)
