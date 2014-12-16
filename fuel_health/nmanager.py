@@ -1,19 +1,17 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2012 OpenStack, LLC
 # Copyright 2013 Mirantis, Inc.
 # All Rights Reserved.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#         http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
 #    under the License.
 
 import logging
@@ -45,6 +43,10 @@ try:
     import neutronclient.neutron.client
 except Exception:
     LOG.warning('Neutron client could not be imported.')
+try:
+    import glanceclient
+except Exception:
+    LOG.warning('Glance client could not be imported')
 
 import cinderclient.client
 import glanceclient.client
@@ -99,11 +101,13 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.sahara_client = self._get_sahara_client()
             self.ceilometer_client = self._get_ceilometer_client()
             self.neutron_client = self._get_neutron_client()
+            self.glance_client_v1 = self._get_glance_client(version=1)
             self.client_attr_names = [
                 'compute_client',
                 'identity_client',
                 'identity_v3_client',
                 'glance_client',
+                'glance_client_v1',
                 'volume_client',
                 'heat_client',
                 'murano_client',
@@ -336,6 +340,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
             def await_state():
                 if client.volumes.get(volume.id).status == expected_state:
                     return True
+
             fuel_health.test.call_until_true(await_state, 50, 1)
 
         return volume
@@ -421,9 +426,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                       "cirros-0.3.1-x86_64-disk.img image and "
                       "register it in Glance with name '{image}' as "
                       "'admin' tenant."
-                      .format(
-                          image=self.manager.config.compute.image_name
-                      )
+                      .format(image=self.manager.config.compute.image_name)
                       )
 
     @classmethod
@@ -432,6 +435,16 @@ class OfficialClientTest(fuel_health.test.TestCase):
             for flavor in cls.flavors:
                 try:
                     cls.compute_client.flavors.delete(flavor)
+                except Exception as exc:
+                    cls.error_msg.append(exc)
+                    LOG.debug(traceback.format_exc())
+
+    @classmethod
+    def _clean_images(cls):
+        if cls.images:
+            for image in cls.images:
+                try:
+                    cls.glance_client.images.delete(image)
                 except Exception as exc:
                     cls.error_msg.append(exc)
                     LOG.debug(traceback.format_exc())
@@ -495,6 +508,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             cls.floating_ips = []
             cls.error_msg = []
             cls.flavors = []
+            cls.images = []
             cls.private_net = 'net04'
 
     def setUp(self):
