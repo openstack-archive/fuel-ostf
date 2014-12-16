@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2013 Mirantis, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -38,23 +36,6 @@ class SanityComputeTest(nmanager.SanityChecksTest):
         self.verify(20, self._list_instances,
                     1, fail_msg, "instance listing",
                     self.compute_client)
-
-    def test_list_images(self):
-        """Request image list
-        Target component: Glance
-
-        Scenario:
-            1. Request the list of images.
-            2. Confirm that a response is received.
-        Duration: 20 s.
-        """
-        fail_msg = 'Images list is unavailable. '
-        list_images_resp = self.verify(20, self._list_images,
-                                       1, fail_msg, "images listing",
-                                       self.compute_client)
-
-        self.verify_response_true(list_images_resp,
-                                  "Step 2 failed: {msg}".format(msg=fail_msg))
 
     def test_list_volumes(self):
         """Request volume list
