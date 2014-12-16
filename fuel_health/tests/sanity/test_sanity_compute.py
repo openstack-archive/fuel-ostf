@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2013 Mirantis, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -38,8 +36,8 @@ class SanityComputeTest(nmanager.SanityChecksTest):
                     self.compute_client)
 
     def test_list_images(self):
-        """Request image list
-        Target component: Glance
+        """Request image list using Nova
+        Target component: Nova
 
         Scenario:
             1. Request the list of images.
@@ -69,7 +67,7 @@ class SanityComputeTest(nmanager.SanityChecksTest):
 
     def test_list_snapshots(self):
         """Request snapshot list
-        Target component: Glance
+        Target component: Cinder
 
         Scenario:
             1. Request the list of snapshots.
