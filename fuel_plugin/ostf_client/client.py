@@ -13,8 +13,9 @@
 #    under the License.
 
 import requests
-from json import dumps
 import time
+
+from oslo.serialization import jsonutils
 
 
 class TestingAdapterClient(object):
@@ -38,7 +39,7 @@ class TestingAdapterClient(object):
                 else:
                     data_el['ostf_os_access_creds'] = ostf_os_access_creds
 
-            data = dumps({'objects': data})
+            data = jsonutils.dumps({'objects': data})
 
         r = requests.request(
             method,

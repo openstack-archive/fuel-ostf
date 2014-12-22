@@ -12,9 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 from mock import patch, MagicMock
 from webtest import TestApp
+
+from oslo.serialization import jsonutils
 
 from fuel_plugin.ostf_adapter.wsgi import app
 from fuel_plugin.testing.tests.unit import base
@@ -65,7 +66,7 @@ class WsgiInterfaceTests(base.BaseWSGITest):
             }
         ]
 
-        self.request_mock.body = json.dumps(testruns)
+        self.request_mock.body = jsonutils.dumps(testruns)
         models.TestRun.start.return_value = {}
         self.app.post_json('/v1/testruns', testruns)
 
@@ -83,7 +84,7 @@ class WsgiInterfaceTests(base.BaseWSGITest):
             }
         ]
 
-        self.request_mock.body = json.dumps(testruns)
+        self.request_mock.body = jsonutils.dumps(testruns)
         self.request_mock.storage.get_test_run.return_value = \
             MagicMock(frontend={})
         self.app.put_json('/v1/testruns', testruns)
