@@ -1,7 +1,9 @@
 -r requirements.txt
+nose-timer
+requests_mock
 mock==1.0.1
-pep8==1.4.6
-tox==1.5.0
+flake8
+tox>=1.7.1
 coverage==3.6
 fabric
 bottle

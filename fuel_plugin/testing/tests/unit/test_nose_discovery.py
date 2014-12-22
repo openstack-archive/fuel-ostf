@@ -13,9 +13,10 @@
 #    under the License.
 
 from mock import Mock
-import unittest2
+
 from fuel_plugin.ostf_adapter.nose_plugin import nose_discovery
 from fuel_plugin.ostf_adapter.storage import models
+from fuel_plugin.testing.tests import base
 
 TEST_PATH = 'fuel_plugin/testing/fixture/dummy_tests'
 
@@ -31,7 +32,7 @@ class TransactionBeginMock:
         pass
 
 
-class TestNoseDiscovery(unittest2.TestCase):
+class TestNoseDiscovery(base.BaseUnitTest):
 
     @classmethod
     def setUpClass(cls):

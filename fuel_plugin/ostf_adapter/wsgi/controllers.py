@@ -140,6 +140,7 @@ class TestrunsController(BaseRestController):
         test_sets = set([testset.id for testset in request.
                         session.query(models.TestSet).all()])
         if nedded_testsets - test_sets:
+            # TODO(prmtl): error message needed
             abort(400)
 
         res = []

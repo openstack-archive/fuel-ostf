@@ -13,12 +13,11 @@
 #    under the License.
 
 import json
-from mock import patch, Mock
+import mock
 
 from fuel_plugin.ostf_adapter.wsgi import controllers
 from fuel_plugin.ostf_adapter.storage import models
-
-from fuel_plugin.testing.tests.unit import base
+from fuel_plugin.testing.tests import base
 
 
 class TestTestsController(base.BaseWSGITest):
@@ -28,7 +27,9 @@ class TestTestsController(base.BaseWSGITest):
         self.controller = controllers.TestsController()
 
     def test_get(self):
-        res = self.controller.get(self.expected['cluster']['id'])
+        cluster_id = self.expected['cluster']['id']
+        self.mock_api_for_cluster(cluster_id)
+        res = self.controller.get(cluster_id)
 
         self.assertTrue(self.is_background_working)
 
@@ -52,7 +53,9 @@ class TestTestSetsController(base.BaseWSGITest):
             'Fake tests for HA deployment',
             'Test for presence of env variables inside of testrun subprocess'
         ]
-        res = self.controller.get(self.expected['cluster']['id'])
+        cluster_id = self.expected['cluster']['id']
+        self.mock_api_for_cluster(cluster_id)
+        res = self.controller.get(cluster_id)
 
         self.assertTrue(self.is_background_working)
 
@@ -93,10 +96,10 @@ class TestTestRunsController(base.BaseWSGITest):
 
         self.controller = controllers.TestrunsController()
 
-        self.plugin_mock = Mock()
+        self.plugin_mock = mock.Mock()
         self.plugin_mock.kill.return_value = True
 
-        self.nose_plugin_patcher = patch(
+        self.nose_plugin_patcher = mock.patch(
             'fuel_plugin.ostf_adapter.storage.models.nose_plugin.get_plugin',
             lambda *args: self.plugin_mock
         )
@@ -126,6 +129,8 @@ class TestTestRunsPostController(TestTestRunsController):
                 ]
             }
         }
+        cluster_id = self.expected['cluster']['id']
+        self.mock_api_for_cluster(cluster_id)
 
         res = self.controller.post()[0]
 
@@ -162,6 +167,9 @@ class TestTestRunsPutController(TestTestRunsController):
 
     def setUp(self):
         super(TestTestRunsPutController, self).setUp()
+        cluster_id = self.expected['cluster']['id']
+        self.mock_api_for_cluster(cluster_id)
+
         self.test_run = self.controller.post()[0]
 
         self.session.query(models.Test)\
@@ -229,12 +237,11 @@ class TestTestRunsPutController(TestTestRunsController):
 
 class TestClusterRedeployment(base.BaseWSGITest):
 
-    def setUp(self):
-        super(TestClusterRedeployment, self).setUp()
+    @mock.patch('fuel_plugin.ostf_adapter.mixins._get_cluster_depl_tags')
+    def test_cluster_redeployment_with_different_tags(self, mget_depl_tags):
         self.controller = controllers.TestsetsController()
         self.controller.get(self.expected['cluster']['id'])
 
-    def test_cluster_redeployment_with_different_tags(self):
         self.expected = {
             'cluster': {
                 'id': 1,
@@ -268,11 +275,8 @@ class TestClusterRedeployment(base.BaseWSGITest):
         cluster_data = set(
             ['multinode', 'ubuntu', 'nova_network']
         )
+        mget_depl_tags.return_value = cluster_data
 
-        with patch(
-            ('fuel_plugin.ostf_adapter.mixins._get_cluster_depl_tags'),
-            lambda *args, **kwargs: cluster_data
-        ):
-            self.controller.get(self.expected['cluster']['id'])
+        self.controller.get(self.expected['cluster']['id'])
 
         self.assertTrue(self.is_background_working)

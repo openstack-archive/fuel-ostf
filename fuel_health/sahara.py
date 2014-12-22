@@ -163,7 +163,7 @@ class SaharaTest(nmanager.PlatformServicesBaseClass):
     @classmethod
     def _create_cluster_template(
             cls, client, name, plugin_name, plugin_version, description,
-            cluster_configs, node_groups,  anti_affinity):
+            cluster_configs, node_groups, anti_affinity):
 
         # TODO(vrovachev): remove this loop after resolve bug:
         # https://bugs.launchpad.net/sahara/+bug/1314578
