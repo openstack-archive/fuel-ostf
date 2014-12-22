@@ -12,8 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 from mock import patch, Mock
+
+from oslo.serialization import jsonutils
 
 from fuel_plugin.ostf_adapter.wsgi import controllers
 from fuel_plugin.ostf_adapter.storage import models
@@ -84,7 +85,7 @@ class TestTestRunsController(base.BaseWSGITest):
     def setUp(self):
         super(TestTestRunsController, self).setUp()
 
-        self.request_mock.body = json.dumps([
+        self.request_mock.body = jsonutils.dumps([
             {
                 'testset': 'ha_deployment_test',
                 'metadata': {'cluster_id': 1}
@@ -171,7 +172,7 @@ class TestTestRunsPutController(TestTestRunsController):
         # flush data which test is depend on into db
         self.session.commit()
 
-        self.request_mock.body = json.dumps(
+        self.request_mock.body = jsonutils.dumps(
             [{
                 'status': 'stopped',
                 'id': self.test_run['id']
