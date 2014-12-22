@@ -15,11 +15,12 @@
 import itertools
 import traceback
 import re
-import json
 import os
 import multiprocessing
 
 import logging
+
+from oslo.serialization import jsonutils
 
 from nose import case
 from nose.suite import ContextSuite
@@ -32,7 +33,7 @@ def parse_json_file(file_path):
     commands_path = os.path.join(
         current_directory, file_path)
     with open(commands_path, 'r') as f:
-        return json.load(f)
+        return jsonutils.load(f)
 
 
 def get_exc_message(exception_value):

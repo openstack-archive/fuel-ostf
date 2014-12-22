@@ -13,11 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import logging
 import requests
 import time
 import traceback
+
+from oslo.serialization import jsonutils
 
 import muranoclient.common.exceptions as exceptions
 from fuel_health.common.utils.data_utils import rand_name
@@ -84,7 +85,7 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
         for image in self.compute_client.images.list():
             if tag in image.metadata:
-                metadata = json.loads(image.metadata[tag])
+                metadata = jsonutils.loads(image.metadata[tag])
                 if image_type == metadata['type']:
                     return image
 
@@ -111,7 +112,7 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
         post_body = {'name': name}
         resp = requests.post(self.endpoint + 'environments',
-                             data=json.dumps(post_body),
+                             data=jsonutils.dumps(post_body),
                              headers=self.headers)
         return resp.json()
 
@@ -229,7 +230,7 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         headers.update({'x-configuration-session': session_id})
         endpoint = '{0}environments/{1}/services'.format(self.endpoint,
                                                          environment_id)
-        return requests.post(endpoint, data=json.dumps(json_data),
+        return requests.post(endpoint, data=jsonutils.dumps(json_data),
                              headers=headers).json()
 
     def list_services(self, environment_id, session_id=None):
