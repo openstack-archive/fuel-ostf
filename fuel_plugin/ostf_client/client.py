@@ -12,9 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import requests
 import time
+
+from oslo.serialization import jsonutils
 
 
 class TestingAdapterClient(object):
@@ -38,7 +39,7 @@ class TestingAdapterClient(object):
                 else:
                     data_el['ostf_os_access_creds'] = ostf_os_access_creds
 
-            data = json.dumps({'objects': data})
+            data = jsonutils.dumps({'objects': data})
 
         r = requests.request(
             method,

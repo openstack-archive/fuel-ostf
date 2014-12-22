@@ -12,10 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import logging
 
 from oslo.config import cfg
+from oslo.serialization import jsonutils
 from pecan import abort
 from pecan import expose
 from pecan import request
@@ -123,7 +123,7 @@ class TestrunsController(BaseRestController):
 
     @expose('json')
     def post(self):
-        test_runs = json.loads(request.body)
+        test_runs = jsonutils.loads(request.body)
         if 'objects' in test_runs:
             test_runs = test_runs['objects']
 
@@ -170,7 +170,7 @@ class TestrunsController(BaseRestController):
 
     @expose('json')
     def put(self):
-        test_runs = json.loads(request.body)
+        test_runs = jsonutils.loads(request.body)
         if 'objects' in test_runs:
             test_runs = test_runs['objects']
 
