@@ -12,9 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
-
 from sqlalchemy.types import TypeDecorator, VARCHAR
+
+from oslo.serialization import jsonutils
 
 
 class JsonField(TypeDecorator):
@@ -22,13 +22,13 @@ class JsonField(TypeDecorator):
 
     def process_bind_param(self, value, dialect):
         if value is not None:
-            value = json.dumps(value)
+            value = jsonutils.dumps(value)
 
         return value
 
     def process_result_value(self, value, dialect):
         if value is not None:
-            value = json.loads(value)
+            value = jsonutils.loads(value)
         return value
 
 

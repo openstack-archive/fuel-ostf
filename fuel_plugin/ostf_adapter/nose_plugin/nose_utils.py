@@ -12,18 +12,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from distutils import version
 import itertools
-import json
 import logging
 import multiprocessing
 import os
 import re
 import traceback
 
-from distutils import version
-
 from nose import case
 from nose.suite import ContextSuite
+
+from oslo.serialization import jsonutils
 
 LOG = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ def parse_json_file(file_path):
     commands_path = os.path.join(
         current_directory, file_path)
     with open(commands_path, 'r') as f:
-        return json.load(f)
+        return jsonutils.load(f)
 
 
 def get_exc_message(exception_value):
