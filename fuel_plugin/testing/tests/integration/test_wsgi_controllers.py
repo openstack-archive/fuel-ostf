@@ -80,6 +80,7 @@ class TestTestRunsController(base.BaseWSGITest):
     def setUp(self):
         super(TestTestRunsController, self).setUp()
         self.plugin_mock = mock.Mock()
+
         self.plugin_mock.kill.return_value = True
 
         self.nose_plugin_patcher = mock.patch(
