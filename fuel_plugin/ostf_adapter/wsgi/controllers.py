@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import logging
 
 from sqlalchemy import func
@@ -20,6 +19,7 @@ from sqlalchemy.orm import joinedload
 from pecan import rest, expose, request, abort
 
 from oslo.config import cfg
+from oslo.serialization import jsonutils
 
 from fuel_plugin.ostf_adapter import mixins
 from fuel_plugin.ostf_adapter.storage import models
@@ -121,7 +121,7 @@ class TestrunsController(BaseRestController):
 
     @expose('json')
     def post(self):
-        test_runs = json.loads(request.body)
+        test_runs = jsonutils.loads(request.body)
         if 'objects' in test_runs:
             test_runs = test_runs['objects']
 
@@ -168,7 +168,7 @@ class TestrunsController(BaseRestController):
 
     @expose('json')
     def put(self):
-        test_runs = json.loads(request.body)
+        test_runs = jsonutils.loads(request.body)
         if 'objects' in test_runs:
             test_runs = test_runs['objects']
 
