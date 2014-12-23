@@ -60,9 +60,6 @@ setuptools.setup(
         ],
         'console_scripts': [
             'ostf-server = fuel_plugin.ostf_adapter.server:main',
-            ('update-commands = fuel_plugin.tests.'
-             'test_utils.update_commands:main'),
-            'ostfctl = adapter_utils.bin.ostf_utils:main'
         ]
     },
 
