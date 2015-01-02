@@ -76,7 +76,7 @@ class PlatformSaharaTests(sahara.SaharaTest):
                     3, fail_msg, 'Launch cluster', cluster_template.id)
 
         fail_msg = 'Failed to delete cluster.'
-        self.verify(40, self._clean_clusters, 4, fail_msg, 'Delete cluster')
+        self.verify(600, self._clean_clusters, 4, fail_msg, 'Delete cluster')
 
         fail_msg = 'Failed to delete cluster template.'
         self.verify(40, self._clean_cluster_templates,
