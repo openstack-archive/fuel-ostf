@@ -197,7 +197,7 @@ ImageGroup = [
     cfg.StrOpt('http_image',
                default='http://download.cirros-cloud.net/0.3.1/'
                'cirros-0.3.1-x86_64-uec.tar.gz',
-               help='http accessable image')
+               help='http accessible image')
 ]
 
 
@@ -368,6 +368,21 @@ HeatConfig = [
 ]
 
 
+fuel_group = cfg.OptGroup(name='fuel',
+                          title='Fuel options')
+
+FuelConf = [
+    cfg.StrOpt('fuel_version',
+               default=None,
+               help="Fuel version"),
+]
+
+
+def register_fuel_opts(conf):
+    conf.register_group(fuel_group)
+    [conf.register_opt(opt, group='fuel') for opt in FuelConf]
+
+
 def register_heat_opts(conf):
     conf.register_group(heat_group)
     for opt in HeatConfig:
@@ -437,6 +452,7 @@ class FileConfig(object):
         register_murano_opts(cfg.CONF)
         register_heat_opts(cfg.CONF)
         register_sahara_opts(cfg.CONF)
+        register_fuel_opts(cfg.CONF)
         self.compute = cfg.CONF.compute
         self.identity = cfg.CONF.identity
         self.network = cfg.CONF.network
@@ -444,6 +460,7 @@ class FileConfig(object):
         self.murano = cfg.CONF.murano
         self.heat = cfg.CONF.heat
         self.sahara = cfg.CONF.sahara
+        self.fuel = cfg.CONF.fuel
 
 
 class ConfigGroup(object):
@@ -484,6 +501,7 @@ class NailgunConfig(object):
     murano = ConfigGroup(MuranoConfig)
     sahara = ConfigGroup(SaharaConfig)
     heat = ConfigGroup(HeatConfig)
+    fuel = ConfigGroup(FuelConf)
 
     def __init__(self, parse=True):
         LOG.info('INITIALIZING NAILGUN CONFIG')
@@ -553,6 +571,8 @@ class NailgunConfig(object):
         network_provider = cluster_data.get('net_provider', 'nova_network')
         self.network.network_provider = network_provider
         release_id = cluster_data.get('release_id', 'failed to get id')
+        self.fuel.fuel_version = cluster_data.get(
+            'fuel_version', 'failed to get fuel version')
         LOG.info('Release id is {0}'.format(release_id))
         release_data = self.req_session.get(
             self.nailgun_url + '/api/releases/{0}'.format(release_id)).json()

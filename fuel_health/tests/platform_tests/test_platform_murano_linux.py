@@ -37,7 +37,8 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
         self.check_clients_state()
 
         doc_link = ('http://docs.mirantis.com/openstack/fuel/'
-                    'fuel-6.0/user-guide.html#platform-tests-description')
+                    'fuel-{0}/user-guide.html#platform-tests-'
+                    'description'.format(self.config.fuel.fuel_version))
 
         msg = ('Murano image was not properly registered or '
                'was not uploaded at all. Please refer to the '
