@@ -54,7 +54,12 @@ class InvalidConfiguration(FuelException):
 
 class SetProxy(InvalidConfiguration):
     message = ("Can not set proxy for Health Check."
-               "Make sure that controllers are online")
+               "Make sure that network configuration on controllers are fine")
+
+
+class OfflineControllers(InvalidConfiguration):
+    message = ('Can not check health of cluster.'
+               ' All controllers are offline')
 
 
 class RestClientException(FuelException,
