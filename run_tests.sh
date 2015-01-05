@@ -66,7 +66,7 @@ function run_tests {
 
 function run_pep8 {
   echo "Running pep8 ..."
-  tox -eflake8 -v
+  tox -epep8 -v
 }
 
 
