@@ -21,6 +21,7 @@ import sys
 import traceback
 import unittest2
 
+import keystoneclient
 from oslo.config import cfg
 import requests
 
@@ -184,6 +185,7 @@ def register_compute_opts(conf):
     for opt in ComputeGroup:
         conf.register_opt(opt, group='compute')
 
+
 image_group = cfg.OptGroup(name='image',
                            title="Image Service Options")
 
@@ -196,7 +198,7 @@ ImageGroup = [
                help='Catalog type of the Image service.'),
     cfg.StrOpt('http_image',
                default='http://download.cirros-cloud.net/0.3.1/'
-               'cirros-0.3.1-x86_64-uec.tar.gz',
+                       'cirros-0.3.1-x86_64-uec.tar.gz',
                help='http accessable image')
 ]
 
@@ -237,6 +239,7 @@ def register_network_opts(conf):
     conf.register_group(network_group)
     for opt in NetworkGroup:
         conf.register_opt(opt, group='network')
+
 
 volume_group = cfg.OptGroup(name='volume',
                             title='Block Storage Options')
@@ -298,6 +301,7 @@ def register_object_storage_opts(conf):
     conf.register_group(object_storage_group)
     for opt in ObjectStoreConfig:
         conf.register_opt(opt, group='object-storage')
+
 
 sahara = cfg.OptGroup(name='sahara',
                       title='Sahara Service Options')
@@ -416,8 +420,8 @@ class FileConfig(object):
             path = os.path.join(conf_dir, conf_file)
 
             if not (os.path.isfile(path) or
-                    'FUEL_CONFIG_DIR' in os.environ or
-                    'FUEL_CONFIG' in os.environ):
+                            'FUEL_CONFIG_DIR' in os.environ or
+                            'FUEL_CONFIG' in os.environ):
                 path = failsafe_path
 
         LOG.info("Using fuel config file %s" % path)
@@ -474,7 +478,6 @@ class ConfigGroup(object):
 
 @process_singleton
 class NailgunConfig(object):
-
     identity = ConfigGroup(IdentityGroup)
     compute = ConfigGroup(ComputeGroup)
     image = ConfigGroup(ImageGroup)
@@ -517,7 +520,7 @@ class NailgunConfig(object):
             self._parse_cluster_generated_data()
             LOG.info('parse generated successful')
         except exceptions.SetProxy as exc:
-                raise exc
+            raise exc
         except Exception:
             LOG.warning('Something wrong with endpoints')
             LOG.debug(traceback.format_exc())
@@ -657,16 +660,42 @@ class NailgunConfig(object):
         self.identity.url = data['horizon_url'] + 'dashboard'
         self.identity.uri = data['keystone_url'] + 'v2.0/'
 
+    def find_proxy(self, ip):
+
+        endpoint = self.network.raw_data.get(
+            'public_vip', None) or ip
+
+        auth_url = 'http://{0}:{1}/{2}/'.format(endpoint, 5000, 'v2.0')
+
+        try:
+            os.environ['http_proxy'] = 'http://{0}:{1}'.format(ip, 8888)
+            LOG.warning('Try to check proxy on {0}'.format(ip))
+            keystoneclient.v2_0.client.Client(
+                username=self.identity.admin_username,
+                password=self.identity.admin_password,
+                tenant_name=self.identity.admin_tenant_name,
+                auth_url=auth_url,
+                insecure=False)
+            return ip
+        except:
+            LOG.warning('Can not pass authorization '
+                        'with proxy on {0}'.format(ip))
+            LOG.debug(traceback.format_exc())
+
     def set_proxy(self):
         """Sets environment property for http_proxy:
             To behave properly - method must be called after all nailgun params
             is processed
         """
-        if self.compute.online_controllers:
-            os.environ['http_proxy'] = 'http://{0}:{1}'.format(
-                self.compute.online_controllers[0], 8888)
-        else:
+        if not self.compute.online_controllers:
+            raise exceptions.OfflineControllers()
+
+        proxies = [self.find_proxy(ip) for ip in
+                   self.compute.online_controllers]
+        if not proxies:
             raise exceptions.SetProxy()
+
+        os.environ['http_proxy'] = 'http://{0}:{1}'.format(proxies[0], 8888)
 
     def set_endpoints(self):
         public_vip = self.network.raw_data.get('public_vip', None)
