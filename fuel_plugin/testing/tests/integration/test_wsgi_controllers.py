@@ -18,7 +18,7 @@ from mock import patch, Mock
 from fuel_plugin.ostf_adapter.wsgi import controllers
 from fuel_plugin.ostf_adapter.storage import models
 
-from fuel_plugin.testing.tests.unit import base
+from fuel_plugin.testing.tests import base
 
 
 class TestTestsController(base.BaseWSGITest):

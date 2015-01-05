@@ -17,7 +17,7 @@ from mock import patch, MagicMock
 from webtest import TestApp
 
 from fuel_plugin.ostf_adapter.wsgi import app
-from fuel_plugin.testing.tests.unit import base
+from fuel_plugin.testing.tests import base
 
 
 class WsgiInterfaceTests(base.BaseWSGITest):
