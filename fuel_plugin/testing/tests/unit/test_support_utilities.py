@@ -12,13 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import unittest
+import requests_mock
 
 from fuel_plugin.ostf_adapter import config
 from fuel_plugin.ostf_adapter import mixins
+from fuel_plugin.testing.tests import base
 
 
-class TestDeplTagsGetter(unittest.TestCase):
+class TestDeplTagsGetter(base.BaseUnitTest):
 
     def setUp(self):
         config.init_config([])
@@ -32,6 +33,14 @@ class TestDeplTagsGetter(unittest.TestCase):
             )
         }
 
-        res = mixins._get_cluster_depl_tags(expected['cluster_id'])
+        with requests_mock.Mocker() as m:
+            cluster = base.CLUSTERS[expected['cluster_id']]
+            m.register_uri('GET', '/api/clusters/3',
+                           json=cluster['cluster_meta'])
+            m.register_uri('GET', '/api/clusters/3/attributes',
+                           json=cluster['cluster_attributes'])
+            m.register_uri('GET', '/api/releases/3',
+                           json=cluster['release_data'])
+            res = mixins._get_cluster_depl_tags(expected['cluster_id'])
 
         self.assertEqual(res, expected['depl_tags'])
