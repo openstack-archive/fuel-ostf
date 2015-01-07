@@ -13,38 +13,30 @@
 #    under the License.
 
 import json
-from mock import patch, MagicMock
+import mock
 from webtest import TestApp
 
+from fuel_plugin.ostf_adapter.storage import models
 from fuel_plugin.ostf_adapter.wsgi import app
 from fuel_plugin.testing.tests import base
 
 
-class WsgiInterfaceTests(base.BaseWSGITest):
-
-    @classmethod
-    def setUpClass(cls):
-        super(WsgiInterfaceTests, cls).setUpClass()
+class WsgiInterfaceTest(base.BaseWSGITest):
 
     def setUp(self):
-        super(WsgiInterfaceTests, self).setUp()
+        super(WsgiInterfaceTest, self).setUp()
 
         self.app = TestApp(app.setup_app())
 
-        self.fixture = {
-            'cluster_id': 1
-        }
-
-    def tearDown(self):
-        super(WsgiInterfaceTests, self).tearDown()
-
     def test_get_all_tests(self):
-        self.app.get('/v1/tests/{0}'
-                     .format(self.fixture['cluster_id']))
+        cluster_id = 1
+        self.mock_api_for_cluster(cluster_id)
+        self.app.get('/v1/tests/{0}'.format(cluster_id))
 
     def test_get_all_testsets(self):
-        self.app.get('/v1/testsets/{0}'
-                     .format(self.fixture['cluster_id']))
+        cluster_id = 1
+        self.mock_api_for_cluster(cluster_id)
+        self.app.get('/v1/testsets/{0}'.format(cluster_id))
 
     def test_get_one_testruns(self):
         self.app.get('/v1/testruns/1')
@@ -52,21 +44,24 @@ class WsgiInterfaceTests(base.BaseWSGITest):
     def test_get_all_testruns(self):
         self.app.get('/v1/testruns')
 
-    @patch('fuel_plugin.ostf_adapter.wsgi.controllers.models')
-    def test_post_testruns(self, models):
+    @mock.patch.object(models.TestRun, 'start')
+    def test_post_testruns(self, mstart):
+        self.mock_api_for_cluster(3)
+        self.mock_api_for_cluster(4)
+
         testruns = [
             {
-                'testset': 'test_simple',
+                'testset': 'general_test',
                 'metadata': {'cluster_id': 3}
             },
             {
-                'testset': 'test_simple',
+                'testset': 'general_test',
                 'metadata': {'cluster_id': 4}
             }
         ]
 
         self.request_mock.body = json.dumps(testruns)
-        models.TestRun.start.return_value = {}
+        mstart.return_value = {}
         self.app.post_json('/v1/testruns', testruns)
 
     def test_put_testruns(self):
@@ -85,9 +80,10 @@ class WsgiInterfaceTests(base.BaseWSGITest):
 
         self.request_mock.body = json.dumps(testruns)
         self.request_mock.storage.get_test_run.return_value = \
-            MagicMock(frontend={})
+            mock.MagicMock(frontend={})
         self.app.put_json('/v1/testruns', testruns)
 
     def test_get_last_testruns(self):
-        self.app.get('/v1/testruns/last/{0}'
-                     .format(self.fixture['cluster_id']))
+        cluster_id = 1
+        self.mock_api_for_cluster(cluster_id)
+        self.app.get('/v1/testruns/last/{0}'.format(cluster_id))
