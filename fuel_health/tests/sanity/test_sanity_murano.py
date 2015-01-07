@@ -18,8 +18,7 @@ from fuel_health import murano
 
 
 class MuranoSanityTests(murano.MuranoTest):
-    """
-    TestClass contains verifications of basic Murano functionality.
+    """TestClass contains verifications of basic Murano functionality.
     Special requirements:
         1. Murano API service should be installed.
     """

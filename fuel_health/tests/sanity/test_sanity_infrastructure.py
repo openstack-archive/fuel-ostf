@@ -15,7 +15,7 @@
 # under the License.
 
 import logging
-from time import sleep
+import time
 import traceback
 
 from fuel_health.common.ssh import Client as SSHClient
@@ -73,10 +73,10 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             self.verify_response_true(
                 u'XXX' not in output, 'Step 2 failed: Some nova services '
                 'have not been started.')
-        except:
+        except Exception:
             LOG.info("Will sleep for 60 seconds and try again")
             LOG.debug(traceback.format_exc())
-            sleep(60)
+            time.sleep(60)
             self.verify_response_true(
                 u'XXX' not in output, 'Step 2 failed: Some nova services '
                 'have not been started.')

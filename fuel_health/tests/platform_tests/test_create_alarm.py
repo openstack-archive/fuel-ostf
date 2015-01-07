@@ -17,9 +17,7 @@ from fuel_health.common.utils.data_utils import rand_name
 
 
 class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
-    """
-    TestClass contains tests that check basic Ceilometer functionality.
-    """
+    """TestClass contains tests that check basic Ceilometer functionality."""
 
     def test_create_alarm(self):
         """Ceilometer create, update, check, delete alarm

@@ -12,8 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from functools import wraps
-from unittest import TestCase
+import functools
+import unittest
 
 from fuel_plugin.ostf_client.client import TestingAdapterClient
 
@@ -23,7 +23,7 @@ class EmptyResponseError(Exception):
 
 
 class Response(object):
-    """This is testing_adapter response object"""
+    """This is testing_adapter response object."""
     test_name_mapping = {}
 
     def __init__(self, response):
@@ -74,7 +74,7 @@ class AdapterClientProxy(object):
             return self._decorate_call(call)
 
     def _decorate_call(self, call):
-        @wraps(call)
+        @functools.wraps(call)
         def inner(*args, **kwargs):
             r = call(*args, **kwargs)
             return Response(r)
@@ -85,7 +85,7 @@ class SubsetException(Exception):
     pass
 
 
-class BaseAdapterTest(TestCase):
+class BaseAdapterTest(unittest.TestCase):
     def compare(self, response, comparable):
         if response.is_empty:
             msg = '{0} is empty'.format(response.request)

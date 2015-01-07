@@ -24,8 +24,7 @@ LOG = logging.getLogger(__name__)
 
 
 class MuranoDeployLinuxServicesTests(murano.MuranoTest):
-    """
-    TestClass contains verifications of full Murano functionality.
+    """TestClass contains verifications of full Murano functionality.
     Special requirements:
         1. Murano component should be installed.
         2. Internet access for virtual machines in OpenStack.
@@ -153,7 +152,7 @@ class MuranoDeployLinuxServicesTests(murano.MuranoTest):
                     self.environment['id'])
 
     def test_deploy_wordpress_app(self):
-        """Check that user can deploy WordPress application in Murano environment
+        """Check that user can deploy WordPress app in Murano environment
         Target component: Murano
 
         Scenario:

@@ -15,8 +15,8 @@
 import json
 import mock
 
-from fuel_plugin.ostf_adapter.wsgi import controllers
 from fuel_plugin.ostf_adapter.storage import models
+from fuel_plugin.ostf_adapter.wsgi import controllers
 from fuel_plugin.testing.tests import base
 
 

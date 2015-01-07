@@ -19,8 +19,8 @@
 import logging
 import os
 
-from fuel_health.common.utils.data_utils import rand_name
 import fuel_health.common.ssh
+from fuel_health.common.utils.data_utils import rand_name
 import fuel_health.nmanager
 import fuel_health.test
 
@@ -29,9 +29,7 @@ LOG = logging.getLogger(__name__)
 
 
 class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
-    """
-    Base class for Heat openstack sanity and smoke tests.
-    """
+    """Base class for Heat openstack sanity and smoke tests."""
 
     @classmethod
     def setUpClass(cls):
@@ -93,8 +91,7 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
     def _wait_for_stack_status(self, stack_id, expected_status,
                                timeout=None, interval=None):
-        """
-        The method is a customization of test.status_timeout().
+        """The method is a customization of test.status_timeout().
         It addresses `stack_status` instead of `status` field and
         checks for FAILED instead of ERROR status.
         The rest is the same.
@@ -148,8 +145,7 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
             count_instances, timeout, interval, reduced_stack_name)
 
     def _wait_for_vm_ready_for_load(self, conn_string, timeout, interval):
-        """
-        Wait for fake file to be created on the instance
+        """Wait for fake file to be created on the instance
         to make sure that vm is ready.
         """
         cmd = (conn_string +
@@ -219,9 +215,7 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
     @staticmethod
     def _load_template(file_name):
-        """
-        Load specified template file from etc directory.
-        """
+        """Load specified template file from etc directory."""
         filepath = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "etc", file_name)
         with open(filepath) as f:
@@ -229,8 +223,7 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
     @staticmethod
     def _customize_template(template):
-        """
-        By default, heat templates expect neutron subnets to be available.
+        """By default, heat templates expect neutron subnets to be available.
         But if nova-network is used instead of neutron then
         subnet usage should be removed from the template.
         """

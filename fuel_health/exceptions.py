@@ -19,8 +19,7 @@ import unittest2
 
 
 class FuelException(Exception):
-    """
-    Base Exception
+    """Base Exception
 
     To correctly use this class, inherit from it and define
     a 'message' property. That message will get printf'd

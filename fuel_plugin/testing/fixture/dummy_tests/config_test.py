@@ -12,14 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from unittest import TestCase
 from oslo.config import cfg
+import unittest
 
 opts = [
     cfg.StrOpt('quantum', default='fake')
 ]
 
 
-class Config(TestCase):
+class Config(unittest.TestCase):
     def test_config(self):
         cfg.CONF

@@ -12,9 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
 import logging
 import logging.handlers
+import os
 
 
 _LOG_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"

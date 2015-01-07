@@ -32,8 +32,7 @@ LOG = logging.getLogger(__name__)
 
 
 class CleanUpClientManager(fuel_health.nmanager.OfficialClientManager):
-    """
-    Manager that provides access to the official python clients for
+    """Manager that provides access to the official python clients for
     calling various OpenStack APIs.
     """
 
@@ -57,8 +56,7 @@ class CleanUpClientManager(fuel_health.nmanager.OfficialClientManager):
 
 
 def cleanup(cluster_deployment_info):
-    '''
-    Function performs cleaning up for current cluster.
+    '''Function performs cleaning up for current cluster.
 
     Because clusters can be deployed in different way
     function uses cluster_deployment_info argument which
@@ -120,7 +118,7 @@ def cleanup(cluster_deployment_info):
                         try:
                             LOG.info('Start flavor deletion.')
                             compute_client.flavors.delete(flavor.id)
-                        except:
+                        except Exception:
                             LOG.warning('Failed to delete flavor')
                             LOG.debug(traceback.format_exc())
 
