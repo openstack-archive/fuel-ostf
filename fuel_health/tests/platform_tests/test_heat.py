@@ -21,8 +21,8 @@ LOG = logging.getLogger(__name__)
 
 
 class HeatSmokeTests(heatmanager.HeatBaseTest):
-    """
-    Test class verifies Heat API calls, rollback and autoscaling use-cases.
+    """Test class verifies Heat API calls, rollback and
+    autoscaling use-cases.
     """
     def setUp(self):
         super(HeatSmokeTests, self).setUp()

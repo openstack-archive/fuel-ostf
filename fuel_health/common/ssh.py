@@ -88,8 +88,7 @@ class Client(object):
         return ssh
 
     def exec_longrun_command(self, cmd):
-        """
-        Execute the specified command on the server.
+        """Execute the specified command on the server.
 
         Unlike exec_command and exec_command_on_vm, this method allows
         to start a process on VM in background and leave it alive
@@ -123,8 +122,7 @@ class Client(object):
             return
 
     def exec_command(self, cmd):
-        """
-        Execute the specified command on the server.
+        """Execute the specified command on the server.
 
         Note that this method is reading whole command outputs to memory, thus
         shouldn't be used for large outputs.
@@ -187,7 +185,8 @@ class Client(object):
 
         :returns: data read from standard output of the command.
         :raises: SSHExecCommandFailed if command returns nonzero
-            status. The exception contains command status stderr content."""
+            status. The exception contains command status stderr content.
+        """
         ssh = self._get_ssh_connection()
         _intermediate_transport = ssh.get_transport()
         _intermediate_channel = \

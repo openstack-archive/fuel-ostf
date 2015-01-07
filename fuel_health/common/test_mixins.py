@@ -23,16 +23,13 @@ LOG = logging.getLogger(__name__)
 
 
 class FuelTestAssertMixin(object):
-    """
-    Mixin class with a set of assert methods created to abstract
+    """Mixin class with a set of assert methods created to abstract
     from unittest assertion methods and provide human
     readable descriptions where possible
     """
     def verify_response_status(self, status,
                                appl='Application', msg='', failed_step=''):
-        """
-
-        Method provides human readable message
+        """Method provides human readable message
         for the HTTP response status verification
 
         :param appl: the name of application requested
@@ -82,8 +79,7 @@ class FuelTestAssertMixin(object):
                                status=status), status_msg, '\n', msg)))
 
     def verify_response_body(self, body, content='', msg='', failed_step=''):
-        """
-        Method provides human readable message for the verification if
+        """Method provides human readable message for the verification if
         HTTP response body contains desired keyword
 
         :param body: response body
@@ -98,8 +94,7 @@ class FuelTestAssertMixin(object):
 
     def verify_response_body_value(self, body_structure, value='', msg='',
                                    failed_step=''):
-        """
-        Method provides human readable message for verification if
+        """Method provides human readable message for verification if
         HTTP response body element contains desired keyword.
 
         :param body_structure: body element value (e.g. body['name'], body);
@@ -134,8 +129,7 @@ class FuelTestAssertMixin(object):
                     actual_content=act_content), '\n', msg))
 
     def verify_elements_list(self, elements, attrs, msg='', failed_step=''):
-        """
-        Method provides human readable message for the verification of
+        """Method provides human readable message for the verification of
         list of elements with specific parameters
         :param elements: the list of elements from response
         :param attrs: required attributes for each element
@@ -173,8 +167,7 @@ class FuelTestAssertMixin(object):
         self.fail(message.format(failed_step_msg, msg))
 
     def verify(self, secs, func, step='', msg='', action='', *args, **kwargs):
-        """
-        Arguments:
+        """Arguments:
         :secs: timeout time;
         :func: function to be verified;
         :step: number of test step;
@@ -204,8 +197,7 @@ def _raise_TimeOut(sig, stack):
 
 
 class timeout(object):
-    """
-    Timeout context that will stop code running within context
+    """Timeout context that will stop code running within context
     if timeout is reached
 
     >>with timeout(2):

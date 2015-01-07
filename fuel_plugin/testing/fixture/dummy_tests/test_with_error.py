@@ -34,8 +34,7 @@ class FakeTests(unittest.TestCase):
 
 
 class WithErrorTest(unittest.TestCase):
-    '''
-    This is supoused to introduce errorness behaviour
+    '''This is supoused to introduce errorness behaviour
     in means that it have exception raised in setUp method for
     testing purposes.
     '''

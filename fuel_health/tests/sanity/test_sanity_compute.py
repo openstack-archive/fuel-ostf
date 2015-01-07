@@ -22,9 +22,7 @@ LOG = logging.getLogger(__name__)
 
 
 class SanityComputeTest(nmanager.SanityChecksTest):
-    """
-    TestClass contains tests that check basic Compute functionality.
-    """
+    """TestClass contains tests that check basic Compute functionality."""
 
     def test_list_instances(self):
         """Request instance list

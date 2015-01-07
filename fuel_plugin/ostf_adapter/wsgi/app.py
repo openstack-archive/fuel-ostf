@@ -22,8 +22,7 @@ CONF = cfg.CONF
 
 
 def setup_config(custom_pecan_config):
-    '''
-    Updates defaults values for pecan server
+    '''Updates defaults values for pecan server
     by those supplied via command line arguments
     when ostf-server is started
     '''

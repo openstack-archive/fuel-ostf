@@ -25,8 +25,7 @@ LOG = logging.getLogger(__name__)
 
 
 class TestUserTenantRole(nmanager.SmokeChecksTest):
-    """
-    Test class verifies the following:
+    """Test class verifies the following:
       - verify that a tenant can be created;
       - verify that a user can be created based on the new tenant;
       - verify that a user role can be created.

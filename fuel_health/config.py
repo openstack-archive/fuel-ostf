@@ -15,6 +15,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from __future__ import print_function
 
 import os
 import sys
@@ -375,7 +376,7 @@ def register_heat_opts(conf):
 
 
 def process_singleton(cls):
-    """Wrapper for classes... To be instantiated only one time per process"""
+    """Wrapper for classes... To be instantiated only one time per process."""
     instances = {}
 
     def wrapper(*args, **kwargs):
@@ -423,8 +424,8 @@ class FileConfig(object):
         LOG.info("Using fuel config file %s" % path)
 
         if not os.path.exists(path):
-            msg = "Config file %(path)s not found" % locals()
-            print >> sys.stderr, RuntimeError(msg)
+            msg = "Config file {0} not found".format(path)
+            print(RuntimeError(msg), file=sys.stderr)
         else:
             config_files.append(path)
 
@@ -648,9 +649,6 @@ class NailgunConfig(object):
             self.volume.ceph_exist = storage
 
     def _parse_ostf_api(self):
-        """
-            will leave this
-        """
         api_url = '/api/ostf/%s' % self.cluster_id
         response = self.req_session.get(self.nailgun_url + api_url)
         data = response.json()

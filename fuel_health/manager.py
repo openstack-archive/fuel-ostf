@@ -24,9 +24,7 @@ LOG = logging.getLogger(__name__)
 
 
 class Manager(object):
-
-    """
-    Base manager class
+    """Base manager class
 
     Manager objects are responsible for providing a configuration object
     and a client object for a test case to use in performing actions.

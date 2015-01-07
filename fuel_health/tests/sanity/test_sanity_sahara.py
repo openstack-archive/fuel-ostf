@@ -22,9 +22,7 @@ LOG = logging.getLogger(__name__)
 
 
 class SanitySaharaTests(sahara.SaharaTest):
-    """
-    TestClass contains tests that check basic Sahara functionality.
-    """
+    """TestClass contains tests that check basic Sahara functionality."""
 
     def test_sanity_sahara(self):
         """Sahara tests to create/list/delete node group and cluster templates

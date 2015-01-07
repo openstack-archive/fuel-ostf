@@ -13,21 +13,21 @@
 #    under the License.
 
 
-import os
-import sys
 import logging
+import os
 import signal
+import sys
 
-from oslo.config import cfg
 from gevent import pywsgi
+from oslo.config import cfg
 
 from fuel_plugin.ostf_adapter import config as ostf_config
-from fuel_plugin.ostf_adapter import nailgun_hooks
 from fuel_plugin.ostf_adapter import logger
-from fuel_plugin.ostf_adapter.wsgi import app
+from fuel_plugin.ostf_adapter import mixins
+from fuel_plugin.ostf_adapter import nailgun_hooks
 from fuel_plugin.ostf_adapter.nose_plugin import nose_discovery
 from fuel_plugin.ostf_adapter.storage import engine
-from fuel_plugin.ostf_adapter import mixins
+from fuel_plugin.ostf_adapter.wsgi import app
 
 
 CONF = cfg.CONF

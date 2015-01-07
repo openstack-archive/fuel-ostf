@@ -12,15 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from pecan import expose
 from fuel_plugin.ostf_adapter.wsgi import controllers
+from pecan import expose
 
 
 class V1Controller(object):
-    """
-        TODO Rewrite it with wsme expose
-    """
-
+    # TODO(???) Rewrite it with wsme expose
     tests = controllers.TestsController()
     testsets = controllers.TestsetsController()
     testruns = controllers.TestrunsController()

@@ -17,9 +17,7 @@ from fuel_health.common.utils.data_utils import rand_name
 
 
 class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
-    """
-    TestClass contains tests that check basic Ceilometer functionality.
-    """
+    """TestClass contains tests that check basic Ceilometer functionality."""
 
     def test_check_alarm_state(self):
         """Ceilometer test to check alarm status and get Nova notifications.
