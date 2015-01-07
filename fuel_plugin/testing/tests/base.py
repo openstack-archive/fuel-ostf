@@ -16,6 +16,7 @@
 
 
 import mock
+import requests_mock
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import unittest2
@@ -119,14 +120,71 @@ class BaseUnitTest(unittest2.TestCase):
     """Base class for all unit tests."""
 
 
-class BaseWSGITest(unittest2.TestCase):
+class BaseIntegrationTest(BaseUnitTest):
+    """Base class for all integration tests."""
 
     @classmethod
     def setUpClass(cls):
-        cls.dbpath = 'postgresql+psycopg2://ostf:ostf@localhost/ostf'
+        config.init_config([])
+        # db connection
+        cls.dbpath = config.cfg.CONF.adapter.dbpath
         cls.Session = sessionmaker()
         cls.engine = create_engine(cls.dbpath)
 
+        # mock http requests
+        cls.requests_mock = requests_mock.Mocker()
+        cls.requests_mock.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        # stop https requests mocking
+        cls.requests_mock.stop()
+
+    def setUp(self):
+        # orm session wrapping
+        self.connection = self.engine.connect()
+        self.trans = self.connection.begin()
+
+        self.Session.configure(
+            bind=self.connection
+        )
+        self.session = self.Session()
+
+    def tearDown(self):
+        # rollback changes to database
+        # made by tests
+        self.trans.rollback()
+        self.session.close()
+        self.connection.close()
+
+    def mock_api_for_cluster(self, cluster_id):
+        """Mock requests to Nailgun to mimic behavior of
+        Nailgun's API
+        """
+        cluster = CLUSTERS[cluster_id]
+        release_id = cluster['cluster_meta']['release_id']
+
+        self.requests_mock.register_uri(
+            'GET',
+            '/api/clusters/{0}'.format(cluster_id),
+            json=cluster['cluster_meta'])
+
+        self.requests_mock.register_uri(
+            'GET',
+            '/api/releases/{0}'.format(release_id),
+            json=cluster['release_data'])
+
+        self.requests_mock.register_uri(
+            'GET',
+            '/api/clusters/{0}/attributes'.format(cluster_id),
+            json=cluster['cluster_attributes'])
+
+
+class BaseWSGITest(BaseIntegrationTest):
+
+    @classmethod
+    def setUpClass(cls):
+        super(BaseWSGITest, cls).setUpClass()
         cls.ext_id = 'fuel_plugin.testing.fixture.dummy_tests.'
         cls.expected = {
             'cluster': {
@@ -158,16 +216,7 @@ class BaseWSGITest(unittest2.TestCase):
         }
 
     def setUp(self):
-        # orm session wrapping
-        config.init_config([])
-        self.connection = self.engine.connect()
-        self.trans = self.connection.begin()
-
-        self.Session.configure(
-            bind=self.connection
-        )
-        self.session = self.Session()
-
+        super(BaseWSGITest, self).setUp()
         test_sets = self.session.query(models.TestSet).all()
 
         # need this if start unit tests in conjuction with integration
@@ -190,15 +239,12 @@ class BaseWSGITest(unittest2.TestCase):
         self.request_mock.session = self.session
 
     def tearDown(self):
-        # rollback changes to database
-        # made by tests
-        self.trans.rollback()
-        self.session.close()
-        self.connection.close()
+        super(BaseWSGITest, self).tearDown()
 
         # end of test_case patching
         self.request_patcher.stop()
 
+        # clear "cache"
         mixins.TEST_REPOSITORY = []
 
     @property
