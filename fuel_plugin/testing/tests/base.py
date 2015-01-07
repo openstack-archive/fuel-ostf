@@ -15,15 +15,18 @@
 #    under the License.
 
 
-import mock
+import requests_mock
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import event
+from sqlalchemy.orm import sessionmaker, scoped_session
 import unittest2
+import webtest
 
 from fuel_plugin.ostf_adapter import config
 from fuel_plugin.ostf_adapter import mixins
-from fuel_plugin.ostf_adapter.nose_plugin.nose_discovery import discovery
+from fuel_plugin.ostf_adapter.nose_plugin import nose_discovery
 from fuel_plugin.ostf_adapter.storage import models
+from fuel_plugin.ostf_adapter.wsgi import app
 
 
 TEST_PATH = 'fuel_plugin/testing/fixture/dummy_tests'
@@ -119,16 +122,77 @@ class BaseUnitTest(unittest2.TestCase):
     """Base class for all unit tests."""
 
 
-class BaseWSGITest(unittest2.TestCase):
+class BaseIntegrationTest(BaseUnitTest):
+    """Base class for all integration tests."""
 
     @classmethod
     def setUpClass(cls):
-        cls.dbpath = 'postgresql+psycopg2://ostf:ostf@localhost/ostf'
-        cls.Session = sessionmaker()
+        config.init_config([])
+        # db connection
+        cls.dbpath = config.cfg.CONF.adapter.dbpath
         cls.engine = create_engine(cls.dbpath)
 
-        cls.ext_id = 'fuel_plugin.testing.fixture.dummy_tests.'
-        cls.expected = {
+        # mock http requests
+        cls.requests_mock = requests_mock.Mocker()
+        cls.requests_mock.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        # stop https requests mocking
+        cls.requests_mock.stop()
+
+    def setUp(self):
+        self.connection = self.engine.connect()
+        self.trans = self.connection.begin()
+        self.session = scoped_session(sessionmaker())
+        self.session.configure(bind=self.connection)
+
+        # supprot tests with rollbacks
+        # start the session in a SAVEPOINT...
+        self.session.begin_nested()
+
+        # # then each time that SAVEPOINT ends, reopen it
+        @event.listens_for(self.session, "after_transaction_end")
+        def restart_savepoint(session, transaction):
+            if transaction.nested and not transaction._parent.nested:
+                session.begin_nested()
+
+    def tearDown(self):
+        # rollback changes to database
+        # made by tests
+        self.trans.rollback()
+        self.session.close()
+        self.connection.close()
+
+    def mock_api_for_cluster(self, cluster_id):
+        """Mock requests to Nailgun to mimic behavior of
+        Nailgun's API
+        """
+        cluster = CLUSTERS[cluster_id]
+        release_id = cluster['cluster_meta']['release_id']
+
+        self.requests_mock.register_uri(
+            'GET',
+            '/api/clusters/{0}'.format(cluster_id),
+            json=cluster['cluster_meta'])
+
+        self.requests_mock.register_uri(
+            'GET',
+            '/api/releases/{0}'.format(release_id),
+            json=cluster['release_data'])
+
+        self.requests_mock.register_uri(
+            'GET',
+            '/api/clusters/{0}/attributes'.format(cluster_id),
+            json=cluster['cluster_attributes'])
+
+
+class BaseWSGITest(BaseIntegrationTest):
+
+    def setUp(self):
+        super(BaseWSGITest, self).setUp()
+        self.ext_id = 'fuel_plugin.testing.fixture.dummy_tests.'
+        self.expected = {
             'cluster': {
                 'id': 1,
                 'deployment_tags': set(['ha', 'rhel', 'nova_network',
@@ -137,7 +201,7 @@ class BaseWSGITest(unittest2.TestCase):
             'test_sets': ['general_test',
                           'stopped_test', 'ha_deployment_test',
                           'environment_variables'],
-            'tests': [cls.ext_id + test for test in [
+            'tests': [self.ext_id + test for test in [
                 ('deployment_types_tests.ha_deployment_test.'
                  'HATest.test_ha_depl'),
                 ('deployment_types_tests.ha_deployment_test.'
@@ -157,51 +221,17 @@ class BaseWSGITest(unittest2.TestCase):
             ]]
         }
 
-    def setUp(self):
-        # orm session wrapping
-        config.init_config([])
-        self.connection = self.engine.connect()
-        self.trans = self.connection.begin()
+        self.discovery()
 
-        self.Session.configure(
-            bind=self.connection
-        )
-        self.session = self.Session()
+        self.app = webtest.TestApp(app.setup_app(session=self.session))
 
-        test_sets = self.session.query(models.TestSet).all()
-
-        # need this if start unit tests in conjuction with integration
-        if not test_sets:
-            discovery(path=TEST_PATH, session=self.session)
-
-        mixins.cache_test_repository(self.session)
-
-        # mocking
-        # request mocking
-        self.request_mock = mock.MagicMock()
-
-        self.request_patcher = mock.patch(
-            'fuel_plugin.ostf_adapter.wsgi.controllers.request',
-            self.request_mock
-        )
-        self.request_patcher.start()
-
-        # engine.get_session mocking
-        self.request_mock.session = self.session
-
-    def tearDown(self):
-        # rollback changes to database
-        # made by tests
-        self.trans.rollback()
-        self.session.close()
-        self.connection.close()
-
-        # end of test_case patching
-        self.request_patcher.stop()
-
+    def discovery(self):
+        """Discover dummy tests used for testsing."""
         mixins.TEST_REPOSITORY = []
+        nose_discovery.discovery(path=TEST_PATH, session=self.session)
+        mixins.cache_test_repository(self.session)
+        self.session.flush()
 
-    @property
     def is_background_working(self):
         is_working = True
 

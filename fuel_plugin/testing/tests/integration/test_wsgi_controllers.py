@@ -12,38 +12,31 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
-from mock import patch, Mock
+import mock
 
-from fuel_plugin.ostf_adapter.wsgi import controllers
 from fuel_plugin.ostf_adapter.storage import models
-
 from fuel_plugin.testing.tests import base
 
 
 class TestTestsController(base.BaseWSGITest):
 
-    def setUp(self):
-        super(TestTestsController, self).setUp()
-        self.controller = controllers.TestsController()
-
     def test_get(self):
-        res = self.controller.get(self.expected['cluster']['id'])
+        cluster_id = self.expected['cluster']['id']
+        self.mock_api_for_cluster(cluster_id)
+        resp = self.app.get(
+            '/v1/tests/{0}'.format(cluster_id)
+        )
+        resp_tests = [test['id'] for test in resp.json]
 
         self.assertTrue(self.is_background_working)
 
-        self.assertTrue(len(res) == len(self.expected['tests']))
-        self.assertTrue(
-            sorted([test['id'] for test in res]),
-            sorted(self.expected['tests'])
+        self.assertItemsEqual(
+            resp_tests,
+            self.expected['tests']
         )
 
 
 class TestTestSetsController(base.BaseWSGITest):
-
-    def setUp(self):
-        super(TestTestSetsController, self).setUp()
-        self.controller = controllers.TestsetsController()
 
     def test_get(self):
         self.expected['test_set_description'] = [
@@ -52,63 +45,55 @@ class TestTestSetsController(base.BaseWSGITest):
             'Fake tests for HA deployment',
             'Test for presence of env variables inside of testrun subprocess'
         ]
-        res = self.controller.get(self.expected['cluster']['id'])
+
+        cluster_id = self.expected['cluster']['id']
+        self.mock_api_for_cluster(cluster_id)
+
+        resp = self.app.get(
+            '/v1/testsets/{0}'.format(cluster_id)
+        )
+        resp_testsets_ids = [testset['id'] for testset in resp.json]
 
         self.assertTrue(self.is_background_working)
 
-        self.assertTrue(
-            sorted([testset['id'] for testset in res]) ==
-            sorted(self.expected['test_sets'])
-        )
-        self.assertTrue(
-            sorted([testset['name'] for testset in res]) ==
-            sorted(self.expected['test_set_description'])
+        self.assertItemsEqual(
+            resp_testsets_ids,
+            self.expected['test_sets']
         )
 
-        test_set_order = {
-            'general_test': 0,
-            'stopped_test': 1,
-            'ha_deployment_test': 2,
-            'environment_variables': 3
-        }
+        self.assertItemsEqual(
+            [testset['name'] for testset in resp.json],
+            self.expected['test_set_description']
+        )
 
-        resp_elements = [testset['id'] for testset in res]
-        for test_set in resp_elements:
-            self.assertTrue(
-                test_set_order[test_set] == resp_elements.index(test_set)
-            )
+        test_sets_order = (
+            'general_test',
+            'stopped_test',
+            'ha_deployment_test',
+            'environment_variables',
+        )
+        self.assertSequenceEqual(resp_testsets_ids, test_sets_order)
 
 
 class TestTestRunsController(base.BaseWSGITest):
 
     def setUp(self):
         super(TestTestRunsController, self).setUp()
-
-        self.request_mock.body = json.dumps([
-            {
-                'testset': 'ha_deployment_test',
-                'metadata': {'cluster_id': 1}
-            }]
-        )
-
-        self.controller = controllers.TestrunsController()
-
-        self.plugin_mock = Mock()
+        self.plugin_mock = mock.Mock()
         self.plugin_mock.kill.return_value = True
 
-        self.nose_plugin_patcher = patch(
+        self.nose_plugin_patcher = mock.patch(
             'fuel_plugin.ostf_adapter.storage.models.nose_plugin.get_plugin',
             lambda *args: self.plugin_mock
         )
         self.nose_plugin_patcher.start()
 
+        self.cluster_id = self.expected['cluster']['id']
+        self.mock_api_for_cluster(self.cluster_id)
+
     def tearDown(self):
         super(TestTestRunsController, self).tearDown()
-
         self.nose_plugin_patcher.stop()
-
-
-class TestTestRunsPostController(TestTestRunsController):
 
     def test_post(self):
         self.expected['testrun_post'] = {
@@ -127,17 +112,25 @@ class TestTestRunsPostController(TestTestRunsController):
             }
         }
 
-        res = self.controller.post()[0]
+        resp = self.app.post_json('/v1/testruns/', (
+            {
+                'testset': 'ha_deployment_test',
+                'metadata': {'cluster_id': self.cluster_id}
+            },
+        ))
 
-        for key in self.expected['testrun_post'].keys():
+        resp_testrun = resp.json[0]
+
+        for key in self.expected['testrun_post']:
             if key == 'tests':
-                self.assertTrue(
-                    sorted(self.expected['testrun_post'][key]['names']) ==
-                    sorted([test['id'] for test in res[key]])
+                self.assertItemsEqual(
+                    self.expected['testrun_post'][key]['names'],
+                    [test['id'] for test in resp_testrun[key]]
                 )
             else:
-                self.assertTrue(
-                    self.expected['testrun_post'][key] == res[key]
+                self.assertEqual(
+                    self.expected['testrun_post'][key],
+                    resp_testrun[key]
                 )
 
         self.session.query(models.TestRun)\
@@ -152,35 +145,29 @@ class TestTestRunsPostController(TestTestRunsController):
         tests_names = [
             test.name for test in testrun_tests
         ]
-        self.assertTrue(
-            sorted(tests_names) ==
-            sorted(self.expected['testrun_post']['tests']['names'])
+        self.assertItemsEqual(
+            tests_names,
+            self.expected['testrun_post']['tests']['names']
         )
 
-
-class TestTestRunsPutController(TestTestRunsController):
-
-    def setUp(self):
-        super(TestTestRunsPutController, self).setUp()
-        self.test_run = self.controller.post()[0]
+    def test_put_stopped(self):
+        resp = self.app.post_json('/v1/testruns/', (
+            {
+                'testset': 'ha_deployment_test',
+                'metadata': {'cluster_id': self.cluster_id}
+            },
+        ))
+        resp_testrun = resp.json[0]
 
         self.session.query(models.Test)\
-            .filter_by(test_run_id=int(self.test_run['id']))\
+            .filter_by(test_run_id=resp_testrun['id'])\
             .update({'status': 'running'})
 
         # flush data which test is depend on into db
         self.session.commit()
 
-        self.request_mock.body = json.dumps(
-            [{
-                'status': 'stopped',
-                'id': self.test_run['id']
-            }]
-        )
-
-    def test_put_stopped(self):
         self.expected['testrun_put'] = {
-            'id': int(self.test_run['id']),
+            'id': resp_testrun['id'],
             'testset': 'ha_deployment_test',
             'cluster_id': 1,
             'tests': {
@@ -195,17 +182,23 @@ class TestTestRunsPutController(TestTestRunsController):
             }
         }
 
-        res = self.controller.put()[0]
+        resp = self.app.put_json('/v1/testruns/', (
+            {
+                'status': 'stopped',
+                'id': resp_testrun['id']
+            },
+        ))
+        resp_testrun = resp.json[0]
 
         for key in self.expected['testrun_put'].keys():
             if key == 'tests':
-                self.assertTrue(
-                    sorted(self.expected['testrun_put'][key]['names']) ==
-                    sorted([test['id'] for test in res[key]])
+                self.assertItemsEqual(
+                    self.expected['testrun_put'][key]['names'],
+                    [test['id'] for test in resp_testrun[key]]
                 )
             else:
-                self.assertTrue(
-                    self.expected['testrun_put'][key] == res[key]
+                self.assertEqual(
+                    self.expected['testrun_put'][key], resp_testrun[key]
                 )
 
         testrun_tests = self.session.query(models.Test)\
@@ -215,9 +208,9 @@ class TestTestRunsPutController(TestTestRunsController):
         tests_names = [
             test.name for test in testrun_tests
         ]
-        self.assertTrue(
-            sorted(tests_names) ==
-            sorted(self.expected['testrun_put']['tests']['names'])
+        self.assertItemsEqual(
+            tests_names,
+            self.expected['testrun_put']['tests']['names']
         )
 
         self.assertTrue(
@@ -229,12 +222,14 @@ class TestTestRunsPutController(TestTestRunsController):
 
 class TestClusterRedeployment(base.BaseWSGITest):
 
-    def setUp(self):
-        super(TestClusterRedeployment, self).setUp()
-        self.controller = controllers.TestsetsController()
-        self.controller.get(self.expected['cluster']['id'])
+    @mock.patch('fuel_plugin.ostf_adapter.mixins._get_cluster_depl_tags')
+    def test_cluster_redeployment_with_different_tags(self, m_get_depl_tags):
+        m_get_depl_tags.return_value = set(
+            ['multinode', 'centos']
+        )
+        cluster_id = self.expected['cluster']['id']
+        self.app.get('/v1/testsets/{0}'.format(cluster_id))
 
-    def test_cluster_redeployment_with_different_tags(self):
         self.expected = {
             'cluster': {
                 'id': 1,
@@ -265,14 +260,10 @@ class TestClusterRedeployment(base.BaseWSGITest):
 
         # patch request_to_nailgun function in orded to emulate
         # redeployment of cluster
-        cluster_data = set(
+        m_get_depl_tags.return_value = set(
             ['multinode', 'ubuntu', 'nova_network']
         )
 
-        with patch(
-            ('fuel_plugin.ostf_adapter.mixins._get_cluster_depl_tags'),
-            lambda *args, **kwargs: cluster_data
-        ):
-            self.controller.get(self.expected['cluster']['id'])
+        self.app.get('/v1/testsets/{0}'.format(cluster_id))
 
         self.assertTrue(self.is_background_working)

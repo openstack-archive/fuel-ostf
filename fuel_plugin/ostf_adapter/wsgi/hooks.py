@@ -13,7 +13,6 @@
 #    under the License.
 
 import logging
-from sqlalchemy import create_engine, orm
 
 from pecan import hooks
 
@@ -22,10 +21,8 @@ LOG = logging.getLogger(__name__)
 
 
 class CustomTransactionalHook(hooks.TransactionHook):
-    def __init__(self, dbpath):
-        engine = create_engine(dbpath)
-        self.session = orm.scoped_session(orm.sessionmaker())
-        self.session.configure(bind=engine)
+    def __init__(self, session):
+        self.session = session
 
         def start():
             pass
