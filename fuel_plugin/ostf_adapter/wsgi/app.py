@@ -17,6 +17,7 @@ import pecan
 
 from fuel_plugin.ostf_adapter.wsgi import access_control
 from fuel_plugin.ostf_adapter.wsgi import hooks
+from fuel_plugin.ostf_adapter.storage import engine
 
 CONF = cfg.CONF
 
@@ -49,13 +50,17 @@ def setup_config(custom_pecan_config):
     pecan.conf.update(config_to_use)
 
 
-def setup_app(config=None):
+def setup_app(config=None, session=None):
     setup_config(config or {})
+    session = session or engine.get_session(pecan.conf.dbpath)
+    app_hooks = [
+        hooks.CustomTransactionalHook(session),
+        hooks.AddTokenHook()
+    ]
     app = pecan.make_app(
         pecan.conf.app.root,
         debug=pecan.conf.debug,
         force_canonical=True,
-        hooks=[hooks.CustomTransactionalHook(dbpath=pecan.conf.dbpath),
-               hooks.AddTokenHook()]
+        hooks=app_hooks,
     )
     return access_control.setup(app)

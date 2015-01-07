@@ -18,7 +18,7 @@ from sqlalchemy import create_engine
 
 from fuel_plugin.testing.tests.functional.base import \
     BaseAdapterTest, Response
-from fuel_plugin.ostf_client.client import TestingAdapterClient as adapter
+from fuel_plugin.ostf_client import client
 
 
 class AdapterTests(BaseAdapterTest):
@@ -74,7 +74,7 @@ class AdapterTests(BaseAdapterTest):
             ]
         }
 
-        cls.adapter = adapter(url)
+        cls.adapter = client.TestingAdapterClient(url)
         cls.client = cls.init_client(url)
 
     @classmethod

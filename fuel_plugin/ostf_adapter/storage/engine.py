@@ -38,3 +38,11 @@ def contexted_session(dbpath):
         raise
     finally:
         session.close()
+
+
+def get_session(dbpath):
+    """Returns SQLAlchemy scoped session for given DB configuration string."""
+    engine = create_engine(dbpath)
+    session = orm.scoped_session(orm.sessionmaker())
+    session.configure(bind=engine)
+    return session
