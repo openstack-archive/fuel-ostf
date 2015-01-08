@@ -15,12 +15,13 @@
 #    under the License.
 
 import mock
-from unittest2 import TestCase
 
 from fuel_plugin.ostf_adapter.logger import ResultsLogger
+from fuel_plugin.testing.tests import base
 
 
-class TestResultsLogger(TestCase):
+@mock.patch.object(ResultsLogger, '_init_file_logger')
+class TestResultsLogger(base.BaseUnitTest):
 
     def get_logger(self, **kwargs):
         options = {
@@ -30,14 +31,14 @@ class TestResultsLogger(TestCase):
         options.update(kwargs)
         return ResultsLogger(**options)
 
-    def test_filename(self):
+    def test_filename(self, m_init_logger):
         logger = self.get_logger(testset='testset_name',
                                  cluster_id=99)
         expected = "cluster_99_testset_name.log"
 
         self.assertEqual(logger.filename, expected)
 
-    def test_log_format_on_success(self):
+    def test_log_format_on_success(self, m_init_logger):
         logger = self.get_logger()
         logger._logger = mock.Mock()
 
@@ -48,7 +49,7 @@ class TestResultsLogger(TestCase):
         expected = 'SUCCESS Successful test (tests.successful.test)  '
         logger._logger.info.assert_called_once_with(expected)
 
-    def test_log_format_on_fail(self):
+    def test_log_format_on_fail(self, m_init_logger):
         logger = self.get_logger()
         logger._logger = mock.Mock()
 
@@ -60,7 +61,7 @@ class TestResultsLogger(TestCase):
                     'Message after fail TRACEBACK')
         logger._logger.info.assert_called_once_with(expected)
 
-    def test_log_format_on_error(self):
+    def test_log_format_on_error(self, m_init_logger):
         logger = self.get_logger()
         logger._logger = mock.Mock()
 

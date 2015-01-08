@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 #    Copyright 2013 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -13,17 +15,108 @@
 #    under the License.
 
 
-import unittest2
-from mock import patch, MagicMock
+import mock
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import unittest2
 
 from fuel_plugin.ostf_adapter import config
+from fuel_plugin.ostf_adapter import mixins
 from fuel_plugin.ostf_adapter.nose_plugin.nose_discovery import discovery
 from fuel_plugin.ostf_adapter.storage import models
-from fuel_plugin.ostf_adapter import mixins
+
 
 TEST_PATH = 'fuel_plugin/testing/fixture/dummy_tests'
+
+
+CLUSTERS = {
+    1: {
+        'cluster_meta': {
+            'release_id': 1,
+            'mode': 'ha'
+        },
+        'release_data': {
+            'operating_system': 'rhel'
+        },
+        'cluster_attributes': {
+            'editable': {
+                'additional_components': {},
+                'common': {}
+            }
+        }
+    },
+    2: {
+        'cluster_meta': {
+            'release_id': 2,
+            'mode': 'multinode',
+        },
+        'release_data': {
+            'operating_system': 'ubuntu'
+        },
+        'cluster_attributes': {
+            'editable': {
+                'additional_components': {},
+                'common': {}
+            }
+        }
+    },
+    3: {
+        'cluster_meta': {
+            'release_id': 3,
+            'mode': 'ha'
+        },
+        'release_data': {
+            'operating_system': 'rhel'
+        },
+        'cluster_attributes': {
+            'editable': {
+                'additional_components': {
+                    'murano': {
+                        'value': True
+                    },
+                    'sahara': {
+                        'value': False
+                    }
+                },
+                'common': {}
+            }
+        }
+    },
+    4: {
+        'cluster_meta': {
+            'release_id': 4,
+            'mode': 'test_error'
+        },
+        'release_data': {
+            'operating_system': 'none'
+        },
+        'cluster_attributes': {
+            'editable': {
+                'additional_components': {},
+                'common': {}
+            }
+        }
+    },
+    5: {
+        'cluster_meta': {
+            'release_id': 5,
+            'mode': 'dependent_tests'
+        },
+        'release_data': {
+            'operating_system': 'none'
+        },
+        'cluster_attributes': {
+            'editable': {
+                'additional_components': {},
+                'common': {}
+            }
+        }
+    }
+}
+
+
+class BaseUnitTest(unittest2.TestCase):
+    """Base class for all unit tests."""
 
 
 class BaseWSGITest(unittest2.TestCase):
@@ -85,9 +178,9 @@ class BaseWSGITest(unittest2.TestCase):
 
         # mocking
         # request mocking
-        self.request_mock = MagicMock()
+        self.request_mock = mock.MagicMock()
 
-        self.request_patcher = patch(
+        self.request_patcher = mock.patch(
             'fuel_plugin.ostf_adapter.wsgi.controllers.request',
             self.request_mock
         )
