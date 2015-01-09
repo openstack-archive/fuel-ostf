@@ -286,17 +286,9 @@ class OfficialClientTest(fuel_health.test.TestCase):
     manager_class = OfficialClientManager
 
     @classmethod
-    def _create_nano_flavor(cls):
-        name = rand_name('ost1_test-flavor-nano')
-        flavorid = rand_int_id(999, 10000)
-        flavor = None
-        try:
-            flavor = cls.compute_client.flavors.create(
-                name, 64, 1, 1, flavorid)
-        except Exception:
-            LOG.debug("OSTF test flavor cannot be created.")
-            LOG.debug(traceback.format_exc())
-        return flavor
+    def find_micro_flavor(cls):
+        return [flavor for flavor in cls.compute_client.flavors.list()
+                if flavor.name == 'm1.micro']
 
     def _create_volume(self, client, expected_state=None, **kwargs):
         kwargs.setdefault('display_name', rand_name('ostf-test-volume'))
@@ -384,16 +376,6 @@ class OfficialClientTest(fuel_health.test.TestCase):
                       )
 
     @classmethod
-    def _clean_flavors(cls):
-        if cls.flavors:
-            for flavor in cls.flavors:
-                try:
-                    cls.compute_client.flavors.delete(flavor)
-                except Exception as exc:
-                    cls.error_msg.append(exc)
-                    LOG.debug(traceback.format_exc())
-
-    @classmethod
     def tearDownClass(cls):
         cls.error_msg = []
         while cls.os_resources:
@@ -453,7 +435,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             cls.network = []
             cls.floating_ips = []
             cls.error_msg = []
-            cls.flavors = []
             cls.private_net = 'net04'
 
     def setUp(self):
@@ -558,15 +539,15 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def _create_server(self, client, name, security_groups=None,
                        flavor_id=None, net_id=None):
         base_image_id = self.get_image_from_name()
-        if not flavor_id:
-            flavor = self._create_nano_flavor()
 
-            if not flavor:
+        if not flavor_id:
+            if not self.find_micro_flavor():
                 self.fail("Flavor for tests was not created. Seems that "
                           "something is wrong with nova services.")
+            else:
+                flavor = self.find_micro_flavor()[0]
 
             flavor_id = flavor.id
-            self.flavors.append(flavor_id)
         if not security_groups:
             security_groups = [self._create_security_group(
                 self.compute_client).name]
@@ -708,7 +689,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         if cls.manager.clients_initialized:
             cls._clean_floating_ips()
             cls._clear_networks()
-            cls._clean_flavors()
+            # cls._clean_flavors()
 
 
 class PlatformServicesBaseClass(NovaNetworkScenarioTest):
@@ -846,10 +827,9 @@ class SmokeChecksTest(OfficialClientTest):
                 cls.config.identity.admin_tenant_name).tenant_id
             cls.build_interval = cls.config.volume.build_interval
             cls.build_timeout = cls.config.volume.build_timeout
-            cls.flavors = []
+            cls.created_flavors = []
             cls.error_msg = []
             cls.private_net = 'net04'
-            cls.smoke_flavor = ''
         else:
             cls.proceed = False
 
@@ -860,10 +840,19 @@ class SmokeChecksTest(OfficialClientTest):
     def _create_flavors(self, client, ram, disk, vcpus=1):
         name = rand_name('ost1_test-flavor-')
         flavorid = rand_int_id()
+        exist_ids = [flavor.id for flavor
+                     in self.compute_client.flavors.list()]
+
+        if flavorid in exist_ids:
+            flavorid = name + rand_int_id()
         flavor = client.flavors.create(name=name, ram=ram, disk=disk,
                                        vcpus=vcpus, flavorid=flavorid)
-        self.flavors.append(flavor)
+        self.created_flavors.append(flavor)
         return flavor
+
+    def _delete_flavors(self, client, flavor):
+        self.created_flavors.remove(flavor)
+        client.flavors.delete(flavor)
 
     def _create_tenant(self, client):
         name = rand_name('ost1_test-tenant-')
@@ -894,9 +883,8 @@ class SmokeChecksTest(OfficialClientTest):
             client, display_name=display_name, imageRef=imageRef)
 
     def create_instance_from_volume(self, client, volume):
-        if not self.smoke_flavor:
-            self.fail("Flavor for tests was not created. Seems that "
-                      "something is wrong with nova services.")
+        if not self.find_micro_flavor():
+            self.fail("m1.micro flavor was not created.")
 
         name = rand_name('ost1_test-boot-volume-instance')
         base_image_id = self.get_image_from_name()
@@ -913,11 +901,12 @@ class SmokeChecksTest(OfficialClientTest):
                           "Please verify it is properly created.".
                           format(self.private_net))
             server = client.servers.create(
-                name, base_image_id, self.smoke_flavor.id, **create_kwargs)
+                name, base_image_id, self.find_micro_flavor()[0].id,
+                **create_kwargs)
         else:
             create_kwargs = {'block_device_mapping': bd_map}
             server = client.servers.create(name, base_image_id,
-                                           self.smoke_flavor.id,
+                                           self.find_micro_flavor()[0].id,
                                            **create_kwargs)
 
         self.verify_response_body_content(server.name,
@@ -931,9 +920,8 @@ class SmokeChecksTest(OfficialClientTest):
         return server
 
     def _create_server(self, client):
-        if not self.smoke_flavor:
-            self.fail("Flavor for tests was not created. Seems that "
-                      "something is wrong with nova services.")
+        if not self.find_micro_flavor():
+            self.fail("m1.micro flavor was not created.")
 
         name = rand_name('ost1_test-volume-instance')
         base_image_id = self.get_image_from_name()
@@ -948,10 +936,11 @@ class SmokeChecksTest(OfficialClientTest):
                           "Please verify it is properly created.".
                           format(self.private_net))
             server = client.servers.create(
-                name, base_image_id, self.smoke_flavor.id, **create_kwargs)
+                name, base_image_id, self.find_micro_flavor()[0].id,
+                **create_kwargs)
         else:
             server = client.servers.create(name, base_image_id,
-                                           self.smoke_flavor.id)
+                                           self.micro_flavors[0].id)
 
         self.verify_response_body_content(server.name,
                                           name,
@@ -1002,10 +991,9 @@ class SmokeChecksTest(OfficialClientTest):
     def tearDownClass(cls):
         super(SmokeChecksTest, cls).tearDownClass()
         if cls.manager.clients_initialized:
-            cls._clean_flavors()
-            if cls.smoke_flavor:
+            if cls.created_flavors:
                 try:
-                    cls.compute_client.flavors.delete(cls.smoke_flavor)
+                    cls.compute_client.flavors.delete(cls.created_flavors)
                 except Exception:
                     LOG.debug("OSTF test flavor cannot be deleted.")
                     LOG.debug(traceback.format_exc())
