@@ -49,7 +49,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         """
         self.check_image_exists()
         parameters = {
-            "InstanceType": self.testvm_flavor.name,
+            "InstanceType": self.find_micro_flavor()[0].name,
             "ImageId": self.config.compute.image_name
         }
         if 'neutron' in self.config.network.network_provider:
@@ -359,7 +359,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         parameters = {
             "KeyName": keypair.name,
-            "InstanceType": self.testvm_flavor.name,
+            "InstanceType": self.find_micro_flavor()[0].name,
             "ImageId": self.config.compute.image_name,
             "SecurityGroup": sec_group.name
         }
