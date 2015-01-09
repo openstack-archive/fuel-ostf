@@ -18,6 +18,7 @@
 
 import logging
 import os
+import traceback
 
 import fuel_health.common.ssh
 from fuel_health.common.utils.data_utils import rand_name
@@ -34,7 +35,6 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
     @classmethod
     def setUpClass(cls):
         super(HeatBaseTest, cls).setUpClass()
-        cls.testvm_flavor = None
         cls.flavors = []
         if cls.manager.clients_initialized:
             if cls.heat_client is None:
@@ -44,20 +44,19 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
     @classmethod
     def tearDownClass(cls):
-        LOG.debug("Deleting flavors created by Heat tests.")
-        cls._clean_flavors()
         super(HeatBaseTest, cls).tearDownClass()
+        if cls.flavors:
+            try:
+                [cls.compute_client.flavors.delete(flavor)
+                 for flavor in cls.flavors]
+            except Exception:
+                LOG.debug(traceback.format_exc())
 
     def setUp(self):
         super(HeatBaseTest, self).setUp()
         self.check_clients_state()
-        if not self.testvm_flavor:
-            LOG.debug("Creating a flavor for Heat tests.")
-            flavor_name = rand_name('ostf-heat-flavor-')
-            self.testvm_flavor = (
-                self.compute_client.flavors.create(flavor_name,
-                                                   disk=1, ram=64, vcpus=1))
-            self.flavors.append(self.testvm_flavor)
+        if not self.find_micro_flavor():
+            self.fail('m1.micro flavor was not created.')
 
     @staticmethod
     def _list_stacks(client):
