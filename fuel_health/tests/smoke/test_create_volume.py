@@ -28,7 +28,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
     def setUpClass(cls):
         super(VolumesTest, cls).setUpClass()
         if cls.manager.clients_initialized:
-            cls.smoke_flavor = cls._create_nano_flavor()
+            cls.micro_flavors = cls.find_micro_flavor()
 
     def setUp(self):
         super(VolumesTest, self).setUp()

@@ -37,7 +37,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
     def setUpClass(cls):
         super(TestImageAction, cls).setUpClass()
         if cls.manager.clients_initialized:
-            cls.smoke_flavor = cls._create_nano_flavor()
+            cls.micro_flavors = cls.find_micro_flavor()
 
     @classmethod
     def tearDownClass(cls):
@@ -80,11 +80,11 @@ class TestImageAction(nmanager.SmokeChecksTest):
         test.call_until_true(is_deletion_complete, 10, 1)
 
     def _boot_image(self, image_id):
-        if not self.smoke_flavor:
+        if not self.find_micro_flavor():
             self.fail("Flavor for tests was not created. Seems that "
                       "something is wrong with nova services.")
-
-        flavor_id = self.smoke_flavor
+        else:
+            flavor_id = self.micro_flavors[0]
         name = rand_name('ost1_test-image')
         client = self.compute_client
         LOG.debug("name:%s, image:%s" % (name, image_id))
@@ -110,7 +110,6 @@ class TestImageAction(nmanager.SmokeChecksTest):
                                            image=image_id,
                                            flavor=flavor_id)
         self.set_resource(name, server)
-        # self.addCleanup(self.compute_client.servers.delete, server)
         self.verify_response_body_content(
             name, server.name,
             msg="Please refer to OpenStack logs for more details.")
