@@ -15,7 +15,7 @@
 import logging
 import uuid
 
-from fuel_health import murano
+from fuel_health import muranomanager
 
 from fuel_health.common.utils.data_utils import rand_name
 
@@ -23,7 +23,7 @@ from fuel_health.common.utils.data_utils import rand_name
 LOG = logging.getLogger(__name__)
 
 
-class MuranoDeployLinuxServicesTests(murano.MuranoTest):
+class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
     """
     TestClass contains verifications of full Murano functionality.
     Special requirements:
