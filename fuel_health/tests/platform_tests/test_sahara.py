@@ -16,12 +16,12 @@
 
 import logging
 
-from fuel_health import sahara
+from fuel_health import saharamanager
 
 LOG = logging.getLogger(__name__)
 
 
-class PlatformSaharaTests(sahara.SaharaTest):
+class PlatformSaharaTests(saharamanager.SaharaTest):
     """
     TestClass contains tests that check basic Sahara functionality.
     """

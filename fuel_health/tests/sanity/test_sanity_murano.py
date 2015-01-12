@@ -14,10 +14,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from fuel_health import murano
+from fuel_health import muranomanager
 
 
-class MuranoSanityTests(murano.MuranoTest):
+class MuranoSanityTests(muranomanager.MuranoTest):
     """
     TestClass contains verifications of basic Murano functionality.
     Special requirements:
