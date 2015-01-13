@@ -131,3 +131,29 @@ class TestNoseDiscovery(base.BaseUnitTest):
             needed_test.deployment_tags,
             expected['test']['deployment_tags']
         )
+
+    def test_if_test_belongs_to_test_set(self):
+        test_set_id = 'ha'
+        pass_checks = (
+            'test_ha_sth',
+            'test-ha-ha',
+            'test.ha.sahara',
+            'test.ha.sth',
+        )
+        fail_checks = (
+            'test_sahara',
+            'test.nonha.sth',
+            'test.nonha.sahara',
+        )
+
+        for test_id in pass_checks:
+            self.assertTrue(
+                nose_discovery.DiscoveryPlugin.test_belongs_to_testset(
+                    test_id, test_set_id)
+            )
+
+        for test_id in fail_checks:
+            self.assertFalse(
+                nose_discovery.DiscoveryPlugin.test_belongs_to_testset(
+                    test_id, test_set_id)
+            )
