@@ -176,6 +176,9 @@ ComputeGroup = [
     cfg.StrOpt('libvirt_type',
                default='qemu',
                help="Type of hypervisor to use."),
+    cfg.ListOpt('vcenter_nodes',
+                default=[],
+                help="IP addresses of vcenter compute nodes"),
 ]
 
 
@@ -615,6 +618,23 @@ class NailgunConfig(object):
             compute_ips.append(node['ip'])
         LOG.info("COMPUTES IPS %s" % compute_ips)
         self.compute.compute_nodes = compute_ips
+
+        online_vcenter_nodes = filter(lambda node: 'vcenter-compute'
+                                      in node['roles'] and
+                                      node['online'] is True, data)
+        online_vcenter_nodes_ips = []
+        for vcenter_node in online_vcenter_nodes:
+            online_vcenter_nodes_ips.append(node['ip'])
+        LOG.info('Online vcenter-compute IPs is {0}'.format(online_vcenter_nodes_ips))
+        self.compute.online_vcenter_nodes = online_vcenter_nodes_ips
+
+        vcenter_nodes_ips = []
+        vcenter_nodes = filter(lambda node: 'vcenter-compute' in node['roles'], data)
+        for node in vcenter_nodes:
+            vcenter_nodes_ips.append(node['ip'])
+        LOG.info("vCenter nodes IPs %s" % vcenter_nodes_ips)
+        self.compute.vcenter_nodes = vcenter_nodes_ips
+
         ceph_nodes = filter(lambda node: 'ceph-osd' in node['roles'],
                             data)
         self.compute.ceph_nodes = ceph_nodes
