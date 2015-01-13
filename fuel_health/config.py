@@ -565,6 +565,8 @@ class NailgunConfig(object):
                 access_data['password']['value']
             )
         self.compute.libvirt_type = common_data['libvirt_type']['value']
+        self.compute.auto_assign_floating_ip = common_data[
+            'auto_assign_floating_ip']['value']
 
         api_url = '/api/clusters/%s' % self.cluster_id
         cluster_data = self.req_session.get(self.nailgun_url + api_url).json()
