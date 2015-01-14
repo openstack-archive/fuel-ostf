@@ -15,11 +15,13 @@
 import json
 import logging
 
+from oslo.config import cfg
+from pecan import abort
+from pecan import expose
+from pecan import request
+from pecan import rest
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
-from pecan import rest, expose, request, abort
-
-from oslo.config import cfg
 
 from fuel_plugin.ostf_adapter import mixins
 from fuel_plugin.ostf_adapter.storage import models

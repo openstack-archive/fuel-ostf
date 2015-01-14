@@ -2,7 +2,6 @@
 WebTest>=2.0.17
 mock==1.0.1
 requests-mock>=0.5.1
-flake8
 tox>=1.7.1
 coverage==3.6
 fabric

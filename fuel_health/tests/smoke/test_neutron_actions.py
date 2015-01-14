@@ -22,8 +22,7 @@ LOG = logging.getLogger(__name__)
 
 
 class TestNeutron(neutronmanager.NeutronBaseTest):
-    """
-    Test suite verifies:
+    """Test suite verifies:
     - router creation
     - network creation
     - subnet creation

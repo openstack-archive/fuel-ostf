@@ -25,8 +25,7 @@ LOG = logging.getLogger(__name__)
 
 
 class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
-    """
-    Test suit verifies:
+    """Test suit verifies:
      - keypairs creation
      - security groups creation
      - Network creation

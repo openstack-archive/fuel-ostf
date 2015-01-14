@@ -12,11 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from time import time
 import logging
 import os
-from nose import plugins
+import time
 
+from nose import plugins
 from oslo.config import cfg
 
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
@@ -122,7 +122,7 @@ class StoragePlugin(plugins.Plugin):
             self._add_message(test, err=err, status='error')
 
     def beforeTest(self, test):
-        self._start_time = time()
+        self._start_time = time.time()
         self._add_message(test, status='running')
 
     def describeTest(self, test):
@@ -131,5 +131,5 @@ class StoragePlugin(plugins.Plugin):
     @property
     def taken(self):
         if self._start_time:
-            return time() - self._start_time
+            return time.time() - self._start_time
         return 0

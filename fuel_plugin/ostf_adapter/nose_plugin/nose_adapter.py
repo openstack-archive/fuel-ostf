@@ -13,28 +13,28 @@
 #    under the License.
 
 import fcntl
-import os
 import logging
+import os
 import signal
 
 from oslo.config import cfg
 
 from fuel_plugin.ostf_adapter.logger import ResultsLogger
+from fuel_plugin.ostf_adapter.nose_plugin import nose_storage_plugin
 from fuel_plugin.ostf_adapter.nose_plugin import nose_test_runner
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
-from fuel_plugin.ostf_adapter.storage import engine, models
-from fuel_plugin.ostf_adapter.nose_plugin import nose_storage_plugin
+from fuel_plugin.ostf_adapter.storage import engine
+from fuel_plugin.ostf_adapter.storage import models
 
 
 LOG = logging.getLogger(__name__)
 
 
 class InterruptTestRunException(KeyboardInterrupt):
-    ''' Current class exception is used for cleanup action
+    """Current class exception is used for cleanup action
     as KeyboardInterrupt is the only exception that is reraised by
     unittest (and nose correspondingly) into outside environment
-    '''
-    pass
+    """
 
 
 class NoseDriver(object):

@@ -30,10 +30,7 @@ LOG = logging.getLogger(__name__)
 
 
 class SaharaTest(nmanager.PlatformServicesBaseClass):
-
-    """
-    Base class for openstack sanity tests for Sahara
-    """
+    """Base class for openstack sanity tests for Sahara."""
     @classmethod
     def setUpClass(cls):
         super(SaharaTest, cls).setUpClass()

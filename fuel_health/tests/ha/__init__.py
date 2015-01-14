@@ -14,12 +14,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-'''
+"""
 Main purpose of following attribute is
 to supply general information about test set.
 This information will be stored in ostf database
 in test_sets table.
-'''
+"""
 __profile__ = {
     "test_runs_ordering_priority": 3,
     "id": "ha",
