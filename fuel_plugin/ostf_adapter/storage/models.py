@@ -12,18 +12,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from datetime import datetime
+import datetime
 import logging
 
 import sqlalchemy as sa
 from sqlalchemy import desc
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.orm import joinedload, relationship, object_mapper
 from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import joinedload, relationship, object_mapper
 
 from fuel_plugin.ostf_adapter import nose_plugin
-from fuel_plugin.ostf_adapter.storage import fields, engine
+from fuel_plugin.ostf_adapter.storage import engine
+from fuel_plugin.ostf_adapter.storage import fields
 
 
 LOG = logging.getLogger(__name__)
@@ -33,8 +34,7 @@ BASE = declarative_base()
 
 
 class ClusterState(BASE):
-    '''
-    Represents clusters currently
+    """Represents clusters currently
     present in the system. Holds info
     about deployment type which is using in
     redeployment process.
@@ -42,7 +42,7 @@ class ClusterState(BASE):
     Is linked with TestSetToCluster entity
     that implements many-to-many relationship with
     TestSet.
-    '''
+    """
 
     __tablename__ = 'cluster_state'
 
@@ -51,9 +51,7 @@ class ClusterState(BASE):
 
 
 class ClusterTestingPattern(BASE):
-    '''
-    Stores cluster's pattern for testsets and tests
-    '''
+    """Stores cluster's pattern for testsets and tests."""
 
     __tablename__ = 'cluster_testing_pattern'
 
@@ -191,10 +189,9 @@ class Test(BASE):
                    synchronize_session=False)
 
     def copy_test(self, test_run, predefined_tests):
-        '''
-        Performs copying of tests for newly created
+        """Performs copying of tests for newly created
         test_run.
-        '''
+        """
         new_test = self.__class__()
         mapper = object_mapper(self)
         primary_keys = set([col.key for col in mapper.primary_key])
@@ -223,7 +220,7 @@ class TestRun(BASE):
     status = sa.Column(sa.Enum(*STATES, name='test_run_states'),
                        nullable=False)
     meta = sa.Column(fields.JsonField())
-    started_at = sa.Column(sa.DateTime, default=datetime.utcnow)
+    started_at = sa.Column(sa.DateTime, default=datetime.datetime.utcnow)
     ended_at = sa.Column(sa.DateTime)
     pid = sa.Column(sa.Integer)
 
@@ -255,7 +252,7 @@ class TestRun(BASE):
     def update(self, status):
         self.status = status
         if status == 'finished':
-            self.ended_at = datetime.utcnow()
+            self.ended_at = datetime.datetime.utcnow()
 
     @property
     def enabled_tests(self):
@@ -284,12 +281,11 @@ class TestRun(BASE):
     @classmethod
     def add_test_run(cls, session, test_set, cluster_id, status='running',
                      tests=None):
-        '''
-        Creates new test_run object with given data
+        """Creates new test_run object with given data
         and makes copy of tests that will be bound
         with this test_run. Copying is performed by
         copy_test method of Test class.
-        '''
+        """
         predefined_tests = tests or []
         tests_names = session.query(ClusterTestingPattern.tests)\
             .filter_by(test_set_id=test_set, cluster_id=cluster_id)\
@@ -338,7 +334,7 @@ class TestRun(BASE):
     @classmethod
     def update_test_run(cls, session, test_run_id, updated_data):
         if updated_data.get('status') in ['finished']:
-            updated_data['ended_at'] = datetime.utcnow()
+            updated_data['ended_at'] = datetime.datetime.utcnow()
 
         session.query(cls). \
             filter(cls.id == test_run_id). \
@@ -346,11 +342,10 @@ class TestRun(BASE):
 
     @classmethod
     def is_last_running(cls, session, test_set, cluster_id):
-        '''
-        Checks whether there one can perform creation of new
+        """Checks whether there one can perform creation of new
         test_run by testing of existing of test_run object
         with given data or test_run with 'finished' status.
-        '''
+        """
         test_run = cls.get_last_test_run(session, test_set, cluster_id)
         return not bool(test_run) or test_run.is_finished()
 

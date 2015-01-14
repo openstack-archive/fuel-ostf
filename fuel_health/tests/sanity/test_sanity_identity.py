@@ -22,8 +22,7 @@ LOG = logging.getLogger(__name__)
 
 
 class SanityIdentityTest(nmanager.SanityChecksTest):
-    """
-    TestClass contains tests that check basic authentication functionality.
+    """TestClass contains tests that check basic authentication functionality.
     Special requirements: OS admin user permissions are needed
     """
 

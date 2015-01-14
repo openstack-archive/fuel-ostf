@@ -22,8 +22,7 @@ LOG = logging.getLogger(__name__)
 
 
 class SanityHeatTest(nmanager.SanityChecksTest):
-    """
-    Class contains tests that check basic Heat functionality.
+    """Class contains tests that check basic Heat functionality.
     Special requirements:
         1. Heat component should be installed.
     """

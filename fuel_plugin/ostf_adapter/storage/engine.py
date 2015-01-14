@@ -12,19 +12,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import contextlib
 import logging
 
-from contextlib import contextmanager
 from sqlalchemy import create_engine, orm
 
 
 LOG = logging.getLogger(__name__)
 
 
-@contextmanager
+@contextlib.contextmanager
 def contexted_session(dbpath):
-    '''Allows to handle session via context manager
-    '''
+    """Allows to handle session via context manager
+    """
     LOG.debug('Starting session with dbpath={0}'.format(dbpath))
     engine = create_engine(dbpath)
     session = orm.Session(bind=engine)

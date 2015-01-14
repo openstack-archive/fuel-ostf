@@ -22,8 +22,8 @@ __profile__ = {
     "exclusive_testsets": []
 }
 
-import time
 import httplib
+import time
 import unittest2
 
 

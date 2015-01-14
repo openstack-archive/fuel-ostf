@@ -89,9 +89,7 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             self.skipTest('There are no compute nodes')
 
     def create_alarm(self, **kwargs):
-        """
-        This method provides creation of alarm
-        """
+        """This method provides creation of alarm."""
         if 'name' in kwargs:
             kwargs['name'] = rand_name(kwargs['name'])
         alarm = self.ceilometer_client.alarms.create(**kwargs)
@@ -100,15 +98,11 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         return alarm
 
     def get_state(self, alarm_id):
-        """
-        This method provides getting state
-        """
+        """This method provides getting state."""
         return self.ceilometer_client.alarms.get_state(alarm_id=alarm_id)
 
     def verify_state(self, alarm_id, state):
-        """
-        This method provides getting state
-        """
+        """This method provides getting state."""
         alarm_state_resp = self.get_state(alarm_id)
         if not alarm_state_resp == state:
             self.fail('State was not setted')
@@ -117,9 +111,7 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         self.status_timeout(self.compute_client.servers, server.id, status)
 
     def wait_for_alarm_status(self, alarm_id, status=None):
-        """
-        The method is a customization of test.status_timeout().
-        """
+        """The method is a customization of test.status_timeout()."""
 
         def check_status():
             alarm_state_resp = self.get_state(alarm_id)
@@ -140,8 +132,7 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                     act_status=actual_status))
 
     def wait_for_sample_of_metric(self, metric, query=None, limit=100):
-        """
-        This method is to wait for sample to add it to database.
+        """This method is to wait for sample to add it to database.
         query example:
         query=[
         {'field':'resource',
@@ -166,9 +157,7 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
     def wait_for_statistic_of_metric(self, meter_name, query=None,
                                      period=None):
-        """
-        The method is a customization of test.status_timeout().
-        """
+        """The method is a customization of test.status_timeout()."""
 
         def check_status():
             stat_state_resp = self.ceilometer_client.statistics.list(

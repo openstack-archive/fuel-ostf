@@ -12,8 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import requests
-from json import dumps
 import time
 
 
@@ -38,7 +38,7 @@ class TestingAdapterClient(object):
                 else:
                     data_el['ostf_os_access_creds'] = ostf_os_access_creds
 
-            data = dumps({'objects': data})
+            data = json.dumps({'objects': data})
 
         r = requests.request(
             method,
@@ -146,9 +146,9 @@ class TestingAdapterClient(object):
     def _with_timeout(self, action, testset, cluster_id,
                       timeout, polling=5, polling_hook=None):
         start_time = time.time()
-        json = action().json()
+        decoded_json = action().json()
 
-        if json == [{}]:
+        if decoded_json == [{}]:
             self.stop_testrun_last(testset, cluster_id)
             time.sleep(1)
             action()

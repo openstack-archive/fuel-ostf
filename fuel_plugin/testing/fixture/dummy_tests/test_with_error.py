@@ -28,17 +28,16 @@ import unittest
 class FakeTests(unittest.TestCase):
 
     def test_successfully_passed(self):
-        '''imitation of work
-        '''
+        """imitation of work
+        """
         self.assertTrue(True)
 
 
 class WithErrorTest(unittest.TestCase):
-    '''
-    This is supoused to introduce errorness behaviour
+    """This is supoused to introduce errorness behaviour
     in means that it have exception raised in setUp method for
     testing purposes.
-    '''
+    """
     @classmethod
     def setUpClass(cls):
         raise Exception('Unhandled exception in setUpClass')
@@ -47,8 +46,8 @@ class WithErrorTest(unittest.TestCase):
         raise Exception('Error in setUp method')
 
     def test_supposed_to_be_success(self):
-        '''test in errorness class
-        '''
+        """test in errorness class
+        """
         self.assertTrue(True)
 
     def test_supposed_to_be_fail(self):

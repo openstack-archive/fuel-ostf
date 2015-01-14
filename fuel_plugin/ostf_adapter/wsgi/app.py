@@ -15,19 +15,18 @@
 from oslo.config import cfg
 import pecan
 
+from fuel_plugin.ostf_adapter.storage import engine
 from fuel_plugin.ostf_adapter.wsgi import access_control
 from fuel_plugin.ostf_adapter.wsgi import hooks
-from fuel_plugin.ostf_adapter.storage import engine
 
 CONF = cfg.CONF
 
 
 def setup_config(custom_pecan_config):
-    '''
-    Updates defaults values for pecan server
+    """Updates defaults values for pecan server
     by those supplied via command line arguments
     when ostf-server is started
-    '''
+    """
     config_to_use = {
         'server': {
             'host': CONF.adapter.server_host,
