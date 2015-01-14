@@ -15,11 +15,12 @@
 
 import json
 import logging
-import requests
 import time
 import traceback
 
 import muranoclient.common.exceptions as exceptions
+import requests
+
 from fuel_health.common.utils.data_utils import rand_name
 import fuel_health.nmanager
 
@@ -27,8 +28,7 @@ LOG = logging.getLogger(__name__)
 
 
 class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
-    """
-    Manager that provides access to the Murano python client for
+    """Manager that provides access to the Murano python client for
     calling Murano API.
     """
 
@@ -56,9 +56,8 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
             self.skipTest("Murano service is not available")
 
     def tearDown(self):
-        """
-            This method allows to clean up the OpenStack environment
-            after the Murano OSTF tests.
+        """This method allows to clean up the OpenStack environment
+        after the Murano OSTF tests.
         """
 
         if self.murano_available:
@@ -66,18 +65,17 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
                 if self.env_name in env["name"]:
                     try:
                         self.delete_environment(env["id"])
-                    except:
+                    except Exception:
                         LOG.warning(traceback.format_exc())
 
         super(MuranoTest, self).tearDown()
 
     def find_murano_image(self, image_type):
-        """
-            This method allows to find Windows images with Murano tag.
+        """This method allows to find Windows images with Murano tag.
 
-            Returns the image object or None
+        Returns the image object or None
 
-            image_type should be in [linux, windows.2012, cirros.demo]
+        image_type should be in [linux, windows.2012, cirros.demo]
         """
 
         tag = 'murano_image_info'
@@ -89,10 +87,9 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
                     return image
 
     def list_environments(self):
-        """
-            This method allows to get the list of environments.
+        """This method allows to get the list of environments.
 
-            Returns the list of environments.
+        Returns the list of environments.
         """
 
         resp = requests.get(self.endpoint + 'environments',
@@ -100,13 +97,12 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         return resp.json()
 
     def create_environment(self, name):
-        """
-            This method allows to create environment.
+        """This method allows to create environment.
 
-            Input parameters:
-              name - Name of new environment
+        Input parameters:
+          name - Name of new environment
 
-            Returns new environment.
+        Returns new environment.
         """
 
         post_body = {'name': name}
@@ -116,14 +112,13 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         return resp.json()
 
     def get_environment(self, environment_id):
-        """
-            This method allows to get specific environment by ID.
+        """This method allows to get specific environment by ID.
 
-            Input parameters:
-              environment_id - ID of environment
-              session_id - ID of session for this environment (optional)
+        Input parameters:
+          environment_id - ID of environment
+          session_id - ID of session for this environment (optional)
 
-            Returns specific environment.
+        Returns specific environment.
         """
 
         return requests.get('{0}environments/{1}'.format(self.endpoint,
@@ -131,26 +126,24 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
                             headers=self.headers).json()
 
     def update_environment(self, environment_id, new_name):
-        """
-            This method allows to update specific environment by ID.
+        """This method allows to update specific environment by ID.
 
-            Input parameters:
-              environment_id - ID of environment
-              new_name - New name for environment
+        Input parameters:
+          environment_id - ID of environment
+          new_name - New name for environment
 
-            Returns new environment.
+        Returns new environment.
         """
 
         return self.murano_client.environments.update(environment_id, new_name)
 
     def delete_environment(self, environment_id):
-        """
-            This method allows to delete specific environment by ID.
+        """This method allows to delete specific environment by ID.
 
-            Input parameters:
-              environment_id - ID of environment
+        Input parameters:
+          environment_id - ID of environment
 
-            Returns None.
+        Returns None.
         """
 
         endpoint = '{0}environments/{1}'.format(self.endpoint, environment_id)
@@ -158,13 +151,12 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         return resp
 
     def create_session(self, environment_id):
-        """
-            This method allows to create session for environment.
+        """This method allows to create session for environment.
 
-            Input parameters:
-              environment_id - ID of environment
+        Input parameters:
+          environment_id - ID of environment
 
-            Returns new session.
+        Returns new session.
         """
 
         post_body = None
@@ -174,40 +166,37 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
                              headers=self.headers).json()
 
     def get_session(self, environment_id, session_id):
-        """
-            This method allows to get specific session.
+        """This method allows to get specific session.
 
-            Input parameters:
-              environment_id - ID of environment
-              session_id - ID of session for this environment
+        Input parameters:
+          environment_id - ID of environment
+          session_id - ID of session for this environment
 
-            Returns specific session.
+        Returns specific session.
         """
 
         return self.murano_client.sessions.get(environment_id, session_id)
 
     def delete_session(self, environment_id, session_id):
-        """
-            This method allows to delete session for environment.
+        """This method allows to delete session for environment.
 
-            Input parameters:
-              environment_id - ID of environment
-              session_id - ID of session for this environment
+        Input parameters:
+          environment_id - ID of environment
+          session_id - ID of session for this environment
 
-            Returns None.
+        Returns None.
         """
 
         return self.murano_client.sessions.delete(environment_id, session_id)
 
     def deploy_session(self, environment_id, session_id):
-        """
-            This method allows to deploy session for environment.
+        """This method allows to deploy session for environment.
 
-            Input parameters:
-              environment_id - ID of environment
-              session_id - ID of session for this environment
+        Input parameters:
+          environment_id - ID of environment
+          session_id - ID of session for this environment
 
-            Returns specific session.
+        Returns specific session.
         """
 
         endpoint = '{0}environments/{1}/sessions/{2}/deploy'.format(
@@ -215,15 +204,14 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         return requests.post(endpoint, data=None, headers=self.headers)
 
     def create_service(self, environment_id, session_id, json_data):
-        """
-            This method allows to create service.
+        """This method allows to create service.
 
-            Input parameters:
-              environment_id - ID of environment
-              session_id - ID of session for this environment
-              json_data - JSON with service description
+        Input parameters:
+          environment_id - ID of environment
+          session_id - ID of session for this environment
+          json_data - JSON with service description
 
-            Returns specific service.
+        Returns specific service.
         """
         headers = self.headers.copy()
         headers.update({'x-configuration-session': session_id})
@@ -233,28 +221,26 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
                              headers=headers).json()
 
     def list_services(self, environment_id, session_id=None):
-        """
-            This method allows to get list of services.
+        """This method allows to get list of services.
 
-            Input parameters:
-              environment_id - ID of environment
-              session_id - ID of session for this environment (optional)
+        Input parameters:
+          environment_id - ID of environment
+          session_id - ID of session for this environment (optional)
 
-            Returns list of services.
+        Returns list of services.
         """
 
         return self.murano_client.services.get(environment_id, '/', session_id)
 
     def get_service(self, environment_id, session_id, service_id):
-        """
-            This method allows to get service by ID.
+        """This method allows to get service by ID.
 
-            Input parameters:
-              environment_id - ID of environment
-              session_id - ID of session for this environment
-              service_id - ID of service in this environment
+        Input parameters:
+          environment_id - ID of environment
+          session_id - ID of session for this environment
+          service_id - ID of service in this environment
 
-            Returns specific service.
+        Returns specific service.
         """
 
         return self.murano_client.services.get(environment_id,
@@ -262,15 +248,14 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
                                                session_id)
 
     def delete_service(self, environment_id, session_id, service_id):
-        """
-            This method allows to delete specific service.
+        """This method allows to delete specific service.
 
-            Input parameters:
-              environment_id - ID of environment
-              session_id - ID of session for this environment
-              service_id - ID of service in this environment
+        Input parameters:
+          environment_id - ID of environment
+          session_id - ID of session for this environment
+          service_id - ID of service in this environment
 
-            Returns None.
+        Returns None.
         """
 
         return self.murano_client.services.delete(environment_id,
@@ -278,13 +263,12 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
                                                   session_id)
 
     def deploy_check(self, environment_id):
-        """
-            This method allows to wait for deployment of Murano evironments.
+        """This method allows to wait for deployment of Murano evironments.
 
-            Input parameters:
-              environment_id - ID of environment
+        Input parameters:
+          environment_id - ID of environment
 
-            Returns environment.
+        Returns environment.
         """
 
         environment = self.get_environment(environment_id)
@@ -301,13 +285,12 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         return environment
 
     def deployments_status_check(self, environment_id):
-        """
-            This method allows to check that deployment status is 'success'.
+        """This method allows to check that deployment status is 'success'.
 
-            Input parameters:
-              environment_id - ID of environment
+        Input parameters:
+          environment_id - ID of environment
 
-            Returns 'OK'.
+        Returns 'OK'.
         """
 
         endpoint = '{0}environments/{1}/deployments'.format(self.endpoint,
@@ -325,14 +308,13 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         return 'OK'
 
     def ports_check(self, environment, ports):
-        """
-            This method allows to check that needed ports are opened.
+        """This method allows to check that needed ports are opened.
 
-            Input parameters:
-              environment - Murano environment
-              ports - list of needed ports
+        Input parameters:
+          environment - Murano environment
+          ports - list of needed ports
 
-            Returns 'OK'.
+        Returns 'OK'.
         """
         check_ip = environment['services'][0]['instance']['floatingIpAddress']
 

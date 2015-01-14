@@ -26,8 +26,7 @@ LOG = logging.getLogger(__name__)
 
 
 class TestImageAction(nmanager.SmokeChecksTest):
-    """
-    Test class verifies the following:
+    """Test class verifies the following:
       - verify that image can be created;
       - verify that instance can be booted from created image;
       - verify that snapshot can be created from an instance;

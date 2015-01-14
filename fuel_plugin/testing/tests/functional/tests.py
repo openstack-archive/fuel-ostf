@@ -13,15 +13,14 @@
 #    under the License.
 
 import os
-import time
 from sqlalchemy import create_engine
+import time
 
-from fuel_plugin.testing.tests.functional.base import \
-    BaseAdapterTest, Response
 from fuel_plugin.ostf_client import client
+from fuel_plugin.testing.tests.functional import base
 
 
-class AdapterTests(BaseAdapterTest):
+class AdapterTests(base.BaseAdapterTest):
 
     @classmethod
     def setUpClass(cls):
@@ -136,7 +135,7 @@ class AdapterTests(BaseAdapterTest):
 
         resp = self.client.testruns_last(cluster_id)
 
-        assertions = Response(
+        assertions = base.Response(
             [
                 {
                     'testset': 'general_test',
@@ -180,7 +179,7 @@ class AdapterTests(BaseAdapterTest):
 
         resp = self.client.testruns_last(cluster_id)
 
-        assertions = Response([
+        assertions = base.Response([
             {
                 'testset': 'stopped_test',
                 'status': 'running',
@@ -245,7 +244,7 @@ class AdapterTests(BaseAdapterTest):
         '''
 
     def test_run_single_test(self):
-        """Verify that you can run individual tests from given testset"""
+        """Verify that you can run individual tests from given testset."""
         testset = "general_test"
         tests = [
             ('fuel_plugin.testing.fixture.dummy_tests.'
@@ -260,7 +259,7 @@ class AdapterTests(BaseAdapterTest):
 
         resp = self.client.start_testrun_tests(testset, tests, cluster_id)
 
-        assertions = Response([
+        assertions = base.Response([
             {
                 'testset': 'general_test',
                 'status': 'running',
@@ -328,7 +327,7 @@ class AdapterTests(BaseAdapterTest):
         self.compare(resp, assertions)
 
     def test_single_test_restart(self):
-        """Verify that you restart individual tests for given testrun"""
+        """Verify that you restart individual tests for given testrun."""
         testset = "general_test"
         tests = [
             ('fuel_plugin.testing.fixture.dummy_tests.'
@@ -345,7 +344,7 @@ class AdapterTests(BaseAdapterTest):
 
         resp = self.client.restart_tests_last(testset, tests, cluster_id)
 
-        assertions = Response([
+        assertions = base.Response([
             {
                 'testset': 'general_test',
                 'status': 'running',
@@ -413,7 +412,8 @@ class AdapterTests(BaseAdapterTest):
 
     def test_restart_combinations(self):
         """Verify that you can restart both tests that
-        ran and did not run during single test start"""
+        ran and did not run during single test start
+        """
         testset = "general_test"
         tests = [
             ('fuel_plugin.testing.fixture.dummy_tests.'
@@ -436,7 +436,7 @@ class AdapterTests(BaseAdapterTest):
         resp = self.client.restart_tests_last(testset, disabled_test,
                                               cluster_id)
 
-        assertions = Response([
+        assertions = base.Response([
             {
                 'testset': 'general_test',
                 'status': 'running',
@@ -533,7 +533,7 @@ class AdapterTests(BaseAdapterTest):
 
         resp = self.client.testruns_last(cluster_id)
 
-        assertions = Response([
+        assertions = base.Response([
             {
                 'testset': 'test_with_error',
                 'status': 'finished',
@@ -574,7 +574,7 @@ class AdapterTests(BaseAdapterTest):
 
         resp = self.client.testruns()
 
-        assertions = Response([
+        assertions = base.Response([
             {
                 'testset': 'gemini_first',
                 'status': 'running',
@@ -628,7 +628,7 @@ class AdapterTests(BaseAdapterTest):
         self.compare(resp, assertions)
 
     def test_env_variables_are_set(self):
-        assertions = Response([
+        assertions = base.Response([
             {
                 'testset': 'environment_variables',
                 'status': 'finished',

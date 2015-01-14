@@ -22,9 +22,7 @@ LOG = logging.getLogger(__name__)
 
 
 class NetworksTest(nmanager.SanityChecksTest):
-    """
-    TestClass contains tests check base networking functionality
-    """
+    """TestClass contains tests check base networking functionality."""
 
     def test_list_networks_nova_network(self):
         """Request list of networks

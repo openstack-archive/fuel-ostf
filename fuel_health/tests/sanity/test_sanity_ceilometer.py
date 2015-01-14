@@ -18,9 +18,7 @@ from fuel_health import ceilometermanager
 
 
 class CeilometerApiTests(ceilometermanager.CeilometerBaseTest):
-    """
-    TestClass contains tests that check basic Ceilometer functionality.
-    """
+    """TestClass contains tests that check basic Ceilometer functionality."""
 
     def test_list_meters(self):
         """List ceilometer availability

@@ -12,15 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-import requests
-from sqlalchemy.orm import joinedload
 import logging
 
 from oslo.config import cfg
+import requests
+from sqlalchemy.orm import joinedload
 
-from fuel_plugin.ostf_adapter.storage import models
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
+from fuel_plugin.ostf_adapter.storage import models
 
 
 LOG = logging.getLogger(__name__)

@@ -25,9 +25,7 @@ LOG = logging.getLogger(__name__)
 
 
 class RabbitSmokeTest(BaseTestCase):
-    """
-    TestClass contains RabbitMQ test checks.
-    """
+    """TestClass contains RabbitMQ test checks."""
 
     @classmethod
     def setUpClass(cls):

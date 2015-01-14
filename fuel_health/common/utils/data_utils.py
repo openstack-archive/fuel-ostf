@@ -63,9 +63,8 @@ def build_url(host, port, api_version=None, path=None,
 
 
 def arbitrary_string(size=4, base_text=None):
-    """
-    Return size characters from base_text, repeating the base_text infinitely
-    if needed.
+    """Return size characters from base_text, repeating
+    the base_text infinitely if needed.
     """
     if not base_text:
         base_text = 'ost1_test-'

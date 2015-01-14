@@ -22,9 +22,7 @@ LOG = logging.getLogger(__name__)
 
 
 class PlatformSaharaTests(saharamanager.SaharaTest):
-    """
-    TestClass contains tests that check basic Sahara functionality.
-    """
+    """TestClass contains tests that check basic Sahara functionality."""
     def setUp(self):
         super(PlatformSaharaTests, self).setUp()
 

@@ -21,9 +21,9 @@ import time
 import testresources
 import unittest2
 
-from fuel_health import config
 from fuel_health.common import log as logging
 from fuel_health.common.test_mixins import FuelTestAssertMixin
+from fuel_health import config
 
 
 LOG = logging.getLogger(__name__)
@@ -44,8 +44,7 @@ class BaseTestCase(unittest2.TestCase,
 
 
 def call_until_true(func, duration, sleep_for, arg=None):
-    """
-    Call the given function until it returns True (and return True) or
+    """Call the given function until it returns True (and return True) or
     until the specified duration (in seconds) elapses (and return
     False).
 
@@ -105,8 +104,7 @@ class TestCase(BaseTestCase):
         del self.resource_keys[key]
 
     def status_timeout(self, things, thing_id, expected_status):
-        """
-        Given a thing and an expected status, do a loop, sleeping
+        """Given a thing and an expected status, do a loop, sleeping
         for a configurable amount of time, checking for the
         expected status to show. At any time, if the returned
         status of the thing is ERROR, fail out.

@@ -25,25 +25,25 @@ LOG = logging.getLogger(__name__)
 # Default client libs
 try:
     import heatclient.v1.client
-except:
+except Exception:
     LOG.warning('Heatclient could not be imported.')
 try:
     import muranoclient.v1.client
-except:
+except Exception:
     LOG.debug(traceback.format_exc())
     LOG.warning('Muranoclient could not be imported.')
 try:
     import saharaclient.client
-except:
+except Exception:
     LOG.debug(traceback.format_exc())
     LOG.warning('Sahara client could not be imported.')
 try:
     import ceilometerclient.v2.client
-except:
+except Exception:
     LOG.warning('Ceilometer client could not be imported.')
 try:
     import neutronclient.neutron.client
-except:
+except Exception:
     LOG.warning('Neutron client could not be imported.')
 
 import cinderclient.client
@@ -51,16 +51,15 @@ import keystoneclient
 import novaclient.client
 
 from fuel_health.common.ssh import Client as SSHClient
-from fuel_health.common.utils.data_utils import rand_name
 from fuel_health.common.utils.data_utils import rand_int_id
+from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import exceptions
 import fuel_health.manager
 import fuel_health.test
 
 
 class OfficialClientManager(fuel_health.manager.Manager):
-    """
-    Manager that provides access to the official python clients for
+    """Manager that provides access to the official python clients for
     calling various OpenStack APIs.
     """
 
@@ -120,9 +119,13 @@ class OfficialClientManager(fuel_health.manager.Manager):
             tenant_name = self.config.identity.admin_tenant_name
 
         if None in (username, password, tenant_name):
-            msg = ("Missing required credentials for compute client. "
-                   "username: %(username)s, password: %(password)s, "
-                   "tenant_name: %(tenant_name)s") % locals()
+            msg = ("Missing required credentials for identity client. "
+                   "username: {username}, password: {password}, "
+                   "tenant_name: {tenant_name}").format(
+                       username=username,
+                       password=password,
+                       tenant_name=tenant_name,
+                   )
             raise exceptions.InvalidConfiguration(msg)
 
         auth_url = self.config.identity.uri
@@ -165,8 +168,12 @@ class OfficialClientManager(fuel_health.manager.Manager):
 
         if None in (username, password, tenant_name):
             msg = ("Missing required credentials for identity client. "
-                   "username: %(username)s, password: %(password)s, "
-                   "tenant_name: %(tenant_name)s") % locals()
+                   "username: {username}, password: {password}, "
+                   "tenant_name: {tenant_name}").format(
+                       username=username,
+                       password=password,
+                       tenant_name=tenant_name,
+                   )
             raise exceptions.InvalidConfiguration(msg)
 
         auth_url = self.config.identity.uri
@@ -215,8 +222,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                                password=password)
 
     def _get_murano_client(self):
-        """
-        This method returns Murano API client
+        """This method returns Murano API client
         """
         # Get xAuth token from Keystone
         self.token_id = self._get_identity_client(
@@ -433,9 +439,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
 
 
 class NovaNetworkScenarioTest(OfficialClientTest):
-    """
-    Base class for nova network scenario tests
-    """
+    """Base class for nova network scenario tests."""
 
     @classmethod
     def setUpClass(cls):
@@ -461,9 +465,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         self.check_clients_state()
 
     def _run_ssh_cmd(self, cmd):
-        """
-        Open SSH session with Controller and and execute command.
-        """
+        """Open SSH session with Controller and and execute command."""
         if not self.host:
             self.fail('Wrong test configuration: '
                       '"online_controllers" parameter is empty.')
@@ -652,7 +654,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                           'parameters are empty controller_node_name or '
                           'controller_node_ip ')
 
-        # TODO Allow configuration of execution and sleep duration.
+        # TODO(???) Allow configuration of execution and sleep duration.
         return fuel_health.test.call_until_true(ping, 40, 1)
 
     def _ping_ip_address_from_instance(self, ip_address, timeout,
@@ -683,7 +685,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                       password='cubswin:)',
                                       vm=ip_address)
 
-        # TODO Allow configuration of execution and sleep duration.
+        # TODO(???) Allow configuration of execution and sleep duration.
         return fuel_health.test.call_until_true(ping, 40, 1)
 
     def _check_vm_connectivity(self, ip_address, timeout, retries):
@@ -766,9 +768,7 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
 
 
 class SanityChecksTest(OfficialClientTest):
-    """
-    Base class for openstack sanity tests
-    """
+    """Base class for openstack sanity tests."""
 
     _enabled = True
 
@@ -849,9 +849,7 @@ class SanityChecksTest(OfficialClientTest):
 
 
 class SmokeChecksTest(OfficialClientTest):
-    """
-    Base class for openstack smoke tests
-    """
+    """Base class for openstack smoke tests."""
 
     @classmethod
     def setUpClass(cls):

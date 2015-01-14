@@ -13,13 +13,12 @@
 #    under the License.
 
 import itertools
-import traceback
-import re
 import json
-import os
-import multiprocessing
-
 import logging
+import multiprocessing
+import os
+import re
+import traceback
 
 from nose import case
 from nose.suite import ContextSuite
@@ -36,8 +35,7 @@ def parse_json_file(file_path):
 
 
 def get_exc_message(exception_value):
-    """
-    @exception_value - Exception type object
+    """@exception_value - Exception type object
     """
     _exc_long = str(exception_value)
     if isinstance(_exc_long, basestring):
@@ -58,8 +56,7 @@ def _process_docstring(docstring, pattern):
 
 
 def get_description(test_obj):
-    '''
-    Parses docstring of test object in order
+    '''Parses docstring of test object in order
     to get necessary data.
 
     test_obj.test._testMethodDoc is using directly
@@ -145,8 +142,7 @@ def get_module(module_path):
 
 
 def get_tests_to_update(test):
-    '''
-    Sometimes (e.g. unhandles exception is occured in
+    '''Sometimes (e.g. unhandles exception is occured in
     setUpClass of test case) tests can be packed in
     separate ContextSuite each. At the moment of following code
     creation depth of this packaging was unknown so
@@ -166,8 +162,7 @@ def get_tests_to_update(test):
 
 
 def process_deployment_tags(cluster_depl_tags, test_depl_tags):
-    '''
-    Process alternative deployment tags for testsets and tests
+    '''Process alternative deployment tags for testsets and tests
     and determines whether current test entity (testset or test)
     is appropriate for cluster.
     '''
