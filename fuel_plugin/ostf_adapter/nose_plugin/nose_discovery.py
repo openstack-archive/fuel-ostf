@@ -14,6 +14,7 @@
 
 import logging
 import os
+import re
 
 from nose import plugins
 
@@ -68,10 +69,18 @@ class DiscoveryPlugin(plugins.Plugin):
                 )
             LOG.info('%s discovered.', module.__name__)
 
+    @classmethod
+    def test_belongs_to_testset(cls, test_id, test_set_id):
+        """Checks by name if test belongs to given test set."""
+        test_set_pattern = re.compile(
+            r'(\b|_){0}(\b|_)'.format(test_set_id)
+        )
+        return bool(test_set_pattern.search(test_id))
+
     def addSuccess(self, test):
         test_id = test.id()
         for test_set_id in self.test_sets.keys():
-            if test_set_id in test_id:
+            if self.test_belongs_to_testset(test_id, test_set_id):
                 data = dict()
 
                 (data['title'], data['description'],
