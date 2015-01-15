@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2013 Mirantis, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,68 +12,160 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
-
 from fuel_health import saharamanager
+from fuel_health.common.utils.data_utils import rand_name
 
-LOG = logging.getLogger(__name__)
+
+class SaharaTemplatesTest(saharamanager.SaharaTestsManager):
+    _plugin_name = 'An unknown plugin name'
+    _hadoop_version = 'An unknown Hadoop version'
+    _node_processes = 'An unknown list of processes'
+
+    def setUp(self):
+        super(SaharaTemplatesTest, self).setUp()
+
+        flavor_id = self.create_flavor()
+        self.ng_template = {
+            'name': rand_name('sahara-ng-template-'),
+            'plugin_name': self._plugin_name,
+            'hadoop_version': self._hadoop_version,
+            'flavor_id': flavor_id,
+            'node_processes': self._node_processes,
+            'description': 'Test node group template'
+        }
+        self.cl_template = {
+            'name': rand_name('sahara-cl-template-'),
+            'plugin_name': self._plugin_name,
+            'hadoop_version': self._hadoop_version,
+            'node_groups': [
+                {
+                    'name': 'all-in-one',
+                    'flavor_id': flavor_id,
+                    'node_processes': self._node_processes,
+                    'count': 1
+                }
+            ],
+            'description': 'Test cluster template'
+        }
+        self.client = self.sahara_client
 
 
-class SanitySaharaTests(saharamanager.SaharaTest):
-    """
-    TestClass contains tests that check basic Sahara functionality.
-    """
+class VanillaTwoTemplatesTest(SaharaTemplatesTest):
+    _plugin_name = 'vanilla'
+    _hadoop_version = '2.4.1'
+    _node_processes = ['resourcemanager', 'namenode', 'secondarynamenode',
+                       'oozie', 'historyserver', 'nodemanager', 'datanode']
 
-    def test_sanity_sahara(self):
-        """Sahara tests to create/list/delete node group and cluster templates
+    def test_vanilla_two_templates(self):
+        """Sahara test for checking CRUD operations on Vanilla2 templates
         Target component: Sahara
 
         Scenario:
-            1. Create node group task tracker and data node template
-            2. Send request to create node group task tracker template
-            3. Send request to create node group data node template
-            4. Send request to create cluster template
-            5. Request the list of node group templates
-            6. Request the list of cluster templates
-            7. Send request to delete cluster template
-            8. Send request to delete node templates
-            9. Send request to delete sahara flavor
+            1. Create a simple node group template
+            2. Get the node group template
+            3. List node group templates
+            4. Delete the node group template
+            5. Create a simple cluster template
+            6. Get the cluster template
+            7. List cluster templates
+            8. Delete the cluster template
 
-        Duration: 100 s.
+        Duration: 20 s.
         Deployment tags: Sahara
         """
-        fail_msg = 'Fail create node group tasktracker and datanode templates.'
-        self.verify(40, self.create_node_group_template_tt_dn, 1, fail_msg,
-                    "Create node group tasktracker and datanode templates")
 
-        fail_msg = 'Fail create node group tasktracker template.'
-        self.verify(40, self.create_node_group_template_tt, 2, fail_msg,
-                    "Create node group tasktracker template")
+        fail_msg = 'Failed to create node group template.'
+        ng_template = self.verify(10, self.client.node_group_templates.create,
+                                  1, fail_msg, 'creating node group template',
+                                  **self.ng_template)
 
-        fail_msg = 'Fail create node group datanode template.'
-        self.verify(40, self.create_node_group_template_dn, 3, fail_msg,
-                    "Create node group datanode template")
+        fail_msg = 'Failed to get node group template.'
+        self.verify(10, self.client.node_group_templates.get, 2,
+                    fail_msg, 'getting node group template', ng_template.id)
 
-        fail_msg = 'Fail create cluster template.'
-        self.verify(40, self.create_cluster_template, 4, fail_msg,
-                    "Create cluster template")
+        fail_msg = 'Failed to list node group templates.'
+        self.verify(10, self.client.node_group_templates.list, 3,
+                    fail_msg, 'listing node group templates')
 
-        fail_msg = 'Fail list group templates.'
-        self.verify(40, self._list_node_group_template, 5, fail_msg,
-                    "List group templates")
+        fail_msg = 'Failed to delete node group template.'
+        self.verify(10, self.client.node_group_templates.delete, 4,
+                    fail_msg, 'deleting node group template', ng_template.id)
 
-        fail_msg = 'Fail list cluster templates.'
-        self.verify(40, self._list_cluster_templates, 6, fail_msg,
-                    "List cluster templates")
+        fail_msg = 'Failed to create cluster template.'
+        cl_template = self.verify(10, self.client.cluster_templates.create, 5,
+                                  fail_msg, 'creating cluster template',
+                                  **self.cl_template)
 
-        fail_msg = 'Fail delete cluster template.'
-        self.verify(40, self._clean_cluster_templates, 7, fail_msg,
-                    "Delete cluster templates")
+        fail_msg = 'Failed to get cluster template.'
+        self.verify(10, self.sahara_client.cluster_templates.get, 6,
+                    fail_msg, 'getting cluster template', cl_template.id)
 
-        fail_msg = 'Fail delete datanodes templates.'
-        self.verify(40, self._clean_node_groups_templates, 8, fail_msg,
-                    "Delete datanodes templates")
+        fail_msg = 'Failed to list cluster templates.'
+        self.verify(10, self.sahara_client.cluster_templates.list, 7,
+                    fail_msg, 'listing cluster templates')
 
-        fail_msg = 'Fail delete clusters flavors.'
-        self.verify(40, self._clean_flavors, 9, fail_msg,
-                    "Delete clusters flavors")
+        fail_msg = 'Failed to delete cluster template.'
+        self.verify(10, self.sahara_client.cluster_templates.delete, 8,
+                    fail_msg, 'deleting cluster template', cl_template.id)
+
+
+class HDPTwoTemplatesTest(SaharaTemplatesTest):
+    _plugin_name = 'hdp'
+    _hadoop_version = '2.0.6'
+    _node_processes = ['NODEMANAGER', 'DATANODE', 'HDFS_CLIENT', 'PIG',
+                       'ZOOKEEPER_CLIENT', 'MAPREDUCE2_CLIENT', 'YARN_CLIENT',
+                       'OOZIE_CLIENT', 'RESOURCEMANAGER', 'OOZIE_SERVER',
+                       'SECONDARY_NAMENODE', 'AMBARI_SERVER', 'NAMENODE',
+                       'ZOOKEEPER_SERVER', 'HISTORYSERVER', 'GANGLIA_SERVER']
+
+    def test_hdp_two_templates(self):
+        """Sahara test for checking CRUD operations on HDP2 templates
+        Target component: Sahara
+
+        Scenario:
+            1. Create a simple node group template
+            2. Get the node group template
+            3. List node group templates
+            4. Delete the node group template
+            5. Create a simple cluster template
+            6. Get the cluster template
+            7. List cluster templates
+            8. Delete the cluster template
+
+        Duration: 20 s.
+        Deployment tags: Sahara
+        """
+
+        fail_msg = 'Failed to create node group template.'
+        ng_template = self.verify(10, self.client.node_group_templates.create,
+                                  1, fail_msg, 'creating node group template',
+                                  **self.ng_template)
+
+        fail_msg = 'Failed to get node group template.'
+        self.verify(10, self.client.node_group_templates.get, 2,
+                    fail_msg, 'getting node group template', ng_template.id)
+
+        fail_msg = 'Failed to list node group templates.'
+        self.verify(10, self.client.node_group_templates.list, 3,
+                    fail_msg, 'listing node group templates')
+
+        fail_msg = 'Failed to delete node group template.'
+        self.verify(10, self.client.node_group_templates.delete, 4,
+                    fail_msg, 'deleting node group template', ng_template.id)
+
+        fail_msg = 'Failed to create cluster template.'
+        cl_template = self.verify(10, self.client.cluster_templates.create, 5,
+                                  fail_msg, 'creating cluster template',
+                                  **self.cl_template)
+
+        fail_msg = 'Failed to get cluster template.'
+        self.verify(10, self.sahara_client.cluster_templates.get, 6,
+                    fail_msg, 'getting cluster template', cl_template.id)
+
+        fail_msg = 'Failed to list cluster templates.'
+        self.verify(10, self.sahara_client.cluster_templates.list, 7,
+                    fail_msg, 'listing cluster templates')
+
+        fail_msg = 'Failed to delete cluster template.'
+        self.verify(10, self.sahara_client.cluster_templates.delete, 8,
+                    fail_msg, 'deleting cluster template', cl_template.id)
