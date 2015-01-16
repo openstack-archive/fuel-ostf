@@ -108,7 +108,7 @@ class CeilometerBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
                 return True  # All good.
             LOG.debug("Waiting for state to get alarm status.")
 
-        if not fuel_health.test.call_until_true(check_status, 1000, 10):
+        if not fuel_health.test.call_until_true(check_status, 1300, 10):
             actual_status = self.get_state(alarm_id)
             self.fail(
                 "Timed out waiting to become alarm status. "

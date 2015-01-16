@@ -72,7 +72,7 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = "Alarm status is not equal 'ok'."
         msg = "Alarm status is 'ok'."
 
-        self.verify(1000, self.wait_for_alarm_status, 4,
+        self.verify(1300, self.wait_for_alarm_status, 4,
                     fail_msg, msg,
                     alarm.alarm_id, 'ok')
 
