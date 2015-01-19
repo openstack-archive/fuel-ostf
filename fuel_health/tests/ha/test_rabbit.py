@@ -13,45 +13,24 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+
 import logging
 
-import fuel_health
-import fuel_health.common.amqp_client
-import fuel_health.common.utils.data_utils
-from fuel_health.test import BaseTestCase
+from fuel_health import ha_base
 
 
 LOG = logging.getLogger(__name__)
 
 
-class RabbitSmokeTest(BaseTestCase):
+class RabbitSanityTest(ha_base.RabbitSanityClass):
     """TestClass contains RabbitMQ test checks."""
 
-    @classmethod
-    def setUpClass(cls):
-        cls.config = fuel_health.config.FuelConfig()
-        cls._controllers = cls.config.compute.online_controllers
-        cls._usr = cls.config.compute.controller_node_ssh_user
-        cls._pwd = cls.config.compute.controller_node_ssh_password
-        cls._key = cls.config.compute.path_to_private_key
-        cls._ssh_timeout = cls.config.compute.ssh_timeout
-        cls.amqp_pwd = cls.config.compute.amqp_pwd
-        cls.amqp_clients = [fuel_health.common.amqp_client.RabbitClient(
-            cnt,
-            cls._usr,
-            cls._key,
-            cls._ssh_timeout,
-            rabbit_username='nova',
-            rabbit_password=cls.amqp_pwd) for cnt in cls._controllers]
-
     def setUp(self):
-        super(RabbitSmokeTest, self).setUp()
+        super(RabbitSanityTest, self).setUp()
         if 'ha' not in self.config.mode:
             self.skipTest("It is not HA configuration")
         if not self._controllers:
             self.skipTest('There are no controller nodes')
-        if not self.amqp_clients:
-            self.skipTest('Cannot create AMQP clients for controllers')
 
     def test_001_rabbitmqctl_status(self):
         """Check RabbitMQ is available
@@ -59,31 +38,84 @@ class RabbitSmokeTest(BaseTestCase):
         Scenario:
           1. Retrieve cluster status for each controller.
           2. Check that numbers of rabbit nodes is the same as controllers.
+          3. Check crm status for rabbit
+          4. List channels
         Duration: 100 s.
-        Deployment tags: CENTOS
+        Deployment tags: CENTOS, 2014.2-6.1
         """
-        self.verify(10, self.amqp_clients[0].list_nodes, 1,
-                    'Cannot retrieve cluster nodes'
-                    ' list for {ctlr} controller.'.format(
-                        ctlr=self.amqp_clients[0].host))
+        self.verify(10, self.list_nodes, 1,
+                    'Cannot retrieve cluster nodes')
 
-        if len(self._controllers) != self.amqp_clients[0].list_nodes():
+        if len(self._controllers) != self.list_nodes():
             self.fail('Step 2 failed: Number of controllers is not equal to '
                       'number of cluster nodes.')
+
+        res = self.verify(10, self.pick_rabbit_master, 3,
+                          'Cannot retrieve crm status')
+
+        LOG.debug("Current res is {0}".format(res))
+
+        if not res:
+            LOG.debug("Current res is {0}".format(res))
+            self.fail('Step 3 failed: Rabbit Master node is not running.')
+
+        fail_msg_4 = 'Can not get rabbit channel list in 20 second.'
+
+        self.verify(20, self.list_channels, 4, fail_msg_4,
+                    'Can not retrieve channels list')
 
     def test_002_rabbitmqctl_status_ubuntu(self):
         """RabbitMQ availability
         Scenario:
           1. Retrieve cluster status for each controller.
           2. Check that numbers of rabbit nodes is the same as controllers.
+          3. Check crm status for rabbit
+          4. List channels
         Duration: 100 s.
-        Deployment tags: Ubuntu
+        Deployment tags: Ubuntu, 2014.2-6.1
         """
-        self.verify(10, self.amqp_clients[0].list_nodes, 1,
-                    'Cannot retrieve cluster nodes'
-                    ' list for {ctlr} controller.'.format(
-                        ctlr=self.amqp_clients[0].host))
+        self.verify(10, self.list_nodes, 1, 'Cannot retrieve cluster nodes')
 
-        if len(self._controllers) != self.amqp_clients[0].list_nodes():
+        if len(self._controllers) != self.list_nodes():
             self.fail('Step 2 failed: Number of controllers is not equal to '
                       'number of cluster nodes.')
+
+        res = self.verify(10, self.pick_rabbit_master, 3,
+                          'Cannot retrieve crm status')
+
+        LOG.debug("Current res is {0}".format(res))
+
+        if not res:
+            LOG.debug("Current res is {0}".format(res))
+            self.fail('Step 3 failed: Rabbit Master node is not running.')
+
+        fail_msg_4 = 'Can not get rabbit channel list in 20 second.'
+
+        self.verify(20, self.list_channels, 4, fail_msg_4,
+                    'Can not retrieve channels list')
+
+    def test_003_rabbitmqctl_replication(self):
+        """RabbitMQ replication
+        Scenario:
+          1. Check rabbitmq connections.
+          2. Create queue.
+          3. Publish test message in created queue
+          4. Request created queue and message
+          5. Delete queue
+        Duration: 100 s.
+        Deployment tags: 2014.2-6.1
+        """
+        self.verify(40, self.check_rabbit_connections, 1,
+                    'Cannot retrieve cluster nodes')
+
+        self.verify(60, self.create_queue, 2,
+                    'Failed to create queue')
+
+        self.verify(40, self.publish_message, 3,
+                    'Failed to publish message')
+
+        self.verify(40, self.check_queue_message_replication, 4,
+                    'Consume of message failed')
+
+        self.verify(40, self.delete_queue, 5,
+                    'Failed to delete queue')

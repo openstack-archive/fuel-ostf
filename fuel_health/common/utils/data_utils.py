@@ -19,6 +19,8 @@ import itertools
 import random
 import re
 import urllib
+import uuid
+
 
 from fuel_health import exceptions
 
@@ -69,3 +71,7 @@ def arbitrary_string(size=4, base_text=None):
     if not base_text:
         base_text = 'ost1_test-'
     return ''.join(itertools.islice(itertools.cycle(base_text), size))
+
+
+def generate_uuid():
+    return uuid.uuid4().hex
