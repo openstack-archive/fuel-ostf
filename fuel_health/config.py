@@ -186,7 +186,6 @@ def register_compute_opts(conf):
     for opt in ComputeGroup:
         conf.register_opt(opt, group='compute')
 
-
 image_group = cfg.OptGroup(name='image',
                            title="Image Service Options")
 
