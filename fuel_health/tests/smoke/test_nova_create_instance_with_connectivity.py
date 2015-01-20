@@ -274,7 +274,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             for addr in server.addresses:
                 if addr.startswith('novanetwork'):
                     instance_ip = server.addresses[addr][0]['addr']
-            compute = getattr(server, 'OS-EXT-SRV-ATTR:host')
         except Exception:
             LOG.debug(traceback.format_exc())
             self.fail("Step 3 failed: cannot get instance details. "
@@ -284,7 +283,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                     3, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                         "function properly."),
                     'public connectivity checking from VM',
-                    instance_ip, 30, (6, 30), compute)
+                    instance_ip, 30, (6, 30))
 
         self.verify(30, self._delete_server, 4,
                     "Server can not be deleted. ",
