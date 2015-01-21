@@ -49,6 +49,7 @@ except Exception:
 import cinderclient.client
 import keystoneclient
 import novaclient.client
+import glanceclient.client
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.common.utils.data_utils import rand_int_id
@@ -91,6 +92,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.traceback = traceback.format_exc()
 
         if self.clients_initialized:
+            self.glance_client = self._get_glance_client()
             self.volume_client = self._get_volume_client()
             self.heat_client = self._get_heat_client()
             self.murano_client = self._get_murano_client()
@@ -101,6 +103,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                 'compute_client',
                 'identity_client',
                 'identity_v3_client',
+                'glance_client',
                 'volume_client',
                 'heat_client',
                 'murano_client',
@@ -140,6 +143,26 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                         service_type=service_type,
                                         no_cache=True,
                                         insecure=dscv)
+
+    def _get_glance_client(self, version=2, username=None, password=None,
+                           tenant_name=None):
+        if not username:
+            username = self.config.identity.admin_username
+        if not password:
+            password = self.config.identity.admin_password
+        if not tenant_name:
+            tenant_name = self.config.identity.admin_tenant_name
+
+        keystone = self._get_identity_client(username, password, tenant_name)
+        try:
+            endpoint = keystone.service_catalog.url_for(
+                service_type='image',
+                endpoint_type='publicURL')
+        except keystoneclient.exceptions.EndpointNotFound:
+            LOG.warning('Can not initialize glance client')
+            return None
+        return glanceclient.client.Client(version, endpoint=endpoint,
+                                          token=keystone.auth_token)
 
     def _get_volume_client(self, username=None, password=None,
                            tenant_name=None):
@@ -316,6 +339,20 @@ class OfficialClientTest(fuel_health.test.TestCase):
             fuel_health.test.call_until_true(await_state, 50, 1)
 
         return volume
+
+    def _create_snapshot(self, client, volume_id, expected_state=None,
+                         **kwargs):
+        kwargs.setdefault('display_name', rand_name('ostf-test-volume'))
+        snapshot = client.volume_snapshots.create(volume_id, **kwargs)
+        self.set_resource(kwargs['display_name'], snapshot)
+        if expected_state:
+            def await_state():
+                if client.volume_snapshots.get(
+                        snapshot.id).status == expected_state:
+                    return True
+            fuel_health.test.call_until_true(await_state, 50, 1)
+
+        return snapshot
 
     def get_image_from_name(self):
         image_name = self.manager.config.compute.image_name
