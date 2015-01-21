@@ -14,8 +14,8 @@
 
 import logging
 
-from fuel_health import heatmanager
 from fuel_health.common.utils import data_utils
+from fuel_health import heatmanager
 
 
 LOG = logging.getLogger(__name__)

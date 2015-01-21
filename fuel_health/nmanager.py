@@ -47,9 +47,9 @@ except Exception:
     LOG.warning('Neutron client could not be imported.')
 
 import cinderclient.client
+import glanceclient.client
 import keystoneclient
 import novaclient.client
-import glanceclient.client
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.common.utils.data_utils import rand_int_id
