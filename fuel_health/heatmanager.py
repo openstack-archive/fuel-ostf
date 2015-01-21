@@ -180,39 +180,6 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         return self._run_ssh_cmd(connection_string +
                                  " kill -9 %s" % pid.strip())[0]
 
-    def _get_net_uuid(self):
-        if 'neutron' in self.config.network.network_provider:
-            network = [net.id for net in
-                       self.compute_client.networks.list()
-                       if net.label == self.private_net]
-            return network
-
-    def _get_subnet_id(self):
-        if 'neutron' in self.config.network.network_provider:
-            neutron_net_list = ("neutron "
-                                "--os-username=%s --os-password=%s "
-                                "--os-tenant-name=%s --os-auth-url=%s "
-                                "net-list" % (
-                                    self.config.identity.admin_username,
-                                    self.config.identity.admin_password,
-                                    self.config.identity.admin_tenant_name,
-                                    self.config.identity.uri))
-
-            # net name surrounded with spaces to guarantee strict match
-            grep = "%s | grep ' %s ' | grep -v grep | awk '{ print $6 }'" % (
-                neutron_net_list, self.private_net)
-
-            cmd = "echo -ne `%s`" % grep
-
-            subnet = self._run_ssh_cmd(cmd)[0]
-            if subnet:
-                return subnet
-            # if network has no subnets
-            networks = [net.id for net in
-                        self.compute_client.networks.list()
-                        if net.label == self.private_net]
-            return networks[0]
-
     @staticmethod
     def _load_template(file_name):
         """Load specified template file from etc directory."""
@@ -229,3 +196,18 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         """
         return '\n'.join(line for line in template.splitlines()
                          if 'Ref: Subnet' not in line)
+
+    def _get_stack_instances(self, mask_name):
+        self.instances = []
+
+        # find just created instance
+        instance_list = self.compute_client.servers.list()
+        LOG.info('Instances list is {0}'.format(instance_list))
+        LOG.info('Expected instance name includes {0}'.format(mask_name))
+
+        for inst in instance_list:
+            LOG.info('Instance name is {0}'.format(inst.name))
+            if inst.name.startswith(mask_name):
+                self.instances.append(inst)
+
+        return self.instances
