@@ -13,7 +13,7 @@
 #    under the License.
 
 from __future__ import with_statement
-import logging
+import logging.config
 
 from sqlalchemy import engine_from_config, pool
 
