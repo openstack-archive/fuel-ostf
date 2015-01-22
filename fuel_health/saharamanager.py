@@ -243,9 +243,9 @@ class SaharaTestsManager(nmanager.PlatformServicesBaseClass):
         return node_ips_and_processes
 
     def check_node_access_via_ssh(self, cluster_id):
-        """This method checks capacity to log into cluster nodes via SSH."""
+        """This method checks ability to log into cluster nodes via SSH."""
 
-        LOG.debug('Checking capacity '
+        LOG.debug('Checking ability '
                   'to log into cluster nodes via SSH...')
         cmd = ('ssh -i {0} '
                '-oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null {1}@'
@@ -263,17 +263,18 @@ class SaharaTestsManager(nmanager.PlatformServicesBaseClass):
         """
 
         LOG.debug('Deleting resource "{0}"...'.format(resource_id))
-        if not self._make_request(resource_client.delete, resource_id):
+        if self._is_resource_deleted(resource_client, resource_id):
             return
+        resource_client.delete(resource_id)
         self._wait_for_deletion(resource_client, resource_id)
         LOG.debug('Resource "{0}" has been deleted.'.format(resource_id))
 
     def _wait_for_deletion(self, resource_client, resource_id):
-        """This method checks whether the resource is really deleted or not."""
+        """This method waits for the resource deletion."""
 
         start = time.time()
         while time.time() - start < self.delete_timeout:
-            if not self._make_request(resource_client.get, resource_id):
+            if self._is_resource_deleted(resource_client, resource_id):
                 return
             time.sleep(self.request_timeout)
 
@@ -281,22 +282,20 @@ class SaharaTestsManager(nmanager.PlatformServicesBaseClass):
                   'Timed out while waiting for one of the test resources '
                   'to delete within {0} seconds.'.format(self.delete_timeout))
 
-    def _make_request(self, request, resource_id):
-        """This method is a wrapper around an API request.
+    @staticmethod
+    def _is_resource_deleted(resource_client, resource_id):
+        """This method checks whether the resource is deleted or not.
 
         The API request is wrapped in try/except block to correctly handle
-        "404 Not Found" exception. If the resource exists, this method will
-        return True. Otherwise it will return False.
+        "404 Not Found" exception. If the resource doesn't exist, this method
+        will return True. Otherwise it will return False.
         """
 
         try:
-            request(resource_id)
+            resource_client.get(resource_id)
         except sab.APIException as sahara_api_exc:
-            if 'not found' in sahara_api_exc.message:
+            if sahara_api_exc.error_code == 404:
                 LOG.debug('Resource "{0}" not found.'.format(resource_id))
-                return False
-            self.fail(sahara_api_exc.message)
-        except Exception as exc:
-            self.fail(exc.message)
+                return True
 
-        return True
+        return False
