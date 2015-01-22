@@ -40,31 +40,29 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
                     'fuel-{0}/user-guide.html#platform-tests-'
                     'description'.format(self.config.fuel.fuel_version))
 
-        msg = ('Murano image was not properly registered or '
-               'was not uploaded at all. Please refer to the '
-               'Mirantis OpenStack documentation ({0}) to find out '
-               'how to register image for Murano.'.format(doc_link))
+        max_free_ram_mb = (
+            self.get_max_free_compute_node_ram(self.min_required_ram_mb))
+        if max_free_ram_mb < self.min_required_ram_mb:
+            msg = ('This test requires more hardware resources of your '
+                   'OpenStack cluster: at least one of the compute nodes '
+                   'must have >= {0} MB of free RAM, but you have only '
+                   '{1} MB on most appropriate compute node.'
+                   .format(self.min_required_ram_mb, max_free_ram_mb))
+            LOG.debug(msg)
+            self.skipTest(msg)
+
         self.image = self.find_murano_image('linux')
         if not self.image:
+            msg = ('Murano image was not properly registered or was not '
+                   'uploaded at all. Please refer to the Mirantis OpenStack '
+                   'documentation ({0}) to find out how to upload and/or '
+                   'register image for Murano.'.format(doc_link))
             LOG.debug(msg)
             self.skipTest(msg)
 
         self.flavor_name = rand_name("ostf_test_Murano_flavor")
-        if self.flavor_reqs:
-            try:
-                self.flavor = self.compute_client.flavors.create(
-                    self.flavor_name, disk=60, ram=self.min_required_ram,
-                    vcpus=1)
-            except Exception:
-                self.fail('Failed to create flavor "%s" for the test. Please, '
-                          'refer to the Mirantis OpenStack documentation and '
-                          'OpenStack Health Check logs.' % self.flavor_name)
-        else:
-            self.skipTest("This test requires more resources on one of "
-                          "the compute nodes (> {0} MB of free RAM), but you "
-                          "have only {1} MB on most appropriate compute node."
-                          .format(self.min_required_ram,
-                                  self.max_available_ram))
+        self.flavor = self.compute_client.flavors.create(
+            self.flavor_name, disk=60, ram=self.min_required_ram, vcpus=1)
 
     def tearDown(self):
         if self.flavor_reqs:

@@ -33,26 +33,26 @@ class SaharaClusterTest(saharamanager.SaharaTestsManager):
                     'fuel-{0}/user-guide.html#platform-tests-'
                     'description'.format(self.config.fuel.fuel_version))
 
-        max_free_ram_mb, enough_ram = (
-            self.check_compute_node_ram(self.min_required_ram_mb))
-        if not enough_ram:
-            ram_msg = ('This test requires more hardware resources of your '
-                       'OpenStack cluster: at least one of the compute nodes '
-                       'must have >= {0}MB of free RAM, but you have only '
-                       '{1}MB on most appropriate compute node.'
-                       .format(self.min_required_ram_mb, max_free_ram_mb))
-            LOG.debug(ram_msg)
-            self.skipTest(ram_msg)
+        max_free_ram_mb = (
+            self.get_max_free_compute_node_ram(self.min_required_ram_mb))
+        if max_free_ram_mb < self.min_required_ram_mb:
+            msg = ('This test requires more hardware resources of your '
+                   'OpenStack cluster: at least one of the compute nodes '
+                   'must have >= {0} MB of free RAM, but you have only '
+                   '{1} MB on most appropriate compute node.'
+                   .format(self.min_required_ram_mb, max_free_ram_mb))
+            LOG.debug(msg)
+            self.skipTest(msg)
 
         self.image_id = self.find_and_check_image(self._plugin_name,
                                                   self._hadoop_version)
         if not self.image_id:
-            image_msg = ('Sahara image was not correctly registered or it was '
-                         'not registered at all. Please refer to the Mirantis '
-                         'OpenStack documentation ({0}) to find out how to '
-                         'register image for Sahara.'.format(doc_link))
-            LOG.debug(image_msg)
-            self.skipTest(image_msg)
+            msg = ('Sahara image was not correctly registered or it was not '
+                   'uploaded at all. Please refer to the Mirantis OpenStack '
+                   'documentation ({0}) to find out how to upload and/or '
+                   'register image for Sahara.'.format(doc_link))
+            LOG.debug(msg)
+            self.skipTest(msg)
 
         flavor_id = self.create_flavor()
         self.cl_template = {
@@ -119,7 +119,7 @@ class VanillaTwoClusterTest(SaharaClusterTest):
             2. Create a cluster
             3. Wait for the cluster to build and get to "Active" status
             4. Check deployment of Hadoop services on the cluster
-            5. Check capacity to log into cluster nodes via SSH
+            5. Check ability to log into cluster nodes via SSH
             6. Delete the cluster
             7. Delete the cluster template
 
