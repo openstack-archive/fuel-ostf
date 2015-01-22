@@ -71,7 +71,8 @@ class VanillaTwoTemplatesTest(SaharaTemplatesTest):
             8. Delete the cluster template
 
         Duration: 80 s.
-        Deployment tags: Sahara, 2014.2-6.1
+        Available for release: 2014.2-6.1
+        Deployment tags: Sahara
         """
 
         fail_msg = 'Failed to create node group template.'
@@ -133,7 +134,8 @@ class HDPTwoTemplatesTest(SaharaTemplatesTest):
             8. Delete the cluster template
 
         Duration: 80 s.
-        Deployment tags: Sahara, 2014.2-6.1
+        Available for release: 2014.2-6.1
+        Deployment tags: Sahara
         """
 
         fail_msg = 'Failed to create node group template.'
