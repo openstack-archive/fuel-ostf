@@ -20,6 +20,8 @@ import os
 import re
 import traceback
 
+from distutils import version
+
 from nose import case
 from nose.suite import ContextSuite
 
@@ -69,6 +71,7 @@ def get_description(test_obj):
     if isinstance(test_obj, case.Test):
         docstring = test_obj.test._testMethodDoc
 
+        test_data = {}
         if docstring:
             deployment_tags_pattern = r'Deployment tags:.?(?P<tags>.+)?'
             docstring, deployment_tags = _process_docstring(
@@ -83,21 +86,31 @@ def get_description(test_obj):
                 deployment_tags = [
                     tag.strip().lower() for tag in deployment_tags.split(',')
                 ]
-            else:
-                deployment_tags = []
+
+                test_data["deployment_tags"] = deployment_tags
+
+            rel_vers_pattern = "Available from release:.?(?P<rel_vers>.+)"
+            docstring, rel_vers = _process_docstring(
+                docstring,
+                rel_vers_pattern
+            )
+            if rel_vers:
+                test_data["available_from_release"] = rel_vers
 
             duration_pattern = r'Duration:.?(?P<duration>.+)'
             docstring, duration = _process_docstring(
                 docstring,
                 duration_pattern
             )
+            if duration:
+                test_data["duration"] = duration
 
             docstring = docstring.split('\n')
-            name = docstring.pop(0)
-            description = u'\n'.join(docstring) if docstring else u""
+            test_data["title"] = docstring.pop(0)
+            test_data["description"] = \
+                u'\n'.join(docstring) if docstring else u""
 
-            return name, description, duration, deployment_tags
-    return u"", u"", u"", []
+    return test_data
 
 
 def modify_test_name_for_nose(test_path):
@@ -163,7 +176,7 @@ def get_tests_to_update(test):
     return tests
 
 
-def process_deployment_tags(cluster_depl_tags, test_depl_tags):
+def _process_deployment_tags(cluster_depl_tags, test_depl_tags):
     """Process alternative deployment tags for testsets and tests
     and determines whether current test entity (testset or test)
     is appropriate for cluster.
@@ -179,3 +192,46 @@ def process_deployment_tags(cluster_depl_tags, test_depl_tags):
             return True
 
     return False
+
+
+def _compare_release_versions(cluster_release_version, test_release_version):
+    cl_openstack_ver, cl_fuel_ver = cluster_release_version.split('-')
+    test_openstack_ver, test_fuel_ver = test_release_version.split('-')
+
+    cond = (
+        (version.StrictVersion(cl_openstack_ver) >=
+         version.StrictVersion(test_openstack_ver))
+        and
+        (version.StrictVersion(cl_fuel_ver) >=
+         version.StrictVersion(test_fuel_ver))
+    )
+    return cond
+
+
+def tests_availability_cond(cluster_data, test_entity_data):
+    is_test_available = False
+    is_rel_ver_suitable = False
+
+    # if 'available_from_release' attritube of test entity
+    # is empty then this test entity is available for cluster
+    # in other case execute release comparator logic
+    if not test_entity_data['available_from_release']:
+        is_rel_ver_suitable = True
+    else:
+        is_rel_ver_suitable = _compare_release_versions(
+            cluster_data['release_version'],
+            test_entity_data['available_from_release']
+        )
+
+    # if release version of test entity is suitable for cluster
+    # then check test entity compatibility with cluster
+    # by deployment tags
+    if is_rel_ver_suitable:
+        is_depl_tags_suitable = _process_deployment_tags(
+            cluster_data['deployment_tags'],
+            test_entity_data['deployment_tags']
+        )
+        if is_depl_tags_suitable:
+            is_test_available = True
+
+    return is_test_available
