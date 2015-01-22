@@ -21,12 +21,16 @@ from sqlalchemy import create_engine, orm
 LOG = logging.getLogger(__name__)
 
 
+def get_engine(dbpath):
+    return create_engine(dbpath)
+
+
 @contextlib.contextmanager
 def contexted_session(dbpath):
     """Allows to handle session via context manager
     """
     LOG.debug('Starting session with dbpath={0}'.format(dbpath))
-    engine = create_engine(dbpath)
+    engine = get_engine(dbpath)
     session = orm.Session(bind=engine)
     try:
         LOG.debug('Before yielding session.')
@@ -42,7 +46,7 @@ def contexted_session(dbpath):
 
 def get_session(dbpath):
     """Returns SQLAlchemy scoped session for given DB configuration string."""
-    engine = create_engine(dbpath)
+    engine = get_engine(dbpath)
     session = orm.scoped_session(orm.sessionmaker())
     session.configure(bind=engine)
     return session

@@ -42,12 +42,14 @@ def cache_test_repository(session):
         .options(joinedload('tests'))\
         .all()
 
-    crucial_tests_attrs = ['name', 'deployment_tags']
+    crucial_tests_attrs = ['name', 'deployment_tags',
+                           'available_since_release']
     for test_set in test_repository:
         data_elem = dict()
 
         data_elem['test_set_id'] = test_set.id
         data_elem['deployment_tags'] = test_set.deployment_tags
+        data_elem['available_since_release'] = test_set.available_since_release
         data_elem['tests'] = []
 
         for test in test_set.tests:
@@ -59,26 +61,24 @@ def cache_test_repository(session):
 
 
 def discovery_check(session, cluster, token=None):
-    cluster_deployment_args = _get_cluster_depl_tags(cluster, token=token)
+    cluster_attrs = _get_cluster_attrs(cluster, token=token)
 
     cluster_data = {
-        'cluster_id': cluster,
-        'deployment_tags': cluster_deployment_args
+        'id': cluster,
+        'deployment_tags': cluster_attrs['deployment_tags'],
+        'release_version': cluster_attrs['release_version'],
     }
 
     cluster_state = session.query(models.ClusterState)\
-        .filter_by(id=cluster_data['cluster_id'])\
+        .filter_by(id=cluster_data['id'])\
         .first()
 
     if not cluster_state:
         session.add(
-            models.ClusterState(
-                id=cluster_data['cluster_id'],
-                deployment_tags=list(cluster_data['deployment_tags'])
-            )
+            models.ClusterState(**cluster_data)
         )
 
-        # flush data to db, cuz _add_cluster_testing_pattern
+        # flush data to db, because _add_cluster_testing_pattern
         # is dependent on it
         session.flush()
 
@@ -100,7 +100,9 @@ def discovery_check(session, cluster, token=None):
         session.merge(cluster_state)
 
 
-def _get_cluster_depl_tags(cluster_id, token=None):
+def _get_cluster_attrs(cluster_id, token=None):
+    cluster_attrs = {}
+
     REQ_SES = requests.Session()
     REQ_SES.trust_env = False
 
@@ -130,13 +132,15 @@ def _get_cluster_depl_tags(cluster_id, token=None):
 
     release_data = REQ_SES.get(release_url).json()
 
+    if 'version' in release_data:
+        cluster_attrs['release_version'] = release_data['version']
+
     # info about deployment type and operating system
     mode = 'ha' if 'ha' in response['mode'].lower() else response['mode']
     deployment_tags.add(mode)
     deployment_tags.add(release_data.get(
         'operating_system', 'failed to get os'))
-    if 'version' in release_data:
-        deployment_tags.add(release_data['version'])
+
     # networks manager
     network_type = response.get('net_provider', 'nova_network')
     deployment_tags.add(network_type)
@@ -175,7 +179,11 @@ def _get_cluster_depl_tags(cluster_id, token=None):
     if libvrt_data and libvrt_data.get('value'):
         deployment_tags.add(libvrt_data['value'])
 
-    return set([tag.lower() for tag in deployment_tags])
+    cluster_attrs['deployment_tags'] = set(
+        [tag.lower() for tag in deployment_tags]
+    )
+
+    return cluster_attrs
 
 
 def _add_cluster_testing_pattern(session, cluster_data):
@@ -188,22 +196,14 @@ def _add_cluster_testing_pattern(session, cluster_data):
         cache_test_repository(session)
 
     for test_set in TEST_REPOSITORY:
-        if nose_utils.process_deployment_tags(
-            cluster_data['deployment_tags'],
-            test_set['deployment_tags']
-        ):
-
-            testing_pattern = dict()
-            testing_pattern['cluster_id'] = cluster_data['cluster_id']
+        if nose_utils.tests_availability_cond(cluster_data, test_set):
+            testing_pattern = {}
+            testing_pattern['cluster_id'] = cluster_data['id']
             testing_pattern['test_set_id'] = test_set['test_set_id']
             testing_pattern['tests'] = []
 
             for test in test_set['tests']:
-                if nose_utils.process_deployment_tags(
-                    cluster_data['deployment_tags'],
-                    test['deployment_tags']
-                ):
-
+                if nose_utils.tests_availability_cond(cluster_data, test):
                     testing_pattern['tests'].append(test['name'])
 
             to_database.append(

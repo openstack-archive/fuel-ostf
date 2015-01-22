@@ -45,7 +45,8 @@ def main():
     root = app.setup_app({})
 
     if CONF.after_initialization_environment_hook:
-        return nailgun_hooks.after_initialization_environment_hook()
+        return nailgun_hooks.after_initialization_environment_hook(
+            CONF.adapter.dbpath)
 
     with engine.contexted_session(CONF.adapter.dbpath) as session:
         # performing cleaning of expired data (if any) in db

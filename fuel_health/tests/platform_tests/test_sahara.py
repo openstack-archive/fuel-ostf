@@ -124,7 +124,8 @@ class VanillaTwoClusterTest(SaharaClusterTest):
             7. Delete the cluster template
 
         Duration:  3600 s.
-        Deployment tags: Sahara, 2014.2-6.1
+        Available since release: 2014.2-6.1
+        Deployment tags: Sahara
         """
 
         fail_msg = 'Failed to create cluster template.'
