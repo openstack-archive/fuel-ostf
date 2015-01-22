@@ -222,11 +222,13 @@ class TestTestRunsController(base.BaseWSGITest):
 
 class TestClusterRedeployment(base.BaseWSGITest):
 
-    @mock.patch('fuel_plugin.ostf_adapter.mixins._get_cluster_depl_tags')
-    def test_cluster_redeployment_with_different_tags(self, m_get_depl_tags):
-        m_get_depl_tags.return_value = set(
-            ['multinode', 'centos']
-        )
+    @mock.patch('fuel_plugin.ostf_adapter.mixins._get_cluster_attrs')
+    def test_cluster_redeployment_with_different_tags(self,
+                                                      m_get_cluster_attrs):
+        m_get_cluster_attrs.return_value = {
+            'deployment_tags': set(['multinode', 'centos']),
+            'release_version': '2015.2-1.0'
+        }
         cluster_id = self.expected['cluster']['id']
         self.app.get('/v1/testsets/{0}'.format(cluster_id))
 
@@ -260,10 +262,44 @@ class TestClusterRedeployment(base.BaseWSGITest):
 
         # patch request_to_nailgun function in orded to emulate
         # redeployment of cluster
-        m_get_depl_tags.return_value = set(
-            ['multinode', 'ubuntu', 'nova_network']
-        )
+        m_get_cluster_attrs.return_value = {
+            'deployment_tags': set(['multinode', 'ubuntu', 'nova_network']),
+            'release_version': '2015.2-1.0'
+        }
 
         self.app.get('/v1/testsets/{0}'.format(cluster_id))
+
+        self.assertTrue(self.is_background_working)
+
+
+class TestVersioning(base.BaseWSGITest):
+    def test_discover_tests_with_versions(self):
+        cluster_id = 6
+        self.mock_api_for_cluster(cluster_id)
+        self.app.get('/v1/testsets/{0}'.format(cluster_id))
+
+        self.expected = {
+            'cluster': {
+                'id': 6,
+                'deployment_tags': set(['releases_comparison'])
+            },
+            'test_sets': ['general_test', 'stopped_test', 'test_versioning',
+                          'environment_variables'],
+            'tests': [self.ext_id + test for test in [
+                'general_test.Dummy_test.test_fast_pass',
+                'general_test.Dummy_test.test_long_pass',
+                'general_test.Dummy_test.test_fast_fail',
+                'general_test.Dummy_test.test_fast_error',
+                'general_test.Dummy_test.test_fail_with_step',
+                'general_test.Dummy_test.test_skip',
+                'general_test.Dummy_test.test_skip_directly',
+                'stopped_test.dummy_tests_stopped.test_really_long',
+                'stopped_test.dummy_tests_stopped.test_one_no_so_long',
+                'stopped_test.dummy_tests_stopped.test_not_long_at_all',
+                ('test_environment_variables.TestEnvVariables.'
+                 'test_os_credentials_env_variables'),
+                'test_versioning.TestVersioning.test_simple_fake_first',
+            ]]
+        }
 
         self.assertTrue(self.is_background_working)

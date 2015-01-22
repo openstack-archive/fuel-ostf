@@ -48,6 +48,7 @@ class ClusterState(BASE):
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=False)
     deployment_tags = sa.Column(ARRAY(sa.String(64)))
+    release_version = sa.Column(sa.String(64))
 
 
 class ClusterTestingPattern(BASE):
@@ -89,6 +90,8 @@ class TestSet(BASE):
     # list of test sets that cannot be executed simultaneously
     # with current test set
     exclusive_testsets = sa.Column(ARRAY(sa.String(128)))
+
+    available_since_release = sa.Column(sa.String(64), default="")
 
     tests = relationship(
         'Test',
@@ -135,6 +138,7 @@ class Test(BASE):
     time_taken = sa.Column(sa.Float())
     meta = sa.Column(fields.JsonField())
     deployment_tags = sa.Column(ARRAY(sa.String(64)))
+    available_since_release = sa.Column(sa.String(64), default="")
 
     test_run_id = sa.Column(
         sa.Integer(),
