@@ -20,16 +20,17 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
     """TestClass contains tests that check basic Ceilometer functionality."""
 
     def test_check_alarm_state(self):
-        """Ceilometer test to check alarm status and get Nova notifications.
+        """Ceilometer test to check alarm status and get Nova metrics.
         Target component: Ceilometer
 
         Scenario:
             1. Create a new instance.
             2. Instance become active.
             3. Wait for Nova notifications.
-            4. Wait for Nova statistic.
-            5. Create a new alarm.
-            6. Verify that become status 'alarm' or 'ok'.
+            4. Wait for Nova pollsters.
+            5. Wait for Nova statistic.
+            6. Create a new alarm.
+            7. Verify that become status 'alarm' or 'ok'.
         Duration: 60 s.
 
         Deployment tags: Ceilometer
@@ -42,28 +43,36 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = "Creation instance is failed."
         msg = "Instance was created."
 
-        self.instance = self.verify(600, self._create_server, 1,
-                                    fail_msg, msg,
-                                    self.compute_client, name)
+        instance = self.verify(600, self._create_server, 1, fail_msg, msg,
+                               self.compute_client, name)
 
         fail_msg = "Instance is not available."
         msg = "instance becoming available."
 
         self.verify(200, self.wait_for_instance_status, 2,
                     fail_msg, msg,
-                    self.instance, 'ACTIVE')
+                    instance, 'ACTIVE')
 
         fail_msg = "Nova notifications is not received."
         msg = "Nova notifications is received."
-        query = [{'field': 'resource', 'op': 'eq', 'value': self.instance.id}]
+        query = [{'field': 'resource', 'op': 'eq', 'value': instance.id}]
 
-        self.verify(600, self.wait_notifications, 3,
+        self.verify(600, self.wait_metrics, 3,
                     fail_msg, msg, self.nova_notifications, query)
+
+        self.nova_pollsters.append("".join(["instance:",
+                                   self.compute_client.flavors.get(
+                                   instance.flavor['id']).name]))
+
+        fail_msg = "Nova pollsters is not received."
+        msg = "Nova pollsters is received."
+        self.verify(600, self.wait_metrics, 4,
+                    fail_msg, msg, self.nova_pollsters, query)
 
         fail_msg = "Statistic for Nova notification:vcpus is not received."
         msg = "Statistic for Nova notification:vcpus is received."
 
-        vcpus_stat = self.verify(60, self.wait_for_statistic_of_metric, 4,
+        vcpus_stat = self.verify(60, self.wait_for_statistic_of_metric, 5,
                                  fail_msg, msg,
                                  self.nova_notifications[1],
                                  query)
@@ -72,7 +81,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         msg = "Creation alarm for sum vcpus is successful."
         threshold = vcpus_stat[0].sum - 1
 
-        alarm = self.verify(60, self.create_alarm, 5,
+        alarm = self.verify(60, self.create_alarm, 6,
                             fail_msg, msg,
                             meter_name=self.nova_notifications[1],
                             threshold=threshold,
@@ -84,7 +93,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = "Alarm verify state is failed."
         msg = "Alarm status becoming."
 
-        self.verify(1000, self.wait_for_alarm_status, 6,
+        self.verify(1000, self.wait_for_alarm_status, 7,
                     fail_msg, msg,
                     alarm.alarm_id)
 
@@ -180,7 +189,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = "Volume notifications are not received."
         msg = "Volume notifications are received."
 
-        self.verify(600, self.wait_notifications, 2,
+        self.verify(600, self.wait_metrics, 2,
                     fail_msg, msg,
                     self.volume_notifications, query)
 
@@ -196,7 +205,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = "Volume snapshot notifications are not received."
         msg = "Volume snapshot notifications are received."
 
-        self.verify(600, self.wait_notifications, 4,
+        self.verify(600, self.wait_metrics, 4,
                     fail_msg, msg,
                     self.snapshot_notifications, query)
 
@@ -215,7 +224,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = "Glance notifications are not received."
         msg = "Glance notifications are received."
 
-        self.verify(600, self.wait_notifications, 1,
+        self.verify(600, self.wait_metrics, 1,
                     fail_msg, msg,
                     self.glance_notifications, query)
 
@@ -237,35 +246,35 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = "Keystone project notifications are not received."
         msg = "Keystone project notifications are received."
         query = [{'field': 'resource', 'op': 'eq', 'value': tenant.id}]
-        self.verify(600, self.wait_notifications, 1,
+        self.verify(600, self.wait_metrics, 1,
                     fail_msg, msg,
                     self.keystone_project_notifications, query)
 
         fail_msg = "Keystone user notifications are not received."
         msg = "Keystone user notifications are received."
         query = [{'field': 'resource', 'op': 'eq', 'value': user.id}]
-        self.verify(600, self.wait_notifications, 2,
+        self.verify(600, self.wait_metrics, 2,
                     fail_msg, msg,
                     self.keystone_user_notifications, query)
 
         fail_msg = "Keystone role notifications are not received."
         msg = "Keystone role notifications are received."
         query = [{'field': 'resource', 'op': 'eq', 'value': role.id}]
-        self.verify(600, self.wait_notifications, 3,
+        self.verify(600, self.wait_metrics, 3,
                     fail_msg, msg,
                     self.keystone_role_notifications, query)
 
         fail_msg = "Keystone group notifications are not received."
         msg = "Keystone group notifications are received."
         query = [{'field': 'resource', 'op': 'eq', 'value': group.id}]
-        self.verify(600, self.wait_notifications, 4,
+        self.verify(600, self.wait_metrics, 4,
                     fail_msg, msg,
                     self.keystone_group_notifications, query)
 
         fail_msg = "Keystone trust notifications are not received."
         msg = "Keystone trust notifications are received."
         query = [{'field': 'resource', 'op': 'eq', 'value': trust.id}]
-        self.verify(600, self.wait_notifications, 5,
+        self.verify(600, self.wait_metrics, 5,
                     fail_msg, msg,
                     self.keystone_trust_notifications, query)
 
@@ -288,35 +297,35 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = "Neutron network notifications are not received."
         msg = "Neutron network notifications are received."
         query = [{'field': 'resource', 'op': 'eq', 'value': net["id"]}]
-        self.verify(60, self.wait_notifications, 1,
+        self.verify(60, self.wait_metrics, 1,
                     fail_msg, msg,
                     self.neutron_network_notifications, query)
 
         fail_msg = "Neutron subnet notifications are not received."
         msg = "Neutron subnet notifications are received."
         query = [{'field': 'resource', 'op': 'eq', 'value': subnet["id"]}]
-        self.verify(60, self.wait_notifications, 2,
+        self.verify(60, self.wait_metrics, 2,
                     fail_msg, msg,
                     self.neutron_subnet_notifications, query)
 
         fail_msg = "Neutron port notifications are not received."
         msg = "Neutron port notifications are received."
         query = [{'field': 'resource', 'op': 'eq', 'value': port["id"]}]
-        self.verify(60, self.wait_notifications, 3,
+        self.verify(60, self.wait_metrics, 3,
                     fail_msg, msg,
                     self.neutron_port_notifications, query)
 
         fail_msg = "Neutron router notifications are not received."
         msg = "Neutron router notifications are received."
         query = [{'field': 'resource', 'op': 'eq', 'value': router["id"]}]
-        self.verify(60, self.wait_notifications, 4,
+        self.verify(60, self.wait_metrics, 4,
                     fail_msg, msg,
                     self.neutron_router_notifications, query)
 
         fail_msg = "Neutron floating ip notifications are not received."
         msg = "Neutron floating ip notifications are received."
         query = [{'field': 'resource', 'op': 'eq', 'value': flip["id"]}]
-        self.verify(60, self.wait_notifications, 5,
+        self.verify(60, self.wait_metrics, 5,
                     fail_msg, msg,
                     self.neutron_floatingip_notifications, query)
 
@@ -335,6 +344,6 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = "Sahara cluster notifications are not received."
         msg = "Sahara cluster notifications are received."
         query = [{'field': 'resource', 'op': 'eq', 'value': cluster.id}]
-        self.verify(60, self.wait_notifications, 1,
+        self.verify(60, self.wait_metrics, 1,
                     fail_msg, msg,
                     self.sahara_cluster_notifications, query)
