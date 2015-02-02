@@ -697,13 +697,19 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def _ping_ip_address_from_instance(self, ip_address, timeout,
                                        retries, viaHost=None):
         def ping():
+            def find_host():
+                services = self.compute_client.services.list()
+                net_service = filter(
+                    lambda n: n.__dict__['binary'] == u'nova-network',
+                    services)[0]
+                return net_service.__dict__['host']
 
             if not (self.host or viaHost):
                 self.fail('Wrong tests configurations, one from the next '
                           'parameters are empty controller_node_name or '
                           'controller_node_ip ')
             try:
-                host = viaHost or self.host[0]
+                host = viaHost or find_host()
                 LOG.debug('Get ssh to instance')
                 ssh = SSHClient(host,
                                 self.usr, self.pwd,
