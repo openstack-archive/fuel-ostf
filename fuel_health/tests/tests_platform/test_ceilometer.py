@@ -350,3 +350,58 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         query = [{'field': 'resource', 'op': 'eq', 'value': cluster.id}]
         self.verify(60, self.wait_metrics, 3, fail_msg, msg,
                     self.sahara_cluster_notifications, query)
+
+    def test_check_swift_metrics(self):
+        """Ceilometer test to check metrics from Swift
+        Target component: Ceilometer
+
+        Scenario:
+        1. Get initial number of samples for object pollsters.
+        2. Create container and object in it.
+        3. Get samples and compare number of samples for object pollsters
+        before and after the step #2.
+        4. If RadosGW option for Swift is disabled, get object notifications.
+        5. If RadosGW option for Swift is disabled, get container pollsters.
+        Duration: 60 s.
+        Deployment tags: Ceilometer
+        """
+        object_ceph = self.config.compute.object_ceph
+        if not object_ceph and 'ha' not in self.config.mode:
+            self.skipTest('There is no Swift configuration')
+
+        fail_msg = 'Failed to get initial number of object pollsters.'
+        msg = 'getting initial number of object pollsters'
+        query = [{'field': 'resource', 'op': 'eq',
+                  'value': self.identity_client.tenant_id}]
+
+        response_count = self.verify(60, self.get_initial_number_of_metrics, 1,
+                                     fail_msg, msg,
+                                     self.swift_object_pollsters, query)
+
+        fail_msg = 'Failed to create container and object.'
+        msg = 'creating container and object'
+        container_name = self.verify(60, self.swift_helper, 2, fail_msg, msg)
+
+        fail_msg = ('Failed while waiting for addition of new samples '
+                    'for object pollsters to samples list.')
+        msg = ('waiting for addition of new samples for object pollsters '
+               'to samples list')
+        self.verify(60, self.wait_metrics_samples_count, 3, fail_msg, msg,
+                    self.swift_object_pollsters, query,
+                    response_count)
+
+        if not object_ceph:
+
+            fail_msg = 'Failed to get object notifications.'
+            msg = 'getting object notifications'
+            self.verify(60, self.wait_metrics, 4, fail_msg, msg,
+                        self.swift_notifications, query)
+
+            fail_msg = 'Failed to get container pollsters.'
+            msg = 'getting container pollsters'
+            query = [{'field': 'resource', 'op': 'eq',
+                      'value': '{0}/{1}'.format(self.identity_client.tenant_id,
+                                                container_name)}]
+            self.verify(60, self.wait_metrics, 5,
+                        fail_msg, msg,
+                        self.swift_container_pollsters, query)
