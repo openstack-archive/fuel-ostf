@@ -582,6 +582,8 @@ class NailgunConfig(object):
         self.compute.use_vcenter = common_data['use_vcenter']['value']
         self.compute.auto_assign_floating_ip = common_data[
             'auto_assign_floating_ip']['value']
+        storage = data['editable']['storage']
+        self.compute.object_ceph = storage['objects_ceph']['value']
 
         api_url = '/api/clusters/%s' % self.cluster_id
         cluster_data = self.req_session.get(self.nailgun_url + api_url).json()
