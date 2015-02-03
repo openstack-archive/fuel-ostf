@@ -90,6 +90,11 @@ CLUSTERS = {
                         'value': False
                     }
                 },
+                'storage': {
+                    'objects_not_ceph': {
+                        'value': True
+                    }
+                },
                 'common': {}
             }
         }

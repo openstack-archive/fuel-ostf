@@ -550,3 +550,41 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         query = [{'field': 'resource', 'op': 'eq', 'value': cluster.id}]
         self.verify(60, self.wait_metrics, 3, fail_msg, msg,
                     self.sahara_cluster_notifications, query)
+
+    def test_swift_metrics(self):
+        """Ceilometer test to check metrics from Swift
+        Target component: Ceilometer
+
+        Scenario:
+        1. Get initial number of samples for object pollsters.
+        2. Create container and object in it.
+        3. Get samples and compare number of samples for object pollsters
+        before and after the step #2.
+        4. Get container pollsters.
+        5. Get object notifications.
+
+        Duration: 80 s.
+        Deployment tags: ha, Ceilometer, objects_not_ceph
+        """
+
+        self.storage_run_helper(self.swift_object_pollsters,
+                                self.swift_container_pollsters,
+                                object_notifications=self.swift_notifications)
+
+    def test_radosgw_metrics(self):
+        """Ceilometer test to check metrics from RadosGW
+        Target component: Ceilometer
+
+        Scenario:
+        1. Get initial number of samples for object pollsters.
+        2. Create container and object in it.
+        3. Get samples and compare number of samples for object pollsters
+        before and after the step #2.
+        4. Get container pollsters.
+
+        Duration: 80 s.
+        Deployment tags: Ceilometer, objects_ceph
+        """
+
+        self.storage_run_helper(self.radosgw_object_pollsters,
+                                self.radosgw_container_pollsters)
