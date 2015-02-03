@@ -356,3 +356,49 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         self.verify(60, self.wait_metrics, 1,
                     fail_msg, msg,
                     self.sahara_cluster_notifications, query)
+
+    def test_check_swift_pollsters(self):
+        """Ceilometer test to check get Swift pollsters.
+        Target component: Ceilometer
+
+        Scenario:
+        1. Get initial number of object pollsters.
+        2. Create container and object in it.
+        3. Get number of object pollsters after step #2.
+        4. If RadosGW option for Swift is disabled, check container pollsters.
+        Duration: 60 s.
+        Deployment tags: Ceilometer
+        """
+        object_ceph = self.config.compute.object_ceph
+        if not object_ceph and 'ha' not in self.config.mode:
+            self.skipTest("There is no Swift configuration")
+
+        fail_msg = "Initial number of object pollsters were not received."
+        msg = "Initial number of object pollsters were received."
+        query = [{'field': 'resource', 'op': 'eq',
+                  'value': self.identity_client.tenant_id}]
+
+        response_count = self.verify(60, self.get_initial_number_of_metrics, 1,
+                                     fail_msg, msg,
+                                     self.swift_object_pollsters, query)
+
+        fail_msg = "Creating container and object was failed."
+        msg = "Creating container and object was successful."
+        container_name = self.verify(60, self.swift_helper, 2, fail_msg, msg)
+
+        fail_msg = "Number of object pollsters isn\'t greater than " \
+                   "initial number."
+        msg = "Number of object pollsters greater than initial number."
+        self.verify(60, self.wait_metrics_samples_count, 3, fail_msg, msg,
+                    self.swift_object_pollsters, query,
+                    response_count)
+
+        if not object_ceph:
+            fail_msg = "Swift container pollsters were not received."
+            msg = "Swift container pollsters were received."
+            query = [{'field': 'resource', 'op': 'eq',
+                      'value': "{0}/{1}".format(self.identity_client.tenant_id,
+                                                container_name)}]
+            self.verify(60, self.wait_metrics, 4,
+                        fail_msg, msg,
+                        self.swift_container_pollsters, query)
