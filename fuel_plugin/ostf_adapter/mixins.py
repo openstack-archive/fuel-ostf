@@ -208,6 +208,9 @@ def _get_cluster_attrs(cluster_id, token=None):
     for scomp in storage_comp:
         storage_processor(scomp)
 
+    if "objects_ceph" not in storage_depl_tags:
+        storage_depl_tags.add("objects_not_ceph")
+
     if additional_depl_tags:
         deployment_tags.add('additional_components')
         deployment_tags.update(additional_depl_tags)
