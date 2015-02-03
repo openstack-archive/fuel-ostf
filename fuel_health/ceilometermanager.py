@@ -97,6 +97,18 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             cls.swift_notifications = ['storage.objects.incoming.bytes',
                                        'storage.objects.outgoing.bytes',
                                        'storage.api.request']
+            cls.swift_object_pollsters = ['storage.objects',
+                                          'storage.objects.size',
+                                          'storage.objects.containers']
+            cls.swift_container_pollsters = ['storage.containers.objects',
+                                             'storage.containers.objects.size']
+            cls.radosgw_object_pollsters = ['radosgw.objects',
+                                            'radosgw.objects.size',
+                                            'radosgw.objects.containers',
+                                            'radosgw.api.request']
+            cls.radosgw_container_pollsters = [
+                'radosgw.containers.objects',
+                'radosgw.containers.objects.size']
             cls.heat_notifications = ['stack.create', 'stack.update',
                                       'stack.delete', 'stack.resume',
                                       'stack.suspend']
@@ -261,6 +273,17 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             if trait not in trait_desc:
                 self.fail('Trait "{trait}" not found in trait list.'.format(
                     trait=trait))
+
+    def wait_metrics_samples_count(self, metric_list, query, count_dict):
+        for metric in metric_list:
+            self.wait_samples_count(metric, query, count_dict[metric])
+
+    def get_initial_number_of_metrics(self, metric_list, query):
+        response_count = {}
+        for metric in metric_list:
+            response_count[metric] = len(
+                self.ceilometer_client.samples.list(metric, query))
+        return response_count
 
     def identity_helper(self):
         user_pass = rand_name("ceilo-user-pass")
@@ -463,11 +486,67 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             get_method=lambda: self.volume_client.volumes.get(volume.id))
         return volume, snapshot
 
+    def swift_helper(self):
+        container_name = rand_name('ost1_ceilo-container')
+        object_name = rand_name('ost1_ceilo-object')
+        self.swift_client.put_container(container_name)
+        self.swift_client.put_object(container_name, object_name, 'text')
+        self.swift_client.get_object(container_name, object_name)
+        self.objects_for_delete.append((self.swift_client.delete_object,
+                                        (container_name, object_name)))
+        self.objects_for_delete.append((self.swift_client.delete_container,
+                                        container_name))
+        return container_name
+
+    def storage_run_helper(self, object_pollsters, container_pollsters,
+                           object_notifications=None):
+        fail_msg = 'Failed to get initial number of object pollsters.'
+        msg = 'getting initial number of object pollsters'
+        query = [{'field': 'resource', 'op': 'eq',
+                  'value': self.identity_client.tenant_id}]
+
+        response_count = self.verify(
+            60, self.get_initial_number_of_metrics, 1,
+            fail_msg, msg, object_pollsters, query)
+
+        fail_msg = 'Failed to create container and object.'
+        msg = 'creating container and object'
+        container_name = self.verify(
+            60, self.swift_helper, 2, fail_msg, msg)
+
+        fail_msg = ('Failed while waiting for addition of new samples '
+                    'for object pollsters to samples list.')
+        msg = ('waiting for addition of new samples for object pollsters '
+               'to samples list')
+        self.verify(60, self.wait_metrics_samples_count, 3, fail_msg, msg,
+                    object_pollsters, query,
+                    response_count)
+
+        fail_msg = 'Failed to get container pollsters.'
+        msg = 'getting container pollsters'
+        query = [{'field': 'resource', 'op': 'eq',
+                  'value': '{0}/{1}'.format(self.identity_client.tenant_id,
+                                            container_name)}]
+        self.verify(60, self.wait_metrics, 4,
+                    fail_msg, msg,
+                    container_pollsters, query)
+
+        if object_notifications:
+            query = [{'field': 'resource', 'op': 'eq',
+                      'value': self.identity_client.tenant_id}]
+            fail_msg = 'Failed to get object notifications.'
+            msg = 'getting object notifications'
+            self.verify(60, self.wait_metrics, 5, fail_msg, msg,
+                        object_notifications, query)
+
     @staticmethod
     def cleanup_resources(object_list):
         for method, resource in object_list:
             try:
-                method(resource)
+                if isinstance(resource, tuple):
+                    method(*resource)
+                else:
+                    method(resource)
             except Exception:
                 LOG.debug(traceback.format_exc())
 

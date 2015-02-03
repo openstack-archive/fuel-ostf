@@ -57,6 +57,7 @@ import glanceclient.client
 import keystoneclient
 import novaclient.client
 import novaclient.exceptions as nova_exc
+import swiftclient
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.common.utils.data_utils import rand_int_id
@@ -107,6 +108,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.ceilometer_client = self._get_ceilometer_client()
             self.neutron_client = self._get_neutron_client()
             self.glance_client_v1 = self._get_glance_client(version=1)
+            self.swift_client = self._get_swift_client()
             self.client_attr_names = [
                 'compute_client',
                 'identity_client',
@@ -118,7 +120,8 @@ class OfficialClientManager(fuel_health.manager.Manager):
                 'murano_client',
                 'sahara_client',
                 'ceilometer_client',
-                'neutron_client'
+                'neutron_client',
+                'swift_client'
             ]
 
     def _get_compute_client(self, username=None, password=None,
@@ -317,6 +320,20 @@ class OfficialClientManager(fuel_health.manager.Manager):
         return neutronclient.neutron.client.Client(version,
                                                    token=keystone.auth_token,
                                                    endpoint_url=endpoint)
+
+    def _get_swift_client(self):
+        keystone = self._get_identity_client()
+        try:
+            endpoint = keystone.service_catalog.url_for(
+                service_type='object-store',
+                endpoint_type='internalURL')
+        except keystoneclient.exceptions.EndpointNotFound:
+            LOG.warning('Can not initialize swift client')
+            return None
+
+        return swiftclient.Connection(auth_version='2',
+                                      preauthurl=endpoint,
+                                      preauthtoken=keystone.auth_token)
 
 
 class OfficialClientTest(fuel_health.test.TestCase):

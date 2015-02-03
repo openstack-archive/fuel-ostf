@@ -31,7 +31,7 @@ class TestDeplTagsGetter(base.BaseUnitTest):
                 'deployment_tags': set(
                     ['ha', 'rhel', 'additional_components',
                      'murano', 'nova_network', 'public_on_all_nodes',
-                     'enable_without_ceph']),
+                     'enable_without_ceph', 'objects_not_ceph']),
                 'release_version': '2015.2-1.0'
             }
         }
