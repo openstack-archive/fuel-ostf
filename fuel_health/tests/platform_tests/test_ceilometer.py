@@ -347,3 +347,38 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         self.verify(60, self.wait_metrics, 1,
                     fail_msg, msg,
                     self.sahara_cluster_notifications, query)
+
+    def test_check_swift_pollsters(self):
+        """Ceilometer test to check get Swift pollsters.
+        Target component: Ceilometer
+
+        Scenario:
+        1. Check swift pollsters.
+        Duration: 60 s.
+        Deployment tags: Ceilometer
+        """
+        object_ceph = self.config.compute.object_ceph
+        if not object_ceph and 'ha' not in self.config.mode:
+            self.skipTest("There is no Swift configuration")
+
+        response_count = {}
+        query = [{'field': 'resource', 'op': 'eq',
+                  'value': self.identity_client.tenant_id}]
+
+        for metric in self.swift_object_pollsters:
+            response_count[metric] = len(
+                self.ceilometer_client.samples.list(metric, query))
+
+        container_name = self.swift_helper()
+
+        for metric in self.swift_object_pollsters:
+            self.wait_samples_count(metric, query, response_count[metric])
+        if not object_ceph:
+            fail_msg = "Swift container pollsters were not received."
+            msg = "Swift container pollsters were received."
+            query = [{'field': 'resource', 'op': 'eq',
+                      'value': "{0}/{1}".format(self.identity_client.tenant_id,
+                                                container_name)}]
+            self.verify(60, self.wait_metrics, 1,
+                        fail_msg, msg,
+                        self.swift_container_pollsters, query)

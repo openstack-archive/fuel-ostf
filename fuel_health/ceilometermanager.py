@@ -61,6 +61,11 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             cls.swift_notifications = ['storage.objects.incoming.bytes',
                                        'storage.objects.outgoing.bytes',
                                        'storage.api.request']
+            cls.swift_object_pollsters = ['storage.objects',
+                                          'storage.objects.size',
+                                          'storage.objects.containers']
+            cls.swift_container_pollsters = ['storage.containers.objects',
+                                             'storage.containers.objects.size']
             cls.heat_notifications = ['stack.create', 'stack.update',
                                       'stack.delete', 'stack.resume',
                                       'stack.suspend']
@@ -346,11 +351,25 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         self.glance_client.images.delete(image.id)
         return image
 
+    def swift_helper(self):
+        container_name = rand_name('ceilo-container')
+        object_name = rand_name('ceilo-object')
+        self.swift_client.put_container(container_name)
+        self.swift_client.put_object(container_name, object_name, 'text')
+        self.objects_for_delete.append((self.swift_client.delete_object,
+                                        (container_name, object_name)))
+        self.objects_for_delete.append((self.swift_client.delete_container,
+                                        container_name))
+        return container_name
+
     @staticmethod
     def cleanup_resources(object_list):
         for method, resource in object_list:
             try:
-                method(resource)
+                if isinstance(resource, tuple):
+                    method(*resource)
+                else:
+                    method(resource)
             except Exception:
                 LOG.debug(traceback.format_exc())
 
