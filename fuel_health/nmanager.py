@@ -699,11 +699,14 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         def ping():
             def find_network_host():
                 """Find host where nova-network works."""
-                services = self.compute_client.services.list()
-                net_service = filter(
-                    lambda n: n.__dict__['binary'] == u'nova-network',
-                    services)[0]
-                return net_service.__dict__['host']
+                if 'neutron' in self.config.network.network_provider:
+                    return self.host[0]
+                else:
+                    services = self.compute_client.services.list()
+                    net_service = filter(
+                        lambda n: n.__dict__['binary'] == u'nova-network',
+                        services)[0]
+                    return net_service.__dict__['host']
 
             if not (self.host or viaHost):
                 self.fail('Wrong tests configurations, one from the next '
