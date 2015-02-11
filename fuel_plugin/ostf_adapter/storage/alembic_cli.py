@@ -33,7 +33,3 @@ def do_apply_migrations():
 
     # apply initial migration
     command.upgrade(alembic_conf, 'head')
-
-
-def drop_migration_meta(engine):
-    engine.execute("DROP TABLE IF EXISTS alembic_version")

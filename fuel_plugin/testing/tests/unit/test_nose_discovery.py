@@ -54,16 +54,10 @@ class TestNoseDiscovery(base.BaseUnitTest):
             if isinstance(el[0][0], models.Test)
         ]
 
-    def _find_needed_test(self, test_name):
-        return next(t for t in self.tests if t.name == test_name)
-
-    def _find_needed_test_set(self, test_set_id):
-        return next(t for t in self.test_sets if t.id == test_set_id)
-
     def test_discovery(self):
         expected = {
-            'test_sets_count': 10,
-            'tests_count': 29
+            'test_sets_count': 9,
+            'tests_count': 27
         }
 
         self.assertTrue(
@@ -121,9 +115,12 @@ class TestNoseDiscovery(base.BaseUnitTest):
                 'deployment_tags': ['one_tag| another_tag', 'other_tag']
             }
         }
-        needed_testset = self._find_needed_test_set(expected['testset']['id'])
 
-        needed_test = self._find_needed_test(expected['test']['name'])
+        needed_testset = [testset for testset in self.test_sets
+                          if testset.id == expected['testset']['id']][0]
+
+        needed_test = [test for test in self.tests
+                       if test.name == expected['test']['name']][0]
 
         self.assertEqual(
             needed_testset.deployment_tags,
@@ -160,40 +157,3 @@ class TestNoseDiscovery(base.BaseUnitTest):
                 nose_discovery.DiscoveryPlugin.test_belongs_to_testset(
                     test_id, test_set_id)
             )
-
-    def test_release_version_attribute(self):
-        for test_entity in (self.tests, self.test_sets):
-            self.assertTrue(
-                all(
-                    [hasattr(t, 'available_since_release')
-                     for t in test_entity]
-                )
-            )
-
-        expected = {
-            'test_set': {
-                'id': 'test_versioning',
-                'available_since_release': '2015.2-6.0',
-            },
-            'tests': [
-                {'name': ('fuel_plugin.testing.fixture.dummy_tests.'
-                          'test_versioning.TestVersioning.'
-                          'test_simple_fake_first'),
-                 'available_since_release': '2015.2-6.0', },
-                {'name': ('fuel_plugin.testing.fixture.dummy_tests.'
-                          'test_versioning.TestVersioning.'
-                          'test_simple_fake_second'),
-                 'available_since_release': '2015.2-6.1', },
-            ]
-        }
-
-        needed_test_set = self._find_needed_test_set(
-            expected['test_set']['id']
-        )
-        self.assertEqual(needed_test_set.available_since_release,
-                         expected['test_set']['available_since_release'])
-
-        for test in expected['tests']:
-            needed_test = self._find_needed_test(test['name'])
-            self.assertEqual(needed_test.available_since_release,
-                             test['available_since_release'])

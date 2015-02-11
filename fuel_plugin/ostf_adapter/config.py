@@ -53,7 +53,6 @@ adapter_opts = [
 
 cli_opts = [
     cfg.BoolOpt('debug', default=False),
-    cfg.BoolOpt('clear-db', default=False),
     cfg.BoolOpt('after-initialization-environment-hook', default=False),
     cfg.StrOpt('debug_tests')
 ]

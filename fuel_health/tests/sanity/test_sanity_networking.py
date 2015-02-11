@@ -53,8 +53,7 @@ class NetworksTest(nmanager.SanityChecksTest):
             2. Confirm that a response is received.
         Duration: 20 s.
 
-        Available since release: 2014.2-6.0
-        Deployment tags: neutron
+        Deployment tags: neutron, 2014.2-6.0, 2014.2-6.1
         """
         fail_msg = "Networks list is unavailable. "
         networks = self.verify(20, self._list_networks, 1,

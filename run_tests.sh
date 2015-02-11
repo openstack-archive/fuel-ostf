@@ -213,18 +213,6 @@ function syncdb {
 }
 
 
-function cleardb {
-  local SERVER_SETTINGS=$1
-  local RUN_CLEARDB="\
-      ostf-server \
-      --debug
-      --clear-db
-      --config-file $SERVER_SETTINGS"
-
-      tox -evenv -- $RUN_CLEARDB > /dev/null
-}
-
-
 function run_integration_tests {
   echo "Starting integration tests"
 
@@ -241,7 +229,6 @@ function run_integration_tests {
 
   create_ostf_conf $config $artifacts
 
-  cleardb $config
   syncdb $config
 
   # run tests

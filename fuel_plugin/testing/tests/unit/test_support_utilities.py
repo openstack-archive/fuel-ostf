@@ -24,15 +24,13 @@ class TestDeplTagsGetter(base.BaseUnitTest):
     def setUp(self):
         config.init_config([])
 
-    def test_get_cluster_attrs(self):
+    def test_get_cluster_depl_tags(self):
         expected = {
             'cluster_id': 3,
-            'attrs': {
-                'deployment_tags': set(
-                    ['ha', 'rhel', 'additional_components',
-                     'murano', 'nova_network', 'public_on_all_nodes']),
-                'release_version': '2015.2-1.0'
-            }
+            'depl_tags': set(
+                ['ha', 'rhel', 'additional_components',
+                 'murano', 'nova_network', 'public_on_all_nodes']
+            )
         }
 
         with requests_mock.Mocker() as m:
@@ -43,6 +41,6 @@ class TestDeplTagsGetter(base.BaseUnitTest):
                            json=cluster['cluster_attributes'])
             m.register_uri('GET', '/api/releases/3',
                            json=cluster['release_data'])
-            res = mixins._get_cluster_attrs(expected['cluster_id'])
+            res = mixins._get_cluster_depl_tags(expected['cluster_id'])
 
-        self.assertEqual(res, expected['attrs'])
+        self.assertEqual(res, expected['depl_tags'])
