@@ -39,7 +39,8 @@ CLUSTERS = {
             'mode': 'ha'
         },
         'release_data': {
-            'operating_system': 'rhel'
+            'operating_system': 'rhel',
+            'version': '2015.2-1.0',
         },
         'cluster_attributes': {
             'editable': {
@@ -54,7 +55,8 @@ CLUSTERS = {
             'mode': 'multinode',
         },
         'release_data': {
-            'operating_system': 'ubuntu'
+            'operating_system': 'ubuntu',
+            'version': '2015.2-1.0',
         },
         'cluster_attributes': {
             'editable': {
@@ -69,7 +71,8 @@ CLUSTERS = {
             'mode': 'ha'
         },
         'release_data': {
-            'operating_system': 'rhel'
+            'operating_system': 'rhel',
+            'version': '2015.2-1.0',
         },
         'cluster_attributes': {
             'editable': {
@@ -91,7 +94,8 @@ CLUSTERS = {
             'mode': 'test_error'
         },
         'release_data': {
-            'operating_system': 'none'
+            'operating_system': 'none',
+            'version': '2015.2-1.0',
         },
         'cluster_attributes': {
             'editable': {
@@ -106,7 +110,24 @@ CLUSTERS = {
             'mode': 'dependent_tests'
         },
         'release_data': {
-            'operating_system': 'none'
+            'operating_system': 'none',
+            'version': '2015.2-1.0',
+        },
+        'cluster_attributes': {
+            'editable': {
+                'additional_components': {},
+                'common': {}
+            }
+        }
+    },
+    6: {
+        'cluster_meta': {
+            'release_id': 6,
+            'mode': 'releases_comparison'
+        },
+        'release_data': {
+            'operating_system': '',
+            'version': '2015.2-6.0',
         },
         'cluster_attributes': {
             'editable': {

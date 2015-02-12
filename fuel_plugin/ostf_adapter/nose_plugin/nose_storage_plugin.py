@@ -70,7 +70,7 @@ class StoragePlugin(plugins.Plugin):
             data
         )
         if data['status'] != 'running':
-            test_name = nose_utils.get_description(test)[0]
+            test_name = nose_utils.get_description(test)["title"]
             self.results_log.log_results(
                 test_id,
                 test_name=test_name,
