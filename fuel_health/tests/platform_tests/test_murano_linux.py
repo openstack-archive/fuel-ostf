@@ -61,13 +61,11 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
             self.skipTest(msg)
 
         self.flavor_name = rand_name("ostf_test_Murano_flavor")
-        self.flavor = self.compute_client.flavors.create(
-            self.flavor_name, disk=60, ram=self.min_required_ram, vcpus=1)
+        flavor = self.compute_client.flavors.create(
+            self.flavor_name, disk=60, ram=self.min_required_ram_mb, vcpus=1)
+        self.addCleanup(self.compute_client.flavors.delete, flavor.id)
 
     def tearDown(self):
-        if self.flavor_reqs:
-            self.compute_client.flavors.delete(self.flavor.id)
-
         super(MuranoDeployLinuxServicesTests, self).tearDown()
 
     def test_deploy_apache_service(self):
