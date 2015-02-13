@@ -290,17 +290,12 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             self.compute_client.flavors.list() if flavor.name == 'm1.small')
 
         #  Create json for node grou
-        node_group = {'name': 'allinone',
+        node_group = {'name': 'all-in-one',
                       'flavor_id': flavor_id,
                       'node_processes': ['namenode', 'jobtracker',
                                          'tasktracker', 'datanode'],
-                      'count': 1}
-
-        #  Find floating ip pool for neutron and nova net
-        if self.neutron_external_network_id:
-            node_group['floating_ip_pool'] = self.neutron_external_network_id
-        if self.floating_ip_pool:
-            node_group['floating_ip_pool'] = self.floating_ip_pool
+                      'count': 1,
+                      'floating_ip_pool': self.floating_ip_pool}
 
         #  Create json for Sahara cluster
         cluster_json = {'name': rand_name("ceilo-cluster"),
@@ -308,9 +303,8 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                         'hadoop_version': "1.2.1",
                         'default_image_id': image_id,
                         'cluster_configs': {},
-                        'node_groups': [node_group]}
-        if self.neutron_private_network_id:
-            cluster_json['net_id'] = self.neutron_private_network_id
+                        'node_groups': [node_group],
+                        'net_id': self.neutron_private_net_id}
 
         #  Create Sahara cluster
         cluster = self.sahara_client.clusters.create(**cluster_json)
