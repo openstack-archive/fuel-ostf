@@ -44,12 +44,18 @@ def main():
 
     root = app.setup_app({})
 
+    # completely clean db (drop tables, constraints and types)
+    # plus drop alembic_version table (needed if, for example, head migration
+    # script was changed after applying)
+    if CONF.clear_db:
+        return nailgun_hooks.clear_db(CONF.adapter.dbpath)
+
     if CONF.after_initialization_environment_hook:
         return nailgun_hooks.after_initialization_environment_hook()
 
     with engine.contexted_session(CONF.adapter.dbpath) as session:
         # performing cleaning of expired data (if any) in db
-        mixins.clean_db(session)
+        mixins.delete_db_data(session)
         log.info('Cleaned up database.')
         # discover testsets and their tests
         CORE_PATH = CONF.debug_tests or 'fuel_health'

@@ -28,7 +28,7 @@ LOG = logging.getLogger(__name__)
 TEST_REPOSITORY = []
 
 
-def clean_db(session):
+def delete_db_data(session):
     LOG.info('Starting clean db action.')
     session.query(models.ClusterTestingPattern).delete()
     session.query(models.ClusterState).delete()
