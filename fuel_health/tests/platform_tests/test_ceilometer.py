@@ -229,7 +229,8 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         3. Check keystone role notifications.
         4. Check keystone group notifications.
         Duration: 5 s.
-        Deployment tags: Ceilometer, 2014.2-6.0, 2014.2-6.1
+        Available since release: 2014.2-6.0
+        Deployment tags: Ceilometer
         """
 
         tenant, user, role, group, trust = self.identity_helper()
