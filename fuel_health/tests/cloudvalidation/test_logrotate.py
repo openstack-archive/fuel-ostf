@@ -48,6 +48,5 @@ class LogRotationTest(cloudvalidation.CloudValidationTest):
                     'checking logrotate', host, cmd)
             except AssertionError:
                 failed.add(host)
-
         failed_hosts = ', '.join(failed)
         self.verify_response_true(len(failed) == 0, fail_msg % failed_hosts, 1)
