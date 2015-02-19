@@ -1,4 +1,4 @@
-
+# Copyright 2015 Mirantis, Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -50,6 +50,7 @@ class CloudValidationTest(nmanager.OfficialClientTest):
         except Exception:
             LOG.debug(traceback.format_exc())
             self.fail("%s command failed." % cmd)
+<<<<<<< HEAD
 
     def _run_ssh_cmd_with_exit_code(self, host, cmd):
         """Open SSH session with host and and execute command.
