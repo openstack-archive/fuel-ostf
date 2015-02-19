@@ -81,21 +81,20 @@ class DiscoveryPlugin(plugins.Plugin):
         test_id = test.id()
         for test_set_id in self.test_sets.keys():
             if self.test_belongs_to_testset(test_id, test_set_id):
-                data = dict()
+                test_kwargs = {
+                    "title": "",
+                    "description": "",
+                    "duration": "",
+                    "deployment_tags": [],
+                    "available_since_release": "",
+                    "test_set_id": test_set_id,
+                    "name": test_id,
+                }
 
-                (data['title'], data['description'],
-                 data['duration'], data['deployment_tags']) = \
-                    nose_utils.get_description(test)
-
-                data.update(
-                    {
-                        'test_set_id': test_set_id,
-                        'name': test_id
-                    }
-                )
+                test_kwargs.update(nose_utils.get_description(test))
 
                 try:
-                    test_obj = models.Test(**data)
+                    test_obj = models.Test(**test_kwargs)
                     self.session.merge(test_obj)
 
                     # flush tests data into db
