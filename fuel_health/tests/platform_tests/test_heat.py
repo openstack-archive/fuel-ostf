@@ -31,6 +31,115 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                 and self.config.compute.libvirt_type != 'vcenter':
             self.skipTest('There are no compute nodes')
 
+    def test_advanced_actions(self):
+        """Advanced stack actions: suspend, resume and check.
+        Target component: Heat
+        Available since release: 2014.2-6.1
+
+        Scenario:
+            1. Create a stack.
+            2. Wait until the stack status will change to 'CREATE_COMPLETE'.
+            3. Call stack suspend action.
+            4. Wait until the stack status will change to 'SUSPEND_COMPLETE'.
+            5. Call stack resume action.
+            6. Wail until the stack status will change to 'RESUME_COMPLETE'.
+            7. Call stack check action.
+            8. Wail until the stack status will change to 'CHECK_COMPLETE'.
+            9. Delete the stack and wait for the stack to be deleted.
+        Duration: 650 s.
+        """
+
+        self.check_image_exists()
+        parameters = {
+            "InstanceType": self.testvm_flavor.name,
+            "ImageId": self.config.compute.image_name
+        }
+        if "neutron" in self.config.network.network_provider:
+            parameters["network"] = self.private_net
+            template = self._load_template(
+                "heat_create_neutron_stack_template.yaml")
+        else:
+            template = self._load_template(
+                "heat_create_nova_stack_template.yaml")
+
+        fail_msg = "Stack was not created properly."
+
+        # create stack
+        stack = self.verify(20, self._create_stack, 1,
+                            fail_msg, "stack creation",
+                            self.heat_client,
+                            template, parameters=parameters)
+
+        self.verify(300, self._wait_for_stack_status, 2,
+                    fail_msg,
+                    "stack status becoming 'CREATE_COMPLETE'",
+                    stack.id, 'CREATE_COMPLETE')
+
+        instances = self._get_stack_instances("ost1-test_heat")
+
+        if not instances:
+            self.fail("Failed step: 2 Instance for the {0} stack "
+                      "was not created.".format(stack.stack_name))
+
+        # suspend stack
+        fail_msg = "Stack suspend failed"
+        self.verify(10, self.heat_client.actions.suspend, 3,
+                    fail_msg, "executing suspend stack action",
+                    stack.id)
+
+        self.verify(60, self._wait_for_stack_status, 4,
+                    fail_msg,
+                    "stack status becoming 'SUSPEND_COMPLETE'",
+                    stack.id, 'SUSPEND_COMPLETE')
+
+        fail_msg = "Server is not in SUSPENDED status."
+        inst_status = self.compute_client.servers.get(instances[0].id).status
+        self.verify_response_body_content(inst_status, 'SUSPENDED',
+                                          fail_msg, 4)
+
+        # resume stack
+        fail_msg = "Stack resume failed"
+        self.verify(10, self.heat_client.actions.resume, 5,
+                    fail_msg, "executing resume stack action",
+                    stack.id)
+
+        self.verify(60, self._wait_for_stack_status, 6,
+                    fail_msg,
+                    "stack status becoming 'RESUME_COMPLETE'",
+                    stack.id, 'RESUME_COMPLETE')
+
+        fail_msg = "Server is not in ACTIVE status."
+        inst_status = self.compute_client.servers.get(instances[0].id).status
+        self.verify_response_body_content(inst_status, 'ACTIVE',
+                                          fail_msg, 6)
+
+        # stack check
+        fail_msg = "Stack check failed"
+        self.verify(10, self.heat_client.actions.check, 7,
+                    fail_msg, "executing check stack action",
+                    stack.id)
+
+        fail_msg = "Stack resource is not in CHECK_COMPLETE status."
+        res_status = self.heat_client.resources.list(
+            stack.id)[0].resource_status
+        self.verify_response_body_content(res_status, 'CHECK_COMPLETE',
+                                          fail_msg, 8)
+
+        self.verify(60, self._wait_for_stack_status, 8,
+                    fail_msg,
+                    "stack status becoming 'CHECK_COMPLETE'",
+                    stack.id, 'CHECK_COMPLETE')
+
+        # delete stack
+        fail_msg = "Cannot delete stack."
+        self.verify(20, self.heat_client.stacks.delete, 9,
+                    fail_msg, "deleting stack",
+                    stack.id)
+
+        self.verify(100, self._wait_for_stack_deleted, 9,
+                    fail_msg, "deleting stack",
+                    stack.id)
+
     def test_actions(self):
         """Typical stack actions: create, delete, show details, etc.
         Target component: Heat
