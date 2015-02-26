@@ -609,8 +609,13 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         return nets
 
     def _create_server(self, client, name, security_groups=None,
-                       flavor_id=None, net_id=None):
-        base_image_id = self.get_image_from_name()
+                       flavor_id=None, net_id=None, img_name=None):
+
+        if img_name:
+            base_image_id = self.get_image_from_name(img_name=img_name)
+        else:
+            base_image_id = self.get_image_from_name()
+
         if not flavor_id:
             flavor = self._create_nano_flavor()
 
