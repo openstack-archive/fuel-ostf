@@ -160,8 +160,17 @@ def _get_cluster_attrs(cluster_id, token=None):
     additional_components = \
         response['editable'].get('additional_components', dict())
 
+<<<<<<< HEAD
     libvrt_data = response['editable']['common'].get('libvirt_type', None)
 
+=======
+    use_vcenter = response['editable']['common'].get('use_vcenter', None)
+    libvrt_data = response['editable']['common'].get('libvirt_type', None)
+
+    if use_vcenter:
+        deployment_tags.add('use_vcenter')
+
+>>>>>>> ddd
     additional_depl_tags = set()
 
     comp_names = ['murano', 'sahara', 'heat', 'ceilometer']

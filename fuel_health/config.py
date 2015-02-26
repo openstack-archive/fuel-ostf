@@ -566,6 +566,10 @@ class NailgunConfig(object):
                 access_data['password']['value']
             )
         self.compute.libvirt_type = common_data['libvirt_type']['value']
+<<<<<<< HEAD
+=======
+        self.compute.use_vcenter = common_data['use_vcenter']['value']
+>>>>>>> ddd
         self.compute.auto_assign_floating_ip = common_data[
             'auto_assign_floating_ip']['value']
 
