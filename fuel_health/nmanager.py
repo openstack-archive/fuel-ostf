@@ -359,8 +359,11 @@ class OfficialClientTest(fuel_health.test.TestCase):
 
         return snapshot
 
-    def get_image_from_name(self):
-        image_name = self.manager.config.compute.image_name
+    def get_image_from_name(self, img_name=None):
+        if img_name:
+            image_name = img_name
+        else:
+            image_name = self.manager.config.compute.image_name
         images = [i for i in self.compute_client.images.list()
                   if i.status.lower() == 'active']
         image_id = ''
@@ -609,8 +612,13 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         return nets
 
     def _create_server(self, client, name, security_groups=None,
-                       flavor_id=None, net_id=None):
-        base_image_id = self.get_image_from_name()
+                       flavor_id=None, net_id=None, img_name=None):
+
+        if img_name:
+            base_image_id = self.get_image_from_name(img_name=img_name)
+        else:
+            base_image_id = self.get_image_from_name()
+
         if not flavor_id:
             flavor = self._create_nano_flavor()
 
