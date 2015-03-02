@@ -769,15 +769,16 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
 
     def setUp(self):
         super(PlatformServicesBaseClass, self).setUp()
-        self.neutron_private_network_id = None
-        self.neutron_external_network_id = None
+
+        self.neutron_private_net_id = None
         self.floating_ip_pool = None
+
         if self.config.network.network_provider == 'neutron':
-            for network in self.neutron_client.list_networks()["networks"]:
-                if not network.get("router:external"):
-                    self.neutron_private_network_id = network['id']
-                else:
-                    self.neutron_external_network_id = network['id']
+            self.neutron_private_net_id = (
+                self.compute_client.networks.find(label=self.private_net)).id
+            self.floating_ip_pool = (
+                self.compute_client.networks.find(
+                    label=self.private_net + '_ext')).id
         else:
             if not self.config.compute.auto_assign_floating_ip:
                 flip_list = self.compute_client.floating_ip_pools.list()
