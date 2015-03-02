@@ -43,7 +43,6 @@ class GlanceSmokeTests(glancemanager.GlanceTest):
 
         Duration: 130 s.
         Available since release: 2014.2-6.1
-        Deployment tags: Glance
         """
         fail_msg = "Internet connection error."
         self.verify(10, self._ping_ip_address, 1, fail_msg,
@@ -103,7 +102,6 @@ class GlanceSmokeTests(glancemanager.GlanceTest):
 
         Duration: 70 s.
         Available since release: 2014.2-6.1
-        Deployment tags: Glance
         """
         fail_msg = ("Error creating image. Please refer to Openstack logs "
                     "for more information.")

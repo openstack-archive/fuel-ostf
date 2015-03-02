@@ -33,7 +33,6 @@ class GlanceSanityTests(glancemanager.GlanceTest):
 
         Duration: 10 s.
         Available since release: 2014.2-6.1
-        Deployment tags: Glance
         """
 
         fail_msg = "Can't get list of images. Glance API isn't available. "
@@ -55,7 +54,6 @@ class GlanceSanityTests(glancemanager.GlanceTest):
 
         Duration: 10 s.
         Available since release: 2014.2-6.1
-        Deployment tags: Glance
         """
 
         fail_msg = "Can't get list of images. Glance API isn't available. "
