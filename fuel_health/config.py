@@ -21,6 +21,7 @@ import sys
 import traceback
 import unittest2
 
+import keystoneclient
 from oslo.config import cfg
 import requests
 
@@ -657,16 +658,37 @@ class NailgunConfig(object):
         self.identity.url = data['horizon_url'] + 'dashboard'
         self.identity.uri = data['keystone_url'] + 'v2.0/'
 
+    def find_proxy(self, ip):
+        endpoint = self.network.raw_data.get('public_vip', None) or ip
+        auth_url = 'http://{0}:{1}/{2}/'.format(endpoint, 5000, 'v2.0')
+        try:
+            os.environ['http_proxy'] = 'http://{0}:{1}'.format(ip, 8888)
+            LOG.warning('Try to check proxy on {0}'.format(ip))
+            keystoneclient.v2_0.client.Client(
+                username=self.identity.admin_username,
+                password=self.identity.admin_password,
+                tenant_name=self.identity.admin_tenant_name,
+                auth_url=auth_url,
+                insecure=False)
+            return ip
+        except Exception:
+            LOG.warning('Can not pass authorization '
+                        'with proxy on {0}'.format(ip))
+            LOG.debug(traceback.format_exc())
+
     def set_proxy(self):
         """Sets environment property for http_proxy:
             To behave properly - method must be called after all nailgun params
             is processed
         """
-        if self.compute.online_controllers:
-            os.environ['http_proxy'] = 'http://{0}:{1}'.format(
-                self.compute.online_controllers[0], 8888)
-        else:
+        if not self.compute.online_controllers:
+            raise exceptions.OfflineControllers()
+        proxies = [self.find_proxy(ip) for ip in
+                   self.compute.online_controllers]
+        if not proxies:
             raise exceptions.SetProxy()
+
+        os.environ['http_proxy'] = 'http://{0}:{1}'.format(proxies[0], 8888)
 
     def set_endpoints(self):
         public_vip = self.network.raw_data.get('public_vip', None)
