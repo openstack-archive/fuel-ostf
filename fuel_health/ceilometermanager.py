@@ -36,6 +36,13 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             cls.objects_for_delete = []
             cls.nova_notifications = ['memory', 'vcpus', 'disk.root.size',
                                       'disk.ephemeral.size']
+            cls.nova_pollsters = ['cpu', 'cpu_util', 'disk.read.bytes',
+                                  'disk.read.bytes.rate', 'disk.read.requests',
+                                  'disk.read.requests.rate',
+                                  'disk.write.bytes',
+                                  'disk.write.bytes.rate',
+                                  'disk.write.requests',
+                                  'disk.write.requests.rate', 'instance']
             cls.neutron_network_notifications = ['network', 'network.create',
                                                  'network.update']
             cls.neutron_subnet_notifications = ['subnet', 'subnet.create',
@@ -172,9 +179,9 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             return self.ceilometer_client.statistics.list(meter_name, q=query,
                                                           period=period)
 
-    def wait_notifications(self, notification_list, query):
-        for sample in notification_list:
-            self.wait_for_sample_of_metric(sample, query)
+    def wait_metrics(self, metric_list, query):
+        for metric in metric_list:
+            self.wait_for_sample_of_metric(metric, query)
 
     def wait_samples_count(self, sample, query, count):
 
