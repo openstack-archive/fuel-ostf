@@ -259,6 +259,9 @@ VolumeGroup = [
     cfg.BoolOpt('cinder_node_exist',
                 default=True,
                 help="Allow to run tests if cinder exist"),
+    cfg.BoolOpt('cinder_vmware_node_exist',
+                default=True,
+                help="Allow to run tests if cinder-vmware exist"),
     cfg.BoolOpt('ceph_exist',
                 default=True,
                 help="Allow to run tests if ceph exist"),
@@ -605,6 +608,8 @@ class NailgunConfig(object):
                          node['online'] is True, data)
         cinder_nodes = filter(lambda node: 'cinder' in node['roles'],
                               data)
+        cinder_vmware_nodes = filter(lambda node: 'cinder-vmware' in
+                                     node['roles'], data)
         controller_ips = []
         conntroller_names = []
         public_ips = []
@@ -626,6 +631,8 @@ class NailgunConfig(object):
         self.compute.online_controllers = online_controllers_ips
         if not cinder_nodes:
             self.volume.cinder_node_exist = False
+        if not cinder_vmware_nodes:
+            self.volume.cinder_vmware_node_exist = False
 
         compute_nodes = filter(lambda node: 'compute' in node['roles'],
                                data)
