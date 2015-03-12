@@ -47,9 +47,6 @@ class TestVcenter(nmanager.NovaNetworkScenarioTest):
     def setUp(self):
         super(TestVcenter, self).setUp()
         self.check_clients_state()
-        if not self.config.compute.compute_nodes and \
-           self.config.compute.use_vcenter:
-            self.skipTest('There are no compute nodes')
 
     def tearDown(self):
         super(TestVcenter, self).tearDown()
@@ -261,9 +258,6 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
     def setUp(self):
         super(TestVcenterImageAction, self).setUp()
         self.check_clients_state()
-        if not self.config.compute.compute_nodes and \
-           self.config.compute.libvirt_type != 'vcenter':
-            self.skipTest('There are no compute nodes')
         self.check_image_exists()
 
     def _wait_for_server_status(self, server, status):
