@@ -967,13 +967,15 @@ class SmokeChecksTest(OfficialClientTest):
         self.set_resource(name, role)
         return role
 
-    def _create_boot_volume(self, client):
+    def _create_boot_volume(self, client, img_name=None, **kwargs):
         display_name = rand_name('ost1_test-bootable-volume')
-        imageRef = self.get_image_from_name()
+
+        imageRef = self.get_image_from_name(img_name=img_name)
+
         LOG.debug(
             'Image ref is {0} for volume {1}'.format(imageRef, display_name))
         return self._create_volume(
-            client, display_name=display_name, imageRef=imageRef)
+            client, display_name=display_name, imageRef=imageRef, **kwargs)
 
     def create_instance_from_volume(self, client, volume):
         if not self.find_micro_flavor():
@@ -1012,12 +1014,14 @@ class SmokeChecksTest(OfficialClientTest):
         self.set_resource(name, server)
         return server
 
-    def _create_server(self, client):
+    def _create_server(self, client, img_name=None):
         if not self.find_micro_flavor():
             self.fail("m1.micro flavor was not created.")
 
         name = rand_name('ost1_test-volume-instance')
-        base_image_id = self.get_image_from_name()
+
+        base_image_id = self.get_image_from_name(img_name=img_name)
+
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in
                        self.compute_client.networks.list()
