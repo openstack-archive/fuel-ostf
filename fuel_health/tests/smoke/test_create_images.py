@@ -28,7 +28,7 @@ class GlanceSmokeTests(glancemanager.GlanceTest):
     """
 
     def test_create_and_delete_image(self):
-        """Check that user can create, update and delete image using Glance v1
+        """Check create, update and delete image actions using Glance v1
         Target component: Glance
 
         Scenario:
@@ -59,7 +59,7 @@ class GlanceSmokeTests(glancemanager.GlanceTest):
 
         fail_msg = ("Image status is incorrect. Please refer to "
                     "Openstack logs for more information.")
-        self.verify(100, self.check_image_status, 4, fail_msg,
+        self.verify(200, self.check_image_status, 4, fail_msg,
                     'Checking image status', self.glance_client_v1, self.image)
 
         fail_msg = ("Image doesn't appear at list. Please refer to "
@@ -89,7 +89,7 @@ class GlanceSmokeTests(glancemanager.GlanceTest):
                     self.glance_client_v1, self.image)
 
     def test_create_and_delete_image_v2(self):
-        """Check that user can create, update and delete image using Glance v2
+        """Check create, update and delete image actions using Glance v2
         Target component: Glance
 
         Scenario:

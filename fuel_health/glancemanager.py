@@ -91,7 +91,7 @@ class GlanceTest(fuel_health.nmanager.NovaNetworkScenarioTest):
             if self.find_image_by_id(client, image.id).status == status:
                 return True
 
-        if fuel_health.test.call_until_true(image_status_comparison, 120, 5):
+        if fuel_health.test.call_until_true(image_status_comparison, 180, 5):
             return self.find_image_by_id(client, image.id)
         else:
             self.fail('Image has incorrect status {0}'
