@@ -113,12 +113,13 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
             1. Create an instance.
             2. Wait for 'ACTIVE' status of the instance.
             3. Get notifications.
-            4. Get pollsters.
-            5. Get the statistic notification:cpu_util.
-            6. Create an alarm for the summary statistic notification:cpu_util.
-            7. Wait for the alarm state to become 'alarm' or 'ok'.
+            4. Get instance pollsters.
+            5. Get disk pollsters.
+            6. Get the statistic notification:cpu_util.
+            7. Create an alarm for the summary statistic notification:cpu_util.
+            8. Wait for the alarm state to become 'alarm' or 'ok'.
 
-        Duration: 60 s.
+        Duration: 150 s.
         Deployment tags: Ceilometer
         """
 
@@ -146,25 +147,39 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         self.verify(600, self.wait_metrics, 3,
                     fail_msg, msg, notifications, query)
 
-        pollsters = (self.nova_pollsters
-                     if not vcenter else self.nova_vsphere_pollsters)
-        pollsters.append("".join(['instance:',
-                                  self.compute_client.flavors.get(
-                                      instance.flavor['id']).name]))
-        fail_msg = 'Failed to get pollsters.'
-        msg = 'getting pollsters'
-        self.verify(600, self.wait_metrics, 4, fail_msg, msg, pollsters, query)
+        instance_pollsters = (self.nova_instance_pollsters if not vcenter
+                              else self.nova_vsphere_pollsters)
+        instance_pollsters.append("".join(['instance:',
+                                           self.compute_client.flavors.get(
+                                               instance.flavor['id']).name]))
+        fail_msg = 'Failed to get instance pollsters.'
+        msg = 'getting instance pollsters'
+        self.verify(600, self.wait_metrics, 4, fail_msg, msg,
+                    instance_pollsters, query)
+
+        fail_msg = 'Failed to get disk.device.* pollsters.'
+        msg = 'getting disk.device.* pollsters'
+        query_disk_device_pollsters = [{'field': 'resource', 'op': 'eq',
+                                        'value': "".join(
+                                            [instance.id, '-vda'])}]
+
+        disk_device_pollsters = (self.nova_disk_device_pollsters if not vcenter
+                                 else [])
+
+        self.verify(600, self.wait_metrics, 5,
+                    fail_msg, msg, disk_device_pollsters,
+                    query_disk_device_pollsters)
 
         fail_msg = 'Failed to get statistic notification:cpu_util.'
         msg = 'getting statistic notification:cpu_util'
-        cpu_util_stat = self.verify(60, self.wait_for_statistic_of_metric, 5,
+        cpu_util_stat = self.verify(60, self.wait_for_statistic_of_metric, 6,
                                     fail_msg, msg, 'cpu_util', query)
 
         fail_msg = ('Failed to create alarm for '
                     'summary statistic notification:cpu_util.')
         msg = 'creating alarm for summary statistic notification:cpu_util'
         threshold = cpu_util_stat[0].sum - 1
-        alarm = self.verify(60, self.create_alarm, 6,
+        alarm = self.verify(60, self.create_alarm, 7,
                             fail_msg, msg,
                             meter_name='cpu_util',
                             threshold=threshold,
@@ -176,7 +191,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = ('Failed while waiting for '
                     'alarm state to become "alarm" or "ok".')
         msg = 'waiting for alarm state to become "alarm" or "ok"'
-        self.verify(1000, self.wait_for_alarm_status, 7,
+        self.verify(1000, self.wait_for_alarm_status, 8,
                     fail_msg, msg, alarm.alarm_id)
 
     def test_create_sample(self):
