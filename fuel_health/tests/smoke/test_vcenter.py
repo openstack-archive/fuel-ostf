@@ -252,7 +252,7 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
     def setUpClass(cls):
         super(TestVcenterImageAction, cls).setUpClass()
         if cls.manager.clients_initialized:
-            cls.smoke_flavor = cls._create_nano_flavor()
+            cls.micro_flavors = cls.find_micro_flavor()
 
     @classmethod
     def tearDownClass(cls):
