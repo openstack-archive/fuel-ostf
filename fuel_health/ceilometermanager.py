@@ -36,13 +36,20 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             cls.objects_for_delete = []
             cls.nova_notifications = ['memory', 'vcpus', 'disk.root.size',
                                       'disk.ephemeral.size']
-            cls.nova_pollsters = ['cpu', 'cpu_util', 'disk.read.bytes',
-                                  'disk.read.bytes.rate', 'disk.read.requests',
-                                  'disk.read.requests.rate',
-                                  'disk.write.bytes',
-                                  'disk.write.bytes.rate',
-                                  'disk.write.requests',
-                                  'disk.write.requests.rate', 'instance']
+            cls.nova_instance_pollsters = ['cpu', 'cpu_util',
+                                           'disk.read.bytes',
+                                           'disk.read.bytes.rate',
+                                           'disk.read.requests',
+                                           'disk.read.requests.rate',
+                                           'disk.write.bytes',
+                                           'disk.write.bytes.rate',
+                                           'disk.write.requests',
+                                           'disk.write.requests.rate',
+                                           'instance']
+            cls.nova_disk_device_pollsters = ['disk.device.read.requests',
+                                              'disk.device.write.requests',
+                                              'disk.device.read.bytes',
+                                              'disk.device.write.bytes']
             cls.neutron_network_notifications = ['network', 'network.create',
                                                  'network.update']
             cls.neutron_subnet_notifications = ['subnet', 'subnet.create',

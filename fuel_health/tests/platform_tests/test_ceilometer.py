@@ -27,11 +27,12 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
             1. Create a new instance.
             2. Instance become active.
             3. Wait for Nova notifications.
-            4. Wait for Nova pollsters.
-            5. Wait for Nova statistic.
-            6. Create a new alarm.
-            7. Verify that become status 'alarm' or 'ok'.
-        Duration: 60 s.
+            4. Wait for Nova instance pollsters.
+            5. Wait for Nova disk pollsters.
+            6. Wait for Nova statistic.
+            7. Create a new alarm.
+            8. Verify that become status 'alarm' or 'ok'.
+        Duration: 150 s.
 
         Deployment tags: Ceilometer
         """
@@ -62,17 +63,26 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
 
         self.nova_pollsters.append("".join(["instance:",
                                    self.compute_client.flavors.get(
-                                   instance.flavor['id']).name]))
+                                       instance.flavor['id']).name]))
 
-        fail_msg = "Nova pollsters is not received."
-        msg = "Nova pollsters is received."
+        fail_msg = "Nova instance pollsters were not received."
+        msg = "Nova instance pollsters were received."
         self.verify(600, self.wait_metrics, 4,
-                    fail_msg, msg, self.nova_pollsters, query)
+                    fail_msg, msg, self.nova_instance_pollsters, query)
+
+        fail_msg = "Nova disk.device pollsters were not received."
+        msg = "Nova disk.device pollsters were received."
+        query_disk_device_pollsters = [{'field': 'resource', 'op': 'eq',
+                                        'value': "".join(
+                                            [instance.id, "-vda"])}]
+        self.verify(600, self.wait_metrics, 5,
+                    fail_msg, msg, self.nova_disk_device_pollsters,
+                    query_disk_device_pollsters)
 
         fail_msg = "Statistic for Nova notification:vcpus is not received."
         msg = "Statistic for Nova notification:vcpus is received."
 
-        vcpus_stat = self.verify(60, self.wait_for_statistic_of_metric, 5,
+        vcpus_stat = self.verify(60, self.wait_for_statistic_of_metric, 6,
                                  fail_msg, msg,
                                  self.nova_notifications[1],
                                  query)
@@ -81,7 +91,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         msg = "Creation alarm for sum vcpus is successful."
         threshold = vcpus_stat[0].sum - 1
 
-        alarm = self.verify(60, self.create_alarm, 6,
+        alarm = self.verify(60, self.create_alarm, 7,
                             fail_msg, msg,
                             meter_name=self.nova_notifications[1],
                             threshold=threshold,
@@ -93,7 +103,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = "Alarm verify state is failed."
         msg = "Alarm status becoming."
 
-        self.verify(1000, self.wait_for_alarm_status, 7,
+        self.verify(1000, self.wait_for_alarm_status, 8,
                     fail_msg, msg,
                     alarm.alarm_id)
 
