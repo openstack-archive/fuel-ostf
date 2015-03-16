@@ -56,19 +56,30 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             cls.objects_for_delete = []
             cls.nova_notifications = ['memory', 'vcpus', 'disk.root.size',
                                       'disk.ephemeral.size']
-            cls.nova_pollsters = ['cpu', 'cpu_util', 'disk.read.bytes',
-                                  'disk.read.bytes.rate', 'disk.read.requests',
-                                  'disk.read.requests.rate',
-                                  'disk.write.bytes',
-                                  'disk.write.bytes.rate',
-                                  'disk.write.requests',
-                                  'disk.write.requests.rate', 'instance']
             cls.nova_vsphere_pollsters = ['instance', 'memory.usage',
                                           'cpu_util',
                                           'disk.read.requests.rate',
                                           'disk.write.requests.rate',
                                           'disk.read.bytes.rate',
                                           'disk.write.bytes.rate']
+            cls.nova_instance_pollsters = ['cpu', 'cpu_util',
+                                           'disk.read.bytes',
+                                           'disk.read.bytes.rate',
+                                           'disk.read.requests',
+                                           'disk.read.requests.rate',
+                                           'disk.write.bytes',
+                                           'disk.write.bytes.rate',
+                                           'disk.write.requests',
+                                           'disk.write.requests.rate',
+                                           'instance', 'memory.resident',
+                                           'disk.capacity', 'disk.allocation',
+                                           'disk.usage', 'memory.resident']
+            cls.nova_disk_device_pollsters = [
+                'disk.device.read.requests', 'disk.device.write.requests',
+                'disk.device.read.bytes', 'disk.device.write.bytes',
+                'disk.device.read.requests.rate',
+                'disk.device.write.requests.rate',
+                'disk.device.read.bytes.rate', 'disk.device.write.bytes.rate']
             cls.neutron_network_notifications = ['network', 'network.create',
                                                  'network.update']
             cls.neutron_subnet_notifications = ['subnet', 'subnet.create',
