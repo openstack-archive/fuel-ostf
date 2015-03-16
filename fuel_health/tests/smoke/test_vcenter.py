@@ -252,7 +252,7 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
     def setUpClass(cls):
         super(TestVcenterImageAction, cls).setUpClass()
         if cls.manager.clients_initialized:
-            cls.smoke_flavor = cls._create_nano_flavor()
+            cls.micro_flavors = cls.find_micro_flavor()
 
     @classmethod
     def tearDownClass(cls):
@@ -295,11 +295,12 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
         test.call_until_true(is_deletion_complete, 10, 1)
 
     def _boot_image(self, image_id):
-        if not self.smoke_flavor:
+        flavor_id = self.find_micro_flavor()
+
+        if not flavor_id:
             self.fail("Flavor for tests was not created. Seems that "
                       "something is wrong with nova services.")
 
-        flavor_id = self.smoke_flavor
         name = rand_name('ost1_test-image')
         client = self.compute_client
         LOG.debug("name:%s, image:%s" % (name, image_id))
@@ -319,11 +320,12 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
                           format(self.private_net))
             server = client.servers.create(name=name,
                                            image=image_id,
-                                           flavor=flavor_id, **create_kwargs)
+                                           flavor=flavor_id[0],
+                                           **create_kwargs)
         else:
             server = client.servers.create(name=name,
                                            image=image_id,
-                                           flavor=flavor_id)
+                                           flavor=flavor_id[0])
         self.set_resource(name, server)
         # self.addCleanup(self.compute_client.servers.delete, server)
         self.verify_response_body_content(
