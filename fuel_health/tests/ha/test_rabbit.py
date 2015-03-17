@@ -41,7 +41,7 @@ class RabbitSanityTest(ha_base.RabbitSanityClass):
           3. Check crm status for rabbit
           4. List channels
         Duration: 100 s.
-        Deployment tags: CENTOS, 2014.2-6.1
+        Deployment tags: CENTOS
         """
         self.verify(10, self.list_nodes, 1,
                     'Cannot retrieve cluster nodes')
@@ -72,7 +72,7 @@ class RabbitSanityTest(ha_base.RabbitSanityClass):
           3. Check crm status for rabbit
           4. List channels
         Duration: 100 s.
-        Deployment tags: Ubuntu, 2014.2-6.1
+        Deployment tags: Ubuntu
         """
         self.verify(10, self.list_nodes, 1, 'Cannot retrieve cluster nodes')
 
@@ -104,7 +104,6 @@ class RabbitSanityTest(ha_base.RabbitSanityClass):
           5. Delete queue
         Duration: 100 s.
         Available since release: 2014.2-6.1
-        Deployment tags: 2014.2-6.1
         """
         self.verify(40, self.check_rabbit_connections, 1,
                     'Cannot retrieve cluster nodes')
