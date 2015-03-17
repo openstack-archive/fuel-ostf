@@ -90,8 +90,8 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         self.check_clients_state()
         if not self.ceilometer_client:
             self.skipTest('Ceilometer is unavailable.')
-        if not self.config.compute.compute_nodes \
-                and self.config.compute.libvirt_type != 'vcenter':
+        if (not self.config.compute.compute_nodes and
+                not self.config.compute.use_vcenter):
             self.skipTest('There are no compute nodes')
 
     def create_alarm(self, **kwargs):
