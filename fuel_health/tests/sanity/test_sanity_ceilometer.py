@@ -14,6 +14,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from datetime import datetime as dt
+from datetime import timedelta as td
+
 from fuel_health import ceilometermanager
 
 
@@ -34,8 +37,10 @@ class CeilometerApiTests(ceilometermanager.CeilometerBaseTest):
         """
         fail_msg = "Meter list is unavailable."
 
+        q = [{"field": "metadata.disk_format", "op": "eq", "value": "qcow2"}]
+
         self.verify(60, self.ceilometer_client.meters.list,
-                    1, fail_msg, "Meter listing.")
+                    1, fail_msg, "Meter listing.", q)
 
         fail_msg = "Alarm list is unavailable."
 
@@ -44,5 +49,9 @@ class CeilometerApiTests(ceilometermanager.CeilometerBaseTest):
 
         fail_msg = 'Resource list is unavailable. '
 
+        an_hour_ago = (dt.now() - td(hours=1)).isoformat()
+
+        q = [{"field": "timestamp", "op": "gt", "value": an_hour_ago}]
+
         self.verify(60, self.ceilometer_client.resources.list,
-                    3, fail_msg, "Resource listing.")
+                    3, fail_msg, "Resource listing.", q)
