@@ -34,7 +34,6 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
     def test_advanced_actions(self):
         """Advanced stack actions: suspend, resume and check.
         Target component: Heat
-        Available since release: 2014.2-6.1
 
         Scenario:
             1. Create a stack.
@@ -47,6 +46,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             8. Wail until the stack status will change to 'CHECK_COMPLETE'.
             9. Delete the stack and wait for the stack to be deleted.
         Duration: 650 s.
+        Available since release: 2014.2-6.1
         """
 
         self.check_image_exists()
