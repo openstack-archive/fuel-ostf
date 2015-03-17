@@ -43,6 +43,12 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                                   'disk.write.bytes.rate',
                                   'disk.write.requests',
                                   'disk.write.requests.rate', 'instance']
+            cls.nova_vsphere_pollsters = ['instance', 'memory.usage',
+                                          'cpu_util',
+                                          'disk.read.requests.rate',
+                                          'disk.write.requests.rate',
+                                          'disk.read.bytes.rate',
+                                          'disk.write.bytes.rate']
             cls.neutron_network_notifications = ['network', 'network.create',
                                                  'network.update']
             cls.neutron_subnet_notifications = ['subnet', 'subnet.create',
