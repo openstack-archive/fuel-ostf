@@ -47,9 +47,6 @@ class TestVcenter(nmanager.NovaNetworkScenarioTest):
     def setUp(self):
         super(TestVcenter, self).setUp()
         self.check_clients_state()
-        if not self.config.compute.compute_nodes and \
-           self.config.compute.use_vcenter:
-            self.skipTest('There are no compute nodes')
 
     def tearDown(self):
         super(TestVcenter, self).tearDown()
