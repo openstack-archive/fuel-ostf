@@ -43,8 +43,11 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = "Creation instance is failed."
         msg = "Instance was created."
 
+        vcenter = self.config.compute.use_vcenter
+        image_name = 'TestVM-VMDK' if vcenter else None
+
         instance = self.verify(600, self._create_server, 1, fail_msg, msg,
-                               self.compute_client, name)
+                               self.compute_client, name, img_name=image_name)
 
         fail_msg = "Instance is not available."
         msg = "instance becoming available."
@@ -57,33 +60,38 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         msg = "Nova notifications is received."
         query = [{'field': 'resource', 'op': 'eq', 'value': instance.id}]
 
-        self.verify(600, self.wait_metrics, 3,
-                    fail_msg, msg, self.nova_notifications, query)
+        notifications = self.nova_notifications if not vcenter else []
 
-        self.nova_pollsters.append("".join(["instance:",
-                                   self.compute_client.flavors.get(
-                                   instance.flavor['id']).name]))
+        self.verify(600, self.wait_metrics, 3,
+                    fail_msg, msg, notifications, query)
+
+        pollsters = (self.nova_pollsters if not vcenter
+                     else self.nova_vsphere_pollsters)
+
+        pollsters.append("".join(["instance:",
+                                  self.compute_client.flavors.get(
+                                      instance.flavor['id']).name]))
 
         fail_msg = "Nova pollsters is not received."
         msg = "Nova pollsters is received."
         self.verify(600, self.wait_metrics, 4,
-                    fail_msg, msg, self.nova_pollsters, query)
+                    fail_msg, msg, pollsters, query)
 
-        fail_msg = "Statistic for Nova notification:vcpus is not received."
-        msg = "Statistic for Nova notification:vcpus is received."
+        fail_msg = "Statistic for Nova notification:cpu_util is not received."
+        msg = "Statistic for Nova notification:cpu_util is received."
 
-        vcpus_stat = self.verify(60, self.wait_for_statistic_of_metric, 5,
-                                 fail_msg, msg,
-                                 self.nova_notifications[1],
-                                 query)
+        cpu_util_stat = self.verify(60, self.wait_for_statistic_of_metric, 5,
+                                    fail_msg, msg,
+                                    "cpu_util",
+                                    query)
 
-        fail_msg = "Creation alarm for sum vcpus is failed."
-        msg = "Creation alarm for sum vcpus is successful."
-        threshold = vcpus_stat[0].sum - 1
+        fail_msg = "Creation alarm for sum cpu_util is failed."
+        msg = "Creation alarm for sum cpu_util is successful."
+        threshold = cpu_util_stat[0].sum - 1
 
         alarm = self.verify(60, self.create_alarm, 6,
                             fail_msg, msg,
-                            meter_name=self.nova_notifications[1],
+                            meter_name="cpu_util",
                             threshold=threshold,
                             name=rand_name('ceilometer-alarm'),
                             period=600,
