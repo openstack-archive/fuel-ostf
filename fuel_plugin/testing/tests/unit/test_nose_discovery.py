@@ -13,10 +13,13 @@
 #    under the License.
 
 from mock import Mock
+from nose import case
 
 from fuel_plugin.ostf_adapter.nose_plugin import nose_discovery
+from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
 from fuel_plugin.ostf_adapter.storage import models
 from fuel_plugin.testing.tests import base
+
 
 TEST_PATH = 'fuel_plugin/testing/fixture/dummy_tests'
 
@@ -96,7 +99,6 @@ class TestNoseDiscovery(base.BaseUnitTest):
             'deployment_tags': ['ha', 'rhel']
 
         }
-
         test = [t for t in self.tests if t.name == expected['name']][0]
 
         self.assertTrue(
@@ -198,3 +200,28 @@ class TestNoseDiscovery(base.BaseUnitTest):
             needed_test = self._find_needed_test(test['name'])
             self.assertEqual(needed_test.available_since_release,
                              test['available_since_release'])
+
+    def test_description_parsing(self):
+        test_obj = Mock(spec=case.Test)
+
+        test_obj.test._testMethodDoc = """
+        Dummy Test
+        Available since release: 2014.2-6.1
+        Duration: 180 s.
+        Scenario:
+            1. Step 1
+        Deployment tags: Dummy Tags
+        """
+
+        data = nose_utils.get_description(test_obj)
+        expected = {
+            'duration': '180 s.',
+            'title': '',
+            'deployment_tags': ['dummy tags'],
+            'available_since_release': '2014.2-6.1'
+        }
+
+        for key in expected:
+            self.assertEqual(data[key], expected[key])
+
+        self.assertNotIn('Duration', data['description'])
