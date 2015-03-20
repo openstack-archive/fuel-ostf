@@ -20,9 +20,9 @@ in test_sets table.
 '''
 __profile__ = {
     "test_runs_ordering_priority": 5,
-    "id": "cloudv",
+    "id": "cloudvalidation",
     "driver": "nose",
-    "test_path": "fuel_health/tests/cloudv",
+    "test_path": "fuel_health/tests/cloudvalidation",
     "cleanup_path": "fuel_health.cleanup",
     "description": "Cloud validation tests. Duration 30 sec - 2 min",
     "exclusive_testsets": []

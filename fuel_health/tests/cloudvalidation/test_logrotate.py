@@ -23,7 +23,7 @@ class LogRotationTest(cloudvalidation.CloudValidationTest):
     """TestClass contains log rotation test."""
 
     def test_logrotate(self):
-        """Check: log rotation configuration on all nodes
+        """Check log rotation configuration on all nodes
         Target component: Logging
 
         Scenario:
