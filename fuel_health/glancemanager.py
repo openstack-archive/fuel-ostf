@@ -13,8 +13,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import json
 import logging
+from oslo.serialization import jsonutils
 import requests
 
 import fuel_health.common.ssh
@@ -110,8 +110,8 @@ class GlanceTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         if client == self.glance_client_v1:
             for group in object.properties:
                 if group == group_props:
-                    for i in json.loads(object.properties[group]):
-                        k = json.loads(object.properties[group])[prop]
+                    for i in jsonutils.loads(object.properties[group]):
+                        k = jsonutils.loads(object.properties[group])[prop]
                         if i == prop and k == unicode(value_prop):
                             return 'OK'
                         else:
