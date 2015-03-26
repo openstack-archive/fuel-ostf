@@ -18,6 +18,7 @@ import logging
 import time
 import traceback
 
+from fuel_health import exceptions
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health import nmanager
 
@@ -152,3 +153,54 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         self.verify_response_true(expected_output in output,
                                   'Step 4 failed: '
                                   'DNS name cannot be resolved.')
+
+    def test_004_check_default_master_node_credential_usage(self):
+        """Check usage of default credentials on master node
+        Target component: Configuration
+
+        Scenario:
+            1. Check user can not ssh on master node with default credentials.
+        Duration: 20 s.
+         Available since release: 2014.2-6.1
+        """
+
+        ssh_client = SSHClient('localhost',
+                               self.usr,
+                               self.pwd,
+                               timeout=self.timeout)
+        cmd = "date"
+        output = []
+        try:
+            output = ssh_client.exec_command(cmd)
+            LOG.debug(output)
+        except exceptions.SSHExecCommandFailed:
+            self.verify_response_true(len(output) == 0,
+                                      'Step 1 failed: Default credentials for '
+                                      'ssh on master node were not changed')
+        except exceptions.TimeoutException:
+            self.verify_response_true(len(output) == 0,
+                                      'Step 1 failed: Default credentials for '
+                                      'ssh on master node were not changed')
+
+        self.verify_response_true(len(output) == 0,
+                                  'Step 1 failed: Default credentials for '
+                                  'ssh on master node were not changed')
+
+    def test_005_check_default_openstack_credential_usage(self):
+        """Check usage of default credentials Openstack cluster
+        Target component: Configuration
+
+        Scenario:
+            1. Check default credentials for Openstack cluster are changed.
+        Duration: 20 s.
+         Available since release: 2014.2-6.1
+        """
+        cluster_data = {
+            'password': self.config.identity.admin_password,
+            'username': self.config.identity.admin_username,
+            'tenant': self.config.identity.admin_tenant_name}
+
+        for key in cluster_data:
+            self.verify_response_true('admin' not in cluster_data[key],
+                                      'Step 1 failed: Default {0} value is using. '
+                                      'We kindly recommends to change all defaults'.format(key))
