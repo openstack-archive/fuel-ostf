@@ -13,9 +13,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import contextlib
 import logging
+import os
 import time
 import traceback
+import zipfile
 
 from oslo.serialization import jsonutils
 
@@ -32,6 +35,11 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
     """Manager that provides access to the Murano python client for
     calling Murano API.
     """
+    @classmethod
+    def setUpClass(cls):
+        super(MuranoTest, cls).setUpClass()
+        cls.packages = []
+        cls.environments = []
 
     def setUp(self):
         super(MuranoTest, self).setUp()
@@ -60,14 +68,36 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         """
 
         if self.murano_available:
-            for env in self.list_environments()["environments"]:
-                if self.env_name in env["name"]:
+            if self.environments:
+                for environment in self.environments:
                     try:
-                        self.delete_environment(env["id"])
+                        self.delete_environment(environment["id"])
+                    except Exception:
+                        LOG.warning(traceback.format_exc())
+            if self.packages:
+                for package in self.packages:
+                    try:
+                        self.delete_package(package.id)
                     except Exception:
                         LOG.warning(traceback.format_exc())
 
         super(MuranoTest, self).tearDown()
+
+    def zip_dir(self, parent_dir, app_dir):
+        """This method allows to zip directory with application
+        :param parent_dir: Directory, where application lives
+        :param app_dir: Directory with application
+        :return:
+        """
+        abs_path = os.path.join(parent_dir, app_dir)
+        path_len = len(abs_path) + 1
+        zip_file = abs_path + ".zip"
+        with contextlib.closing(zipfile.ZipFile(zip_file, "w")) as zf:
+            for dir_name, _, files in os.walk(abs_path):
+                for filename in files:
+                    fn = os.path.join(dir_name, filename)
+                    zf.write(fn, fn[path_len:])
+        return zip_file
 
     def find_murano_image(self, image_type):
         """This method allows to find Windows images with Murano tag.
@@ -108,7 +138,10 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         resp = requests.post(self.endpoint + 'environments',
                              data=jsonutils.dumps(post_body),
                              headers=self.headers)
-        return resp.json()
+        self.assertEqual(200, resp.status_code)
+        environment = resp.json()
+        self.environments.append(environment)
+        return environment
 
     def get_environment(self, environment_id):
         """This method allows to get specific environment by ID.
@@ -148,6 +181,28 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         endpoint = '{0}environments/{1}'.format(self.endpoint, environment_id)
         resp = requests.delete(endpoint, headers=self.headers)
         return resp
+
+    def environment_delete_check(self, environment_id, timeout=60):
+        resp = requests.get('{0}environments/{1}'.format(self.endpoint,
+                                                         environment_id),
+                            headers=self.headers)
+        self.delete_environment(environment_id)
+        point = time.time()
+        while resp.status_code == 200:
+            if time.time() - point > timeout:
+                self.fail("Can't delete environment more than {0} seconds".
+                          format(timeout))
+            resp = requests.get('{0}environments/{1}'.format(self.endpoint,
+                                                             environment_id),
+                                headers=self.headers)
+            try:
+                env = resp.json()
+                if env["status"] == "delete failure":
+                    self.fail("Environment status: {0}".format(env["status"]))
+            except Exception:
+                LOG.debug("Failed to get environment status "
+                          "or environment no more exists")
+            time.sleep(5)
 
     def create_session(self, environment_id):
         """This method allows to create session for environment.
@@ -296,14 +351,14 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
                                                             environment_id)
         deployments = requests.get(endpoint,
                                    headers=self.headers).json()['deployments']
-        for depl in deployments:
+        for deployment in deployments:
             # Save the information about all deployments
-            LOG.debug("Environment state: {0}".format(depl['state']))
-            r = requests.get('{0}/{1}'.format(endpoint, depl['id']),
+            LOG.debug("Environment state: {0}".format(deployment['state']))
+            r = requests.get('{0}/{1}'.format(endpoint, deployment['id']),
                              headers=self.headers).json()
             LOG.debug("Reports: {0}".format(r))
 
-            self.assertEqual('success', depl['state'])
+            self.assertEqual('success', deployment['state'])
         return 'OK'
 
     def ports_check(self, environment, ports):
@@ -328,6 +383,43 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
         self.assertEqual(200, resp.status_code)
         self.assertIsInstance(resp.json()['packages'], list)
+
+    def upload_package(self, package_name, body, app):
+        files = {'%s' % package_name: open(app, 'rb')}
+        package = self.murano_client.packages.create(body, files)
+        self.packages.append(package)
+        return package
+
+    def package_exists(self, *packages):
+        resp = requests.get(self.endpoint + 'catalog/packages',
+                            headers=self.headers)
+        LOG.debug("Response for packages is {0}".format(resp.text))
+        for package in packages:
+            if package not in resp.text:
+                return False
+        return True
+
+    def get_package(self, package_id):
+        resp = requests.get(self.endpoint + 'catalog/packages/{0}'.
+                            format(package_id), headers=self.headers)
+        self.assertEqual(200, resp.status_code)
+        return resp.json()
+
+    def get_package_by_fqdn(self, package_name):
+        resp = requests.get(self.endpoint + 'catalog/packages',
+                            headers=self.headers)
+        for package in resp.json()["packages"]:
+            if package["fully_qualified_name"] == package_name:
+                return package
+
+    def delete_package(self, package_id):
+        resp = requests.delete(self.endpoint + 'catalog/packages/{0}'.
+                               format(package_id), headers=self.headers)
+        try:
+            self.assertEqual(200, resp.status_code)
+        except Exception:
+            self.assertEqual(404, resp.status_code)
+            LOG.debug("Package not exists.")
 
     def get_list_categories(self):
         resp = requests.get(self.endpoint + 'catalog/packages/categories',
