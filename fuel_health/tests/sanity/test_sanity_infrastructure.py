@@ -18,6 +18,7 @@ import logging
 import time
 import traceback
 
+from fuel_health import exceptions
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health import nmanager
 
