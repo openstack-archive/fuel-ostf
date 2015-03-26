@@ -289,14 +289,7 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         self.neutron_client.delete_network(net["id"])
         return net, subnet, port, router, flip
 
-    def sahara_helper(self):
-        #  Find Sahara image
-        image_id = None
-        for image in self.compute_client.images.list():
-            if ('_sahara_tag_vanilla' in image.metadata
-                    and '_sahara_tag_1.2.1' in image.metadata):
-                image_id = image.id
-
+    def sahara_helper(self, image_id, plugin_name, hadoop_version):
         #  Find flavor id for sahara instances
         flavor_id = next(
             flavor.id for flavor in
@@ -305,15 +298,17 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         #  Create json for node grou
         node_group = {'name': 'all-in-one',
                       'flavor_id': flavor_id,
-                      'node_processes': ['namenode', 'jobtracker',
-                                         'tasktracker', 'datanode'],
+                      'node_processes': ['nodemanager', 'datanode',
+                                         'resourcemanager', 'namenode',
+                                         'historyserver'],
                       'count': 1,
-                      'floating_ip_pool': self.floating_ip_pool}
+                      'floating_ip_pool': self.floating_ip_pool,
+                      'auto_security_group': True}
 
         #  Create json for Sahara cluster
         cluster_json = {'name': rand_name("ceilo-cluster"),
-                        'plugin_name': "vanilla",
-                        'hadoop_version': "1.2.1",
+                        'plugin_name': plugin_name,
+                        'hadoop_version': hadoop_version,
                         'default_image_id': image_id,
                         'cluster_configs': {},
                         'node_groups': [node_group],
