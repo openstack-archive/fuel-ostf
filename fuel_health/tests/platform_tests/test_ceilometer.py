@@ -14,9 +14,11 @@
 
 from fuel_health import ceilometermanager
 from fuel_health.common.utils.data_utils import rand_name
+from fuel_health import saharamanager
 
 
-class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
+class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest,
+                                 saharamanager.SaharaTestsManager):
     """TestClass contains tests that check basic Ceilometer functionality."""
 
     def test_check_alarm_state(self):
@@ -348,11 +350,25 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         Deployment tags: Ceilometer, Sahara
         """
 
-        cluster = self.sahara_helper()
+        plugin_name = 'vanilla'
+        hadoop_version = '2.4.1'
 
-        fail_msg = "Sahara cluster notifications are not received."
-        msg = "Sahara cluster notifications are received."
+        fail_msg = "Sahara image is not correctly registered or it is not " \
+                   "registered at all. Correct image for Sahara not found."
+        msg = "Image was found and registered for Sahara."
+
+        image_id = self.verify(60, self.find_and_check_image, 1,
+                               fail_msg, msg, plugin_name, hadoop_version)
+
+        fail_msg = "Creation Sahara cluster was failed."
+        msg = "Sahara cluster was created"
+
+        cluster = self.verify(60, self.sahara_helper, 2,
+                              fail_msg, msg, image_id)
+
+        fail_msg = "Sahara cluster notifications were not received."
+        msg = "Sahara cluster notifications were received."
         query = [{'field': 'resource', 'op': 'eq', 'value': cluster.id}]
-        self.verify(60, self.wait_metrics, 1,
+        self.verify(60, self.wait_metrics, 3,
                     fail_msg, msg,
                     self.sahara_cluster_notifications, query)

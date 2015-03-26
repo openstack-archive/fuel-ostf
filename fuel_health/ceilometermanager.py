@@ -289,14 +289,7 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         self.neutron_client.delete_network(net["id"])
         return net, subnet, port, router, flip
 
-    def sahara_helper(self):
-        #  Find Sahara image
-        image_id = None
-        for image in self.compute_client.images.list():
-            if ('_sahara_tag_vanilla' in image.metadata
-                    and '_sahara_tag_1.2.1' in image.metadata):
-                image_id = image.id
-
+    def sahara_helper(self, image_id):
         #  Find flavor id for sahara instances
         flavor_id = next(
             flavor.id for flavor in
