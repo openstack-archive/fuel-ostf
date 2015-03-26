@@ -13,6 +13,7 @@
 # under the License.
 
 import logging
+import os
 import uuid
 
 from fuel_health import muranomanager
@@ -36,9 +37,9 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
         super(MuranoDeployLinuxServicesTests, self).setUp()
         self.check_clients_state()
 
-        doc_link = ('http://docs.mirantis.com/openstack/fuel/'
-                    'fuel-{0}/user-guide.html#platform-tests-'
-                    'description'.format(self.config.fuel.fuel_version))
+        self.doc_link = ('http://docs.mirantis.com/openstack/fuel/'
+                         'fuel-{0}/user-guide.html#platform-tests-'
+                         'description'.format(self.config.fuel.fuel_version))
 
         max_free_ram_mb = (
             self.get_max_free_compute_node_ram(self.min_required_ram_mb))
@@ -52,13 +53,8 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
             self.skipTest(msg)
 
         self.image = self.find_murano_image('linux')
-        if not self.image:
-            msg = ('Murano image was not properly registered or was not '
-                   'uploaded at all. Please refer to the Mirantis OpenStack '
-                   'documentation ({0}) to find out how to upload and/or '
-                   'register image for Murano.'.format(doc_link))
-            LOG.debug(msg)
-            self.skipTest(msg)
+
+        self.dummy_fqdn = 'io.murano.apps.Simple'
 
         self.flavor_name = rand_name("ostf_test_Murano_flavor")
         flavor = self.compute_client.flavors.create(
@@ -67,6 +63,103 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
 
     def tearDown(self):
         super(MuranoDeployLinuxServicesTests, self).tearDown()
+
+    def test_deploy_dummy_app(self):
+        """Check that user can deploy application in Murano environment
+        Target component: Murano
+
+        Scenario:
+            1. Prepare test app.
+            2. Upload test app.
+            3. Send request to create environment.
+            4. Send request to create session for environment.
+            5. Send request to create test service.
+            6. Send request to deploy session.
+            7. Checking environment status.
+            8. Checking deployment status.
+            9. Send request to delete environment.
+            10. Send request to delete package.
+
+        Duration: 1200 s.
+        Deployment tags: Murano, Heat
+        Available since release: 2014.2-6.1
+        """
+
+        if self.package_exists(self.dummy_fqdn):
+            package=self.get_package_by_fqdn(self.dummy_fqdn)
+            self.delete_package(package["id"])
+
+        fail_msg = ("Package preparation failed. Please refer to "
+                    "OSTF logs for more information")
+        zip_path = self.verify(10, self.zip_dir, 1, fail_msg, 'prepare package',
+                               os.path.dirname(__file__), self.dummy_fqdn)
+
+        fail_msg = ("Package uploading failed. "
+                    "Please refer to Openstack and OSTF logs")
+        self.package = self.verify(10, self.upload_package, 2, fail_msg,
+                                   'uploading package', 'SimpleApp',
+                                   {"categories": ["Web"], "tags": ["tag"]},
+                                   zip_path)
+
+        fail_msg = "Can't create environment. Murano API is not available. "
+        self.environment = self.verify(15, self.create_environment,
+                                       3, fail_msg, 'creating environment',
+                                       self.env_name)
+
+        fail_msg = "User can't create session for environment. "
+        session = self.verify(5, self.create_session,
+                              4, fail_msg, "session creating",
+                              self.environment['id'])
+
+        post_body = {
+            "instance": {
+                "flavor": self.flavor_name,
+                "image": "TestVM",
+                "assignFloatingIp": True,
+                "?": {
+                    "type": "io.murano.resources.LinuxMuranoInstance",
+                    "id": str(uuid.uuid4())
+                },
+                "name": rand_name("testMurano")
+            },
+            "name": rand_name("teMurano"),
+            "?": {
+                "_{id}".format(id=uuid.uuid4().hex): {
+                    "name": "SimpleApp"
+                },
+                "type": self.dummy_fqdn,
+                "id": str(uuid.uuid4())
+            }
+        }
+
+        fail_msg = "User can't create service. "
+        self.verify(5, self.create_service,
+                    5, fail_msg, "service creating",
+                    self.environment['id'], session['id'], post_body)
+
+        fail_msg = "User can't deploy session. "
+        self.verify(5, self.deploy_session,
+                    6, fail_msg,
+                    "sending session on deployment",
+                    self.environment['id'], session['id'])
+
+        fail_msg = "Deployment was not completed correctly. "
+        self.verify(860, self.deploy_check,
+                    7, fail_msg, 'deployment is going',
+                    self.environment['id'])
+
+        self.verify(5, self.deployments_status_check, 8, fail_msg,
+                    'Check deployments status',
+                    self.environment['id'])
+
+        fail_msg = "Can't delete environment. "
+        self.verify(5, self.delete_environment,
+                    9, fail_msg, "deleting environment",
+                    self.environment['id'])
+
+        fail_msg = "Can't delete package"
+        self.verify(5, self.delete_package, 10, fail_msg, "deleting_package",
+                    self.package.id)
 
     def test_deploy_apache_service(self):
         """Check that user can deploy Apache service in Murano environment
@@ -83,9 +176,22 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
             8. Send request to delete environment.
 
         Duration: 2140 s.
-
         Deployment tags: Murano, Heat
+        Available since release: 2014.2-6.0
         """
+
+        if not self.image:
+            msg = ('Murano image was not properly registered or was not '
+                   'uploaded at all. Please refer to the Mirantis OpenStack '
+                   'documentation ({0}) to find out how to upload and/or '
+                   'register image for Murano.'.format(self.doc_link))
+            LOG.debug(msg)
+            self.skipTest(msg)
+
+        if not self.package_exists('io.murano.apps.apache.ApacheHttpServer'):
+            self.skipTest("This test requires Apache HTTP Server application."
+                          "Please add this application to Murano "
+                          "and run this test again.")
 
         fail_msg = "Can't create environment. Murano API is not available. "
         self.environment = self.verify(15, self.create_environment,
@@ -166,9 +272,17 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
             10. Send request to delete environment.
 
         Duration: 2140 s.
-
         Deployment tags: Murano, Heat
+        Available since release: 2014.2-6.1
         """
+        if not self.package_exists('io.murano.apps.apache.ApacheHttpServer',
+                                   'io.murano.databases.MySql',
+                                   'io.murano.apps.WordPress'):
+            self.skipTest("This test requires Apache HTTP Server, "
+                          "MySQL database and WordPress applications."
+                          "Please add this applications to Murano and "
+                          "run this test again.")
+
         fail_msg = "Can't create environment. Murano API is not available. "
         self.environment = self.verify(15, self.create_environment,
                                        1, fail_msg, 'creating environment',
