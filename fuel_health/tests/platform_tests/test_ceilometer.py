@@ -343,16 +343,36 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         Target component: Ceilometer
 
         Scenario:
-        1. Check Sahara cluster notifications.
-        Duration: 5 s.
+        1. Find and check Sahara image
+        2. Create Sahara cluster
+        3. Check Sahara cluster notification
+        Duration: 40 s.
         Deployment tags: Ceilometer, Sahara
         """
 
-        cluster = self.sahara_helper()
+        plugin_name = 'vanilla'
+        hadoop_version = '2.4.1'
 
-        fail_msg = "Sahara cluster notifications are not received."
-        msg = "Sahara cluster notifications are received."
+        fail_msg = ("Sahara image is not correctly registered or it is not "
+                    "registered at all. Correct image for Sahara not found.")
+        msg = "Image was found and registered for Sahara."
+
+        image_id = self.verify(60, self.find_and_check_image, 1,
+                               fail_msg, msg, plugin_name, hadoop_version)
+
+        if image_id is None:
+            self.skipTest('Image for creating Sahara cluster not found')
+
+        fail_msg = "Creation of Sahara cluster failed."
+        msg = "Sahara cluster was created"
+
+        cluster = self.verify(60, self.sahara_helper, 2,
+                              fail_msg, msg,
+                              image_id, plugin_name, hadoop_version)
+
+        fail_msg = "Sahara cluster notifications were not received."
+        msg = "Sahara cluster notifications were received."
         query = [{'field': 'resource', 'op': 'eq', 'value': cluster.id}]
-        self.verify(60, self.wait_metrics, 1,
+        self.verify(60, self.wait_metrics, 3,
                     fail_msg, msg,
                     self.sahara_cluster_notifications, query)
