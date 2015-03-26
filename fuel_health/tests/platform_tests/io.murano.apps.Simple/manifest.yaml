@@ -1,0 +1,11 @@
+Format: 1.0
+Type: Application
+FullName: io.murano.apps.Simple
+Name: SimpleApp
+Description: |
+ Simple Test Application.
+ This app initiates VM installation, but doesn't require Murano Agent
+Author: 'Mirantis, Inc'
+Tags: [App, Test, HelloWorld]
+Classes:
+ io.murano.apps.Simple: Simple.yaml

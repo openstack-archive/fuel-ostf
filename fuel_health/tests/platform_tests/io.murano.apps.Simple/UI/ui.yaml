@@ -1,0 +1,53 @@
+Version: 2
+
+Application:
+  ?:
+    type: io.murano.apps.Simple
+  name: $.appConfiguration.name
+
+  instance:
+    ?:
+      type: io.murano.resources.LinuxMuranoInstance
+    name: generateHostname($.appConfiguration.unitNamingPattern, 1)
+    image: $.appConfiguration.osImage
+    keyname: $.appConfiguration.keyPair
+    flavor: $.appConfiguration.flavor
+
+Forms:
+  - appConfiguration:
+      fields:
+        - name: name
+          initial: SimpleVM
+          type: string
+          label: Application Name
+          description: >-
+            Enter a desired name for the application. Just A-Z, a-z, 0-9, dash and
+            underline are allowed
+        - name: flavor
+          type: flavor
+          label: Instance flavor
+          description: >-
+            Select registered in Openstack flavor. Consider that application performance
+            depends on this parameter.
+        - name: osImage
+          type: image
+          imageType: linux
+          label: Instance image
+          description: >-
+            Select a valid image for the application. Image should already be prepared and
+            registered in glance.
+        - name: keyPair
+          type: keypair
+          hidden: true
+          label: Key Pair
+          description: >-
+            Select a Key Pair to control access to instances. You can login to
+            instances using this KeyPair after the deployment of application.
+          required: false
+        - name: unitNamingPattern
+          label: Instance Name Pattern
+          type: string
+          required: false
+          widgetMedia:
+            js: ['muranodashboard/js/support_placeholder.js']
+            css: {all: ['muranodashboard/css/support_placeholder.css']}
