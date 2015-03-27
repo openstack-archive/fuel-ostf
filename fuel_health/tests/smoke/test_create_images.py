@@ -49,12 +49,12 @@ class GlanceSmokeTests(glancemanager.GlanceTest):
                     'Checking internet connection', "8.8.8.8", 10, (1, 5))
 
         fail_msg = "Cirros image is not available in public network storage."
-        self.verify(5, self.check_image_exists_in_network, 2, fail_msg,
+        self.verify(30, self.check_image_exists_in_network, 2, fail_msg,
                     'Checking that image exists in network storage')
 
         fail_msg = ("Error creating image. Please refer to Openstack logs "
                     "for more information.")
-        self.image = self.verify(5, self.image_create, 3, fail_msg,
+        self.image = self.verify(15, self.image_create, 3, fail_msg,
                                  'Image creation', self.glance_client_v1)
 
         fail_msg = ("Image status is incorrect. Please refer to "
@@ -73,13 +73,13 @@ class GlanceSmokeTests(glancemanager.GlanceTest):
 
         fail_msg = ("Can't update image with properties. Please refer to "
                     "Openstack logs for more information.")
-        self.verify(5, self.update_image, 6, fail_msg, 'Updating image',
+        self.verify(15, self.update_image, 6, fail_msg, 'Updating image',
                     self.glance_client_v1, self.image, group_props, prop,
                     value_prop)
 
         fail_msg = ("Can't find appended properties. Please refer to "
                     "OSTF logs for more information.")
-        self.verify(5, self.find_props, 7, fail_msg, 'Finding properties',
+        self.verify(15, self.find_props, 7, fail_msg, 'Finding properties',
                     self.glance_client_v1, self.image, group_props, prop,
                     value_prop)
 
@@ -110,7 +110,7 @@ class GlanceSmokeTests(glancemanager.GlanceTest):
 
         fail_msg = ("Image status is incorrect. Please refer to "
                     "Openstack logs for more information.")
-        self.verify(10, self.check_image_status, 2, fail_msg,
+        self.verify(30, self.check_image_status, 2, fail_msg,
                     'Checking image status', self.glance_client, self.image)
 
         fail_msg = ("Image doesn't appear at list. Please refer to "
