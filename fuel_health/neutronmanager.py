@@ -121,21 +121,27 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
         for router in cls.routers:
             try:
-                cls._remove_router(router, cls.routers[router])
+                cls.neutron_client.remove_gateway_router(
+                    cls.routers[router])
             except Exception as exc:
                 cls.error_msg.append(exc)
                 LOG.debug(traceback.format_exc())
 
         for subnet in cls.subnets:
             try:
-                cls._remove_subnet(subnet)
+                cls.neutron_client.delete_subnet(subnet['id'])
             except Exception as exc:
                 cls.error_msg.append(exc)
                 LOG.debug(traceback.format_exc())
 
         for network in cls.networks:
             try:
-                cls._remove_network(network)
+                cls.neutron_client.delete_network(network['id'])
             except Exception as exc:
                 cls.error_msg.append(exc)
                 LOG.debug(traceback.format_exc())
+
+    @classmethod
+    def tearDownClass(cls):
+        super(NeutronBaseTest, cls)
+        cls._clear_networks()
