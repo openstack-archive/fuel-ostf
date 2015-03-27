@@ -52,6 +52,7 @@ import cinderclient.client
 import glanceclient.client
 import keystoneclient
 import novaclient.client
+import novaclient.exceptions as nova_exc
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.common.utils.data_utils import rand_int_id
@@ -423,6 +424,10 @@ class OfficialClientTest(fuel_health.test.TestCase):
                       "'admin' tenant."
                       .format(image=self.manager.config.compute.image_name)
                       )
+        except nova_exc.ClientException:
+            LOG.debug(traceback.format_exc())
+            self.fail("Image can not be retrieved. "
+                      "Please refer to OpenStack logs for more details")
 
     @classmethod
     def _clean_flavors(cls):
