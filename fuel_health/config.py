@@ -258,6 +258,9 @@ VolumeGroup = [
     cfg.BoolOpt('cinder_node_exist',
                 default=True,
                 help="Allow to run tests if cinder exist"),
+    cfg.BoolOpt('cinder_vmware_node_exist',
+                default=True,
+                help="Allow to run tests if cinder-vmware exist"),
     cfg.BoolOpt('ceph_exist',
                 default=True,
                 help="Allow to run tests if ceph exist"),
@@ -270,6 +273,9 @@ VolumeGroup = [
     cfg.StrOpt('backend2_name',
                default='BACKEND_2',
                help="Name of the backend2 (must be declared in cinder.conf)"),
+    cfg.StrOpt('cinder_vmware_storage_az',
+               default='vcenter',
+               help="Name of storage availability zone for cinder-vmware."),
 ]
 
 
@@ -537,6 +543,8 @@ class NailgunConfig(object):
             LOG.info('set proxy successful')
             self._parse_cluster_generated_data()
             LOG.info('parse generated successful')
+            self._parse_vmware_attributes()
+            LOG.info('parse vmware attributes successful')
         except exceptions.SetProxy as exc:
             raise exc
         except Exception:
@@ -604,6 +612,8 @@ class NailgunConfig(object):
                          node['online'] is True, data)
         cinder_nodes = filter(lambda node: 'cinder' in node['roles'],
                               data)
+        cinder_vmware_nodes = filter(lambda node: 'cinder-vmware' in
+                                     node['roles'], data)
         controller_ips = []
         conntroller_names = []
         public_ips = []
@@ -625,6 +635,8 @@ class NailgunConfig(object):
         self.compute.online_controllers = online_controllers_ips
         if not cinder_nodes:
             self.volume.cinder_node_exist = False
+        if not cinder_vmware_nodes:
+            self.volume.cinder_vmware_node_exist = False
 
         compute_nodes = filter(lambda node: 'compute' in node['roles'],
                                data)
@@ -679,6 +691,13 @@ class NailgunConfig(object):
         data = response.json()
         self.identity.url = data['horizon_url'] + 'dashboard'
         self.identity.uri = data['keystone_url'] + 'v2.0/'
+
+    def _parse_vmware_attributes(self):
+        if self.volume.cinder_vmware_node_exist:
+            api_url = '/api/clusters/%s/vmware_attributes' % self.cluster_id
+            data = self.req_session.get(self.nailgun_url + api_url).json()
+            az = data['editable']['value']['availability_zones'][0]['az_name']
+            self.volume.cinder_vmware_storage_az = "{0}-cinder".format(az)
 
     def find_proxy(self, ip):
 
