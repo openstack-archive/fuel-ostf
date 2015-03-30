@@ -1,0 +1,30 @@
+Namespaces:
+  =: io.murano.apps
+  std: io.murano
+  sys: io.murano.system
+  res: io.murano.resources
+
+
+Name: Simple
+
+Extends: std:Application
+
+Properties:
+  name:
+    Contract: $.string().notNull()
+  instance:
+    Contract: $.class(res:Instance).notNull()
+
+Methods:
+  initialize:
+    Body:
+      - $.environment: $.find(std:Environment).require()
+
+  deploy:
+    Body:
+      - If: not $.getAttr(deployed, false)
+        Then:
+          - $.environment.reporter.report($this, 'Starting SimpleApp deployment!')
+          - $.instance.deploy()
+          - $.environment.reporter.report($this, 'SimpleApp deployment is finished')
+          - $.setAttr(deployed, true)
