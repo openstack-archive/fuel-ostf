@@ -15,6 +15,7 @@
 # under the License.
 
 import logging
+import socket
 import time
 import traceback
 
@@ -720,11 +721,17 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 if 'neutron' in self.config.network.network_provider:
                     return self.host[0]
                 else:
-                    services = self.compute_client.services.list()
-                    net_service = filter(
-                        lambda n: n.__dict__['binary'] == u'nova-network',
-                        services)[0]
-                    return net_service.__dict__['host']
+                    command = "pcs status|grep nova-network|awk {'print $4'}"
+                    ssh = SSHClient(self.host[0],
+                                    self.usr, self.pwd,
+                                    key_filename=self.key,
+                                    timeout=timeout)
+                    n_net_nodename = self.retry_command(retries[0],
+                                                        retries[1],
+                                                        ssh.exec_command,
+                                                        cmd=command).strip()
+                    get_n_net_nodename = socket.gethostbyname(n_net_nodename)
+                    return get_n_net_nodename
 
             if not (self.host or viaHost):
                 self.fail('Wrong tests configurations, one from the next '
