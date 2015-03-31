@@ -207,6 +207,7 @@ class TestVcenter(nmanager.NovaNetworkScenarioTest):
         name = rand_name('ost1_test-server-smoke-')
         security_groups = [self.security_groups[self.tenant_id].name]
         img_name = 'TestVM-VMDK'
+        compute = None
 
         server = self.verify(
             250, self._create_server, 2,
@@ -218,10 +219,6 @@ class TestVcenter(nmanager.NovaNetworkScenarioTest):
             for addr in server.addresses:
                 if addr.startswith('novanetwork'):
                     instance_ip = server.addresses[addr][0]['addr']
-            if self.config.compute.libvirt_type != 'vcenter':
-                compute = getattr(server, 'OS-EXT-SRV-ATTR:host')
-            else:
-                compute = None
         except Exception:
             LOG.debug(traceback.format_exc())
             self.fail("Step 3 failed: cannot get instance details. "
