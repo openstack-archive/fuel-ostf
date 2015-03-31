@@ -20,10 +20,10 @@ import fuel_health.test
 LOG = logging.getLogger(__name__)
 
 
-class TestMysqlSanity(fuel_health.test.BaseTestCase):
+class TestMysqlStatus(fuel_health.test.BaseTestCase):
     @classmethod
     def setUpClass(cls):
-        super(TestMysqlSanity, cls).setUpClass()
+        super(TestMysqlStatus, cls).setUpClass()
         cls.controller_ip = cls.config.compute.online_controllers[0]
         cls.controllers = cls.config.compute.online_controllers
         cls.controller_key = cls.config.compute.path_to_private_key
@@ -32,7 +32,7 @@ class TestMysqlSanity(fuel_health.test.BaseTestCase):
         cls.master_ip = []
 
     def setUp(self):
-        super(TestMysqlSanity, self).setUp()
+        super(TestMysqlStatus, self).setUp()
         if 'ha' not in self.config.compute.deployment_mode:
             self.skipTest('Cluster is not HA mode, skipping tests')
         if len(self.controllers) == 1:
