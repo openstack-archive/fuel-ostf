@@ -274,8 +274,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             for addr in server.addresses:
                 if addr.startswith('novanetwork'):
                     instance_ip = server.addresses[addr][0]['addr']
-            if self.config.compute.libvirt_type != 'vcenter':
-                compute = getattr(server, 'OS-EXT-SRV-ATTR:host')
             else:
                 compute = None
         except Exception:
