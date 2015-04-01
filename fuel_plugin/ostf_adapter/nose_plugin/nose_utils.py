@@ -52,7 +52,8 @@ def _process_docstring(docstring, pattern):
 
     if pattern_matcher:
         value = pattern_matcher.group(1)
-        docstring = docstring[:pattern_matcher.start()]
+        docstring = (docstring[:pattern_matcher.start()] +
+                     docstring[pattern_matcher.end():])
     else:
         value = None
 
