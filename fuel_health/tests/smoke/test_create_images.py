@@ -32,39 +32,29 @@ class GlanceSmokeTests(glancemanager.GlanceTest):
         Target component: Glance
 
         Scenario:
-            1.Checking Internet connection
-            2.Checking that image exists in network storage
-            3.Send request to create image via URL
-            4.Checking image status
-            5.Check that image was created successfully
-            6.Update image with properties
-            7.Check that properties was updated successfully
-            8.Delete image
+            1.Create image
+            2.Checking image status
+            3.Check that image was created successfully
+            4.Update image with properties
+            5.Check that properties was updated successfully
+            6.Delete image
 
         Duration: 130 s.
         Available since release: 2014.2-6.1
         """
-        fail_msg = "Internet connection error."
-        self.verify(10, self._ping_ip_address, 1, fail_msg,
-                    'Checking internet connection', "8.8.8.8", 10, (1, 5))
-
-        fail_msg = "Cirros image is not available in public network storage."
-        self.verify(30, self.check_image_exists_in_network, 2, fail_msg,
-                    'Checking that image exists in network storage')
-
         fail_msg = ("Error creating image. Please refer to Openstack logs "
                     "for more information.")
-        self.image = self.verify(15, self.image_create, 3, fail_msg,
+        self.image = self.verify(100, self.image_create, 1, fail_msg,
                                  'Image creation', self.glance_client_v1)
 
         fail_msg = ("Image status is incorrect. Please refer to "
                     "Openstack logs for more information.")
-        self.verify(200, self.check_image_status, 4, fail_msg,
+        self.verify(200, self.check_image_status, 2, fail_msg,
                     'Checking image status', self.glance_client_v1, self.image)
 
         fail_msg = ("Image doesn't appear at list. Please refer to "
                     "Openstack logs for more information.")
-        self.verify(10, self.find_image_by_id, 5, fail_msg, 'Finding image',
+        self.verify(10, self.find_image_by_id, 3, fail_msg, 'Finding image',
                     self.glance_client_v1, self.image.id)
 
         group_props = rand_name("ostf_test")
@@ -73,19 +63,19 @@ class GlanceSmokeTests(glancemanager.GlanceTest):
 
         fail_msg = ("Can't update image with properties. Please refer to "
                     "Openstack logs for more information.")
-        self.verify(15, self.update_image, 6, fail_msg, 'Updating image',
+        self.verify(15, self.update_image, 4, fail_msg, 'Updating image',
                     self.glance_client_v1, self.image, group_props, prop,
                     value_prop)
 
         fail_msg = ("Can't find appended properties. Please refer to "
                     "OSTF logs for more information.")
-        self.verify(15, self.find_props, 7, fail_msg, 'Finding properties',
+        self.verify(15, self.find_props, 5, fail_msg, 'Finding properties',
                     self.glance_client_v1, self.image, group_props, prop,
                     value_prop)
 
         fail_msg = ("Cant delete image. Please refer to Openstack logs "
                     "for more information.")
-        self.verify(10, self.delete_image, 8, fail_msg, 'Deleting image',
+        self.verify(10, self.delete_image, 6, fail_msg, 'Deleting image',
                     self.glance_client_v1, self.image)
 
     def test_create_and_delete_image_v2(self):
