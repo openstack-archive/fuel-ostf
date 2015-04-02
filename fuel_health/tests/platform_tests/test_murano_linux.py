@@ -276,6 +276,15 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
         Deployment tags: Murano, Heat
         Available since release: 2014.2-6.1
         """
+
+        if not self.image:
+            msg = ('Murano image was not properly registered or was not '
+                   'uploaded at all. Please refer to the Mirantis OpenStack '
+                   'documentation ({0}) to find out how to upload and/or '
+                   'register image for Murano.'.format(self.doc_link))
+            LOG.debug(msg)
+            self.skipTest(msg)
+
         if not self.package_exists('io.murano.apps.apache.ApacheHttpServer',
                                    'io.murano.databases.MySql',
                                    'io.murano.apps.WordPress'):
