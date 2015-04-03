@@ -825,6 +825,30 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             "Timed out waiting for %s to become reachable. "
             "Please, check Network configuration" % ip_address)
 
+    def get_compute_hostname(self):
+        return self.compute_client.hypervisors.list()
+
+    def get_instance_details(self, instance):
+        return self.compute_client.servers.get(instance)
+
+    def get_instance_host(self, instance):
+        return getattr(self.get_instance_details(instance),
+                       "OS-EXT-SRV-ATTR:host")
+
+    def get_free_host(self, instance):
+        current_host = self.get_instance_host(instance)
+        LOG.debug('Current host is {0}'.format(current_host))
+        available_hosts = self.get_compute_hostname()
+        for host in available_hosts:
+            if host.hypervisor_hostname != current_host:
+                return host.hypervisor_hostname
+
+    def migrate_instance(self, instance, host_to):
+        instance.live_migrate(host_to)
+        self.status_timeout(self.compute_client.servers,
+                            instance.id, 'ACTIVE')
+        return instance
+
     @classmethod
     def tearDownClass(cls):
         super(NovaNetworkScenarioTest, cls).tearDownClass()
