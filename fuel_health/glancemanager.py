@@ -15,7 +15,8 @@
 
 import logging
 from oslo.serialization import jsonutils
-import requests
+import random
+import StringIO
 
 import fuel_health.common.ssh
 from fuel_health.common.utils.data_utils import rand_name
@@ -34,8 +35,6 @@ class GlanceTest(fuel_health.nmanager.NovaNetworkScenarioTest):
     @classmethod
     def setUpClass(cls):
         super(GlanceTest, cls).setUpClass()
-        cls.image_url = ('http://download.cirros-cloud.net/0.3.3/'
-                         'cirros-0.3.3-x86_64-disk.img')
         cls.images = []
         if cls.manager.clients_initialized:
             if not cls.glance_client_v1:
@@ -53,20 +52,16 @@ class GlanceTest(fuel_health.nmanager.NovaNetworkScenarioTest):
     def _list_images(self, client):
         return client.images.list()
 
-    def check_image_exists_in_network(self):
-        resp = requests.head(self.image_url, allow_redirects=True)
-        if not resp.ok:
-            self.fail("Image not available in network.")
-
     def image_create(self, client, **kwargs):
         container_format = 'bare'
-        copy_from = self.image_url
-        disk_format = 'qcow2'
+        data = StringIO.StringIO(
+            ''.join([chr(random.randint(0, 255)) for i in range(1024)]))
+        disk_format = 'raw'
         image_name = rand_name('ostf_test-image_glance-')
         if client == self.glance_client_v1:
             image = client.images.create(name=image_name,
                                          container_format=container_format,
-                                         copy_from=copy_from,
+                                         data=data,
                                          disk_format=disk_format, **kwargs)
             self.images.append(image)
             return image
