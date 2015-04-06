@@ -154,7 +154,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
                     self.environment['id'])
 
         fail_msg = "Can't delete environment. "
-        self.verify(5, self.delete_environment,
+        self.verify(60, self.environment_delete_check,
                     9, fail_msg, "deleting environment",
                     self.environment['id'])
 
