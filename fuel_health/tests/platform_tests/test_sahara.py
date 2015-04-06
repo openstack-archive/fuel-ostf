@@ -29,9 +29,9 @@ class SaharaClusterTest(saharamanager.SaharaTestsManager):
     def setUp(self):
         super(SaharaClusterTest, self).setUp()
 
-        doc_link = ('http://docs.mirantis.com/openstack/fuel/'
-                    'fuel-{0}/user-guide.html#platform-tests-'
-                    'description'.format(self.config.fuel.fuel_version))
+        doc_link = ('http://docs.mirantis.com/'
+                    'openstack/fuel/fuel-{0}/operations.html#sahara-'
+                    'test-prepare'.format(self.config.fuel.fuel_version))
 
         max_free_ram_mb = (
             self.get_max_free_compute_node_ram(self.min_required_ram_mb))
