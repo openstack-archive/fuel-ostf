@@ -42,6 +42,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         cls.pwd = cls.config.compute.controller_node_ssh_password
         cls.key = cls.config.compute.path_to_private_key
         cls.timeout = cls.config.compute.ssh_timeout
+        cls.fuel_dns = cls.config.fuel.dns
 
     @classmethod
     def tearDownClass(cls):
@@ -123,13 +124,16 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         if not self.computes:
             self.skipTest('There are no computes nodes')
 
+        dns = self.fuel_dns.spit(',') if self.fuel_dns else ['8.8.8.8']
+
         ssh_client = SSHClient(self.computes[0],
                                self.usr,
                                self.pwd,
                                key_filename=self.key,
                                timeout=self.timeout)
-        expected_output = "google"
-        cmd = "host 8.8.8.8"
+        expected_output = "{0}.in-addr.arpa domain name pointer".format(dns[0])
+
+        cmd = "host {0}".format(dns[0])
         output = self.verify(100, self.retry_command, 1,
                              "'host' command failed. Looks like there is no "
                              "Internet connection on the computes node.",
@@ -138,17 +142,17 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         LOG.debug(output)
         self.verify_response_true(expected_output in output,
                                   'Step 2 failed: '
-                                  'DNS name for 8.8.8.8 host '
-                                  'cannot be resolved.')
+                                  'DNS name for {0} host '
+                                  'cannot be resolved.'.format(dns[0]))
 
-        expected_output = "google.com has address"
-        cmd = "host google.com"
+        domain_name = output.split()[-1]
+        cmd = "host {0}".format(domain_name)
         output = self.verify(100, self.retry_command, 3,
                              "'host' command failed. "
                              "DNS name cannot be resolved.",
                              "'host' command", 10, 5,
                              ssh_client.exec_command, cmd)
         LOG.debug(output)
-        self.verify_response_true(expected_output in output,
+        self.verify_response_true('has address {0}'.format(dns[0]) in output,
                                   'Step 4 failed: '
                                   'DNS name cannot be resolved.')

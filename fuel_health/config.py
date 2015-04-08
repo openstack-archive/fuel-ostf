@@ -385,6 +385,9 @@ FuelConf = [
     cfg.StrOpt('fuel_version',
                default=None,
                help="Fuel version"),
+    cfg.StrOpt('dns',
+               default=None,
+               help="dns"),
 ]
 
 
@@ -596,6 +599,7 @@ class NailgunConfig(object):
         if deployment_os != 'RHEL':
             storage = data['editable']['storage']['volumes_ceph']['value']
             self.volume.ceph_exist = storage
+        self.fuel.dns = data['editable']['external_dns'].get('value', None)
 
     def _parse_nodes_cluster_id(self):
         api_url = '/api/nodes?cluster_id=%s' % self.cluster_id
