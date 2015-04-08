@@ -15,6 +15,7 @@
 # under the License.
 
 import logging
+import os
 import time
 import traceback
 
@@ -609,7 +610,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         return nets
 
     def _create_server(self, client, name, security_groups=None,
-                       flavor_id=None, net_id=None, img_name=None):
+                       flavor_id=None, net_id=None, img_name=None,
+                       data_file=None):
 
         if img_name:
             base_image_id = self.get_image_from_name(img_name=img_name)
@@ -645,7 +647,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         else:
             create_kwargs = {'security_groups': security_groups}
 
-        server = client.servers.create(name, base_image_id, flavor_id,
+        server = client.servers.create(name, base_image_id,
+                                       flavor_id, files=data_file,
                                        **create_kwargs)
         self.verify_response_body_content(server.name,
                                           name,
@@ -658,6 +661,12 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         server = client.servers.get(server.id)
         self.set_resource(name, server)
         return server
+
+    def _load_file(self, file_name):
+        path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "etc", file_name)
+        with open(path) as f:
+            return f.read()
 
     def _create_floating_ip(self):
         floating_ips_pool = self.compute_client.floating_ip_pools.list()
@@ -753,6 +762,45 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         # TODO(???) Allow configuration of execution and sleep duration.
         return fuel_health.test.call_until_true(ping, 40, 1)
 
+    def _run_command_on_instance(self, ip_address, timeout, retries, cmd,
+                                 viaHost=None):
+        def run_cmd():
+            def find_network_host():
+                """Find host where nova-network works."""
+                if 'neutron' in self.config.network.network_provider:
+                    return self.host[0]
+                else:
+                    services = self.compute_client.services.list()
+                    net_service = filter(
+                        lambda n: n.__dict__['binary'] == u'nova-network',
+                        services)[0]
+                    return net_service.__dict__['host']
+
+            if not (self.host or viaHost):
+                self.fail('Wrong tests configurations, one from the next '
+                          'parameters are empty controller_node_name or '
+                          'controller_node_ip ')
+            try:
+                host = viaHost or find_network_host()
+                LOG.debug('Get ssh to instance')
+                ssh = SSHClient(host,
+                                self.usr, self.pwd,
+                                key_filename=self.key,
+                                timeout=timeout)
+
+            except Exception:
+                LOG.debug(traceback.format_exc())
+
+            return self.retry_command(retries[0], retries[1],
+                                      ssh.exec_command_on_vm,
+                                      command=cmd,
+                                      user='cirros',
+                                      password='cubswin:)',
+                                      vm=ip_address)
+
+        # TODO(???) Allow configuration of execution and sleep duration.
+        return fuel_health.test.call_until_true(run_cmd, 40, 1)
+
     def _check_vm_connectivity(self, ip_address, timeout, retries):
         self.assertTrue(self._ping_ip_address(ip_address, timeout, retries),
                         "Timed out waiting for %s to become "
@@ -768,6 +816,14 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                         "Timed out waiting for %s to become "
                         "reachable. Please, check Network "
                         "configuration" % ip_address)
+
+    def _run_command_from_vm(self, ip_address,
+                             timeout, retries, cmd, viaHost=None):
+        self.assertTrue(
+            self._run_command_on_instance(
+                ip_address, timeout, retries, cmd, viaHost=viaHost),
+            "Timed out waiting for %s to become reachable. "
+            "Please, check Network configuration" % ip_address)
 
     @classmethod
     def tearDownClass(cls):
