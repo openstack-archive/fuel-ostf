@@ -2,6 +2,7 @@ oslo.config>=1.1.1
 python-cinderclient>=1.0.7
 python-ceilometerclient>=1.0.9
 python-keystoneclient>=0.11
+python-muranoclient>=0.2.11
 python-novaclient>=2.17.0
 python-neutronclient>=2.3.6,<3
 python-heatclient>=0.2.9
