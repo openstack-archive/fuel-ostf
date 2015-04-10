@@ -886,6 +886,41 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
 
         return max_free_ram_mb
 
+    # Methods for finding and checking Sahara images.
+    def find_and_check_image(self, tag_plugin, tag_version):
+        """This method finds a correctly registered image for Sahara platform
+        tests.
+
+        It finds a Sahara image by specific tags and checks whether the image
+        is correctly registered or not.
+        """
+
+        LOG.debug('Finding and checking image for Sahara...')
+        image = self._find_image_by_tags(tag_plugin, tag_version)
+        if (image is not None) and (
+            '_sahara_username' in image.metadata) and (
+                image.metadata['_sahara_username'] is not None):
+            self.ssh_username = image.metadata['_sahara_username']
+            LOG.debug('Image with name "{0}" is registered for Sahara with '
+                      'username "{1}".'.format(image.name, self.ssh_username))
+            return image.id
+        LOG.debug('Image is not correctly registered or it is not '
+                  'registered at all. Correct image for Sahara not found.')
+
+    def _find_image_by_tags(self, tag_plugin, tag_version):
+        """This method finds a Sahara image by specific tags."""
+
+        tag_plug = '_sahara_tag_' + tag_plugin
+        tag_ver = '_sahara_tag_' + tag_version
+        for image in self.compute_client.images.list():
+            if tag_plug in image.metadata and tag_ver in image.metadata:
+                LOG.debug(
+                    'Image with tags "{0}" and "{1}" found. Image name '
+                    'is "{2}".'.format(tag_plugin, tag_version, image.name))
+                return image
+        LOG.debug('Image with tags "{0}" and "{1}" '
+                  'not found.'.format(tag_plugin, tag_version))
+
 
 class SanityChecksTest(OfficialClientTest):
     """Base class for openstack sanity tests."""
