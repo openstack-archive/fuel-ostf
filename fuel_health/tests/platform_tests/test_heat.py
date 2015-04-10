@@ -440,7 +440,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             13. Delete the file with private key.
             14. Delete the stack.
             15. Wait for the stack to be deleted.
-        Duration: 2100 s.
+        Duration: 2150 s.
         """
 
         if not self.ceilometer_client:
@@ -461,7 +461,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                                   "saving private key to the file",
                                   keypair.private_key)
 
-        sec_group = self.verify(10, self._create_security_group, 3,
+        sec_group = self.verify(60, self._create_security_group, 3,
                                 'Security group can not be created.',
                                 'security group creation',
                                 self.compute_client, 'ost1_test-sgroup')
