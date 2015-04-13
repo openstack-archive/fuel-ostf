@@ -37,8 +37,8 @@ class VolumesTest(nmanager.SmokeChecksTest):
                 and not self.config.volume.ceph_exist):
             self.skipTest('There are no cinder nodes or '
                           'ceph storage for volume')
-        if not self.config.compute.compute_nodes \
-                and self.config.compute.libvirt_type != 'vcenter':
+        if (not self.config.compute.compute_nodes and
+                not self.config.compute.use_vcenter):
             self.skipTest('There are no compute nodes')
         self.check_image_exists()
 
