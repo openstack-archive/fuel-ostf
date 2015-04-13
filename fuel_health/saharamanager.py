@@ -13,8 +13,6 @@
 # under the License.
 
 import logging
-import socket
-import telnetlib
 import time
 
 from saharaclient.api import base as sab
@@ -181,12 +179,11 @@ class SaharaTestsManager(nmanager.PlatformServicesBaseClass):
 
         start = time.time()
         while time.time() - start < self.process_timeout:
-            try:
-                telnet_connection = telnetlib.Telnet(node_ip, port)
-                if telnet_connection:
-                    return telnet_connection.close()
-            except socket.error:
-                time.sleep(1)
+            cmd = ("timeout 3 bash -c 'telnet {0} {1}'".format(node_ip, port))
+            output, output_err = self._run_ssh_cmd(cmd)
+            if 'Connected to {0}'.format(node_ip) in output:
+                return
+            time.sleep(5)
 
         self.fail('Port {0} on node {1} is unreachable for '
                   '{2} seconds.'.format(port, node_ip, self.process_timeout))
