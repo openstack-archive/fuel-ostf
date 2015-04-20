@@ -51,7 +51,7 @@ class DBSpaceTest(cloudvalidation.CloudValidationTest):
                        self.controllers)
 
         self.verify_response_true(not hosts,
-                                  ("Free disk space cannot be used ",
+                                  ("Free disk space cannot be used "
                                    "by database on node(s): {hosts}"
                                    ).format(hosts=hosts),
                                   1)
