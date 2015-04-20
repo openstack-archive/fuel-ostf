@@ -22,11 +22,18 @@ class DBSpaceTest(cloudvalidation.CloudValidationTest):
         """Checks whether DB expects less free space than actually
         is presented on the controller node
         """
+        scheduler_log = 'nova-scheduler.log'
 
-        err_msg = "Cannot check nova-scheduler.log at {host}".format(host=host)
+        if self.config.compute.deployment_os.lower() == 'centos':
+            scheduler_log = 'scheduler.log'
+
+        err_msg = "Cannot check {scheduler_log} at {host}".format(
+            host=host, scheduler_log=scheduler_log)
+
         warning_msg = "Host has more disk space than database expected"
-        cmd = ("cat /var/log/nova/nova-scheduler.log "
-               "| grep '{msg}' | tail -1").format(msg=warning_msg)
+        cmd = ("cat /var/log/nova/{scheduler_log} "
+               "| grep '{msg}' | tail -1").format(
+                   msg=warning_msg, scheduler_log=scheduler_log)
 
         out, err = self.verify(5, self._run_ssh_cmd, 1, err_msg,
                                'check nova-scheduler.log', host, cmd)
