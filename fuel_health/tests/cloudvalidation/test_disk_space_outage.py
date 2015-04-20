@@ -35,7 +35,7 @@ class DiskSpaceTest(cloudvalidation.CloudValidationTest):
         return partitions
 
     def test_disk_space_outage(self):
-        """Check: disk space outage on controller and compute nodes
+        """Check disk space outage on controller and compute nodes
         Target component: Nova
 
         Scenario:

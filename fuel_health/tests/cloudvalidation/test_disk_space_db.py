@@ -36,7 +36,7 @@ class DBSpaceTest(cloudvalidation.CloudValidationTest):
         return out
 
     def test_db_expectation_free_space(self):
-        """Check: disk space allocation for databases on controller nodes
+        """Check disk space allocation for databases on controller nodes
         Target component: Nova
 
         Scenario:
