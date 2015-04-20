@@ -50,8 +50,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     def setUp(self):
         super(TestNovaNetwork, self).setUp()
         self.check_clients_state()
-        if not self.config.compute.compute_nodes and \
-           self.config.compute.libvirt_type != 'vcenter':
+        if (not self.config.compute.compute_nodes and
+                not self.config.compute.use_vcenter):
             self.skipTest('There are no compute nodes')
 
     def tearDown(self):
@@ -274,7 +274,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             for addr in server.addresses:
                 if addr.startswith('novanetwork'):
                     instance_ip = server.addresses[addr][0]['addr']
-            if self.config.compute.libvirt_type != 'vcenter':
+            if not self.config.compute.use_vcenter:
                 compute = getattr(server, 'OS-EXT-SRV-ATTR:host')
             else:
                 compute = None
