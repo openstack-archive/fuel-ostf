@@ -74,9 +74,9 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                 u'XXX' not in output, 'Step 2 failed: Some nova services '
                 'have not been started.')
         except Exception:
-            LOG.info("Will sleep for 60 seconds and try again")
+            LOG.info("Will sleep for 120 seconds and try again")
             LOG.debug(traceback.format_exc())
-            time.sleep(60)
+            time.sleep(120)
             self.verify_response_true(
                 u'XXX' not in output, 'Step 2 failed: Some nova services '
                 'have not been started.')
