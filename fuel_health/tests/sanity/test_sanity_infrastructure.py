@@ -54,7 +54,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Scenario:
             1. Execute nova-manage service list command on a controller node.
             2. Check there are no failed services (with XXX state).
-        Duration: 100 s.
+        Duration: 180 s.
         """
         output = u'XXX'
         cmd = 'nova-manage service list'
@@ -74,9 +74,9 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                 u'XXX' not in output, 'Step 2 failed: Some nova services '
                 'have not been started.')
         except Exception:
-            LOG.info("Will sleep for 60 seconds and try again")
+            LOG.info("Will sleep for 120 seconds and try again")
             LOG.debug(traceback.format_exc())
-            time.sleep(60)
+            time.sleep(120)
             self.verify_response_true(
                 u'XXX' not in output, 'Step 2 failed: Some nova services '
                 'have not been started.')
