@@ -356,14 +356,6 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
         Available since release: 2014.2-6.1
         Deployment tags: nova_network, use_vcenter
         """
-        if self.config.compute.use_vcenter:
-            LOG.debug(
-                "Redefining timeout for instance snapshot operations"
-                " because of slow vCenter speed."
-            )
-            image_ops_timeout = 700
-        else:
-            image_ops_timeout = 180
 
         img_name = 'TestVM-VMDK'
         image = self.verify(30, self.get_image_from_name, 1,
@@ -377,8 +369,7 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
                              image)
 
         # snapshot the instance
-        snapshot_image_id = self.verify(image_ops_timeout, self._create_image,
-                                        3,
+        snapshot_image_id = self.verify(700, self._create_image, 3,
                                         "Snapshot of an"
                                         " instance can not be created.",
                                         'snapshotting an instance',
@@ -394,7 +385,7 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
                     'Wait for instance deletion complete',
                     server)
 
-        server = self.verify(image_ops_timeout, self._boot_image, 6,
+        server = self.verify(700, self._boot_image, 6,
                              "Instance can not be launched from snapshot.",
                              'booting instance from snapshot',
                              snapshot_image_id)
