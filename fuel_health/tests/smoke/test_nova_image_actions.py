@@ -45,8 +45,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
     def setUp(self):
         super(TestImageAction, self).setUp()
         self.check_clients_state()
-        if not self.config.compute.compute_nodes and \
-           self.config.compute.libvirt_type != 'vcenter':
+        if not self.config.compute.compute_nodes:
             self.skipTest('There are no compute nodes')
         self.check_image_exists()
 
@@ -144,14 +143,6 @@ class TestImageAction(nmanager.SmokeChecksTest):
             7. Delete server.
         Duration: 300 s.
         """
-        if self.config.compute.libvirt_type == 'vcenter':
-            LOG.debug(
-                "Redefining timeout for instance snapshot operations"
-                " because of slow vCenter speed."
-            )
-            image_ops_timeout = 700
-        else:
-            image_ops_timeout = 180
 
         image = self.verify(30, self.get_image_from_name, 1,
                             "Image can not be retrieved.",
@@ -163,8 +154,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
                              image)
 
         # snapshot the instance
-        snapshot_image_id = self.verify(image_ops_timeout, self._create_image,
-                                        3,
+        snapshot_image_id = self.verify(180, self._create_image, 3,
                                         "Snapshot of an"
                                         " instance can not be created.",
                                         'snapshotting an instance',
@@ -180,7 +170,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
                     'Wait for instance deletion complete',
                     server)
 
-        server = self.verify(image_ops_timeout, self._boot_image, 6,
+        server = self.verify(180, self._boot_image, 6,
                              "Instance can not be launched from snapshot.",
                              'booting instance from snapshot',
                              snapshot_image_id)
