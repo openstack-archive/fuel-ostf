@@ -141,6 +141,15 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
                 cls.error_msg.append(exc)
                 LOG.debug(traceback.format_exc())
 
+        try:
+            sec_groups = cls.compute_client.security_groups.list()
+            [cls.compute_client.security_groups.delete(group)
+             for group in sec_groups
+             if 'ost1_test-secgroup-smoke' in group.name]
+        except Exception as exc:
+            cls.error_msg.append(exc)
+            LOG.debug(traceback.format_exc())
+
     @classmethod
     def tearDownClass(cls):
         super(NeutronBaseTest, cls)
