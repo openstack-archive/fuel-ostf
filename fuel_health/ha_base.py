@@ -15,6 +15,7 @@
 import kombu
 from kombu import Connection
 import logging
+from lxml import etree
 import time
 import traceback
 
@@ -194,3 +195,188 @@ class RabbitSanityClass(BaseTestCase):
             except Exception:
                 LOG.debug(traceback.format_exc())
                 self.fail('Failed to delete queue')
+
+
+class TestPacemakerBase(fuel_health.cloudvalidation.CloudValidationTest):
+    """TestPacemakerStatus class base methods."""
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestPacemakerBase, cls).setUpClass()
+        cls.controller_names = cls.config.compute.controller_names
+        cls.online_controller_names = (
+            cls.config.compute.online_controller_names)
+        cls.offline_controller_names = list(
+            set(cls.controller_names) - set(cls.online_controller_names))
+
+        cls.online_controller_ips = cls.config.compute.online_controllers
+        cls.controller_key = cls.config.compute.path_to_private_key
+        cls.controller_user = cls.config.compute.ssh_user
+
+    def setUp(self):
+        super(TestPacemakerBase, self).setUp()
+        if 'ha' not in self.config.mode:
+            self.skipTest('Cluster is not HA mode, skipping tests')
+        if not self.online_controller_names:
+            self.skipTest('There are no controller nodes')
+
+    def _register_resource(self, res, res_name, resources):
+        if res_name not in resources:
+            resources[res_name] = {
+                'master': [],
+                'nodes': [],
+                'started': 0,
+                'stopped': 0,
+                'active': False}
+
+        if 'true' in res.get('active'):
+            resources[res_name]['active'] = True
+
+        res_role = res.get('role')
+        num_nodes = int(res.get('nodes_running_on'))
+
+        if num_nodes:
+            resources[res_name]['started'] += num_nodes
+
+            for rnode in res.iter('node'):
+                if 'Master' in res_role:
+                    resources[res_name]['master'].append(
+                        rnode.get('name'))
+                resources[res_name]['nodes'].append(
+                    rnode.get('name'))
+        else:
+            resources[res_name]['stopped'] += 1
+
+    def get_pcs_resources(self, pcs_status):
+        """Get pacemaker resources status to a python dict:
+            return:
+                {
+                  str: {                        # Resource name
+                    'started': int,             # count of Master/Started
+                    'stopped': int,             # count of Stopped resources
+                    'nodes':  [node_name, ...], # All node names where the
+                                                # resource is started
+                    'master': [node_name, ...], # Node names for 'Master'
+                                                # ('master' is also in 'nodes')
+                  },
+                  ...
+                }
+        """
+        root = etree.fromstring(pcs_status)
+        resources = {}
+
+        for res_group in root.iter('resources'):
+            for res in res_group:
+                res_name = res.get('id')
+                if 'resource' in res.tag:
+                    self._register_resource(res, res_name, resources)
+                elif 'clone' in res.tag:
+                    for r in res:
+                        self._register_resource(r, res_name, resources)
+
+        return resources
+
+    def get_pcs_nodes(self, pcs_status):
+        root = etree.fromstring(pcs_status)
+        nodes = {'Online': [], 'Offline': []}
+        for nodes_group in root.iter('nodes'):
+            for node in nodes_group:
+                if 'true' in node.get('online'):
+                    nodes['Online'].append(node.get('name'))
+                else:
+                    nodes['Offline'].append(node.get('name'))
+        return nodes
+
+    def get_pcs_constraints(self, constraints_xml):
+        """Parse pacemaker constraints
+
+        :param constraints_xml: XML string contains pacemaker constraints
+        :return dict:
+            {string:                # Resource name,
+                {'attrs': list,     # List of dicts for resource
+                                    #     attributes on each node,
+                 'enabled': list    # List of strings with node names where
+                                    #     the resource allowed to start,
+                 'with-rsc': string # Name of an another resource
+                                    #     from which this resource depends on.
+                }
+            }
+
+        """
+
+        root = etree.fromstring(constraints_xml)
+        constraints = {}
+        # 1. Get all attributes from constraints for each resource
+        for con_group in root.iter('constraints'):
+            for con in con_group:
+                if 'score' not in con.keys():
+                    # TODO(ddmitriev): process resource dependences
+                    # for 'rule' section
+                    continue
+
+                rsc = con.get('rsc')
+                if rsc not in constraints:
+                    constraints[rsc] = {'attrs': [con.attrib]}
+                else:
+                    constraints[rsc]['attrs'].append(con.attrib)
+
+        # 2. Make list of nodes for each resource where it is allowed to start.
+        #    Remove from 'enabled' list all nodes with score '-INFINITY'
+        for rsc in constraints:
+            attrs = constraints[rsc]['attrs']
+            enabled = []
+            disabled = []
+            for attr in attrs:
+                if 'with-rsc' in attr:
+                    constraints[rsc]['with-rsc'] = attr['with-rsc']
+                elif 'node' in attr:
+                    if attr['score'] == '-INFINITY':
+                        disabled.append(attr['node'])
+                    else:
+                        enabled.append(attr['node'])
+            constraints[rsc]['enabled'] = list(set(enabled) - set(disabled))
+
+        return constraints
+
+    def get_resource_nodes(self, rsc, constraints, cluster_resources,
+                           orig_rsc):
+        if rsc in orig_rsc:
+            # Constraints loop detected!
+            msg = ('There is a dependency loop in constraints configuration: '
+                   'resource "{0}" depends on the resource "{1}". Please check'
+                   ' the pacemaker configuration!'
+                   .format(orig_rsc[-1], rsc))
+            raise fuel_health.exceptions.InvalidConfiguration(msg)
+        else:
+            orig_rsc.append(rsc)
+
+        # Nodes where the resource is allowed to start
+        allowed = constraints[rsc]['enabled']
+        # Nodes where the parent resource is actually started
+        started = cluster_resources[rsc]['nodes']
+
+        if 'with-rsc' in constraints[rsc]:
+            # Recursively get nodes for the parent resource
+            (parent_allowed,
+             parent_started,
+             parent_disallowed) = self.get_resource_nodes(
+                 constraints[rsc]['with-rsc'],
+                 constraints,
+                 cluster_resources,
+                 orig_rsc)
+            if 'score' in constraints[rsc]:
+                if constraints[rsc]['score'] == '-INFINITY':
+                    # If resource banned to start on the same nodes where
+                    # parent resource is started, then nodes where parent
+                    # resource is started should be removed from 'allowed'
+                    allowed = (set(allowed) - set(parent_started))
+                else:
+                    # Reduce 'allowed' list to only those nodes where
+                    # the parent resource is allowed and running
+                    allowed = list(set(parent_started) &
+                                   set(parent_allowed) &
+                                   set(allowed))
+        # List of nodes, where resource is started, but not allowed to start
+        disallowed = list(set(started) - set(allowed))
+
+        return (allowed, started, disallowed)
