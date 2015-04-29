@@ -117,11 +117,13 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                         "Please refer to OpenStack logs for more details.",
                     failed_step=9)
             else:
-                csrftoken = client.cookies['csrftoken']
                 login_data = dict(username=user.name,
                                   password=password,
-                                  csrfmiddlewaretoken=csrftoken,
                                   next='/')
+                csrftoken = client.cookies.get('csrftoken', None)
+                if csrftoken:
+                    login_data['csrfmiddlewaretoken']=csrftoken
+
                 resp = client.post(url, data=login_data,
                                    headers=dict(Referer=url))
                 self.verify_response_status(
