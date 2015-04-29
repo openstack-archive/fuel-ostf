@@ -15,6 +15,7 @@
 import kombu
 from kombu import Connection
 import logging
+from lxml import etree
 import time
 import traceback
 
@@ -194,3 +195,94 @@ class RabbitSanityClass(BaseTestCase):
             except Exception:
                 LOG.debug(traceback.format_exc())
                 self.fail('Failed to delete queue')
+
+
+class TestPacemakerBase(fuel_health.cloudvalidation.CloudValidationTest):
+    """TestPacemakerStatus class base methods."""
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestPacemakerBase, cls).setUpClass()
+        cls.controller_names = cls.config.compute.controller_names
+        cls.online_controller_names = (
+            cls.config.compute.online_controller_names)
+        cls.offline_controller_names = list(
+            set(cls.controller_names) - set(cls.online_controller_names))
+
+        cls.online_controller_ips = cls.config.compute.online_controllers
+        cls.controller_key = cls.config.compute.path_to_private_key
+        cls.controller_user = cls.config.compute.ssh_user
+
+    def setUp(self):
+        super(TestPacemakerBase, self).setUp()
+        if 'ha' not in self.config.mode:
+            self.skipTest('Cluster is not HA mode, skipping tests')
+        if not self.online_controller_names:
+            self.skipTest('There are no controller nodes')
+
+    def _register_resource(self, res, resources):
+        res_name = res.get('id')
+        if res_name not in resources:
+            resources[res_name] = {
+                'master': [],
+                'nodes': [],
+                'started': 0,
+                'stopped': 0,
+                'active': False}
+
+        if 'true' in res.get('active'):
+            resources[res_name]['active'] = True
+
+        res_role = res.get('role')
+        num_nodes = int(res.get('nodes_running_on'))
+
+        if num_nodes:
+            resources[res_name]['started'] += num_nodes
+
+            for rnode in res.iter('node'):
+                if 'Master' in res_role:
+                    resources[res_name]['master'].append(
+                        rnode.get('name'))
+                resources[res_name]['nodes'].append(
+                    rnode.get('name'))
+        else:
+            resources[res_name]['stopped'] += 1
+
+    def get_pcs_resources(self, pcs_status):
+        """Get pacemaker resources status to a python dict:
+            return:
+                {
+                  str: {                        # Resource name
+                    'started': int,             # count of Master/Started
+                    'stopped': int,             # count of Stopped resources
+                    'nodes':  [node_name, ...], # All node names where the
+                                                # resource is started
+                    'master': [node_name, ...], # Node names for 'Master'
+                                                # ('master' is also in 'nodes')
+                  },
+                  ...
+                }
+        """
+        root = etree.fromstring(pcs_status)
+        resources = {}
+
+        for res_group in root.iter('resources'):
+            for res in res_group:
+                if 'resource' in res.tag:
+                    self._register_resource(res, resources)
+                elif 'clone' in res.tag:
+                    for r in res:
+                        self._register_resource(r, resources)
+
+        return resources
+
+    def get_pcs_nodes(self, pcs_status):
+        root = etree.fromstring(pcs_status)
+        nodes = {'Online': [], 'Offline': []}
+        for nodes_group in root.iter('nodes'):
+            for node in nodes_group:
+                if 'true' in node.get('online'):
+                    nodes['Online'].append(node.get('name'))
+                else:
+                    nodes['Offline'].append(node.get('name'))
+        return nodes
