@@ -31,9 +31,8 @@ class DBSpaceTest(cloudvalidation.CloudValidationTest):
             host=host, scheduler_log=scheduler_log)
 
         warning_msg = "Host has more disk space than database expected"
-        cmd = ("cat /var/log/nova/{scheduler_log} "
-               "| grep '{msg}' | tail -1").format(
-                   msg=warning_msg, scheduler_log=scheduler_log)
+        cmd = ("grep {msg} /var/log/nova/{scheduler_log} | tail -1").format(
+            msg=warning_msg, scheduler_log=scheduler_log)
 
         out, err = self.verify(5, self._run_ssh_cmd, 1, err_msg,
                                'check nova-scheduler.log', host, cmd)
