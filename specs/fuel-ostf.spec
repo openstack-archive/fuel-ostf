@@ -1,6 +1,6 @@
 %define name fuel-ostf
-%define version 6.1.0
-%define release 1
+%{!?version: %define version 6.1.0}
+%{!?release: %define release 1}
 
 Summary: cloud computing testing
 Name: %{name}
