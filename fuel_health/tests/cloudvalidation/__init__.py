@@ -25,5 +25,6 @@ __profile__ = {
     "test_path": "fuel_health/tests/cloudvalidation",
     "cleanup_path": "fuel_health.cleanup",
     "description": "Cloud validation tests. Duration 30 sec - 2 min",
-    "exclusive_testsets": []
+    "exclusive_testsets": [],
+    "available_since_release": "2014.2-6.1",
 }
