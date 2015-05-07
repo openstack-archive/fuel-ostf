@@ -75,7 +75,7 @@ class GlanceSmokeTests(glancemanager.GlanceTest):
 
         fail_msg = ("Cant delete image. Please refer to Openstack logs "
                     "for more information.")
-        self.verify(10, self.delete_image, 6, fail_msg, 'Deleting image',
+        self.verify(100, self.delete_image, 6, fail_msg, 'Deleting image',
                     self.glance_client_v1, self.image)
 
     def test_create_and_delete_image_v2(self):
@@ -95,7 +95,7 @@ class GlanceSmokeTests(glancemanager.GlanceTest):
         """
         fail_msg = ("Error creating image. Please refer to Openstack logs "
                     "for more information.")
-        self.image = self.verify(10, self.image_create, 1, fail_msg,
+        self.image = self.verify(100, self.image_create, 1, fail_msg,
                                  'Image creation', self.glance_client)
 
         fail_msg = ("Image status is incorrect. Please refer to "
