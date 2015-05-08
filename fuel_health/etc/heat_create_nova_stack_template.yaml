@@ -14,3 +14,7 @@ resources:
       image: {get_param: ImageId}
       flavor: {get_param: InstanceType}
       flavor_update_policy: REPLACE
+outputs:
+  servers:
+    value:
+      get_resource: Server

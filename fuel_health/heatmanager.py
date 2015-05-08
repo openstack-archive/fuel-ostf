@@ -196,7 +196,16 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         return '\n'.join(line for line in template.splitlines()
                          if 'Ref: Subnet' not in line)
 
-    def _get_stack_instances(self, mask_name):
+    def _get_stack_instances(self, stack_id):
+
+        servers = self.heat_client.stacks.get(stack_id).outputs
+        server_ids = [server['output_value'] for server in servers]
+    
+        LOG.info('SERVERS {0}'.format(server_ids))
+
+        return server_ids
+
+    def _get_instances_by_name_mask(self, mask_name):
         self.instances = []
 
         # find just created instance
