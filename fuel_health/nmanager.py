@@ -722,38 +722,38 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         # TODO(???) Allow configuration of execution and sleep duration.
         return fuel_health.test.call_until_true(ping, 40, 1)
 
+    def _find_network_host(self,timeout,retries):
+        """Find host where nova-network works."""
+        if 'neutron' in self.config.network.network_provider:
+            return self.host[0]
+        if self.config.compute.use_vcenter:
+            command = "pcs status|grep nova-network|awk {'print $4'}"
+            ssh = SSHClient(self.host[0],
+                            self.usr, self.pwd,
+                            key_filename=self.key,
+                            timeout=timeout)
+            n_net_nodename = self.retry_command(retries[0],
+                                                retries[1],
+                                                ssh.exec_command,
+                                                cmd=command).strip()
+            get_n_net_nodename = socket.gethostbyname(n_net_nodename)
+            return get_n_net_nodename
+        else:
+            services = self.compute_client.services.list()
+            net_service = filter(
+                lambda n: n.__dict__['binary'] == u'nova-network',
+                services)[0]
+            return net_service.__dict__['host']
+
     def _ping_ip_address_from_instance(self, ip_address, timeout,
                                        retries, viaHost=None):
         def ping():
-            def find_network_host():
-                """Find host where nova-network works."""
-                if 'neutron' in self.config.network.network_provider:
-                    return self.host[0]
-                if self.config.compute.use_vcenter:
-                    command = "pcs status|grep nova-network|awk {'print $4'}"
-                    ssh = SSHClient(self.host[0],
-                                    self.usr, self.pwd,
-                                    key_filename=self.key,
-                                    timeout=timeout)
-                    n_net_nodename = self.retry_command(retries[0],
-                                                        retries[1],
-                                                        ssh.exec_command,
-                                                        cmd=command).strip()
-                    get_n_net_nodename = socket.gethostbyname(n_net_nodename)
-                    return get_n_net_nodename
-                else:
-                    services = self.compute_client.services.list()
-                    net_service = filter(
-                        lambda n: n.__dict__['binary'] == u'nova-network',
-                        services)[0]
-                    return net_service.__dict__['host']
-
             if not (self.host or viaHost):
                 self.fail('Wrong tests configurations, one from the next '
                           'parameters are empty controller_node_name or '
                           'controller_node_ip ')
             try:
-                host = viaHost or find_network_host()
+                host = viaHost or self._find_network_host(timeout,retries)
                 LOG.debug('Get ssh to instance')
                 ssh = SSHClient(host,
                                 self.usr, self.pwd,
@@ -778,23 +778,12 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def _run_command_on_instance(self, ip_address, timeout, retries, cmd,
                                  viaHost=None):
         def run_cmd():
-            def find_network_host():
-                """Find host where nova-network works."""
-                if 'neutron' in self.config.network.network_provider:
-                    return self.host[0]
-                else:
-                    services = self.compute_client.services.list()
-                    net_service = filter(
-                        lambda n: n.__dict__['binary'] == u'nova-network',
-                        services)[0]
-                    return net_service.__dict__['host']
-
             if not (self.host or viaHost):
                 self.fail('Wrong tests configurations, one from the next '
                           'parameters are empty controller_node_name or '
                           'controller_node_ip ')
             try:
-                host = viaHost or find_network_host()
+                host = viaHost or self._find_network_host(timeout,retries)
                 LOG.debug('Get ssh to instance')
                 ssh = SSHClient(host,
                                 self.usr, self.pwd,
