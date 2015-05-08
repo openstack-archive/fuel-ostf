@@ -24,3 +24,10 @@ resources:
       flavor: {get_param: InstanceType}
       networks:
           - network: {Ref: network}
+outputs:
+  server1:
+    value:
+      get_resource: Server1
+  server2:
+    value:
+      get_resource: Server2
