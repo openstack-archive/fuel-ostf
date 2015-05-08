@@ -74,7 +74,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     "stack status becoming 'CREATE_COMPLETE'",
                     stack.id, 'CREATE_COMPLETE')
 
-        instances = self._get_stack_instances("ost1-test_heat")
+        instances = self._get_stack_instances(stack.id)
 
         if not instances:
             self.fail("Failed step: 2 Instance for the {0} stack "
@@ -92,7 +92,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     stack.id, 'SUSPEND_COMPLETE')
 
         fail_msg = "Server is not in SUSPENDED status."
-        inst_status = self.compute_client.servers.get(instances[0].id).status
+        inst_status = self.compute_client.servers.get(instances[0]).status
         self.verify_response_body_content(inst_status, 'SUSPENDED',
                                           fail_msg, 4)
 
@@ -108,7 +108,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     stack.id, 'RESUME_COMPLETE')
 
         fail_msg = "Server is not in ACTIVE status."
-        inst_status = self.compute_client.servers.get(instances[0].id).status
+        inst_status = self.compute_client.servers.get(instances[0]).status
         self.verify_response_body_content(inst_status, 'ACTIVE',
                                           fail_msg, 6)
 
@@ -314,7 +314,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     "stack status becoming 'CREATE_COMPLETE'",
                     stack.id, 'CREATE_COMPLETE')
 
-        instances = self._get_stack_instances("ost1-test_heat")
+        instances = self._get_stack_instances(stack.id)
 
         if not instances:
             self.fail("Failed step: 2 Instance for the {0} stack "
@@ -338,7 +338,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     stack.id, 'UPDATE_COMPLETE')
 
         new_instance_name = self.compute_client.servers.get(
-            instances[0].id).name
+            instances[0]).name
 
         if new_instance_name != "ost1-test_updated":
             self.fail("Failed step: 5 Stack update inplace wasn't "
@@ -364,9 +364,12 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     "stack status becoming 'UPDATE_COMPLETE'",
                     stack.id, 'UPDATE_COMPLETE')
 
-        instances = self._get_stack_instances("ost1-test_updated")
+        instances = self._get_stack_instances(stack.id)
+        old_instance_id = instances[0]
 
-        new_instance_flavor = instances[0].flavor['id']
+        new_instance_flavor = self.compute_client.servers.get(
+            instances[0]).flavor['id']
+
         if new_instance_flavor != flavor.id:
             self.fail("Failed step: 9 Stack update replace wasn't "
                       "finished, instance flavor wasn't changed.")
@@ -397,15 +400,13 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     "stack status becoming 'UPDATE_COMPLETE'",
                     stack.id, 'UPDATE_COMPLETE')
 
-        instances = self._get_stack_instances(stack.stack_name)
+        instances = self._get_stack_instances(stack.id)
 
         if len(instances) != 2:
             self.fail("Failed step: 12 There are more then two expected "
                       "instances belonging test stack.")
 
-        instances = self._get_stack_instances("ost1-test_updated")
-
-        if instances:
+        if old_instance_id in instances:
             self.fail("Failed step: 12 Previously create instance "
                       "wasn't deleted during stack update.")
 
@@ -492,7 +493,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         reduced_stack_name = '{0}-{1}'.format(
             stack.stack_name[:2], stack.stack_name[-4:])
 
-        instances = self._get_stack_instances(reduced_stack_name)
+        instances = self._get_instances_by_name_mask(reduced_stack_name)
 
         if not instances:
             self.fail("Failed step: 5 Instance for the {0} stack "
@@ -595,8 +596,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     "rolling back the stack after its creation failed",
                     stack.id)
 
-        instances = [i for i in self.compute_client.servers.list()
-                     if i.name.startswith(stack.stack_name)]
+        instances = self._get_stack_instances(stack.id)
+
         self.verify(20, self.assertTrue, 4,
                     "The stack instance rollback failed.",
                     "verifying if the instance was rolled back",

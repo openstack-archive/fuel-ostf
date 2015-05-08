@@ -18,3 +18,7 @@ resources:
       flavor_update_policy: REPLACE
       networks:
           - network: {Ref: network}
+outputs:
+  servers:
+    value:
+      get_resource: Server

@@ -17,3 +17,10 @@ resources:
     properties:
       image: {get_param: ImageId}
       flavor: {get_param: InstanceType}
+outputs:
+  server1:
+    value:
+      get_resource: Server1
+  server2:
+    value:
+      get_resource: Server2
