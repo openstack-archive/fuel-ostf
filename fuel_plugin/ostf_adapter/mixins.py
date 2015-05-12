@@ -180,9 +180,29 @@ def _get_cluster_attrs(cluster_id, token=None):
     for comp in comp_names:
         processor(comp)
 
+    storage_components = response['editable'].get('storage', dict())
+
+    storage_comp = ['volumes_ceph', 'images_ceph', 'ephemeral_ceph',
+                    'objects_ceph', 'osd_pool_size', 'volumes_lvm',
+                    'volumes_vmdk', 'images_vcenter']
+
+    storage_depl_tags = set()
+
+    def storage_processor(scomp):
+        if scomp in storage_comp:
+            if storage_components.get(scomp) \
+                    and storage_components.get(scomp)['value'] \
+                    is True:
+                storage_depl_tags.add(scomp)
+    for scomp in storage_comp:
+        storage_processor(scomp)
+
     if additional_depl_tags:
         deployment_tags.add('additional_components')
         deployment_tags.update(additional_depl_tags)
+    if storage_depl_tags:
+        deployment_tags.add('storage')
+        deployment_tags.update(storage_depl_tags)
     if libvrt_data and libvrt_data.get('value'):
         deployment_tags.add(libvrt_data['value'])
 
