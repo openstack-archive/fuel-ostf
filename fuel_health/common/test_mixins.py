@@ -126,7 +126,7 @@ class FuelTestAssertMixin(object):
         self.fail(
             ''.join(
                 failed_step_msg + 'Actual value - {actual_content}'.format(
-                    actual_content=act_content), '\n', msg))
+                    actual_content=act_content) + '\n' + msg))
 
     def verify_elements_list(self, elements, attrs, msg='', failed_step=''):
         """Method provides human readable message for the verification of
