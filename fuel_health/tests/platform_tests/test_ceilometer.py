@@ -366,7 +366,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = "Creation of Sahara cluster failed."
         msg = "Sahara cluster was created"
 
-        cluster = self.verify(60, self.sahara_helper, 2,
+        cluster = self.verify(300, self.sahara_helper, 2,
                               fail_msg, msg,
                               image_id, plugin_name, hadoop_version)
 

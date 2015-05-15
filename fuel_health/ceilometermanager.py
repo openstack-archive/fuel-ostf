@@ -321,7 +321,7 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         def check_status():
             cluster_state = self.sahara_client.clusters.get(cluster.id).status
             return cluster_state in ['Waiting', 'Active', 'Error']
-        fuel_health.test.call_until_true(check_status, 60, 1)
+        fuel_health.test.call_until_true(check_status, 300, 1)
 
         self.objects_for_delete.append((self.sahara_client.clusters.delete,
                                         cluster.id))
