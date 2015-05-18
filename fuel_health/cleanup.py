@@ -142,21 +142,6 @@ def cleanup(cluster_deployment_info):
                 'Something wrong with ceilometer client. Esception: %s', exc
             )
 
-    if 'heat' in cluster_deployment_info:
-        try:
-            heat_client = manager._get_heat_client()
-            if heat_client is not None:
-                stacks = heat_client.stacks.list()
-                for s in stacks:
-                    if s.stack_name.startswith('ost1_test-'):
-                        try:
-                            LOG.info('Start stacks deletion.')
-                            heat_client.stacks.delete(s.id)
-                        except Exception:
-                            LOG.debug(traceback.format_exc())
-        except Exception:
-            LOG.warning(traceback.format_exc())
-
     instances_id = []
     servers = manager._get_compute_client().servers.list()
     floating_ips = manager._get_compute_client().floating_ips.list()
