@@ -58,28 +58,32 @@ class GlanceTest(fuel_health.nmanager.NovaNetworkScenarioTest):
             ''.join([chr(random.randint(0, 255)) for i in range(1024)]))
         disk_format = 'raw'
         image_name = rand_name('ostf_test-image_glance-')
-        if client == self.glance_client_v1:
+        if client is self.glance_client_v1:
             image = client.images.create(name=image_name,
                                          container_format=container_format,
                                          data=data,
                                          disk_format=disk_format, **kwargs)
-            self.images.append(image)
+            self.images.append(image.id)
             return image
-        elif client == self.glance_client:
+        elif client is self.glance_client:
             # TODO(vryzhenkin): Rework this function using Glance Tasks v2,
             # TODO(vryzhenkin) when Tasks will be supported by OpenStack Glance
             image = client.images.create(name=image_name,
                                          container_format=container_format,
                                          disk_format=disk_format, **kwargs)
             client.images.upload(image.id, 'dummy_data')
-            self.images.append(image)
+            self.images.append(image.id)
             return image
 
     def find_image_by_id(self, client, image_id):
         return client.images.get(image_id)
 
     def delete_image(self, client, object):
-        return client.images.delete(object)
+        client.images.delete(object)
+        if client is self.glance_client_v1:
+            return self.images.remove(object.id)
+        else:
+            return self.images.remove(object)
 
     def check_image_status(self, client, image, status='active'):
         def image_status_comparison():
@@ -93,16 +97,17 @@ class GlanceTest(fuel_health.nmanager.NovaNetworkScenarioTest):
                       .format(self.find_image_by_id(client, image.id)))
 
     def update_image(self, client, object, group_props, prop, value_prop):
-        if client == self.glance_client_v1:
-            properties = {group_props: {prop: value_prop}}
+        if client is self.glance_client_v1:
+            properties = object.properties
+            properties[group_props] = jsonutils.dumps({prop: value_prop})
             return client.images.update(object, properties=properties)
-        elif client == self.glance_client:
+        elif client is self.glance_client:
             properties = '{0}: {1}'.format(prop, value_prop)
             return client.images.update(object, group_props=properties)
 
     def find_props(self, client, object, group_props, prop, value_prop):
         msg = 'Can not find created properties in image'
-        if client == self.glance_client_v1:
+        if client is self.glance_client_v1:
             for group in object.properties:
                 if group == group_props:
                     for i in jsonutils.loads(object.properties[group]):
@@ -113,7 +118,7 @@ class GlanceTest(fuel_health.nmanager.NovaNetworkScenarioTest):
                             self.fail(msg)
                 else:
                     self.fail(msg)
-        elif client == self.glance_client:
+        elif client is self.glance_client:
             properties = '{0}: {1}'.format(prop, value_prop)
             for key in object:
                 if object[key] == properties:
