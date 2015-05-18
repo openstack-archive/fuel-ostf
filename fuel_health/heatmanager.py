@@ -79,8 +79,16 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         # heat client doesn't return stack details after creation
         # so need to request them:
         stack = self._find_stack(client, 'stack_name', stack_name)
-        self.set_resource(stack.id, stack)
+        self.addCleanup(self._delete_stack, stack.id)
         return stack
+
+    def _delete_stack(self, stack_id):
+        LOG.debug("Deleting stack: %s" % stack_id)
+        if self._find_stack(self.heat_client, 'id', stack_id) is None:
+            return
+        self.heat_client.stacks.delete(stack_id)
+        self._wait_for_stack_deleted(stack_id)
+        LOG.debug("Resource '%s' has been deleted." % stack_id)
 
     def _update_stack(self, client, stack_id, template, parameters={}):
         client.stacks.update(stack_id=stack_id,
