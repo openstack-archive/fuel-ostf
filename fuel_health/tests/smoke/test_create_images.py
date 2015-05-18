@@ -63,9 +63,9 @@ class GlanceSmokeTests(glancemanager.GlanceTest):
 
         fail_msg = ("Can't update image with properties. Please refer to "
                     "Openstack logs for more information.")
-        self.verify(100, self.update_image, 4, fail_msg, 'Updating image',
-                    self.glance_client_v1, self.image, group_props, prop,
-                    value_prop)
+        self.image = self.verify(100, self.update_image, 4, fail_msg,
+                                 'Updating image', self.glance_client_v1,
+                                 self.image, group_props, prop, value_prop)
 
         fail_msg = ("Can't find appended properties. Please refer to "
                     "OSTF logs for more information.")
@@ -126,5 +126,5 @@ class GlanceSmokeTests(glancemanager.GlanceTest):
 
         fail_msg = ("Cant delete image. Please refer to Openstack logs "
                     "for more information.")
-        self.verify(200, self.delete_image, 5, fail_msg, 'Deleting image',
+        self.verify(200, self.delete_image, 6, fail_msg, 'Deleting image',
                     self.glance_client, self.image.id)

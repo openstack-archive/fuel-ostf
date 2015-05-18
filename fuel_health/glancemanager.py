@@ -63,7 +63,7 @@ class GlanceTest(fuel_health.nmanager.NovaNetworkScenarioTest):
                                          container_format=container_format,
                                          data=data,
                                          disk_format=disk_format, **kwargs)
-            self.images.append(image)
+            self.images.append(image.id)
             return image
         elif client == self.glance_client:
             # TODO(vryzhenkin): Rework this function using Glance Tasks v2,
@@ -72,14 +72,18 @@ class GlanceTest(fuel_health.nmanager.NovaNetworkScenarioTest):
                                          container_format=container_format,
                                          disk_format=disk_format, **kwargs)
             client.images.upload(image.id, 'dummy_data')
-            self.images.append(image)
+            self.images.append(image.id)
             return image
 
     def find_image_by_id(self, client, image_id):
         return client.images.get(image_id)
 
     def delete_image(self, client, object):
-        return client.images.delete(object)
+        client.images.delete(object)
+        if client == self.glance_client_v1:
+            return self.images.remove(object.id)
+        else:
+            return self.images.remove(object)
 
     def check_image_status(self, client, image, status='active'):
         def image_status_comparison():
@@ -94,7 +98,8 @@ class GlanceTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
     def update_image(self, client, object, group_props, prop, value_prop):
         if client == self.glance_client_v1:
-            properties = {group_props: {prop: value_prop}}
+            properties = object.properties
+            properties[group_props] = jsonutils.dumps({prop: value_prop})
             return client.images.update(object, properties=properties)
         elif client == self.glance_client:
             properties = '{0}: {1}'.format(prop, value_prop)
