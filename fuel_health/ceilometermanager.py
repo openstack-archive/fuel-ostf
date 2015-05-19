@@ -209,6 +209,32 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             self.fail('Count of samples list isn\'t '
                       'greater than expected value')
 
+    def check_event_type(self, event_type):
+        event_list = [event.event_type for event
+                      in self.ceilometer_client.event_types.list()]
+        if event_type not in event_list:
+            self.fail('"{event_type}" not found in event type list.'.format(
+                event_type=event_type))
+
+    def check_event_message_id(self, events_list, instance_id):
+        for event in events_list:
+            try:
+                if next(x['value'] for x in event.traits
+                        if x['name'] == "instance_id") == instance_id:
+                    return event.message_id
+            except StopIteration:
+                self.fail('No events found for "{instance_id}" '
+                          'instance.'.format(instance_id=instance_id))
+
+    def check_traits(self, event_type, traits):
+        trait_desc = [desc.name for desc in
+                      self.ceilometer_client.trait_descriptions.list(
+                          event_type)]
+        for trait in traits:
+            if trait not in trait_desc:
+                self.fail('Trait "{trait}" not found in trait list.'.format(
+                    trait=trait))
+
     def identity_helper(self):
         user_pass = rand_name("ceilo-user-pass")
         user_name = rand_name("ceilo-user-update")
