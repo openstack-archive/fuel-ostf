@@ -21,13 +21,14 @@ class CeilometerApiTests(ceilometermanager.CeilometerBaseTest):
     """TestClass contains tests that check basic Ceilometer functionality."""
 
     def test_list_meters(self):
-        """Ceilometer test to list meters, alarms and resources
+        """Ceilometer test to list meters, alarms, resources and events
         Target component: Ceilometer
 
         Scenario:
             1. Request the list of meters with query: disk_format=qcow2.
             2. Request the list of alarms.
             3. Request the list of resources created for the last hour.
+            4. Request the list of events created for the last hour.
 
         Duration: 180 s.
         Deployment tags: Ceilometer
@@ -48,3 +49,7 @@ class CeilometerApiTests(ceilometermanager.CeilometerBaseTest):
         q = [{"field": "timestamp", "op": "gt", "value": an_hour_ago}]
         self.verify(60, self.ceilometer_client.resources.list,
                     3, fail_msg, "getting list of resources", q)
+
+        fail_msg = 'Failed to get list of events.'
+        self.verify(60, self.ceilometer_client.events.list,
+                    4, fail_msg, 'getting list of events', q)
