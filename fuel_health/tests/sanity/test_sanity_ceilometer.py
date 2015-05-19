@@ -30,6 +30,7 @@ class CeilometerApiTests(ceilometermanager.CeilometerBaseTest):
             1. Request the list of meters with query: disk_format=qcow2.
             2. Request the list of alarms.
             3. Request the list of resources received in the last hour.
+            4. Request the list of events created in the last hour.
 
         Duration: 180 s.
         Deployment tags: Ceilometer
@@ -55,3 +56,8 @@ class CeilometerApiTests(ceilometermanager.CeilometerBaseTest):
 
         self.verify(60, self.ceilometer_client.resources.list,
                     3, fail_msg, "Resource listing.", q)
+
+        fail_msg = 'Event list is unavailable. '
+
+        self.verify(60, self.ceilometer_client.events.list,
+                    4, fail_msg, "Event listing.", q)
