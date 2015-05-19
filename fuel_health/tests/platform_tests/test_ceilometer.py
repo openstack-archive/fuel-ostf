@@ -167,6 +167,101 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         self.verify(20, self.ceilometer_client.resources.get, 5,
                     fail_msg, msg, sample[0].resource_id)
 
+    def test_check_events_and_traits(self):
+        """Ceilometer test to check events and traits.
+        Target component: Ceilometer
+
+        Scenario:
+            1. Create a new instance.
+            2. Check that instance become active.
+            3. Check that event_type is contained in event_type list.
+            4. Check that event with expected type is contained in event list.
+            5. Check event traits description.
+            6. Check that exist event with expected instance_id.
+            7. Show information about one event.
+            8. Get list of all traits for certain event type and trait name.
+        Duration: 30 s.
+
+        Deployment tags: Ceilometer
+        """
+
+        event_type = "compute.instance.create.start"
+
+        self.check_image_exists()
+
+        name = rand_name('ost1-test-ceilo-instance-')
+
+        fail_msg = "Creation instance is failed."
+        msg = "Instance was created."
+
+        vcenter = self.config.compute.use_vcenter
+        image_name = 'TestVM-VMDK' if vcenter else None
+
+        instance = self.verify(600, self._create_server, 1, fail_msg, msg,
+                               self.compute_client, name, img_name=image_name)
+
+        fail_msg = "Instance is not available."
+        msg = "Instance became available."
+
+        self.verify(200, self.wait_for_instance_status, 2,
+                    fail_msg, msg,
+                    instance, 'ACTIVE')
+
+        fail_msg = ("%(event_type)s is not in event type list."
+                    % {"event_type": event_type})
+        msg = ("%(event_type)s is in event list."
+               % {"event_type": event_type})
+
+        self.verify(60, self.check_event_type, 3,
+                    fail_msg, msg, event_type)
+
+        fail_msg = ("Event with %(event_type)s type is not in event list."
+                    % {"event_type": event_type})
+        msg = ("Event with %(event_type)s type is in event list."
+               % {"event_type": event_type})
+        query = [{'field': 'event_type', 'op': 'eq', 'value': event_type}]
+
+        events_list = self.verify(60, self.ceilometer_client.events.list, 4,
+                                  fail_msg, msg, query)
+
+        if not events_list:
+            self.fail("Events with %(event_type)s event type not found"
+                      % {"event_type": event_type})
+
+        traits = ["instance_id", "request_id", "state", "service", "host"]
+
+        fail_msg = "The set of event traits is not as expected."
+        msg = "Set of event traits consistent with the expected."
+
+        self.verify(60, self.check_traits, 5, fail_msg, msg,
+                    event_type=event_type, traits=traits)
+
+        fail_msg = ("%(event_type)s event type with expected %(instance_id)s "
+                    "not found." % {"event_type": event_type,
+                                    "instance_id": instance.id})
+        msg = ("%(event_type)s event type with expected %(instance_id)s "
+               "was found." % {"event_type": event_type,
+                               "instance_id": instance.id})
+
+        message_id = self.verify(60, self.check_event_message_id, 6,
+                                 fail_msg, msg, events_list, instance.id)
+
+        fail_msg = "Event information is not available."
+        msg = "Event information is available."
+
+        self.verify(60, self.ceilometer_client.events.get, 7,
+                    fail_msg, msg, message_id)
+
+        fail_msg = ("List of all traits for %(event_type)s event type "
+                    "and %(trait_name)s trait name is not available."
+                    % {"event_type": event_type, "trait_name": traits[0]})
+        msg = ("List of all traits for %(event_type)s event type "
+               "and %(trait_name)s trait name is available."
+               % {"event_type": event_type, "trait_name": traits[0]})
+
+        self.verify(60, self.ceilometer_client.traits.list, 8, fail_msg, msg,
+                    event_type, traits[0])
+
     def test_check_volume_notifications(self):
         """Ceilometer test to check get Cinder notifications.
         Target component: Ceilometer
