@@ -444,9 +444,9 @@ class OfficialClientTest(fuel_health.test.TestCase):
     @classmethod
     def _clean_images(cls):
         if cls.images:
-            for image in cls.images:
+            for image_id in cls.images:
                 try:
-                    cls.glance_client.images.delete(image)
+                    cls.glance_client.images.delete(image_id)
                 except Exception as exc:
                     cls.error_msg.append(exc)
                     LOG.debug(traceback.format_exc())
