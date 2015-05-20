@@ -58,6 +58,8 @@ class TestNeutron(neutronmanager.NeutronBaseTest):
 
         Deployment tags: neutron
         """
+        if not self.config.compute.compute_nodes:
+            self.skipTest('There are no compute nodes')
 
         self.check_image_exists()
         if not self.security_groups:
