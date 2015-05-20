@@ -118,11 +118,20 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
     @classmethod
     def _clear_networks(cls):
-
+        try:
+            [cls.compute_client.servers.delete(srv)
+             for srv in cls.compute_client.servers.list()
+             if 'ost1_' in srv.name]
+        except Exception as exc:
+            cls.error_msg.append(exc)
+            LOG.debug(traceback.format_exc())
         for router in cls.routers:
             try:
                 cls.neutron_client.remove_gateway_router(
                     cls.routers[router])
+                for subnet in cls.subnets:
+                    cls.neutron_client.remove_interface_router(
+                        router['id'], {"subnet_id": subnet['id']})
             except Exception as exc:
                 cls.error_msg.append(exc)
                 LOG.debug(traceback.format_exc())
