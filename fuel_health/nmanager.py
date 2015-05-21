@@ -851,6 +851,12 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                             instance.id, 'ACTIVE')
         return instance
 
+    def host_power_action(self, host, action):
+        return self.compute_client.hosts.host_action(host, action)
+
+    def evacuate_instance(self, server):
+        return self.compute_client.servers.evacuate(server)
+
     @classmethod
     def tearDownClass(cls):
         super(NovaNetworkScenarioTest, cls).tearDownClass()
