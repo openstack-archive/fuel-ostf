@@ -96,7 +96,9 @@ class SanityConfigurationTest(nmanager.SanityChecksTest):
             'tenant': self.config.identity.admin_tenant_name}
 
         for key in cluster_data:
-            self.verify_response_true(
-                'admin' not in cluster_data[key],
-                'Step 1 failed: Default {0} value is using. '
-                'We kindly recommend to change all defaults'.format(key))
+            self.verify_response_body_not_equal(
+                exp_content='admin',
+                act_content=cluster_data[key],
+                msg='Default credentials value for {0} is using. '
+                'We kindly recommend to change all defaults'.format(key),
+                failed_step='1')
