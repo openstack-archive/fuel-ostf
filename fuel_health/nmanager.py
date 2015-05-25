@@ -269,25 +269,22 @@ class OfficialClientManager(fuel_health.manager.Manager):
             LOG.debug(traceback.format_exc())
             LOG.warning('Can not initialize murano client')
 
-    def _get_sahara_client(self, username=None, password=None):
-        auth_url = self.config.identity.uri
-        tenant_name = self.config.identity.admin_tenant_name
-        sahara_url = self.config.sahara.api_url
-        LOG.debug('Sahara url is %s' % sahara_url)
-        if not username:
-            username = self.config.identity.admin_username
-        if not password:
-            password = self.config.identity.admin_password
-        tenant_id = [
-            tenant.id for tenant in self.identity_client.tenants.list()
-            if tenant.name == tenant_name][0]
-        return saharaclient.client.Client(self.config.sahara.api_version,
-                                          username=username,
-                                          api_key=password,
-                                          project_name=tenant_name,
-                                          auth_url=auth_url,
-                                          sahara_url="{url}/{id}".format(
-                                              url=sahara_url, id=tenant_id))
+    def _get_sahara_client(self):
+        sahara_api_version = self.config.sahara.api_version
+
+        keystone = self._get_identity_client()
+        try:
+            sahara_url = keystone.service_catalog.url_for(
+                service_type='data_processing', endpoint_type='publicURL')
+        except keystoneclient.exceptions.EndpointNotFound:
+            LOG.warning('Endpoint for Sahara service '
+                        'not found. Sahara client cannot be initialized.')
+            return
+        auth_token = keystone.auth_token
+
+        return saharaclient.client.Client(sahara_api_version,
+                                          sahara_url=sahara_url,
+                                          input_auth_token=auth_token)
 
     def _get_ceilometer_client(self):
         keystone = self._get_identity_client()
