@@ -377,11 +377,23 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         return 'OK'
 
     def get_list_packages(self):
-        resp = requests.get(self.endpoint + 'catalog/packages',
-                            headers=self.headers)
+        try:
+            packages = self.murano_client.packages.list()
+        except exceptions.ClientException:
+            self.fail("Can not get list of packages")
+        packages_list = list(packages)
+        LOG.debug('Packages List: {0}'.format(packages_list))
+        self.assertIsInstance(packages_list, list)
+        return packages_list
 
-        self.assertEqual(200, resp.status_code)
-        self.assertIsInstance(resp.json()['packages'], list)
+    def generate_fqn_list(self):
+        fqn_list = []
+        packages = self.get_list_packages()
+        LOG.debug('Packages list: {0}'.format(packages))
+        for package in packages:
+            fqn_list.append(package.to_dict()['fully_qualified_name'])
+        LOG.debug('FQN List: {0}'.format(fqn_list))
+        return fqn_list
 
     def upload_package(self, package_name, body, app):
         files = {'%s' % package_name: open(app, 'rb')}
@@ -390,11 +402,10 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         return package
 
     def package_exists(self, *packages):
-        resp = requests.get(self.endpoint + 'catalog/packages',
-                            headers=self.headers)
-        LOG.debug("Response for packages is {0}".format(resp.text))
+        fqn_list = self.generate_fqn_list()
+        LOG.debug("Response for packages is {0}".format(fqn_list))
         for package in packages:
-            if package not in resp.text:
+            if package not in fqn_list:
                 return False
         return True
 
