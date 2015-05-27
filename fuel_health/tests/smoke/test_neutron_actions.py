@@ -101,7 +101,7 @@ class TestNeutron(neutronmanager.NeutronBaseTest):
             "Floating IP can not be created.",
             'floating IP creation')
 
-        self.verify(10, self._assign_floating_ip_to_instance,
+        self.verify(20, self._assign_floating_ip_to_instance,
                     8, "Floating IP can not be assigned.",
                     'floating IP assignment',
                     self.compute_client, server, floating_ip)
@@ -112,29 +112,29 @@ class TestNeutron(neutronmanager.NeutronBaseTest):
         LOG.info('is address is  {0}'.format(ip_address))
         LOG.debug(ip_address)
 
-        self.verify(400, self._check_vm_connectivity, 9,
+        self.verify(600, self._check_vm_connectivity, 9,
                     "VM connectivity doesn`t function properly.",
                     'VM connectivity checking', ip_address,
-                    30, (6, 60))
+                    30, (9, 60))
 
-        self.verify(400, self._check_connectivity_from_vm,
+        self.verify(600, self._check_connectivity_from_vm,
                     10, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                          "function properly."),
                     'public connectivity checking from VM', ip_address,
-                    30, (6, 60))
+                    30, (9, 60))
 
-        self.verify(10, self.compute_client.servers.remove_floating_ip,
+        self.verify(20, self.compute_client.servers.remove_floating_ip,
                     11, "Floating IP cannot be removed.",
                     "removing floating IP", server, floating_ip)
 
-        self.verify(10, self.compute_client.floating_ips.delete,
+        self.verify(20, self.compute_client.floating_ips.delete,
                     12, "Floating IP cannot be deleted.",
                     "floating IP deletion", floating_ip)
 
         if self.floating_ips:
             self.floating_ips.remove(floating_ip)
 
-        self.verify(30, self._delete_server, 13,
+        self.verify(40, self._delete_server, 13,
                     "Server can not be deleted. ",
                     "server deletion", server)
 

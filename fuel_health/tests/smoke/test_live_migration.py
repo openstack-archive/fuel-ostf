@@ -125,7 +125,7 @@ class TestInstanceLiveMigration(nmanager.NovaNetworkScenarioTest):
         self.verify(600, self._check_vm_connectivity, 4,
                     "VM connectivity doesn`t function properly.",
                     'VM connectivity checking', ip_address,
-                    30, (6, 60))
+                    30, (9, 60))
 
         free_host = self.verify(
             20,
@@ -153,13 +153,13 @@ class TestInstanceLiveMigration(nmanager.NovaNetworkScenarioTest):
         self.verify(600, self._check_vm_connectivity, 8,
                     "VM connectivity doesn`t function properly.",
                     'VM connectivity checking', ip_address,
-                    30, (6, 60))
+                    30, (9, 60))
 
-        self.verify(10, self.compute_client.servers.remove_floating_ip,
+        self.verify(20, self.compute_client.servers.remove_floating_ip,
                     9, "Floating IP cannot be removed.",
                     "removing floating IP", migrate_server, floating_ip)
 
-        self.verify(10, self.compute_client.floating_ips.delete,
+        self.verify(20, self.compute_client.floating_ips.delete,
                     9, "Floating IP cannot be deleted.",
                     "floating IP deletion", floating_ip)
 

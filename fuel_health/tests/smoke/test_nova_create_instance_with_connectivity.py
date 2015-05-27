@@ -74,7 +74,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         Duration: 25 s.
 
         """
-        self.keypairs[self.tenant_id] = self.verify(25,
+        self.keypairs[self.tenant_id] = self.verify(30,
                                                     self._create_keypair,
                                                     1,
                                                     'Keypair can not be'
@@ -216,19 +216,19 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         self.verify(600, self._check_vm_connectivity, 5,
                     "VM connectivity doesn`t function properly.",
                     'VM connectivity checking', ip_address,
-                    30, (6, 60))
+                    30, (9, 60))
 
         self.verify(600, self._check_connectivity_from_vm,
                     6, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                         "function properly."),
                     'public connectivity checking from VM', ip_address,
-                    30, (6, 60))
+                    30, (9, 60))
 
-        self.verify(10, self.compute_client.servers.remove_floating_ip,
+        self.verify(20, self.compute_client.servers.remove_floating_ip,
                     7, "Floating IP cannot be removed.",
                     "removing floating IP", server, floating_ip)
 
-        self.verify(10, self.compute_client.floating_ips.delete,
+        self.verify(20, self.compute_client.floating_ips.delete,
                     8, "Floating IP cannot be deleted.",
                     "floating IP deletion", floating_ip)
 
@@ -282,11 +282,11 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.fail("Step 3 failed: cannot get instance details. "
                       "Please refer to OpenStack logs for more details.")
 
-        self.verify(400, self._check_connectivity_from_vm,
+        self.verify(600, self._check_connectivity_from_vm,
                     3, ("Connectivity to 8.8.8.8 from the VM doesn`t "
                         "function properly."),
                     'public connectivity checking from VM',
-                    instance_ip, 30, (6, 30), compute)
+                    instance_ip, 30, (9, 30), compute)
 
         self.verify(30, self._delete_server, 4,
                     "Server can not be deleted. ",
@@ -325,7 +325,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self._create_server,
             2,
             "Creating instance using the new security group has failed.",
-            'image creation',
+            'instance creation',
             self.compute_client, name, security_groups,  data_file=data_file
         )
 
@@ -336,7 +336,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             "Floating IP can not be created.",
             'floating IP creation')
 
-        self.verify(10, self._assign_floating_ip_to_instance,
+        self.verify(20, self._assign_floating_ip_to_instance,
                     3, "Floating IP can not be assigned.",
                     'floating IP assignment',
                     self.compute_client, server, floating_ip)
@@ -349,14 +349,14 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             600, self._run_command_from_vm,
             4, "Can not find injected file on instance.",
             'check if injected file exists', ip_address,
-            30, (6, 60),
+            30, (9, 60),
             '[ -f /home/cirros/server.txt ] && echo "True" || echo "False"')
 
-        self.verify(10, self.compute_client.servers.remove_floating_ip,
+        self.verify(20, self.compute_client.servers.remove_floating_ip,
                     5, "Floating IP cannot be removed.",
                     "removing floating IP", server, floating_ip)
 
-        self.verify(10, self.compute_client.floating_ips.delete,
+        self.verify(20, self.compute_client.floating_ips.delete,
                     5, "Floating IP cannot be deleted.",
                     "floating IP deletion", floating_ip)
 
