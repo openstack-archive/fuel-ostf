@@ -288,53 +288,57 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
                     self.keystone_trust_notifications, query)
 
     def test_check_neutron_notifications(self):
-        """Ceilometer test to check get Neutron notifications.
+        """Ceilometer test to check notifications from Neutron
         Target component: Ceilometer
 
         Scenario:
-        1. Check neutron network notifications.
-        2. Check neutron subnet notifications.
-        3. Check neutron port notifications.
-        4. Check neutron router notifications.
-        5. Check neutron floating ip notifications.
+        1. Create Neutron resources.
+        2. Check network notifications.
+        3. Check subnet notifications.
+        4. Check port notifications.
+        5. Check router notifications.
+        6. Check floating IP notifications.
         Duration: 40 s.
-        Deployment tags: Ceilometer, neutron
+        Deployment tags: Ceilometer, Neutron
         """
 
-        net, subnet, port, router, flip = self.neutron_helper()
+        fail_msg = "Creating some Neutron resources failed."
+        msg = "creating Neutron resources"
+        net, subnet, port, router, flip = self.verify(60, self.neutron_helper,
+                                                      1, fail_msg, msg)
 
         fail_msg = "Neutron network notifications are not received."
         msg = "Neutron network notifications are received."
         query = [{'field': 'resource', 'op': 'eq', 'value': net["id"]}]
-        self.verify(60, self.wait_metrics, 1,
+        self.verify(60, self.wait_metrics, 2,
                     fail_msg, msg,
                     self.neutron_network_notifications, query)
 
         fail_msg = "Neutron subnet notifications are not received."
         msg = "Neutron subnet notifications are received."
         query = [{'field': 'resource', 'op': 'eq', 'value': subnet["id"]}]
-        self.verify(60, self.wait_metrics, 2,
+        self.verify(60, self.wait_metrics, 3,
                     fail_msg, msg,
                     self.neutron_subnet_notifications, query)
 
         fail_msg = "Neutron port notifications are not received."
         msg = "Neutron port notifications are received."
         query = [{'field': 'resource', 'op': 'eq', 'value': port["id"]}]
-        self.verify(60, self.wait_metrics, 3,
+        self.verify(60, self.wait_metrics, 4,
                     fail_msg, msg,
                     self.neutron_port_notifications, query)
 
         fail_msg = "Neutron router notifications are not received."
         msg = "Neutron router notifications are received."
         query = [{'field': 'resource', 'op': 'eq', 'value': router["id"]}]
-        self.verify(60, self.wait_metrics, 4,
+        self.verify(60, self.wait_metrics, 5,
                     fail_msg, msg,
                     self.neutron_router_notifications, query)
 
         fail_msg = "Neutron floating ip notifications are not received."
         msg = "Neutron floating ip notifications are received."
         query = [{'field': 'resource', 'op': 'eq', 'value': flip["id"]}]
-        self.verify(60, self.wait_metrics, 5,
+        self.verify(60, self.wait_metrics, 6,
                     fail_msg, msg,
                     self.neutron_floatingip_notifications, query)
 
