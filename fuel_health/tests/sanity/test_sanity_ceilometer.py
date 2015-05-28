@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2013 Mirantis, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -29,29 +27,24 @@ class CeilometerApiTests(ceilometermanager.CeilometerBaseTest):
         Scenario:
             1. Request the list of meters with query: disk_format=qcow2.
             2. Request the list of alarms.
-            3. Request the list of resources received in the last hour.
+            3. Request the list of resources created for the last hour.
 
         Duration: 180 s.
         Deployment tags: Ceilometer
         """
-        fail_msg = "Meter list is unavailable."
 
+        fail_msg = "Failed to get list of meters."
         q = [{"field": "metadata.disk_format", "op": "eq", "value": "qcow2"}]
-
         self.verify(60, self.ceilometer_client.meters.list,
-                    1, fail_msg, "Meter listing.", q)
+                    1, fail_msg, "getting list of meters", q)
 
-        fail_msg = "Alarm list is unavailable."
-
+        fail_msg = "Failed to get list of alarms."
         self.verify(60, self.ceilometer_client.alarms.list,
-                    2, fail_msg, "Alarm listing.")
+                    2, fail_msg, "getting list of alarms")
 
-        fail_msg = 'Resource list is unavailable. '
-
+        fail_msg = 'Failed to get list of resources.'
         an_hour_ago = (datetime.datetime.now() -
                        datetime.timedelta(hours=1)).isoformat()
-
         q = [{"field": "timestamp", "op": "gt", "value": an_hour_ago}]
-
         self.verify(60, self.ceilometer_client.resources.list,
-                    3, fail_msg, "Resource listing.", q)
+                    3, fail_msg, "getting list of resources", q)
