@@ -139,7 +139,7 @@ class VanillaTwoClusterTest(SaharaClusterTest):
         cluster_id = self.verify(30, self.create_cluster, 2,
                                  fail_msg, msg, **self.cluster)
 
-        fail_msg = 'Failed to poll cluster status.'
+        fail_msg = 'Failed while polling cluster status.'
         msg = 'polling cluster status'
         self.verify(self.cluster_timeout,
                     self.poll_cluster_status, 3, fail_msg, msg, cluster_id)
