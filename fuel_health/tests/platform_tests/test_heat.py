@@ -31,7 +31,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             self.skipTest('There are no compute nodes')
 
     def test_advanced_actions(self):
-        """Advanced stack actions: suspend, resume and check.
+        """Advanced stack actions: suspend, resume and check
         Target component: Heat
 
         Scenario:
@@ -266,7 +266,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     stack.id)
 
     def test_update(self):
-        """Update stack actions: inplace, replace and update whole template.
+        """Update stack actions: inplace, replace and update whole template
         Target component: Heat
 
         Scenario:
