@@ -29,6 +29,7 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         cls.routers = {}
         cls.subnets = []
         cls.networks = []
+        cls.floating_ips = []
         cls.security_groups = {}
 
     def setUp(self):
@@ -117,6 +118,16 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         self.neutron_client.delete_network(network['id'])
 
     @classmethod
+    def _clean_floating_ips(cls):
+        if cls.floating_ips:
+            for ip in cls.floating_ips:
+                try:
+                    cls.compute_client.floating_ips.delete(ip)
+                except Exception as exc:
+                    cls.error_msg.append(exc)
+                    LOG.debug(traceback.format_exc())
+
+    @classmethod
     def _clear_networks(cls):
         try:
             [cls.compute_client.servers.delete(srv)
@@ -164,4 +175,5 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
     @classmethod
     def tearDownClass(cls):
         super(NeutronBaseTest, cls)
+        cls._clean_floating_ips()
         cls._clear_networks()
