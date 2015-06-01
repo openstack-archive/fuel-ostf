@@ -243,7 +243,8 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
     def neutron_helper(self):
         net = self.neutron_client.create_network(
             {"network": {"name": rand_name("ceilo-net")}})["network"]
-        self.addCleanup(self.neutron_client.delete_network, net["id"])
+        self.addCleanup(self.cleanup_resources,
+                        [(self.neutron_client.delete_network, net["id"])])
         self.neutron_client.update_network(
             net["id"], {"network": {"name": rand_name("ceilo-net-update")}})
 
@@ -252,20 +253,23 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                         "network_id": net["id"],
                         "ip_version": 4,
                         "cidr": "10.0.7.0/24"}})["subnet"]
-        self.addCleanup(self.neutron_client.delete_subnet, subnet["id"])
+        self.addCleanup(self.cleanup_resources,
+                        [(self.neutron_client.delete_subnet, subnet["id"])])
         self.neutron_client.update_subnet(
             subnet["id"], {"subnet": {"name": rand_name("ceilo-subnet")}})
 
         port = self.neutron_client.create_port({
             "port": {"name": rand_name("ceilo-port"),
                      "network_id": net["id"]}})['port']
-        self.addCleanup(self.neutron_client.delete_port, port["id"])
+        self.addCleanup(self.cleanup_resources,
+                        [(self.neutron_client.delete_port, port["id"])])
         self.neutron_client.update_port(
             port["id"], {"port": {"name": rand_name("ceilo-port-update")}})
 
         router = self.neutron_client.create_router(
             {"router": {"name": rand_name("ceilo-router")}})['router']
-        self.addCleanup(self.neutron_client.delete_router, router["id"])
+        self.addCleanup(self.cleanup_resources,
+                        [(self.neutron_client.delete_router, router["id"])])
         self.neutron_client.update_router(
             router["id"],
             {"router": {"name": rand_name("ceilo-router-update")}})
@@ -285,7 +289,8 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             fl_ip = self.neutron_client.create_floatingip(body)["floatingip"]
         except neutron_exc.IpAddressGenerationFailureClient:
             self.fail('No more IP addresses available on external network.')
-        self.addCleanup(self.neutron_client.delete_floatingip, fl_ip["id"])
+        self.addCleanup(self.cleanup_resources,
+                        [(self.neutron_client.delete_floatingip, fl_ip["id"])])
         self.neutron_client.update_floatingip(
             fl_ip["id"], {"floatingip": {"port_id": None}})
 
