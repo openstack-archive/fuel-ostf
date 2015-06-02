@@ -1,0 +1,15 @@
+Verified+2: Jenkins
+Code-Review+2: tatyana-leontovich <tleontovich@mirantis.com>
+Workflow+1: tatyana-leontovich <tleontovich@mirantis.com>
+Code-Review+1: Vadim Rovachev <vrovachev@mirantis.com>
+Code-Review+1: Timur Nurlygayanov <tnurlygayanov@mirantis.com>
+Code-Review+1: Anastasia Kuznetsova <akuznetsova@mirantis.com>
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Code-Review+1: svasheka <svasheka@mirantis.com>
+Code-Review+1: Alexander Gubanov <ogubanov@mirantis.com>
+Code-Review+1: Vitaly Gusev <vgusev@mirantis.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 02 Jun 2015 07:57:59 +0000
+Reviewed-on: https://review.openstack.org/186822
+Project: stackforge/fuel-ostf
+Branch: refs/heads/master
