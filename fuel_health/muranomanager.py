@@ -16,6 +16,7 @@
 import contextlib
 import logging
 import os
+import socket
 import time
 import traceback
 import zipfile
@@ -49,7 +50,7 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         if not self.config.compute.compute_nodes:
             self.skipTest('There are no compute nodes to run tests')
 
-        self.min_required_ram_mb = 2048
+        self.min_required_ram_mb = 4096
 
         self.murano_available = True
         self.endpoint = self.config.murano.api_url + '/v1/'
@@ -68,9 +69,9 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
         if self.murano_available:
             if self.environments:
-                for environment in self.environments:
+                for environment_id in self.environments:
                     try:
-                        self.delete_environment(environment["id"])
+                        self.delete_environment(environment_id)
                     except Exception:
                         LOG.warning(traceback.format_exc())
             if self.packages:
@@ -133,13 +134,8 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         Returns new environment.
         """
 
-        post_body = {'name': name}
-        resp = requests.post(self.endpoint + 'environments',
-                             data=jsonutils.dumps(post_body),
-                             headers=self.headers)
-        self.assertEqual(200, resp.status_code)
-        environment = resp.json()
-        self.environments.append(environment)
+        environment = self.murano_client.environments.create({'name': name})
+        self.environments.append(environment.id)
         return environment
 
     def get_environment(self, environment_id):
@@ -152,9 +148,7 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         Returns specific environment.
         """
 
-        return requests.get('{0}environments/{1}'.format(self.endpoint,
-                                                         environment_id),
-                            headers=self.headers).json()
+        return self.murano_client.environments.get(environment_id)
 
     def update_environment(self, environment_id, new_name):
         """This method allows to update specific environment by ID.
@@ -177,9 +171,8 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         Returns None.
         """
 
-        endpoint = '{0}environments/{1}'.format(self.endpoint, environment_id)
-        resp = requests.delete(endpoint, headers=self.headers)
-        return resp
+        self.murano_client.environments.delete(environment_id)
+        return self.environments.remove(environment_id)
 
     def environment_delete_check(self, environment_id, timeout=60):
         resp = requests.get('{0}environments/{1}'.format(self.endpoint,
@@ -212,11 +205,7 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         Returns new session.
         """
 
-        post_body = None
-        endpoint = '{0}environments/{1}/configure'.format(self.endpoint,
-                                                          environment_id)
-        return requests.post(endpoint, data=post_body,
-                             headers=self.headers).json()
+        return self.murano_client.sessions.configure(environment_id)
 
     def get_session(self, environment_id, session_id):
         """This method allows to get specific session.
@@ -315,26 +304,26 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
                                                   '/{0}'.format(service_id),
                                                   session_id)
 
-    def deploy_check(self, environment_id):
+    def deploy_check(self, environment):
         """This method allows to wait for deployment of Murano evironments.
 
         Input parameters:
-          environment_id - ID of environment
+          environment - Murano environment
 
         Returns environment.
         """
 
-        environment = self.get_environment(environment_id)
-        while environment['status'] != 'ready':
+        environment = self.get_environment(environment.id)
+        while environment.status != 'ready':
             time.sleep(5)
-            environment = self.get_environment(environment_id)
-            if environment['status'] == 'deploy failure':
+            environment = self.get_environment(environment.id)
+            if environment.status == 'deploy failure':
                 LOG.error(
                     'Environment has incorrect status'
-                    ' %s' % environment['status'])
+                    ' %s' % environment.status)
                 self.fail(
                     'Environment has incorrect status'
-                    ' %s .' % environment['status'])
+                    ' %s .' % environment.status)
         return environment
 
     def deployments_status_check(self, environment_id):
@@ -360,21 +349,45 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
             self.assertEqual('success', deployment['state'])
         return 'OK'
 
-    def ports_check(self, environment, ports):
-        """This method allows to check that needed ports are opened.
+    def check_port_access(self, ip, port):
+        result = 1
+        start_time = time.time()
+        while time.time() - start_time < 600:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            result = sock.connect_ex((str(ip), port))
+            sock.close()
+            if result == 0:
+                break
+            time.sleep(5)
+        self.assertEqual(0, result, '%s port is closed on instance' % port)
 
-        Input parameters:
-          environment - Murano environment
-          ports - list of needed ports
+    def port_status_check(self, environment, configurations):
+        """Function which gives opportunity to check multiple instances
+        :param environment: Murano environment
+        :param configurations: Array of configurations.
 
-        Returns 'OK'.
+        Example: [[instance_name, *ports], [instance_name, *ports]] ...
         """
-        check_ip = environment['services'][0]['instance']['floatingIpAddress']
+        for configuration in configurations:
+            inst_name = configuration[0]
+            ports = configuration[1:]
+            ip = self.get_ip_by_instance_name(environment, inst_name)
+            if ip and ports:
+                for port in ports:
+                    self.check_port_access(ip, port)
+            else:
+                self.fail('Instance does not have floating IP')
 
-        for port in ports:
-            self.assertTrue(self._try_port(check_ip, port))
-
-        return 'OK'
+    def get_ip_by_instance_name(self, environment, inst_name):
+        """Returns ip of instance using instance name
+        :param environment: Murano environment
+        :param name: String, which is substring of name of instance or name of
+        instance
+        :return:
+        """
+        for service in environment.services:
+            if inst_name in service['instance']['name']:
+                return service['instance']['floatingIpAddress']
 
     def get_list_packages(self):
         try:
@@ -437,9 +450,14 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         self.assertEqual(200, resp.status_code)
         self.assertIsInstance(resp.json()['categories'], list)
 
-    def check_path(self, environment, path):
-        floating_ip = environment['services'][0]['instance'][
-            'floatingIpAddress']
-        resp = requests.get('http://{0}/{1}'.format(floating_ip, path))
-
-        self.assertEqual(200, resp.status_code)
+    def check_path(self, env, path, inst_name=None):
+        environment = env.manager.get(env.id)
+        if inst_name:
+            ip = self.get_ip_by_instance_name(environment, inst_name)
+        else:
+            ip = environment.services[0]['instance']['floatingIpAddress']
+        resp = requests.get('http://{0}/{1}'.format(ip, path))
+        if resp.status_code == 200:
+            pass
+        else:
+            self.fail("Service path unavailable")

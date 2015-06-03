@@ -110,7 +110,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
         fail_msg = "User can't create session for environment. "
         session = self.verify(5, self.create_session,
                               4, fail_msg, "session creating",
-                              self.environment['id'])
+                              self.environment.id)
 
         post_body = {
             "instance": {
@@ -136,27 +136,27 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
         fail_msg = "User can't create service. "
         self.verify(5, self.create_service,
                     5, fail_msg, "service creating",
-                    self.environment['id'], session['id'], post_body)
+                    self.environment.id, session.id, post_body)
 
         fail_msg = "User can't deploy session. "
         self.verify(5, self.deploy_session,
                     6, fail_msg,
                     "sending session on deployment",
-                    self.environment['id'], session['id'])
+                    self.environment.id, session.id)
 
         fail_msg = "Deployment was not completed correctly. "
         self.verify(860, self.deploy_check,
                     7, fail_msg, 'deployment is going',
-                    self.environment['id'])
+                    self.environment)
 
         self.verify(5, self.deployments_status_check, 8, fail_msg,
                     'Check deployments status',
-                    self.environment['id'])
+                    self.environment.id)
 
         fail_msg = "Can't delete environment. "
         self.verify(60, self.environment_delete_check,
                     9, fail_msg, "deleting environment",
-                    self.environment['id'])
+                    self.environment.id)
 
         fail_msg = "Can't delete package"
         self.verify(5, self.delete_package, 10, fail_msg, "deleting_package",
@@ -202,7 +202,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
         fail_msg = "User can't create session for environment. "
         session = self.verify(5, self.create_session,
                               2, fail_msg, "session creating",
-                              self.environment['id'])
+                              self.environment.id)
 
         post_body = {
             "instance": {
@@ -226,35 +226,35 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
         }
 
         fail_msg = "User can't create service. "
-        self.verify(5, self.create_service,
-                    3, fail_msg, "service creating",
-                    self.environment['id'], session['id'], post_body)
+        apache = self.verify(5, self.create_service,
+                             3, fail_msg, "service creating",
+                             self.environment.id, session.id, post_body)
 
         fail_msg = "User can't deploy session. "
         self.verify(5, self.deploy_session,
                     4, fail_msg,
                     "sending session on deployment",
-                    self.environment['id'], session['id'])
+                    self.environment.id, session.id)
 
         fail_msg = "Deployment was not completed correctly. "
-        environment = self.verify(1800, self.deploy_check,
-                                  5, fail_msg, 'deployment is going',
-                                  self.environment['id'])
+        self.environment = self.verify(1800, self.deploy_check,
+                                       5, fail_msg, 'deployment is going',
+                                       self.environment)
 
         self.verify(5, self.deployments_status_check,
                     6, fail_msg,
                     'Check deployments status',
-                    self.environment['id'])
+                    self.environment.id)
 
-        self.verify(300, self.ports_check,
+        self.verify(300, self.port_status_check,
                     7, fail_msg,
                     'Check that needed ports are opened',
-                    environment, ['80'])
+                    self.environment, [[apache['instance']['name'], 22, 80]])
 
         fail_msg = "Can't delete environment. "
         self.verify(5, self.delete_environment,
                     8, fail_msg, "deleting environment",
-                    self.environment['id'])
+                    self.environment.id)
 
     def test_deploy_wordpress_app(self):
         """Check that user can deploy WordPress app in Murano environment
@@ -263,14 +263,15 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
         Scenario:
             1. Send request to create environment.
             2. Send request to create session for environment.
-            3. Send request to create Linux-based service Apache.
-            4. Send request to create MySQL.
+            3. Send request to create MySQL.
+            4. Send request to create Linux-based service Apache.
             5. Send request to create WordPress.
             6. Request to deploy session.
             7. Checking environment status.
             8. Checking deployments status.
-            9. Checking WordPress path.
-            10. Send request to delete environment.
+            9. Checking ports availability.
+            10. Checking WordPress path.
+            11. Send request to delete environment.
 
         Duration: 2140 s.
         Deployment tags: Murano, Heat
@@ -301,35 +302,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
         fail_msg = "User can't create session for environment. "
         session = self.verify(5, self.create_session,
                               2, fail_msg, "session creating",
-                              self.environment['id'])
-
-        post_body = {
-            "instance": {
-                "flavor": self.flavor_name,
-                "image": self.image.name,
-                "assignFloatingIp": True,
-                "?": {
-                    "type": "io.murano.resources.LinuxMuranoInstance",
-                    "id": str(uuid.uuid4())
-                },
-                "name": rand_name("testMurano")
-            },
-            "name": rand_name("teMurano"),
-            "enablePHP": True,
-            "?": {
-                "_{id}".format(id=uuid.uuid4().hex): {
-                    "name": "Apache"
-                },
-                "type": "io.murano.apps.apache.ApacheHttpServer",
-                "id": str(uuid.uuid4())
-            }
-        }
-
-        fail_msg = "User can't create service Apache. "
-        self.apache = self.verify(5, self.create_service,
-                                  3, fail_msg, "service creating",
-                                  self.environment['id'], session['id'],
-                                  post_body)
+                              self.environment.id)
 
         post_body = {
             "instance": {
@@ -357,9 +330,37 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
 
         fail_msg = "User can't create service MySQL. "
         self.mysql = self.verify(5, self.create_service,
-                                 4, fail_msg, "service creating",
-                                 self.environment['id'], session['id'],
+                                 3, fail_msg, "service creating",
+                                 self.environment.id, session.id,
                                  post_body)
+
+        post_body = {
+            "instance": {
+                "flavor": self.flavor_name,
+                "image": self.image.name,
+                "assignFloatingIp": True,
+                "?": {
+                    "type": "io.murano.resources.LinuxMuranoInstance",
+                    "id": str(uuid.uuid4())
+                },
+                "name": rand_name("testMurano")
+            },
+            "name": rand_name("teMurano"),
+            "enablePHP": True,
+            "?": {
+                "_{id}".format(id=uuid.uuid4().hex): {
+                    "name": "Apache"
+                },
+                "type": "io.murano.apps.apache.ApacheHttpServer",
+                "id": str(uuid.uuid4())
+            }
+        }
+
+        fail_msg = "User can't create service Apache. "
+        self.apache = self.verify(5, self.create_service,
+                                  4, fail_msg, "service creating",
+                                  self.environment.id, session.id,
+                                  post_body)
 
         post_body = {
             "name": rand_name("teMurano"),
@@ -380,29 +381,38 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
         fail_msg = "User can't create service WordPress. "
         self.verify(5, self.create_service,
                     5, fail_msg, "service creating",
-                    self.environment['id'], session['id'], post_body)
+                    self.environment.id, session.id, post_body)
 
         fail_msg = "User can't deploy session. "
         self.verify(5, self.deploy_session,
                     6, fail_msg,
                     "sending session on deployment",
-                    self.environment['id'], session['id'])
+                    self.environment.id, session.id)
 
         fail_msg = "Deployment was not completed correctly. "
-        environment = self.verify(1800, self.deploy_check,
-                                  7, fail_msg, 'deployment is going',
-                                  self.environment['id'])
+        self.environment = self.verify(1800, self.deploy_check,
+                                       7, fail_msg, 'deployment is going',
+                                       self.environment)
 
         self.verify(5, self.deployments_status_check,
                     8, fail_msg,
                     'Check deployments status',
-                    self.environment['id'])
+                    self.environment.id)
+
+        self.verify(300, self.port_status_check,
+                    9, fail_msg,
+                    'Check that needed ports are opened',
+                    self.environment,
+                    [[self.apache['instance']['name'], 22, 80],
+                     [self.mysql['instance']['name'], 22, 3306]])
 
         fail_msg = "Path to WordPress unavailable"
-        self.verify(10, self.check_path, 9, fail_msg,
-                    'checking path availability', environment, "wordpress")
+        self.verify(10, self.check_path, 10, fail_msg,
+                    'checking path availability',
+                    self.environment, "wordpress",
+                    self.apache['instance']['name'])
 
         fail_msg = "Can't delete environment. "
         self.verify(5, self.delete_environment,
-                    10, fail_msg, "deleting environment",
-                    self.environment['id'])
+                    11, fail_msg, "deleting environment",
+                    self.environment.id)
