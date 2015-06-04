@@ -44,7 +44,7 @@ class MuranoSanityTests(muranomanager.MuranoTest):
         fail_msg = ("Can't delete environment. Murano API isn't available "
                     "or RabbitMQ connectivity broken. ")
         self.verify(5, self.delete_environment, 2, fail_msg,
-                    "deleting environment", self.environment['id'])
+                    "deleting environment", self.environment.id)
 
     def test_get_list_categories(self):
         """Get list of Murano applications categories
