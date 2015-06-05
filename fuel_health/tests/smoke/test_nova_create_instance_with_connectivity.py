@@ -321,7 +321,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
 
         data_file = {"/home/cirros/server.txt": self._load_file('server.txt')}
         server = self.verify(
-            200,
+            300,
             self._create_server,
             2,
             "Creating instance using the new security group has failed.",
