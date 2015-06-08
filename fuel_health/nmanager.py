@@ -721,8 +721,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def _find_network_host(self, timeout, retries):
         """Find host where nova-network works."""
-        if 'neutron' in self.config.network.network_provider:
-            return self.host[0]
         if self.config.compute.use_vcenter:
             command = "pcs status|grep nova-network|awk {'print $4'}"
             ssh = SSHClient(self.host[0],
@@ -736,11 +734,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             get_n_net_nodename = socket.gethostbyname(n_net_nodename)
             return get_n_net_nodename
         else:
-            services = self.compute_client.services.list()
-            net_service = filter(
-                lambda n: n.__dict__['binary'] == u'nova-network',
-                services)[0]
-            return net_service.__dict__['host']
+            return self.host[0]
 
     def _ping_ip_address_from_instance(self, ip_address, timeout,
                                        retries, viaHost=None):
