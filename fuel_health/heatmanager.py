@@ -89,7 +89,10 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         stack = self._find_stack(self.heat_client, 'stack_name', stack_name)
         if stack is None:
             return
-        self.heat_client.stacks.delete(stack.id)
+        try:
+            self.heat_client.stacks.delete(stack.id)
+        except:
+            self.fail("Cleanup: Failed to delete stack '%s'" % stack_name)
         self._wait_for_stack_deleted(stack.id)
         LOG.debug("Resource '%s' has been deleted." % stack_name)
 
