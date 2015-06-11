@@ -284,7 +284,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             11. Wait for the stack status to change to 'UPDATE_COMPLETE'.
             12. Check that there are only two newly created stack instances.
             13. Delete the stack.
-            15. Wait for the stack to be deleted.
+            14. Wait for the stack to be deleted.
         Duration: 900 s.
         """
         self.check_image_exists()
