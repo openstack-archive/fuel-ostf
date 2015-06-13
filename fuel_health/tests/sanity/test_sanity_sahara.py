@@ -52,7 +52,7 @@ class SaharaTemplatesTest(saharamanager.SaharaTestsManager):
 
 class VanillaTwoTemplatesTest(SaharaTemplatesTest):
     _plugin_name = 'vanilla'
-    _hadoop_version = '2.4.1'
+    _hadoop_version = '2.6.0'
     _node_processes = ['resourcemanager', 'namenode', 'secondarynamenode',
                        'oozie', 'historyserver', 'nodemanager', 'datanode']
 
@@ -111,13 +111,12 @@ class VanillaTwoTemplatesTest(SaharaTemplatesTest):
 
 
 class HDPTwoTemplatesTest(SaharaTemplatesTest):
-    _plugin_name = 'hdp'
-    _hadoop_version = '2.0.6'
-    _node_processes = ['NODEMANAGER', 'DATANODE', 'HDFS_CLIENT', 'PIG',
-                       'ZOOKEEPER_CLIENT', 'MAPREDUCE2_CLIENT', 'YARN_CLIENT',
-                       'OOZIE_CLIENT', 'RESOURCEMANAGER', 'OOZIE_SERVER',
-                       'SECONDARY_NAMENODE', 'AMBARI_SERVER', 'NAMENODE',
-                       'ZOOKEEPER_SERVER', 'HISTORYSERVER', 'GANGLIA_SERVER']
+    _plugin_name = 'ambari'
+    _hadoop_version = '2.2'
+    _node_processes = ["Ambari", "YARN Timeline Server", "DataNode",
+                       "MapReduce History Server", "NameNode", "NodeManager",
+                       "Oozie", "ResourceManager", "SecondaryNameNode",
+                       "ZooKeeper"]
 
     def test_hdp_two_templates(self):
         """Sahara test for checking CRUD operations on HDP2 templates

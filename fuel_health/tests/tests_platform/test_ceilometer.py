@@ -415,7 +415,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         """
 
         plugin_name = 'vanilla'
-        hadoop_version = '2.4.1'
+        hadoop_version = '2.6.0'
 
         fail_msg = 'Failed to find correctly registered Sahara image.'
         msg = 'finding correctly registered Sahara image'
