@@ -52,7 +52,7 @@ class SaharaTemplatesTest(saharamanager.SaharaTestsManager):
 
 class VanillaTwoTemplatesTest(SaharaTemplatesTest):
     _plugin_name = 'vanilla'
-    _hadoop_version = '2.4.1'
+    _hadoop_version = '2.6.0'
     _node_processes = ['resourcemanager', 'namenode', 'secondarynamenode',
                        'oozie', 'historyserver', 'nodemanager', 'datanode']
 
