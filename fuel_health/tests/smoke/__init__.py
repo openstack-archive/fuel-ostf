@@ -27,5 +27,5 @@ __profile__ = {
     "test_path": "fuel_health/tests/smoke",
     "cleanup_path": "fuel_health.cleanup",
     "description": "Functional tests. Duration 3 min - 14 min",
-    "exclusive_testsets": ['smoke_platform']
+    "exclusive_testsets": ['smoke_tests']
 }
