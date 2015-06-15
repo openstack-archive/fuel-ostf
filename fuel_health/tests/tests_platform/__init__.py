@@ -22,9 +22,9 @@ in test_sets table.
 """
 __profile__ = {
     "test_runs_ordering_priority": 4,
-    "id": "platform_tests",
+    "id": "tests_platform",
     "driver": "nose",
-    "test_path": "fuel_health/tests/platform_tests",
+    "test_path": "fuel_health/tests/tests_platform",
     "description": ("Platform services functional tests."
                     " Duration 3 min - 60 min"),
     "cleanup_path": "fuel_health.cleanup",
