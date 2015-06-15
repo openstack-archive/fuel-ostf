@@ -722,7 +722,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def _find_network_host(self, timeout, retries):
         """Find host where nova-network works."""
         if self.config.compute.use_vcenter:
-            command = "pcs status|grep nova-network|awk {'print $4'}"
+            command = "crm_mon -1|grep nova-network|awk {'print $4'}"
             ssh = SSHClient(self.host[0],
                             self.usr, self.pwd,
                             key_filename=self.key,
