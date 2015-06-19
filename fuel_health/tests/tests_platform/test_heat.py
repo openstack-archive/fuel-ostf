@@ -503,7 +503,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                                   "Floating IP can not be created.",
                                   'floating IP creation')
 
-        self.verify(10, self._assign_floating_ip_to_instance, 7,
+        self.verify(20, self._assign_floating_ip_to_instance, 7,
                     "Floating IP can not be assigned.",
                     'assigning floating IP',
                     self.compute_client, instances[0], floating_ip)

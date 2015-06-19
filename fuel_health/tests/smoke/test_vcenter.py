@@ -144,7 +144,7 @@ class TestVcenter(nmanager.NovaNetworkScenarioTest):
             "Floating IP can not be created.",
             'floating IP creation')
 
-        self.verify(10, self._assign_floating_ip_to_instance,
+        self.verify(20, self._assign_floating_ip_to_instance,
                     4, "Floating IP can not be assigned.",
                     'floating IP assignment',
                     self.compute_client, server, floating_ip)
