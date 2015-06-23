@@ -43,12 +43,13 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
 
         max_free_ram_mb = (
             self.get_max_free_compute_node_ram(self.min_required_ram_mb))
-        if max_free_ram_mb < self.min_required_ram_mb:
+        # OSTF tests will create 2 VMs with min_required_ram_mb
+        if max_free_ram_mb < self.min_required_ram_mb*2:
             msg = ('This test requires more hardware resources of your '
                    'OpenStack cluster: at least one of the compute nodes '
                    'must have >= {0} MB of free RAM, but you have only '
                    '{1} MB on most appropriate compute node.'
-                   .format(self.min_required_ram_mb, max_free_ram_mb))
+                   .format(self.min_required_ram_mb*2, max_free_ram_mb))
             LOG.debug(msg)
             self.skipTest(msg)
 
@@ -58,7 +59,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
 
         self.flavor_name = rand_name("ostf_test_Murano_flavor")
         flavor = self.compute_client.flavors.create(
-            self.flavor_name, disk=60, ram=self.min_required_ram_mb, vcpus=1)
+            self.flavor_name, disk=40, ram=self.min_required_ram_mb, vcpus=2)
         self.addCleanup(self.compute_client.flavors.delete, flavor.id)
 
     def tearDown(self):
@@ -390,7 +391,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
                     self.environment.id, session.id)
 
         fail_msg = "Deployment was not completed correctly. "
-        self.environment = self.verify(1800, self.deploy_check,
+        self.environment = self.verify(2400, self.deploy_check,
                                        7, fail_msg, 'deployment is going',
                                        self.environment)
 
@@ -407,12 +408,12 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
                      [self.mysql['instance']['name'], 22, 3306]])
 
         fail_msg = "Path to WordPress unavailable"
-        self.verify(10, self.check_path, 10, fail_msg,
+        self.verify(30, self.check_path, 10, fail_msg,
                     'checking path availability',
                     self.environment, "wordpress",
                     self.apache['instance']['name'])
 
         fail_msg = "Can't delete environment. "
-        self.verify(5, self.delete_environment,
+        self.verify(10, self.delete_environment,
                     11, fail_msg, "deleting environment",
                     self.environment.id)
