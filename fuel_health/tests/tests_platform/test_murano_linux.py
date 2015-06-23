@@ -41,24 +41,15 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
                          'fuel-{0}/user-guide.html#platform-tests-'
                          'description'.format(self.config.fuel.fuel_version))
 
-        max_free_ram_mb = (
-            self.get_max_free_compute_node_ram(self.min_required_ram_mb))
-        if max_free_ram_mb < self.min_required_ram_mb:
-            msg = ('This test requires more hardware resources of your '
-                   'OpenStack cluster: at least one of the compute nodes '
-                   'must have >= {0} MB of free RAM, but you have only '
-                   '{1} MB on most appropriate compute node.'
-                   .format(self.min_required_ram_mb, max_free_ram_mb))
-            LOG.debug(msg)
-            self.skipTest(msg)
-
         self.image = self.find_murano_image('linux')
 
         self.dummy_fqdn = 'io.murano.apps.Simple'
 
+        # Flavor with 2 vCPU and 40Gb HDD will allow to sucessfully
+        # deploy all Murano applications.
         self.flavor_name = rand_name("ostf_test_Murano_flavor")
         flavor = self.compute_client.flavors.create(
-            self.flavor_name, disk=60, ram=self.min_required_ram_mb, vcpus=1)
+            self.flavor_name, disk=40, ram=self.min_required_ram_mb, vcpus=2)
         self.addCleanup(self.compute_client.flavors.delete, flavor.id)
 
     def tearDown(self):
@@ -84,6 +75,18 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
         Deployment tags: Murano, Heat
         Available since release: 2014.2-6.1
         """
+
+        vms_count = self.get_info_about_available_resources(
+            self.min_required_ram_mb, 40, 2)
+        if vms_count < 1:
+            msg = ('This test requires more hardware resources of your '
+                   'OpenStack cluster: your cloud should allow to create '
+                   'at least 1 VM with {0} MB of RAM, {1} HDD and {2} vCPUs. '
+                   'You need to remove some resources or add compute nodes '
+                   'to have an ability to run this OSTF test.'
+                   .format(self.min_required_ram_mb, 40, 2))
+            LOG.debug(msg)
+            self.skipTest(msg)
 
         if self.package_exists(self.dummy_fqdn):
             package = self.get_package_by_fqdn(self.dummy_fqdn)
@@ -181,6 +184,18 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
         Available since release: 2014.2-6.0
         """
 
+        vms_count = self.get_info_about_available_resources(
+            self.min_required_ram_mb, 40, 2)
+        if vms_count < 1:
+            msg = ('This test requires more hardware resources of your '
+                   'OpenStack cluster: your cloud should allow to create '
+                   'at least 1 VM with {0} MB of RAM, {1} HDD and {2} vCPUs. '
+                   'You need to remove some resources or add compute nodes '
+                   'to have an ability to run this OSTF test.'
+                   .format(self.min_required_ram_mb, 40, 2))
+            LOG.debug(msg)
+            self.skipTest(msg)
+
         if not self.image:
             msg = ('Murano image was not properly registered or was not '
                    'uploaded at all. Please refer to the Mirantis OpenStack '
@@ -277,6 +292,18 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
         Deployment tags: Murano, Heat
         Available since release: 2014.2-6.1
         """
+
+        vms_count = self.get_info_about_available_resources(
+            self.min_required_ram_mb, 40, 2)
+        if vms_count < 2:
+            msg = ('This test requires more hardware resources of your '
+                   'OpenStack cluster: your cloud should allow to create '
+                   'at least 2 VMs with {0} MB of RAM, {1} HDD and {2} vCPUs.'
+                   ' You need to remove some resources or add compute nodes '
+                   'to have an ability to run this OSTF test.'
+                   .format(self.min_required_ram_mb, 40, 2))
+            LOG.debug(msg)
+            self.skipTest(msg)
 
         if not self.image:
             msg = ('Murano image was not properly registered or was not '
@@ -390,7 +417,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
                     self.environment.id, session.id)
 
         fail_msg = "Deployment was not completed correctly. "
-        self.environment = self.verify(1800, self.deploy_check,
+        self.environment = self.verify(2400, self.deploy_check,
                                        7, fail_msg, 'deployment is going',
                                        self.environment)
 
@@ -407,12 +434,12 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
                      [self.mysql['instance']['name'], 22, 3306]])
 
         fail_msg = "Path to WordPress unavailable"
-        self.verify(10, self.check_path, 10, fail_msg,
+        self.verify(30, self.check_path, 10, fail_msg,
                     'checking path availability',
                     self.environment, "wordpress",
                     self.apache['instance']['name'])
 
         fail_msg = "Can't delete environment. "
-        self.verify(5, self.delete_environment,
+        self.verify(10, self.delete_environment,
                     11, fail_msg, "deleting environment",
                     self.environment.id)
