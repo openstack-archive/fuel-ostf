@@ -171,6 +171,7 @@ class FuelTestAssertMixin(object):
         :msg: message that will be displayed if an exception occurs;
         :action: action that is performed by the method.
         """
+        LOG.info("STEP:{0}, verify action: '{1}'".format(step, action))
         try:
             with timeout(secs, action):
                 result = func(*args, **kwargs)

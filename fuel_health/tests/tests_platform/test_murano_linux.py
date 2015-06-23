@@ -390,7 +390,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
                     self.environment.id, session.id)
 
         fail_msg = "Deployment was not completed correctly. "
-        self.environment = self.verify(1800, self.deploy_check,
+        self.environment = self.verify(2400, self.deploy_check,
                                        7, fail_msg, 'deployment is going',
                                        self.environment)
 
@@ -407,12 +407,12 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
                      [self.mysql['instance']['name'], 22, 3306]])
 
         fail_msg = "Path to WordPress unavailable"
-        self.verify(10, self.check_path, 10, fail_msg,
+        self.verify(30, self.check_path, 10, fail_msg,
                     'checking path availability',
                     self.environment, "wordpress",
                     self.apache['instance']['name'])
 
         fail_msg = "Can't delete environment. "
-        self.verify(5, self.delete_environment,
+        self.verify(10, self.delete_environment,
                     11, fail_msg, "deleting environment",
                     self.environment.id)
