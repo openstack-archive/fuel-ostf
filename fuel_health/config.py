@@ -45,12 +45,6 @@ IdentityGroup = [
     cfg.StrOpt('uri',
                default='http://localhost/',
                help="Full URI of the OpenStack Identity API (Keystone), v2"),
-    cfg.StrOpt('url',
-               default='http://localhost:5000/v2.0/',
-               help="Dashboard Openstack url, v2"),
-    cfg.StrOpt('ubuntu_url',
-               default='http://localhost:5000/v2.0/',
-               help="Dashboard Openstack url, v2"),
     cfg.StrOpt('uri_v3',
                help='Full URI of the OpenStack Identity API (Keystone), v3'),
     cfg.StrOpt('strategy',
@@ -707,7 +701,7 @@ class NailgunConfig(object):
     def find_proxy(self, ip):
 
         endpoint = self.network.raw_data.get(
-            'public_vip', None) or ip
+            'management_vip', None) or ip
 
         auth_url = 'http://{0}:{1}/{2}/'.format(endpoint, 5000, 'v2.0')
 
@@ -742,15 +736,17 @@ class NailgunConfig(object):
         os.environ['http_proxy'] = 'http://{0}:{1}'.format(proxies[0], 8888)
 
     def set_endpoints(self):
+        management_vip = self.network.raw_data.get('management_vip', None)
         public_vip = self.network.raw_data.get('public_vip', None)
-        # workaround for api without public_vip for ha mode
-        if not public_vip and 'ha' in self.mode:
+        # workaround for api without management_vip for ha mode
+        if not management_vip and 'ha' in self.mode:
             self._parse_ostf_api()
         else:
-            endpoint = public_vip or self.compute.public_ips[0]
-            endpoint_mur_sav = public_vip or self.compute.controller_nodes[0]
-            self.identity.url = 'http://{0}/{1}/'.format(endpoint, 'dashboard')
-            self.identity.ubuntu_url = 'http://{0}/'.format(endpoint)
+            endpoint = management_vip or self.compute.public_ips[0]
+            endpoint_mur_sav = management_vip \
+                or self.compute.controller_nodes[0]
+            self.horizon_url = 'http://{0}/{1}/'.format(public_vip, 'dashboard')
+            self.horizon_ubuntu_url = 'http://{0}/'.format(public_vip)
             self.identity.uri = 'http://{0}:{1}/{2}/'.format(
                 endpoint, 5000, 'v2.0')
             self.murano.api_url = 'http://{0}:{1}'.format(

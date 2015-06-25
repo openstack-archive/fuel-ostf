@@ -99,9 +99,9 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
             # Auth in horizon with non-admin user
             client = requests.session()
             if self.config.compute.deployment_os == 'Ubuntu':
-                url = self.config.identity.ubuntu_url
+                url = self.config.horizon_ubuntu_url
             else:
-                url = self.config.identity.url
+                url = self.config.horizon_url
 
             # Retrieve the CSRF token first
             client.get(url)  # sets cookie
