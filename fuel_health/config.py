@@ -707,7 +707,7 @@ class NailgunConfig(object):
     def find_proxy(self, ip):
 
         endpoint = self.network.raw_data.get(
-            'public_vip', None) or ip
+            'management_vip', None) or ip
 
         auth_url = 'http://{0}:{1}/{2}/'.format(endpoint, 5000, 'v2.0')
 
@@ -742,13 +742,14 @@ class NailgunConfig(object):
         os.environ['http_proxy'] = 'http://{0}:{1}'.format(proxies[0], 8888)
 
     def set_endpoints(self):
-        public_vip = self.network.raw_data.get('public_vip', None)
-        # workaround for api without public_vip for ha mode
-        if not public_vip and 'ha' in self.mode:
+        management_vip = self.network.raw_data.get('management_vip', None)
+        # workaround for api without management_vip for ha mode
+        if not management_vip and 'ha' in self.mode:
             self._parse_ostf_api()
         else:
-            endpoint = public_vip or self.compute.public_ips[0]
-            endpoint_mur_sav = public_vip or self.compute.controller_nodes[0]
+            endpoint = management_vip or self.compute.public_ips[0]
+            endpoint_mur_sav = management_vip \
+                or self.compute.controller_nodes[0]
             self.identity.url = 'http://{0}/{1}/'.format(endpoint, 'dashboard')
             self.identity.ubuntu_url = 'http://{0}/'.format(endpoint)
             self.identity.uri = 'http://{0}:{1}/{2}/'.format(
