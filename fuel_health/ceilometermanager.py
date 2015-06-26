@@ -14,6 +14,7 @@
 # under the License.
 
 
+import functools
 import logging
 import traceback
 
@@ -24,6 +25,20 @@ import fuel_health.nmanager
 import fuel_health.test
 
 LOG = logging.getLogger(__name__)
+
+
+def check_compute_nodes():
+
+    def decorator(func):
+
+        @functools.wraps(func)
+        def wrapper(self, *args, **kwargs):
+            if (not self.config.compute.compute_nodes and
+                    not self.config.compute.use_vcenter):
+                self.skipTest('There are no compute nodes')
+            return func(self, *args, **kwargs)
+        return wrapper
+    return decorator
 
 
 class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
@@ -107,9 +122,6 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         self.check_clients_state()
         if not self.ceilometer_client:
             self.skipTest('Ceilometer is unavailable.')
-        if (not self.config.compute.compute_nodes and
-                not self.config.compute.use_vcenter):
-            self.skipTest('There are no compute nodes')
 
     def create_server(self, name, **kwargs):
         server = self._create_server(self.compute_client, name, **kwargs)
