@@ -104,6 +104,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         self.verify(60, self.ceilometer_client.alarms.delete, 11,
                     fail_msg, msg, alarm_id=alarm.alarm_id)
 
+    @ceilometermanager.check_compute_nodes()
     def test_check_alarm_state(self):
         """Ceilometer test to check alarm state and get Nova metrics
         Target component: Ceilometer
@@ -234,6 +235,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         self.verify(20, self.ceilometer_client.resources.get, 5,
                     fail_msg, msg, sample[0].resource_id)
 
+    @ceilometermanager.check_compute_nodes()
     def test_check_events_and_traits(self):
         """Ceilometer test to check events and traits
         Target component: Ceilometer
@@ -326,6 +328,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         msg = 'instance deleting'
         self.verify(60, self._delete_server, 9, fail_msg, msg, instance)
 
+    @ceilometermanager.check_compute_nodes()
     def test_check_volume_notifications(self):
         """Ceilometer test to check notifications from Cinder
         Target component: Ceilometer
@@ -511,6 +514,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         self.verify(60, self.wait_metrics, 6, fail_msg, msg,
                     self.neutron_floatingip_notifications, query)
 
+    @ceilometermanager.check_compute_nodes()
     def test_check_sahara_notifications(self):
         """Ceilometer test to check notifications from Sahara
         Target component: Ceilometer
