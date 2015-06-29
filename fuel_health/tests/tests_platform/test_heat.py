@@ -14,7 +14,6 @@
 
 import logging
 
-from fuel_health.common.utils import data_utils
 from fuel_health import heatmanager
 
 
@@ -29,6 +28,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         super(HeatSmokeTests, self).setUp()
         if not self.config.compute.compute_nodes:
             self.skipTest('There are no compute nodes')
+
+        self.heat_flavor = self.create_flavor()
 
     def test_advanced_actions(self):
         """Advanced stack actions: suspend, resume and check
@@ -50,7 +51,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         self.check_image_exists()
         parameters = {
-            "InstanceType": self.find_micro_flavor()[0].name,
+            "InstanceType": self.heat_flavor.name,
             "ImageId": self.config.compute.image_name
         }
         if "neutron" in self.config.network.network_provider:
@@ -157,7 +158,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         """
         self.check_image_exists()
         parameters = {
-            "InstanceType": self.find_micro_flavor()[0].name,
+            "InstanceType": self.heat_flavor.name,
             "ImageId": self.config.compute.image_name
         }
         if 'neutron' in self.config.network.network_provider:
@@ -289,7 +290,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         """
         self.check_image_exists()
         parameters = {
-            "InstanceType": self.find_micro_flavor()[0].name,
+            "InstanceType": self.heat_flavor.name,
             "ImageId": self.config.compute.image_name
         }
         if 'neutron' in self.config.network.network_provider:
@@ -345,12 +346,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                       "finished, instance name wasn't changed.")
 
         # update replace
-        flavor_name = data_utils.rand_name('ostf-heat-flavor-')
-        flavor = self.verify(10, self.compute_client.flavors.create, 6,
-                             "Flavor can not be created.", "flavor creation",
-                             flavor_name, 512, 1, 12)
-        self.flavors.append(flavor)
-
+        flavor = self.create_flavor()
         parameters["InstanceType"] = flavor.name
 
         stack = self.verify(20, self._update_stack, 7,
@@ -378,7 +374,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # two new resources will be created
 
         parameters = {
-            "InstanceType": self.find_micro_flavor()[0].name,
+            "InstanceType": self.heat_flavor.name,
             "ImageId": self.config.compute.image_name
         }
         if 'neutron' in self.config.network.network_provider:
@@ -468,7 +464,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         parameters = {
             "KeyName": keypair.name,
-            "InstanceType": self.find_micro_flavor()[0].name,
+            "InstanceType": self.heat_flavor.name,
             "ImageId": self.config.compute.image_name,
             "SecurityGroup": sec_group.name
         }
@@ -565,12 +561,13 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                expiration of timeout defined in WaitHandle resource
                of the stack.
             4. Verify the instance of the stack has been deleted.
-        Duration: 140 s.
+        Duration: 260 s.
         """
         self.check_image_exists()
+        large_flavor = self.create_flavor(ram=1048576)
 
         parameters = {
-            "InstanceType": "non-exists",
+            "InstanceType": large_flavor.name,
             "ImageId": self.config.compute.image_name
         }
         if 'neutron' in self.config.network.network_provider:
@@ -581,7 +578,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             template = self._load_template(
                 'heat_create_nova_stack_template.yaml')
         fail_msg = "Stack creation was not started."
-        stack = self.verify(20, self._create_stack, 1,
+        stack = self.verify(60, self._create_stack, 1,
                             fail_msg, "starting stack creation",
                             self.heat_client, template,
                             disable_rollback=False,
@@ -591,7 +588,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                                           stack.stack_status,
                                           fail_msg, 2)
 
-        self.verify(100, self._wait_for_stack_deleted, 3,
+        self.verify(180, self._wait_for_stack_deleted, 3,
                     "Rollback of the stack failed.",
                     "rolling back the stack after its creation failed",
                     stack.id)
