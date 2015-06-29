@@ -915,13 +915,14 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
 
         LOG.debug('Finding and checking image for Sahara...')
         image = self._find_image_by_tags(tag_plugin, tag_version)
-        if (image is not None) and (
-            '_sahara_username' in image.metadata) and (
-                image.metadata['_sahara_username'] is not None):
-            self.ssh_username = image.metadata['_sahara_username']
-            LOG.debug('Image with name "{0}" is registered for Sahara with '
-                      'username "{1}".'.format(image.name, self.ssh_username))
-            return image.id
+        if image is not None:
+            self.ssh_username = image.metadata.get('_sahara_username', None)
+            msg = 'Image "{0}" is registered for Sahara with username "{1}".'
+
+            if self.ssh_username is not None:
+                LOG.debug(msg.format(image.name, self.ssh_username))
+                return image.id
+
         LOG.debug('Image is not correctly registered or it is not '
                   'registered at all. Correct image for Sahara not found.')
 
@@ -930,12 +931,13 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
 
         tag_plug = '_sahara_tag_' + tag_plugin
         tag_ver = '_sahara_tag_' + tag_version
+        msg = 'Image with tags "{0}" and "{1}" found. Image name is "{2}".'
+
         for image in self.compute_client.images.list():
-            if tag_plug in image.metadata and tag_ver in image.metadata:
-                LOG.debug(
-                    'Image with tags "{0}" and "{1}" found. Image name '
-                    'is "{2}".'.format(tag_plugin, tag_version, image.name))
-                return image
+            if image.status.lower() == 'active':
+                if tag_plug in image.metadata and tag_ver in image.metadata:
+                    LOG.debug(msg.format(tag_plugin, tag_version, image.name))
+                    return image
         LOG.debug('Image with tags "{0}" and "{1}" '
                   'not found.'.format(tag_plugin, tag_version))
 
