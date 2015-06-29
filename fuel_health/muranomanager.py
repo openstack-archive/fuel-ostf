@@ -110,7 +110,7 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         tag = 'murano_image_info'
 
         for image in self.compute_client.images.list():
-            if tag in image.metadata:
+            if tag in image.metadata and image.status.lower() == "active":
                 metadata = jsonutils.loads(image.metadata[tag])
                 if image_type == metadata['type']:
                     return image

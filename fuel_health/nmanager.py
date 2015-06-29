@@ -915,7 +915,7 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
 
         LOG.debug('Finding and checking image for Sahara...')
         image = self._find_image_by_tags(tag_plugin, tag_version)
-        if (image is not None) and (
+        if (image is not None) and (image.status.lower() == "active") and (
             '_sahara_username' in image.metadata) and (
                 image.metadata['_sahara_username'] is not None):
             self.ssh_username = image.metadata['_sahara_username']
