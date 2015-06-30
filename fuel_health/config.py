@@ -142,9 +142,15 @@ ComputeGroup = [
     cfg.ListOpt('controller_nodes',
                 default=[],
                 help="IP addresses of controller nodes"),
+    cfg.ListOpt('controller_names',
+                default=[],
+                help="FQDNs of controller nodes"),
     cfg.ListOpt('online_controllers',
                 default=[],
                 help="ips of online controller nodes"),
+    cfg.ListOpt('online_controller_names',
+                default=[],
+                help="FQDNs of online controller nodes"),
     cfg.ListOpt('compute_nodes',
                 default=[],
                 help="IP addresses of compute nodes"),
@@ -619,25 +625,29 @@ class NailgunConfig(object):
         cinder_vmware_nodes = filter(lambda node: 'cinder-vmware' in
                                      node['roles'], data)
         controller_ips = []
-        conntroller_names = []
+        controller_names = []
         public_ips = []
         online_controllers_ips = []
+        online_controller_names = []
         for node in controller_nodes:
             public_network = next(network for network in node['network_data']
                                   if network['name'] == 'public')
             ip = public_network['ip'].split('/')[0]
             public_ips.append(ip)
             controller_ips.append(node['ip'])
-            conntroller_names.append(node['fqdn'])
-        LOG.info("IP %s NAMES %s" % (controller_ips, conntroller_names))
+            controller_names.append(node['fqdn'])
+        LOG.info("IP %s NAMES %s" % (controller_ips, controller_names))
 
         for node in online_controllers:
             online_controllers_ips.append(node['ip'])
+            online_controller_names.append(node['fqdn'])
         LOG.info("Online controllers ips is %s" % online_controllers_ips)
 
         self.compute.public_ips = public_ips
         self.compute.controller_nodes = controller_ips
+        self.compute.controller_names = controller_names
         self.compute.online_controllers = online_controllers_ips
+        self.compute.online_controller_names = online_controller_names
         if not cinder_nodes:
             self.volume.cinder_node_exist = False
         if not cinder_vmware_nodes:
