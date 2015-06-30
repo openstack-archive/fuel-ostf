@@ -31,9 +31,6 @@ class RabbitSanityTest(ha_base.RabbitSanityClass):
             self.skipTest("It is not HA configuration")
         if not self._controllers:
             self.skipTest('There are no controller nodes')
-        if len(self.controllers) == 1:
-            self.skipTest('There is only one controller online. '
-                          'Nothing to check')
 
     def test_001_rabbitmqctl_status(self):
         """Check RabbitMQ is available
