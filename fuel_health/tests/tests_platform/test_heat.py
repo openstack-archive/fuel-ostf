@@ -44,6 +44,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             8. Call stack check action.
             9. Wait until the stack status will change to 'CHECK_COMPLETE'.
             10. Delete the stack and wait for the stack to be deleted.
+
         Duration: 700 s.
         Available since release: 2014.2-6.1
         """
@@ -124,16 +125,16 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                     fail_msg, "executing check stack action",
                     stack.id)
 
+        self.verify(60, self._wait_for_stack_status, 9,
+                    fail_msg,
+                    "stack status becoming 'CHECK_COMPLETE'",
+                    stack.id, 'CHECK_COMPLETE')
+
         fail_msg = "Stack resource is not in CHECK_COMPLETE status."
         res_status = self.heat_client.resources.list(
             stack.id)[0].resource_status
         self.verify_response_body_content(res_status, 'CHECK_COMPLETE',
                                           fail_msg, 9)
-
-        self.verify(60, self._wait_for_stack_status, 9,
-                    fail_msg,
-                    "stack status becoming 'CHECK_COMPLETE'",
-                    stack.id, 'CHECK_COMPLETE')
 
         # delete stack
         fail_msg = "Cannot delete stack."
