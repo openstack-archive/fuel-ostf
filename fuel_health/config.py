@@ -80,6 +80,28 @@ def register_identity_opts(conf):
     for opt in IdentityGroup:
         conf.register_opt(opt, group='identity')
 
+master_node_group = cfg.OptGroup(name='master',
+                                 title='Master Node Options')
+
+MasterGroup = [
+    cfg.StrOpt('keystone_password',
+               default='admin',
+               help='Default keystone password on master node'),
+    cfg.StrOpt('keystone_user',
+               default='admin',
+               help='Default keystone user on master node'),
+    cfg.StrOpt('master_node_ssh_user',
+               default='root'),
+    cfg.StrOpt('master_node_ssh_password',
+               default='r00tme',
+               help='ssh user pass of master node')
+]
+
+
+def register_master_opts(conf):
+    conf.register_group(master_node_group)
+    for opt in MasterGroup:
+        conf.register_opt(opt, group='master')
 
 compute_group = cfg.OptGroup(name='compute',
                              title='Compute Service Options')
@@ -460,6 +482,7 @@ class FileConfig(object):
         register_compute_opts(cfg.CONF)
         register_identity_opts(cfg.CONF)
         register_network_opts(cfg.CONF)
+        register_master_opts(cfg.CONF)
         register_volume_opts(cfg.CONF)
         register_murano_opts(cfg.CONF)
         register_heat_opts(cfg.CONF)
@@ -468,6 +491,7 @@ class FileConfig(object):
         self.compute = cfg.CONF.compute
         self.identity = cfg.CONF.identity
         self.network = cfg.CONF.network
+        self.master = cfg.CONF.master
         self.volume = cfg.CONF.volume
         self.murano = cfg.CONF.murano
         self.heat = cfg.CONF.heat
@@ -507,6 +531,7 @@ class NailgunConfig(object):
     identity = ConfigGroup(IdentityGroup)
     compute = ConfigGroup(ComputeGroup)
     image = ConfigGroup(ImageGroup)
+    master = ConfigGroup(MasterGroup)
     network = ConfigGroup(NetworkGroup)
     volume = ConfigGroup(VolumeGroup)
     object_storage = ConfigGroup(ObjectStoreConfig)
