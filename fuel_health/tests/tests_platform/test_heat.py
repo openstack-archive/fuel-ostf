@@ -39,13 +39,19 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             3. Wait until the stack status will change to 'CREATE_COMPLETE'.
             4. Call stack suspend action.
             5. Wait until the stack status will change to 'SUSPEND_COMPLETE'.
-            6. Call stack resume action.
-            7. Wait until the stack status will change to 'RESUME_COMPLETE'.
-            8. Call stack check action.
-            9. Wait until the stack status will change to 'CHECK_COMPLETE'.
-            10. Delete the stack and wait for the stack to be deleted.
+            6. Check that stack resources are in 'SUSPEND_COMPLETE' status.
+            7. Check that server owned by stack is in 'SUSPENDED' status.
+            8. Call stack resume action.
+            9. Wait until the stack status will change to 'RESUME_COMPLETE'.
+            10. Check that stack resources are in 'RESUME_COMPLETE' status.
+            11. Check that instance owned by stack is in 'ACTIVE' status.
+            12. Call stack check action.
+            13. Wait until the stack status will change to 'CHECK_COMPLETE'.
+            14. Check that stack resources are in 'CHECK_COMPLETE' status.
+            15. Check that instance owned by stack is in 'ACTIVE' status.
+            16. Delete the stack and wait for the stack to be deleted.
 
-        Duration: 700 s.
+        Duration: 660 s.
         Available since release: 2014.2-6.1
         """
 
@@ -53,8 +59,11 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         # create test flavor
         fail_msg = "Test flavor was not created."
-        heat_flavor = self.verify(50, self.create_flavor, 1,
-                                  fail_msg, "flavor creation")
+        heat_flavor = self.verify(
+            60, self.create_flavor,
+            1, fail_msg,
+            "flavor creation"
+        )
 
         # define stack parameters
         parameters = {
@@ -71,80 +80,122 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         # create stack
         fail_msg = "Stack was not created properly."
-        stack = self.verify(20, self._create_stack, 2,
-                            fail_msg, "stack creation",
-                            self.heat_client,
-                            template, parameters=parameters)
-
-        self.verify(300, self._wait_for_stack_status, 3,
-                    fail_msg,
-                    "stack status becoming 'CREATE_COMPLETE'",
-                    stack.id, 'CREATE_COMPLETE')
-
-        instances = self._get_stack_instances(stack.id)
-
-        if not instances:
-            self.fail("Failed step: 3. Instance for the {0} stack "
-                      "was not created.".format(stack.stack_name))
+        stack = self.verify(
+            20, self._create_stack,
+            2, fail_msg,
+            "stack creation",
+            self.heat_client,
+            template, parameters=parameters
+        )
+        self.verify(
+            300, self._wait_for_stack_status,
+            3, fail_msg,
+            "stack status becoming 'CREATE_COMPLETE'",
+            stack.id, "CREATE_COMPLETE"
+        )
+        res = self._get_stack_resources(
+            stack.id,
+            key="resource_type", value="OS::Nova::Server"
+        )
 
         # suspend stack
         fail_msg = "Stack suspend failed."
-        self.verify(10, self.heat_client.actions.suspend, 4,
-                    fail_msg, "executing suspend stack action",
-                    stack.id)
-
-        self.verify(60, self._wait_for_stack_status, 5,
-                    fail_msg,
-                    "stack status becoming 'SUSPEND_COMPLETE'",
-                    stack.id, 'SUSPEND_COMPLETE')
-
-        fail_msg = "Server is not in SUSPENDED status."
-        inst_status = self.compute_client.servers.get(instances[0]).status
-        self.verify_response_body_content('SUSPENDED', inst_status,
-                                          fail_msg, 5)
+        self.verify(
+            10, self.heat_client.actions.suspend,
+            4, fail_msg,
+            "executing suspend stack action",
+            stack.id
+        )
+        self.verify(
+            60, self._wait_for_stack_status,
+            5, fail_msg,
+            "stack status becoming 'SUSPEND_COMPLETE'",
+            stack.id, "SUSPEND_COMPLETE"
+        )
+        res = self._get_stack_resources(
+            stack.id,
+            key="resource_type", value="OS::Nova::Server"
+        )
+        self.verify_response_body_content(
+            "SUSPEND_COMPLETE", res[0].resource_status,
+            "Stack resource is not in 'SUSPEND_COMPLETE' status.", 6
+        )
+        instance = self.compute_client.servers.get(res[0].physical_resource_id)
+        self.verify_response_body_content(
+            "SUSPENDED", instance.status,
+            "Instance owned by stack is not in 'SUSPENDED' status.", 7
+        )
 
         # resume stack
         fail_msg = "Stack resume failed."
-        self.verify(10, self.heat_client.actions.resume, 6,
-                    fail_msg, "executing resume stack action",
-                    stack.id)
-
-        self.verify(60, self._wait_for_stack_status, 7,
-                    fail_msg,
-                    "stack status becoming 'RESUME_COMPLETE'",
-                    stack.id, 'RESUME_COMPLETE')
-
-        fail_msg = "Server is not in ACTIVE status."
-        inst_status = self.compute_client.servers.get(instances[0]).status
-        self.verify_response_body_content('ACTIVE', inst_status,
-                                          fail_msg, 7)
+        self.verify(
+            10, self.heat_client.actions.resume,
+            8, fail_msg,
+            "executing resume stack action",
+            stack.id
+        )
+        self.verify(
+            60, self._wait_for_stack_status,
+            9, fail_msg,
+            "stack status becoming 'RESUME_COMPLETE'",
+            stack.id, "RESUME_COMPLETE"
+        )
+        res = self._get_stack_resources(
+            stack.id,
+            key="resource_type", value="OS::Nova::Server"
+        )
+        self.verify_response_body_content(
+            "RESUME_COMPLETE", res[0].resource_status,
+            "Stack resource is not in 'RESUME_COMPLETE'.", 10
+        )
+        instance = self.compute_client.servers.get(res[0].physical_resource_id)
+        self.verify_response_body_content(
+            "ACTIVE", instance.status,
+            "Instance owned by stack is not in 'ACTIVE' status.", 11
+        )
 
         # stack check
         fail_msg = "Stack check failed."
-        self.verify(10, self.heat_client.actions.check, 8,
-                    fail_msg, "executing check stack action",
-                    stack.id)
-
-        self.verify(60, self._wait_for_stack_status, 9,
-                    fail_msg,
-                    "stack status becoming 'CHECK_COMPLETE'",
-                    stack.id, 'CHECK_COMPLETE')
-
-        fail_msg = "Stack resource is not in CHECK_COMPLETE status."
-        res_status = self.heat_client.resources.list(
-            stack.id)[0].resource_status
-        self.verify_response_body_content('CHECK_COMPLETE', res_status,
-                                          fail_msg, 9)
+        self.verify(
+            10, self.heat_client.actions.check,
+            12, fail_msg,
+            "executing check stack action",
+            stack.id
+        )
+        self.verify(
+            60, self._wait_for_stack_status,
+            13, fail_msg,
+            "stack status becoming 'CHECK_COMPLETE'",
+            stack.id, "CHECK_COMPLETE"
+        )
+        res = self._get_stack_resources(
+            stack.id,
+            key="resource_type", value="OS::Nova::Server"
+        )
+        self.verify_response_body_content(
+            "CHECK_COMPLETE", res[0].resource_status,
+            "Stack resource is not in 'CHECK_COMPLETE' status", 14
+        )
+        instance = self.compute_client.servers.get(res[0].physical_resource_id)
+        self.verify_response_body_content(
+            "ACTIVE", instance.status,
+            "Instance owned by stack is not in 'ACTIVE' status", 15
+        )
 
         # delete stack
         fail_msg = "Cannot delete stack."
-        self.verify(20, self.heat_client.stacks.delete, 10,
-                    fail_msg, "deleting stack",
-                    stack.id)
-
-        self.verify(100, self._wait_for_stack_deleted, 10,
-                    fail_msg, "deleting stack",
-                    stack.id)
+        self.verify(
+            10, self.heat_client.stacks.delete,
+            16, fail_msg,
+            "deleting stack",
+            stack.id
+        )
+        self.verify(
+            60, self._wait_for_stack_deleted,
+            16, fail_msg,
+            "deleting stack",
+            stack.id
+        )
 
     def test_actions(self):
         """Typical stack actions: create, delete, show details, etc.
@@ -161,14 +212,14 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             8. Get the details of the stack event.
             9. Get the stack template details.
             10. Delete the stack and wait for the stack to be deleted.
-        Duration: 850 s.
+        Duration: 800 s.
         """
 
         self.check_image_exists()
 
         # create test flavor
         fail_msg = "Test flavor was not created."
-        heat_flavor = self.verify(50, self.create_flavor, 1,
+        heat_flavor = self.verify(60, self.create_flavor, 1,
                                   fail_msg, "flavor creation")
 
         # define stack parameters
@@ -302,14 +353,14 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             14. Delete the stack.
             15. Wait for the stack to be deleted.
 
-        Duration: 950 s.
+        Duration: 900 s.
         """
 
         self.check_image_exists()
 
         # create test flavor
         fail_msg = "Test flavor was not created."
-        heat_flavor = self.verify(50, self.create_flavor, 1,
+        heat_flavor = self.verify(60, self.create_flavor, 1,
                                   fail_msg, "flavor creation")
 
         # define stack parameters
@@ -464,7 +515,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             15. Delete the stack.
             16. Wait for the stack to be deleted.
 
-        Duration: 2200 s.
+        Duration: 2150 s.
         """
 
         if not self.ceilometer_client:
@@ -477,7 +528,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         # create test flavor
         fail_msg = "Test flavor was not created."
-        heat_flavor = self.verify(50, self.create_flavor, 1,
+        heat_flavor = self.verify(60, self.create_flavor, 1,
                                   fail_msg, "flavor creation")
 
         # creation of test keypair
@@ -597,13 +648,13 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                of the stack.
             5. Verify the instance of the stack has been deleted.
 
-        Duration: 310 s.
+        Duration: 260 s.
         """
         self.check_image_exists()
 
         # create test flavor
         fail_msg = "Test flavor was not created."
-        large_flavor = self.verify(50, self.create_flavor, 1,
+        large_flavor = self.verify(60, self.create_flavor, 1,
                                    fail_msg, "flavor creation", ram=1048576)
 
         parameters = {
