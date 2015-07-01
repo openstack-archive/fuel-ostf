@@ -12,12 +12,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import keystoneclient
 import logging
 import paramiko.ssh_exception as exc
+import yaml
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health import exceptions
 from fuel_health import nmanager
+from keystoneclient.v2_0 import Client as client
 
 LOG = logging.getLogger(__name__)
 
@@ -102,3 +105,34 @@ class SanityConfigurationTest(nmanager.SanityChecksTest):
                 msg='Default credentials value for {0} is using. '
                 'We kindly recommend to change all defaults'.format(key),
                 failed_step='1')
+
+    def test_003_check_default_keystone_credential_usage(self):
+            """Check usage of default credentials for keystone
+            Target component: Configuration
+
+            Scenario:
+                1. Check default credentials for keystone are changed.
+            Duration: 20 s.
+             Available since release: 2014.2-6.1
+            """
+
+            data = yaml.load(open('/etc/fuel/astute.yaml').read())
+            ip = data['ADMIN_NETWORK']['ipaddress']
+
+            keystone_data = {'username': data['FUEL_ACCESS']['user'],
+                             'password': data['FUEL_ACCESS']['password'],
+                             'auth_url': 'http://{0}:5000/v2.0'.format(ip)}
+
+            try:
+                keystone = client(**keystone_data)
+                keystone.authenticate()
+                checker = False
+            except keystoneclient.openstack.common.apiclient.exceptions.\
+                    Unauthorized:
+                checker = True
+
+            self.verify_response_true(checker,
+                                      'Step 1 failed: Default credentials for '
+                                      'keystone on master node '
+                                      'were not changed')
+
