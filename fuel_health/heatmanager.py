@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2012 OpenStack, LLC
 # Copyright 2013 Mirantis, Inc.
 # All Rights Reserved.
@@ -18,7 +16,6 @@
 
 import logging
 import os
-import traceback
 
 import fuel_health.common.ssh
 from fuel_health.common.utils.data_utils import rand_name
@@ -38,71 +35,89 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
         if cls.manager.clients_initialized:
             if cls.heat_client is None:
-                cls.fail('Heat is unavailable.')
+                cls.fail("Heat is unavailable.")
             cls.wait_interval = cls.config.compute.build_interval
             cls.wait_timeout = cls.config.compute.build_timeout
 
     def setUp(self):
         super(HeatBaseTest, self).setUp()
         self.check_clients_state()
-        if not self.find_micro_flavor():
-            self.fail('m1.micro flavor was not created.')
 
     def create_flavor(self, ram=256, vcpus=1, disk=2):
         """This method creates a flavor for Heat tests."""
 
-        LOG.debug('Creating flavor for Heat tests...')
-        name = rand_name('heat-test-flavor-')
+        LOG.debug("Creating flavor for Heat tests...")
+        name = rand_name("heat-test-flavor-")
         flavor = self.compute_client.flavors.create(name, ram, vcpus, disk)
         self.addCleanup(self.compute_client.flavors.delete, flavor.id)
-        LOG.debug('Flavor for Heat tests has been created.')
+        LOG.debug("Flavor for Heat tests has been created.")
 
         return flavor
 
-    @staticmethod
-    def _list_stacks(client):
-        return client.stacks.list()
+    def _list_stacks(self):
+        return self.heat_client.stacks.list()
 
-    def _find_stack(self, client, key, value):
-        for stack in self._list_stacks(client):
-            if hasattr(stack, key) and getattr(stack, key) == value:
-                return stack
-        return None
+    def _get_stack(self, stack_id):
+        """This method returns desired stack."""
 
-    def _create_stack(self, client, template,
-                      disable_rollback=True, parameters={}):
+        LOG.debug("Getting desired stack: {0}.".format(stack_id))
+        try:
+            return self.heat_client.stacks.get(stack_id)
+        except Exception:
+            self.fail("Failed to get defined stack.")
 
+    def _create_stack(self, template, disable_rollback=True, parameters={}):
+        """This method creates stack by given template."""
+
+        LOG.debug("Stack creation started.")
         stack_name = rand_name('ost1_test-')
-        client.stacks.create(stack_name=stack_name,
-                             template=template,
-                             parameters=parameters,
-                             disable_rollback=disable_rollback)
-        self.addCleanup(self._delete_stack, stack_name)
+        stack_id = self.heat_client.stacks.create(
+            stack_name=stack_name,
+            template=template,
+            parameters=parameters,
+            disable_rollback=disable_rollback
+        )['stack']['id']
+
+        self.addCleanup(self._delete_stack, stack_id)
 
         # heat client doesn't return stack details after creation
         # so need to request them:
-        stack = self._find_stack(client, 'stack_name', stack_name)
+        stack = self._get_stack(stack_id)
+        LOG.debug("Stack '{0}' creation finished.".format(stack_name))
 
         return stack
 
-    def _delete_stack(self, stack_name):
-        LOG.debug("Deleting stack: %s" % stack_name)
-        stack = self._find_stack(self.heat_client, 'stack_name', stack_name)
-        if stack is None:
+    def _is_stack_deleted(self, stack_id):
+        """This method checks was stack deleted or not."""
+        stack = self.heat_client.stacks.get(stack_id)
+        if stack.stack_status in ("DELETE_COMPLETE", "ROLLBACK_COMPLETE"):
+            return True
+        return False
+
+    def _delete_stack(self, stack_id):
+        LOG.debug("Deleting stack: {0}".format(stack_id))
+        if self._is_stack_deleted(stack_id):
+            LOG.debug("Stack '{0}' already deleted.".format(stack_id))
             return
         try:
-            self.heat_client.stacks.delete(stack.id)
+            self.heat_client.stacks.delete(stack_id)
         except Exception:
-            LOG.debug(traceback.format_exc())
-            self.fail("Cleanup: Failed to delete stack '%s'" % stack_name)
-        self._wait_for_stack_deleted(stack.id)
-        LOG.debug("Resource '%s' has been deleted." % stack_name)
+            self.fail("Cleanup: Failed to delete stack '{0}'".format(stack_id))
+        self._wait_for_stack_deleted(stack_id)
+        LOG.debug("Stack '{0}' has been deleted.".format(stack_id))
 
-    def _update_stack(self, client, stack_id, template, parameters={}):
-        client.stacks.update(stack_id=stack_id,
-                             template=template,
-                             parameters=parameters)
-        return self._find_stack(client, 'id', stack_id)
+    def _wait_for_stack_deleted(self, stack_id):
+        if not fuel_health.test.call_until_true(self._is_stack_deleted,
+                                                self.wait_timeout,
+                                                self.wait_interval,
+                                                stack_id):
+            self.fail("Timed out waiting for stack to be deleted.")
+
+    def _update_stack(self, stack_id, template, parameters={}):
+        self.heat_client.stacks.update(stack_id=stack_id,
+                                       template=template,
+                                       parameters=parameters)
+        return self._get_stack(stack_id)
 
     def _wait_for_stack_status(self, stack_id, expected_status,
                                timeout=None, interval=None):
@@ -119,7 +134,7 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         def check_status():
             stack = self.heat_client.stacks.get(stack_id)
             new_status = stack.stack_status
-            if 'FAIL' in new_status:
+            if "FAIL" in new_status:
                 self.fail("Failed to get to expected status. "
                           "In %s state." % new_status)
             elif new_status == expected_status:
@@ -134,25 +149,18 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
             self.fail("Timed out waiting to become %s"
                       % expected_status)
 
-    def _wait_for_stack_deleted(self, stack_id):
-        f = lambda: self._find_stack(self.heat_client, 'id', stack_id) is None
-        if not fuel_health.test.call_until_true(f,
-                                                self.wait_timeout,
-                                                self.wait_interval):
-            self.fail("Timed out waiting for stack to be deleted.")
-
     def _wait_for_autoscaling(self, exp_count,
                               timeout, interval, reduced_stack_name):
-        LOG.info('expected count is {0}'.format(exp_count))
+        LOG.info("expected count is {0}".format(exp_count))
 
         def count_instances(reduced_stack_name):
             res = []
             _list = self.compute_client.servers.list()
             for server in _list:
-                LOG.info('instance name is {0}'.format(server.name))
+                LOG.info("instance name is {0}".format(server.name))
                 if server.name.startswith(reduced_stack_name):
                     res.append(server)
-                    LOG.info('!!! current res is {0}'.format(res))
+                    LOG.info("!!! current res is {0}".format(res))
 
             return len(res) == exp_count
 
@@ -210,14 +218,14 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         subnet usage should be removed from the template.
         """
         return '\n'.join(line for line in template.splitlines()
-                         if 'Ref: Subnet' not in line)
+                         if "Ref: Subnet" not in line)
 
     def _get_stack_instances(self, stack_id):
 
         servers = self.heat_client.stacks.get(stack_id).outputs
-        server_ids = [server['output_value'] for server in servers]
+        server_ids = [server["output_value"] for server in servers]
 
-        LOG.info('SERVERS {0}'.format(server_ids))
+        LOG.info("SERVERS {0}".format(server_ids))
 
         return server_ids
 
@@ -226,18 +234,18 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
         # find just created instance
         instance_list = self.compute_client.servers.list()
-        LOG.info('Instances list is {0}'.format(instance_list))
-        LOG.info('Expected instance name includes {0}'.format(mask_name))
+        LOG.info("Instances list is {0}".format(instance_list))
+        LOG.info("Expected instance name includes {0}".format(mask_name))
 
         for inst in instance_list:
-            LOG.info('Instance name is {0}'.format(inst.name))
+            LOG.info("Instance name is {0}".format(inst.name))
             if inst.name.startswith(mask_name):
                 self.instances.append(inst)
 
         return self.instances
 
     def _get_stack_resources(self, stack_id, **kwargs):
-        """This method return list of desired stack resources.
+        """This method returns list of desired stack resources.
 
         It gets all resources of defined stack and returns all
         of them or just needed based on the specified criteria.
@@ -249,9 +257,9 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         except Exception:
             self.fail("Failed to get list of stack resources.")
 
-        if kwargs.get('key') and kwargs.get('value'):
+        if kwargs.get("key") and kwargs.get("value"):
             resources = [res for res in resources
-                         if getattr(res, kwargs['key']) == kwargs['value']]
+                         if getattr(res, kwargs["key"]) == kwargs["value"]]
 
         LOG.debug("List of fetched resources: {0}".format(resources))
 

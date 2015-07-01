@@ -84,7 +84,6 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             20, self._create_stack,
             2, fail_msg,
             "stack creation",
-            self.heat_client,
             template, parameters=parameters
         )
         self.verify(
@@ -239,7 +238,6 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         fail_msg = "Stack was not created properly."
         stack = self.verify(20, self._create_stack, 2,
                             fail_msg, "stack creation",
-                            self.heat_client,
                             template, parameters=parameters)
 
         self.verify(600, self._wait_for_stack_status, 3,
@@ -381,7 +379,6 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         stack = self.verify(20, self._create_stack, 2,
                             fail_msg,
                             "stack creation",
-                            self.heat_client,
                             template, parameters=parameters)
 
         self.verify(300, self._wait_for_stack_status, 3,
@@ -404,7 +401,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         stack = self.verify(20, self._update_stack, 4,
                             fail_msg,
                             "updating stack, changing resource name",
-                            self.heat_client, stack.id,
+                            stack.id,
                             template, parameters=parameters)
 
         self.verify(100, self._wait_for_stack_status, 5,
@@ -429,7 +426,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         stack = self.verify(20, self._update_stack, 8,
                             fail_msg,
                             "updating stack, changing instance flavor",
-                            self.heat_client, stack.id,
+                            stack.id,
                             template, parameters=parameters)
 
         self.verify(100, self._wait_for_stack_status, 9,
@@ -465,7 +462,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         stack = self.verify(20, self._update_stack, 11,
                             fail_msg,
                             "updating stack, changing template",
-                            self.heat_client, stack.id,
+                            stack.id,
                             template, parameters=parameters)
 
         self.verify(180, self._wait_for_stack_status, 12,
@@ -563,7 +560,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         fail_msg = "Stack was not created properly."
         stack = self.verify(20, self._create_stack, 5,
                             fail_msg, "stack creation",
-                            self.heat_client, template,
+                            template,
                             parameters=parameters)
 
         self.verify(600, self._wait_for_stack_status, 6,
@@ -671,7 +668,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         fail_msg = "Stack creation was not started."
         stack = self.verify(60, self._create_stack, 2,
                             fail_msg, "starting stack creation",
-                            self.heat_client, template,
+                            template,
                             disable_rollback=False,
                             parameters=parameters)
 
