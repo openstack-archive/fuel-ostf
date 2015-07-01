@@ -35,28 +35,29 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
     @classmethod
     def setUpClass(cls):
         super(HeatBaseTest, cls).setUpClass()
-        cls.flavors = []
+
         if cls.manager.clients_initialized:
             if cls.heat_client is None:
                 cls.fail('Heat is unavailable.')
             cls.wait_interval = cls.config.compute.build_interval
             cls.wait_timeout = cls.config.compute.build_timeout
 
-    @classmethod
-    def tearDownClass(cls):
-        super(HeatBaseTest, cls).tearDownClass()
-        if cls.flavors:
-            try:
-                [cls.compute_client.flavors.delete(flavor)
-                 for flavor in cls.flavors]
-            except Exception:
-                LOG.debug(traceback.format_exc())
-
     def setUp(self):
         super(HeatBaseTest, self).setUp()
         self.check_clients_state()
         if not self.find_micro_flavor():
             self.fail('m1.micro flavor was not created.')
+
+    def create_flavor(self, ram=256, vcpus=1, disk=2):
+        """This method creates a flavor for Heat tests."""
+
+        LOG.debug('Creating flavor for Heat tests...')
+        name = rand_name('heat-test-flavor-')
+        flavor = self.compute_client.flavors.create(name, ram, vcpus, disk)
+        self.addCleanup(self.compute_client.flavors.delete, flavor.id)
+        LOG.debug('Flavor for Heat tests has been created.')
+
+        return flavor
 
     @staticmethod
     def _list_stacks(client):
