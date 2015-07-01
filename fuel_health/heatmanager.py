@@ -235,3 +235,24 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
                 self.instances.append(inst)
 
         return self.instances
+
+    def _get_stack_resources(self, stack_id, **kwargs):
+        """This method return list of desired stack resources.
+
+        It gets all resources of defined stack and returns all
+        of them or just needed based on the specified criteria.
+        """
+
+        LOG.debug("Getting stack resources.")
+        try:
+            resources = self.heat_client.resources.list(stack_id)
+        except Exception:
+            self.fail("Failed to get list of stack resources.")
+
+        if kwargs.get('key') and kwargs.get('value'):
+            resources = [res for res in resources
+                         if getattr(res, kwargs['key']) == kwargs['value']]
+
+        LOG.debug("List of fetched resources: {0}".format(resources))
+
+        return resources
