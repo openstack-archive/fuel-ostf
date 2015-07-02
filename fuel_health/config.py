@@ -94,7 +94,11 @@ MasterGroup = [
                default='root'),
     cfg.StrOpt('master_node_ssh_password',
                default='r00tme',
-               help='ssh user pass of master node')
+               help='ssh user pass of master node'),
+    cfg.IntOpt('ssh_timeout',
+               default=50,
+               help="Timeout in seconds to wait for authentication to "
+                    "succeed."),
 ]
 
 

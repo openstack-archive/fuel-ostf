@@ -36,12 +36,6 @@ class SanityConfigurationTest(nmanager.SanityChecksTest):
     @classmethod
     def setUpClass(cls):
         super(SanityConfigurationTest, cls).setUpClass()
-        cls.controllers = cls.config.compute.online_controllers
-        cls.computes = cls.config.compute.online_computes
-        cls.usr = cls.config.compute.controller_node_ssh_user
-        cls.pwd = cls.config.compute.controller_node_ssh_password
-        cls.key = cls.config.compute.path_to_private_key
-        cls.timeout = cls.config.compute.ssh_timeout
 
     @classmethod
     def tearDownClass(cls):
@@ -58,9 +52,9 @@ class SanityConfigurationTest(nmanager.SanityChecksTest):
         """
 
         ssh_client = SSHClient('localhost',
-                               self.usr,
-                               self.pwd,
-                               timeout=self.timeout)
+                               self.config.master.master_node_ssh_user,
+                               self.config.master.master_node_ssh_password,
+                               timeout=self.config.master.ssh_timeout)
         cmd = "date"
         output = []
         try:
