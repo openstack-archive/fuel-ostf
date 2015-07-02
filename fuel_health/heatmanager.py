@@ -54,7 +54,7 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
         return flavor
 
-    def _get_stack(self, stack_id):
+    def get_stack(self, stack_id):
         """This method returns desired stack."""
 
         LOG.debug("Getting desired stack: {0}.".format(stack_id))
@@ -76,7 +76,7 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
         # heat client doesn't return stack details after creation
         # so need to request them
-        stack = self._get_stack(stack_id)
+        stack = self.get_stack(stack_id)
         LOG.debug('Stack "{0}" creation finished.'.format(stack_name))
 
         return stack
@@ -84,7 +84,7 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
     def _is_stack_deleted(self, stack_id):
         """This method checks whether or not stack deleted."""
 
-        stack = self._get_stack(stack_id)
+        stack = self.get_stack(stack_id)
         if stack.stack_status in ('DELETE_COMPLETE', 'ROLLBACK_COMPLETE'):
             return True
         return False
@@ -113,7 +113,7 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         self.heat_client.stacks.update(stack_id=stack_id,
                                        template=template,
                                        parameters=parameters)
-        return self._get_stack(stack_id)
+        return self.get_stack(stack_id)
 
     def wait_for_stack_status(self, stack_id, expected_status,
                               timeout=None, interval=None):
@@ -241,23 +241,23 @@ class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
         return self.instances
 
-    def get_stack_resources(self, stack_id, **kwargs):
-        """This method returns list of desired stack resources.
+    def get_stack_objects(self, objects_call, stack_id, **kwargs):
+        """This method returns list of desired stack objects.
 
-        It gets all resources of defined stack and returns all
+        It gets all defined objects of stack and returns all
         of them or just needed based on the specified criteria.
         """
 
-        LOG.debug('Getting stack resources.')
+        LOG.debug('Getting stack objects.')
         try:
-            resources = self.heat_client.resources.list(stack_id)
+            objects = objects_call.list(stack_id)
         except Exception:
-            self.fail('Failed to get list of stack resources.')
+            self.fail('Failed to get list of stack objects.')
 
         if kwargs.get('key') and kwargs.get('value'):
-            resources = [res for res in resources
-                         if getattr(res, kwargs['key']) == kwargs['value']]
+            objects = [ob for ob in objects
+                       if getattr(ob, kwargs['key']) == kwargs['value']]
 
-        LOG.debug('List of fetched resources: {0}'.format(resources))
+        LOG.debug('List of fetched objects: {0}'.format(objects))
 
-        return resources
+        return objects
