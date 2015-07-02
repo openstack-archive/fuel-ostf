@@ -92,8 +92,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             'stack status becoming "CREATE_COMPLETE"',
             stack.id, 'CREATE_COMPLETE'
         )
-        res = self.get_stack_resources(
-            stack.id,
+        res = self.get_stack_objects(
+            self.heat_client.resources, stack.id,
             key='resource_type', value='OS::Nova::Server'
         )
 
@@ -111,8 +111,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             'stack status becoming "SUSPEND_COMPLETE"',
             stack.id, 'SUSPEND_COMPLETE'
         )
-        res = self.get_stack_resources(
-            stack.id,
+        res = self.get_stack_objects(
+            self.heat_client.resources, stack.id,
             key='resource_type', value='OS::Nova::Server'
         )
         self.verify_response_body_content(
@@ -139,8 +139,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             'stack status becoming "RESUME_COMPLETE"',
             stack.id, 'RESUME_COMPLETE'
         )
-        res = self.get_stack_resources(
-            stack.id,
+        res = self.get_stack_objects(
+            self.heat_client.resources, stack.id,
             key='resource_type', value='OS::Nova::Server'
         )
         self.verify_response_body_content(
@@ -167,8 +167,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             'stack status becoming "CHECK_COMPLETE"',
             stack.id, 'CHECK_COMPLETE'
         )
-        res = self.get_stack_resources(
-            stack.id,
+        res = self.get_stack_objects(
+            self.heat_client.resources, stack.id,
             key='resource_type', value='OS::Nova::Server'
         )
         self.verify_response_body_content(
@@ -211,15 +211,19 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             8. Get the details of the stack event.
             9. Get the stack template details.
             10. Delete the stack and wait for the stack to be deleted.
-        Duration: 850 s.
+
+        Duration: 560 s.
         """
 
         self.check_image_exists()
 
         # create test flavor
         fail_msg = 'Test flavor was not created.'
-        heat_flavor = self.verify(50, self.create_flavor, 1,
-                                  fail_msg, 'flavor creation')
+        heat_flavor = self.verify(
+            50, self.create_flavor,
+            1, fail_msg,
+            'flavor creation'
+        )
 
         # define stack parameters
         parameters = {
@@ -236,98 +240,142 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         # create stack
         fail_msg = 'Stack was not created properly.'
-        stack = self.verify(20, self.create_stack, 2,
-                            fail_msg, 'stack creation',
-                            template, parameters=parameters)
-
-        self.verify(600, self.wait_for_stack_status, 3,
-                    fail_msg,
-                    'stack status becoming "CREATE_COMPLETE"',
-                    stack.id, 'CREATE_COMPLETE')
+        stack = self.verify(
+            20, self.create_stack,
+            2, fail_msg,
+            'stack creation',
+            template, parameters=parameters
+        )
+        self.verify(
+            300, self.wait_for_stack_status,
+            3, fail_msg,
+            'stack status becoming "CREATE_COMPLETE"',
+            stack.id, 'CREATE_COMPLETE'
+        )
 
         # get stack details
-        details = self.verify(20, self.heat_client.stacks.get, 4,
-                              'Cannot retrieve stack details.',
-                              'retrieving stack details',
-                              stack.stack_name)
-
+        fail_msg = 'Cannot retrieve stack details.'
+        details = self.verify(
+            20, self.get_stack,
+            4, fail_msg,
+            'retrieving stack details',
+            stack.stack_name
+        )
         fail_msg = 'Stack details contain incorrect values.'
-        self.verify_response_body_content(details.id, stack.id,
-                                          fail_msg, 4)
-        self.verify_response_body_content(self.config.compute.image_name,
-                                          details.parameters['ImageId'],
-                                          fail_msg, 4)
-        self.verify_response_body_content(details.stack_status,
-                                          'CREATE_COMPLETE',
-                                          fail_msg, 4)
+        self.verify_response_body_content(
+            stack.id, details.id,
+            fail_msg, 4
+        )
+        self.verify_response_body_content(
+            self.config.compute.image_name, details.parameters['ImageId'],
+            fail_msg, 4
+        )
+        self.verify_response_body_content(
+            'CREATE_COMPLETE', details.stack_status,
+            fail_msg, 4
+        )
+
         # get resources list
-        fail_msg = "Cannot retrieve list of stack resources."
-        resources = self.verify(10, self.heat_client.resources.list, 5,
-                                fail_msg,
-                                'retrieving list of stack resources',
-                                stack.id)
-        self.verify_response_body_content(len(resources), 1, fail_msg, 5)
-        resource_id = resources[0].logical_resource_id
-        self.verify_response_body_content('Server', resource_id,
-                                          fail_msg, 5)
+        fail_msg = 'Cannot retrieve list of stack resources.'
+        resources = self.verify(
+            10, self.get_stack_objects,
+            5, fail_msg,
+            'retrieving list of stack resources',
+            self.heat_client.resources,
+            stack.id
+        )
+        self.verify_response_body_content(
+            1, len(resources),
+            fail_msg, 5
+        )
 
         # get resource details
-        res_details = self.verify(10, self.heat_client.resources.get, 6,
-                                  'Cannot retrieve stack resource details.',
-                                  'retrieving stack resource details',
-                                  stack.id, resource_id)
+        resource_name = self.get_stack_objects(
+            self.heat_client.resources, stack.id,
+            key='resource_type', value='OS::Nova::Server'
+        )[0].logical_resource_id
 
+        fail_msg = 'Cannot retrieve stack resource details.'
+        res_details = self.verify(
+            10, self.heat_client.resources.get,
+            6, fail_msg,
+            'retrieving stack resource details',
+            stack.id, resource_name
+        )
         fail_msg = 'Resource details contain incorrect values.'
-        self.verify_response_body_content('CREATE_COMPLETE',
-                                          res_details.resource_status,
-                                          fail_msg, 6)
-        self.verify_response_body_content('OS::Nova::Server',
-                                          res_details.resource_type,
-                                          fail_msg, 6)
+        self.verify_response_body_content(
+            'CREATE_COMPLETE', res_details.resource_status,
+            fail_msg, 6
+        )
+        self.verify_response_body_content(
+            'OS::Nova::Server', res_details.resource_type,
+            fail_msg, 6
+        )
+
         # get events list
         fail_msg = 'Cannot retrieve list of stack events.'
-        events = self.verify(10, self.heat_client.events.list, 7,
-                             fail_msg, 'retrieving list of stack events',
-                             stack.id)
-        self.verify_response_body_not_equal(0, len(events), fail_msg, 7)
+        events = self.verify(
+            10, self.get_stack_objects,
+            7, fail_msg,
+            'retrieving list of stack events',
+            self.heat_client.events,
+            stack.id
+        )
+        self.verify_response_body_not_equal(
+            0, len(events),
+            fail_msg, 7
+        )
 
-        fail_msg = 'Event details contain incorrect values.'
-        self.verify_response_body_content('Server',
-                                          events[0].logical_resource_id,
-                                          fail_msg, 7)
         # get event details
-        event_id = events[0].id
-        ev_details = self.verify(10, self.heat_client.events.get, 8,
-                                 'Cannot retrieve stack event details.',
-                                 'retrieving stack event details',
-                                 stack.id, resource_id, event_id)
+        event_id = self.get_stack_objects(
+            self.heat_client.events, stack.id,
+            key='resource_name', value=resource_name
+        )[0].id
 
+        fail_msg = 'Cannot retrieve stack event details.'
+        ev_details = self.verify(
+            10, self.heat_client.events.get,
+            8, fail_msg,
+            'retrieving stack event details',
+            stack.id, resource_name, event_id
+        )
         fail_msg = 'Event details contain incorrect values.'
-        self.verify_response_body_content(ev_details.id, event_id,
-                                          fail_msg, 8)
-        self.verify_response_body_content(ev_details.logical_resource_id,
-                                          'Server', fail_msg, 8)
+        self.verify_response_body_content(
+            event_id, ev_details.id,
+            fail_msg, 8
+        )
+        self.verify_response_body_content(
+            resource_name, ev_details.logical_resource_id,
+            fail_msg, 8
+        )
 
         # show template
         fail_msg = 'Cannot retrieve template of the stack.'
-        act_tpl = self.verify(10, self.heat_client.stacks.template, 9,
-                              fail_msg, 'retrieving stack template',
-                              stack.id)
-
-        check_content = lambda: ('InstanceType' in act_tpl['parameters'] and
-                                 'Server' in act_tpl['resources'])
-        self.verify(10, check_content, 9,
-                    fail_msg, 'verifying template content')
+        act_tpl = self.verify(
+            10, self.heat_client.stacks.template,
+            9, fail_msg,
+            'retrieving stack template',
+            stack.id
+        )
+        self.verify_response_body_content(
+            'OS::Nova::Server', act_tpl['resources'][resource_name]['type'],
+            fail_msg, 9
+        )
 
         # delete stack
-        fail_msg = 'Cannot delete stack.'
-        self.verify(20, self.heat_client.stacks.delete, 10,
-                    fail_msg, 'deleting stack',
-                    stack.id)
-
-        self.verify(100, self.wait_for_stack_deleted, 10,
-                    fail_msg, 'deleting stack',
-                    stack.id)
+        fail_msg = 'Can not delete stack.'
+        self.verify(
+            20, self.heat_client.stacks.delete,
+            10, fail_msg,
+            'deleting stack',
+            stack.id
+        )
+        self.verify(
+            100, self.wait_for_stack_deleted,
+            10, fail_msg,
+            'deleting stack',
+            stack.id
+        )
 
     def test_update(self):
         """Update stack actions: inplace, replace and update whole template
@@ -358,8 +406,11 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         # create test flavor
         fail_msg = 'Test flavor was not created.'
-        heat_flavor = self.verify(50, self.create_flavor, 1,
-                                  fail_msg, 'flavor creation')
+        heat_flavor = self.verify(
+            50, self.create_flavor,
+            1, fail_msg,
+            'flavor creation'
+        )
 
         # define stack parameters
         parameters = {
@@ -376,73 +427,89 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         # create stack
         fail_msg = 'Stack was not created properly.'
-        stack = self.verify(20, self.create_stack, 2,
-                            fail_msg,
-                            'stack creation',
-                            template, parameters=parameters)
-
-        self.verify(300, self.wait_for_stack_status, 3,
-                    fail_msg,
-                    'stack status becoming "CREATE_COMPLETE"',
-                    stack.id, 'CREATE_COMPLETE')
-
-        instances = self.get_stack_instances(stack.id)
-
-        if not instances:
-            self.fail('Failed step: 3. Instance for the {0} stack '
-                      'was not created.'.format(stack.stack_name))
+        stack = self.verify(
+            20, self.create_stack,
+            2, fail_msg,
+            'stack creation',
+            template, parameters=parameters
+        )
+        self.verify(
+            300, self.wait_for_stack_status,
+            3, fail_msg,
+            'stack status becoming "CREATE_COMPLETE"',
+            stack.id, 'CREATE_COMPLETE'
+        )
 
         fail_msg = 'Can not update stack.'
 
         # update inplace
-        template = template.replace('name: ost1-test_heat',
-                                    'name: ost1-test_updated')
+        template = template.replace(
+            'name: ost1-test_heat',
+            'name: ost1-test_updated'
+        )
 
-        stack = self.verify(20, self.update_stack, 4,
-                            fail_msg,
-                            'updating stack, changing resource name',
-                            stack.id,
-                            template, parameters=parameters)
+        stack = self.verify(
+            20, self.update_stack,
+            4, fail_msg,
+            'updating stack, changing resource name',
+            stack.id,
+            template, parameters=parameters
+        )
+        self.verify(
+            100, self.wait_for_stack_status,
+            5, fail_msg,
+            'stack status becoming "UPDATE_COMPLETE"',
+            stack.id, 'UPDATE_COMPLETE'
+        )
 
-        self.verify(100, self.wait_for_stack_status, 5,
-                    fail_msg,
-                    'stack status becoming "UPDATE_COMPLETE"',
-                    stack.id, 'UPDATE_COMPLETE')
-
+        instances = self.get_stack_objects(
+            self.heat_client.resources, stack.id,
+            key='resource_type', value='OS::Nova::Server'
+        )
+        instance_id = instances[0].physical_resource_id
         new_instance_name = self.compute_client.servers.get(
-            instances[0]).name
+            instance_id).name
 
-        if new_instance_name != 'ost1-test_updated':
-            self.fail('Failed step: 6 Stack update inplace was not '
-                      'finished, instance name was not changed.')
+        self.verify_response_body_content(
+            'ost1-test_updated', new_instance_name,
+            'Update inplace failed, instance name was not changed', 6
+        )
 
         # creation of one more flavor, that will be used for 'update replace'
-        flavor = self.verify(60, self.create_flavor, 7,
-                             'Test flavor was not created.', 'flavor creation')
+        flavor = self.verify(
+            60, self.create_flavor,
+            7, 'Test flavor was not created.',
+            'flavor creation'
+        )
 
         # update replace
         parameters['InstanceType'] = flavor.name
 
-        stack = self.verify(20, self.update_stack, 8,
-                            fail_msg,
-                            'updating stack, changing instance flavor',
-                            stack.id,
-                            template, parameters=parameters)
-
-        self.verify(100, self.wait_for_stack_status, 9,
-                    fail_msg,
-                    'stack status becoming "UPDATE_COMPLETE"',
-                    stack.id, 'UPDATE_COMPLETE')
-
-        instances = self.get_stack_instances(stack.id)
-        old_instance_id = instances[0]
-
+        stack = self.verify(
+            20, self.update_stack,
+            8, fail_msg,
+            'updating stack, changing instance flavor',
+            stack.id,
+            template, parameters=parameters
+        )
+        self.verify(
+            100, self.wait_for_stack_status,
+            9, fail_msg,
+            'stack status becoming "UPDATE_COMPLETE"',
+            stack.id, 'UPDATE_COMPLETE'
+        )
+        instances = self.get_stack_objects(
+            self.heat_client.resources, stack.id,
+            key='resource_type', value='OS::Nova::Server'
+        )
+        instance_id = instances[0].physical_resource_id
         new_instance_flavor = self.compute_client.servers.get(
-            instances[0]).flavor['id']
+            instance_id).flavor['id']
 
-        if new_instance_flavor != flavor.id:
-            self.fail('Failed step: 10. Stack update replace was not '
-                      'finished, instance flavor was not changed.')
+        self.verify_response_body_content(
+            flavor.id, new_instance_flavor,
+            'Update replace failed, instance flavor was not changed.', 10
+        )
 
         # update the whole template: one old resource will be deleted and
         # two new resources will be created
@@ -459,36 +526,48 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             template = self.load_template(
                 'heat_update_nova_stack_template.yaml')
 
-        stack = self.verify(20, self.update_stack, 11,
-                            fail_msg,
-                            'updating stack, changing template',
-                            stack.id,
-                            template, parameters=parameters)
+        stack = self.verify(
+            20, self.update_stack,
+            11, fail_msg,
+            'updating stack, changing template',
+            stack.id,
+            template, parameters=parameters
+        )
+        self.verify(
+            180, self.wait_for_stack_status,
+            12, fail_msg,
+            'stack status becoming "UPDATE_COMPLETE"',
+            stack.id, 'UPDATE_COMPLETE'
+        )
 
-        self.verify(180, self.wait_for_stack_status, 12,
-                    fail_msg,
-                    'stack status becoming "UPDATE_COMPLETE"',
-                    stack.id, 'UPDATE_COMPLETE')
+        instances = self.get_stack_objects(
+            self.heat_client.resources, stack.id
+        )
+        self.verify(
+            2, self.assertTrue,
+            13, 'Number of instances belonging to stack is not equal 2.',
+            'verifying the number of instances after template update',
+            len(instances) == 2
+        )
 
-        instances = self.get_stack_instances(stack.id)
-
-        if len(instances) != 2:
-            self.fail('Failed step: 13. There are more then two expected '
-                      'instances belonging test stack.')
-
-        if old_instance_id in instances:
+        if instance_id in [ins.physical_resource_id for ins in instances]:
             self.fail('Failed step: 13. Previously create instance '
                       'was not deleted during stack update.')
 
         # delete stack
-        fail_msg = 'Cannot delete stack.'
-        self.verify(20, self.heat_client.stacks.delete, 14,
-                    fail_msg, 'deleting stack',
-                    stack.id)
-
-        self.verify(100, self.wait_for_stack_deleted, 15,
-                    fail_msg, 'deleting stack',
-                    stack.id)
+        fail_msg = 'Can not delete stack.'
+        self.verify(
+            20, self.heat_client.stacks.delete,
+            14, fail_msg,
+            'deleting stack',
+            stack.id
+        )
+        self.verify(
+            100, self.wait_for_stack_deleted,
+            15, fail_msg,
+            'deleting stack',
+            stack.id
+        )
 
     def test_autoscaling(self):
         """Check stack autoscaling
@@ -651,8 +730,12 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         # create test flavor
         fail_msg = 'Test flavor was not created.'
-        large_flavor = self.verify(50, self.create_flavor, 1,
-                                   fail_msg, 'flavor creation', ram=1048576)
+        large_flavor = self.verify(
+            50, self.create_flavor,
+            1, fail_msg,
+            'flavor creation',
+            ram=1048576
+        )
 
         parameters = {
             'InstanceType': large_flavor.name,
@@ -665,25 +748,35 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         else:
             template = self.load_template(
                 'heat_create_nova_stack_template.yaml')
+
         fail_msg = 'Stack creation was not started.'
-        stack = self.verify(60, self.create_stack, 2,
-                            fail_msg, 'starting stack creation',
-                            template,
-                            disable_rollback=False,
-                            parameters=parameters)
+        stack = self.verify(
+            60, self.create_stack,
+            2, fail_msg,
+            'starting stack creation',
+            template, disable_rollback=False, parameters=parameters
+        )
 
-        self.verify_response_body_content('CREATE_IN_PROGRESS',
-                                          stack.stack_status,
-                                          fail_msg, 3)
+        self.verify_response_body_content(
+            'CREATE_IN_PROGRESS', stack.stack_status,
+            fail_msg, 3
+        )
+        self.verify(
+            180, self.wait_for_stack_deleted,
+            4, 'Rollback of the stack failed.',
+            'rolling back the stack after its creation failed',
+            stack.id
+        )
 
-        self.verify(180, self.wait_for_stack_deleted, 4,
-                    'Rollback of the stack failed.',
-                    'rolling back the stack after its creation failed',
-                    stack.id)
+        instances = self.get_stack_objects(
+            self.heat_client.resources, stack.id,
+            key='resource_name', value='OS::Nova::Server'
+        )
 
-        instances = self.get_instances_by_name_mask(stack.stack_name)
-
-        self.verify(20, self.assertTrue, 5,
-                    'The stack instance rollback failed.',
-                    'verifying if the instance was rolled back',
-                    len(instances) == 0)
+        fail_msg = 'The stack instance rollback failed.'
+        self.verify(
+            20, self.assertTrue,
+            5, fail_msg,
+            'verifying if the instance was rolled back',
+            len(instances) == 0
+        )
