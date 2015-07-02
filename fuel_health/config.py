@@ -710,10 +710,12 @@ class NailgunConfig(object):
 
     def find_proxy(self, ip):
 
-        endpoint = self.network.raw_data.get(
-            'management_vip', None) or ip
+        if 'keystone_vip' in self.network.raw_data:
+            keystone_vip = self.network.raw_data['keystone_vip']
+        else:
+            keystone_vip = self.network.raw_data.get('management_vip', None)
 
-        auth_url = 'http://{0}:{1}/{2}/'.format(endpoint, 5000, 'v2.0')
+        auth_url = 'http://{0}:{1}/{2}/'.format(keystone_vip, 5000, 'v2.0')
 
         try:
             os.environ['http_proxy'] = 'http://{0}:{1}'.format(ip, 8888)
@@ -746,13 +748,20 @@ class NailgunConfig(object):
         os.environ['http_proxy'] = 'http://{0}:{1}'.format(proxies[0], 8888)
 
     def set_endpoints(self):
-        management_vip = self.network.raw_data.get('management_vip', None)
+        # NOTE(dshulyak) this is hacky convention to allow granular deployment
+        # of keystone
+        if 'keystone_vip' in self.network.raw_data:
+            keystone_vip = self.network.raw_data['keystone_vip']
+            management_vip = None
+        else:
+            management_vip = self.network.raw_data.get('management_vip', None)
+            keystone_vip = management_vip
         public_vip = self.network.raw_data.get('public_vip', None)
         # workaround for api without management_vip for ha mode
-        if not management_vip and 'ha' in self.mode:
+        if not keystone_vip and 'ha' in self.mode:
             self._parse_ostf_api()
         else:
-            endpoint = management_vip or self.compute.public_ips[0]
+            endpoint = keystone_vip or self.compute.public_ips[0]
             endpoint_mur_sav = management_vip \
                 or self.compute.controller_nodes[0]
             self.horizon_url = 'http://{0}/{1}/'.format(
