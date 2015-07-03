@@ -602,27 +602,36 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         self.check_image_exists()
 
-        # create test flavor
-        fail_msg = 'Test flavor was not created.'
-        heat_flavor = self.verify(50, self.create_flavor, 1,
-                                  fail_msg, 'flavor creation')
+        # creation of test flavor
+        heat_flavor = self.verify(
+            50, self.create_flavor,
+            1, 'Test flavor can not be created.',
+            'flavor creation'
+        )
 
         # creation of test keypair
-        keypair = self.verify(10, self._create_keypair, 2,
-                              'Keypair can not be created.',
-                              'keypair creation',
-                              self.compute_client)
+        keypair = self.verify(
+            10, self._create_keypair,
+            2, 'Keypair can not be created.',
+            'keypair creation',
+            self.compute_client
+        )
+        path_to_key = self.verify(
+            10, self.save_key_to_file,
+            3, 'Private key can not be saved to file.',
+            'saving private key to the file',
+            keypair.private_key
+        )
 
-        path_to_key = self.verify(10, self.save_key_to_file, 3,
-                                  'Private key can not be saved to file.',
-                                  'saving private key to the file',
-                                  keypair.private_key)
+        # creation of test security group
+        sec_group = self.verify(
+            60, self._create_security_group,
+            4, 'Security group can not be created.',
+            'security group creation',
+            self.compute_client, 'ost1_test-sgroup'
+        )
 
-        sec_group = self.verify(60, self._create_security_group, 4,
-                                'Security group can not be created.',
-                                'security group creation',
-                                self.compute_client, 'ost1_test-sgroup')
-
+        # definition of stack parameters
         parameters = {
             'KeyName': keypair.name,
             'InstanceType': heat_flavor.name,
@@ -636,80 +645,109 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         else:
             template = self.load_template('heat_autoscaling_nova.yaml')
 
+        # creation of stack
         fail_msg = 'Stack was not created properly.'
-        stack = self.verify(20, self.create_stack, 5,
-                            fail_msg, 'stack creation',
-                            template,
-                            parameters=parameters)
-
-        self.verify(600, self.wait_for_stack_status, 6,
-                    fail_msg,
-                    'stack status becoming "CREATE_COMPLETE"',
-                    stack.id, 'CREATE_COMPLETE', 600, 15)
+        stack = self.verify(
+            20, self.create_stack,
+            5, fail_msg,
+            'stack creation',
+            template, parameters=parameters
+        )
+        self.verify(
+            600, self.wait_for_stack_status,
+            6, fail_msg,
+            'stack status becoming "CREATE_COMPLETE"',
+            stack.id, 'CREATE_COMPLETE', 600, 15
+        )
 
         reduced_stack_name = '{0}-{1}'.format(
             stack.stack_name[:2], stack.stack_name[-4:])
 
         instances = self.get_instances_by_name_mask(reduced_stack_name)
+        self.verify(
+            2, self.assertTrue,
+            6, 'Instance for the stack was not created.',
+            'verifying the number of instances after template update',
+            len(instances) != 0
+        )
 
-        if not instances:
-            self.fail('Failed step: 6. Instance for the {0} stack '
-                      'was not created.'.format(stack.stack_name))
+        # assigning floating ip
+        floating_ip = self.verify(
+            10, self._create_floating_ip,
+            7, 'Floating IP can not be created.',
+            'floating IP creation'
+        )
+        self.verify(
+            20, self._assign_floating_ip_to_instance,
+            8, 'Floating IP can not be assigned.',
+            'assigning floating IP',
+            self.compute_client, instances[0], floating_ip
+        )
 
-        floating_ip = self.verify(10, self._create_floating_ip, 7,
-                                  'Floating IP can not be created.',
-                                  'floating IP creation')
+        # vm connection check
+        vm_connection = ('ssh -o StrictHostKeyChecking=no -i {0} {1}@{2}'.
+                         format(path_to_key, 'cirros', floating_ip.ip))
 
-        self.verify(20, self._assign_floating_ip_to_instance, 8,
-                    'Floating IP can not be assigned.',
-                    'assigning floating IP',
-                    self.compute_client, instances[0], floating_ip)
+        self.verify(
+            120, self.wait_for_vm_ready_for_load,
+            9, 'VM is not ready or connection can not be established.',
+            'test script execution on VM',
+            vm_connection, 120, 15
+        )
 
-        vm_connection = 'ssh -o StrictHostKeyChecking=no -i %s %s@%s' % (
-            path_to_key, 'cirros', floating_ip.ip)
+        # start of vm loading
+        self.verify(
+            60, self.load_vm_cpu,
+            10, 'Can not create a process to load VM CPU.',
+            'loading VM CPU',
+            vm_connection
+        )
 
-        self.verify(120, self.wait_for_vm_ready_for_load, 9,
-                    'VM is not ready or connection can not be established',
-                    'test script execution on VM',
-                    vm_connection, 120, 15)
+        # launching the second instance during autoscaling
+        self.verify(
+            480, self.wait_for_autoscaling,
+            11, 'Failed to launch the 2nd instance per autoscaling alarm.',
+            'launching the new instance per autoscaling alarm',
+            len(instances) + 1, 480, 10, reduced_stack_name
+        )
 
-        self.verify(60, self.load_vm_cpu, 10,
-                    'Cannot create a process to load VM CPU.',
-                    'loading VM CPU',
-                    vm_connection)
+        # finish of vm loading
+        self.verify(
+            180, self.release_vm_cpu,
+            12, 'Can not kill the process on VM to turn CPU load off.',
+            'turning off VM CPU load',
+            vm_connection
+        )
 
-        self.verify(480,
-                    self.wait_for_autoscaling, 11,
-                    'Stack failed to launch the 2nd instance '
-                    'per autoscaling alarm.',
-                    'launching the new instance per autoscaling alarm',
-                    len(instances) + 1, 480, 10, reduced_stack_name)
+        # termination of the second instance during autoscaling
+        self.verify(
+            480, self.wait_for_autoscaling,
+            13, 'Failed to terminate the 2nd instance per autoscaling alarm.',
+            'terminating the 2nd instance per autoscaling alarm',
+            len(instances), 480, 10, reduced_stack_name
+        )
 
-        self.verify(180, self.release_vm_cpu, 12,
-                    'Cannot kill the process on VM to turn CPU load off.',
-                    'turning off VM CPU load',
-                    vm_connection)
+        # deletion of file with keypair from vm
+        self.verify(
+            10, self.delete_key_file,
+            14, 'The file with private key can not be deleted.',
+            'deleting the file with private key',
+            path_to_key
+        )
 
-        self.verify(480, self.wait_for_autoscaling, 13,
-                    'Stack failed to terminate the 2nd instance '
-                    'per autoscaling alarm.',
-                    'terminating the 2nd instance per autoscaling alarm',
-                    len(instances), 480, 10, reduced_stack_name)
-
-        self.verify(10, self.delete_key_file, 14,
-                    'The file with private key cannot be deleted.',
-                    'deleting the file with private key',
-                    path_to_key)
-
-        self.verify(20, self.heat_client.stacks.delete, 15,
-                    'Cannot delete stack.',
-                    'deleting stack',
-                    stack.id)
-
-        self.verify(100, self.wait_for_stack_deleted, 16,
-                    'Cannot delete stack.',
-                    'deleting stack',
-                    stack.id)
+        # deletion of stack
+        self.verify(
+            20, self.heat_client.stacks.delete,
+            15, 'Can not delete stack.',
+            'deleting stack',
+            stack.id
+        )
+        self.verify(
+            100, self.wait_for_stack_deleted,
+            16, 'Can not delete stack.',
+            'deleting stack',
+            stack.id
+        )
 
     def test_rollback(self):
         """Check stack rollback
