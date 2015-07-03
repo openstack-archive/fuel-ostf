@@ -18,15 +18,15 @@ BuildArch: noarch
 Requires:    python-amqplib >= 1.0.2
 Requires:    python-anyjson >= 0.3.3
 Requires:    python-argparse >= 1.2.1
-Requires:    python-oslo-config >= 1.1.1
+Requires:    python-oslo-config >= 1.9.3
 Requires:    python-ceilometerclient >= 1.0.9
 Requires:    python-cinderclient >= 1.0.6
-Requires:    python-keystoneclient >= 0.11
+Requires:    python-keystoneclient >= 1.3.1
 Requires:    python-kombu >= 1:3.0.16
-Requires:    python-novaclient >= 1:2.15.0
+Requires:    python-novaclient >= 1:2.23.0
 Requires:    python-heatclient >= 0.2.5
 Requires:    python-muranoclient >= 0.2.11
-Requires:    python-neutronclient >= 2.3.6
+Requires:    python-neutronclient >= 2.4.0
 Requires:    python-saharaclient >= 0.6
 Requires:    python-swiftclient >= 2.3.1
 Requires:    python-glanceclient >= 0.14.1
@@ -46,8 +46,8 @@ Requires:    python-gevent >= 0.13.8
 Requires:    python-pecan >= 0.3.0
 Requires:    python-pecan < 0.6.0
 Requires:    python-psycopg2 >= 2.5.1
-Requires:    python-stevedore >= 0.10
-Requires:    python-oslo-serialization >= 1.0.0
+Requires:    python-stevedore >= 1.3.0
+Requires:    python-oslo-serialization >= 1.4.0
 
 
 # test_requires
