@@ -55,6 +55,7 @@ class SaharaClusterTest(saharamanager.SaharaTestsManager):
             self.skipTest(msg)
 
         flavor_id = self.create_flavor()
+        private_net_id, floating_ip_pool = self.create_network_resources()
         self.cl_template = {
             'name': rand_name('sahara-cluster-template-'),
             'plugin': self._plugin_name,
@@ -64,7 +65,7 @@ class SaharaClusterTest(saharamanager.SaharaTestsManager):
                     'name': 'master',
                     'flavor_id': flavor_id,
                     'node_processes': self._master_processes,
-                    'floating_ip_pool': self.floating_ip_pool,
+                    'floating_ip_pool': floating_ip_pool,
                     'auto_security_group': True,
                     'count': 1
                 },
@@ -72,12 +73,12 @@ class SaharaClusterTest(saharamanager.SaharaTestsManager):
                     'name': 'worker',
                     'flavor_id': flavor_id,
                     'node_processes': self._worker_processes,
-                    'floating_ip_pool': self.floating_ip_pool,
+                    'floating_ip_pool': floating_ip_pool,
                     'auto_security_group': True,
                     'count': 1
                 }
             ],
-            'net_id': self.neutron_private_net_id,
+            'net_id': private_net_id,
             'cluster_configs': {'HDFS': {'dfs.replication': 1}},
             'description': 'Test cluster template'
         }
