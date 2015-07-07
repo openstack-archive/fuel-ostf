@@ -20,6 +20,8 @@ import socket
 import time
 import traceback
 
+import fuel_health.common.utils.data_utils as data_utils
+
 LOG = logging.getLogger(__name__)
 
 # Default client libs
@@ -853,47 +855,121 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
 class PlatformServicesBaseClass(NovaNetworkScenarioTest):
 
-    def setUp(self):
-        super(PlatformServicesBaseClass, self).setUp()
+    # Methods for creating network resources.
+    def create_network_resources(self):
+        """This method creates network resources.
 
-        self.neutron_private_net_id = None
-        self.floating_ip_pool = None
+        It creates a network, an internal subnet on the network, a router and
+        links the subnet to the router. All resources created by this method
+        will be automatically deleted.
+        """
+
+        private_net_id = None
+        floating_ip_pool = None
 
         if self.config.network.network_provider == 'neutron':
-            self.neutron_private_net_id = (
-                self.compute_client.networks.find(label=self.private_net)).id
-            self.floating_ip_pool = (
-                self.compute_client.networks.find(
-                    label=self.private_net + '_ext')).id
+            ext_net = self._find_ext_net()
+            net_name = data_utils.rand_name('platform-service-net-')
+            net = self._create_net(net_name)
+            subnet = self._create_internal_subnet(net)
+            router_name = data_utils.rand_name('platform-service-router-')
+            router = self._create_router(router_name, ext_net)
+            self.neutron_client.add_interface_router(
+                router['id'], {'subnet_id': subnet['id']})
+            self.addCleanup(self.neutron_client.remove_interface_router,
+                            router['id'], {'subnet_id': subnet['id']})
+            self.addCleanup(
+                self.neutron_client.remove_gateway_router, router['id'])
+
+            private_net_id = net['id']
+            floating_ip_pool = ext_net['id']
         else:
             if not self.config.compute.auto_assign_floating_ip:
                 flip_list = self.compute_client.floating_ip_pools.list()
-                self.floating_ip_pool = next(
+                floating_ip_pool = next(
                     flip.name for flip in flip_list if flip.is_loaded())
 
-    def _try_port(self, host, port):
-        start_time = time.time()
-        delta = time.time() - start_time
+        return private_net_id, floating_ip_pool
 
-        while delta < 600:
-            cmd = ("timeout 60 bash -c 'echo >/dev/"
-                   "tcp/{0}/{1}'; echo $?".format(host, port))
+    def _find_ext_net(self):
+        """This method finds the external network."""
 
-            output, output_err = self._run_ssh_cmd(cmd)
-            print('NC output after %s seconds is "%s"' % (delta, output))
-            LOG.debug('NC output after %s seconds is "%s"',
-                      delta, output)
+        LOG.debug('Finding external network...')
+        for net in self.neutron_client.list_networks()['networks']:
+            if net['router:external']:
+                LOG.debug('External network found. Ext net: {0}'.format(net))
+                return net
 
-            if output or str(output_err).find(' succeeded!') > 0:
-                return True
+        self.fail('Cannot find an external network.')
 
-            time.sleep(10)
-            delta = time.time() - start_time
+    def _create_net(self, name):
+        """This method creates a network.
 
-        self.fail('On host %s port %s is not opened '
-                  'more then 10 minutes' % (host, port))
+        All resources created by this method will be automatically deleted.
+        """
+
+        LOG.debug('Creating network with name "{0}"...'.format(name))
+        net_body = {
+            'network': {
+                'name': name,
+                'tenant_id': self.tenant_id
+            }
+        }
+        net = self.neutron_client.create_network(net_body)['network']
+        self.addCleanup(self.neutron_client.delete_network, net['id'])
+        LOG.debug('Network "{0}" has been created. Net: {1}'.format(name, net))
+
+        return net
+
+    def _create_internal_subnet(self, net):
+        """This method creates an internal subnet on the network.
+
+        All resources created by this method will be automatically deleted.
+        """
+
+        LOG.debug('Creating subnet...')
+        subnet_body = {
+            'subnet': {
+                'network_id': net['id'],
+                'ip_version': 4,
+                'cidr': '10.1.7.0/24',
+                'tenant_id': self.tenant_id
+            }
+        }
+        subnet = self.neutron_client.create_subnet(subnet_body)['subnet']
+        self.addCleanup(self.neutron_client.delete_subnet, subnet['id'])
+        LOG.debug('Subnet has been created. Subnet: {0}'.format(subnet))
+
+        return subnet
+
+    def _create_router(self, name, ext_net):
+        """This method creates a router.
+
+        All resources created by this method will be automatically deleted.
+        """
+
+        LOG.debug('Creating router with name "{0}"...'.format(name))
+        router_body = {
+            'router': {
+                'name': name,
+                'external_gateway_info': {
+                    'network_id': ext_net['id']
+                },
+                'tenant_id': self.tenant_id
+            }
+        }
+        router = self.neutron_client.create_router(router_body)['router']
+        self.addCleanup(self.neutron_client.delete_router, router['id'])
+        LOG.debug('Router "{0}" has been created. '
+                  'Router: {1}'.format(name, router))
+
+        return router
 
     def get_max_free_compute_node_ram(self, min_required_ram_mb):
+        """This method returns the max amount of free RAM that
+        a compute node has.
+        """
+
         max_free_ram_mb = 0
         for hypervisor in self.compute_client.hypervisors.list():
             if hypervisor.free_ram_mb >= min_required_ram_mb:
@@ -906,8 +982,7 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
 
     # Methods for finding and checking Sahara images.
     def find_and_check_image(self, tag_plugin, tag_version):
-        """This method finds a correctly registered image for Sahara platform
-        tests.
+        """This method finds a correctly registered Sahara image.
 
         It finds a Sahara image by specific tags and checks whether the image
         is correctly registered or not.
