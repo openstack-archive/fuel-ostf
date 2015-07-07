@@ -308,14 +308,15 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             flavor.id for flavor in
             self.compute_client.flavors.list() if flavor.name == 'm1.small')
 
-        #  Create json for node grou
+        private_net_id, floating_ip_pool = self.create_network_resources()
+        #  Create json for node group
         node_group = {'name': 'all-in-one',
                       'flavor_id': flavor_id,
                       'node_processes': ['nodemanager', 'datanode',
                                          'resourcemanager', 'namenode',
                                          'historyserver'],
                       'count': 1,
-                      'floating_ip_pool': self.floating_ip_pool,
+                      'floating_ip_pool': floating_ip_pool,
                       'auto_security_group': True}
 
         #  Create json for Sahara cluster
@@ -325,10 +326,15 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                         'default_image_id': image_id,
                         'cluster_configs': {'HDFS': {'dfs.replication': 1}},
                         'node_groups': [node_group],
-                        'net_id': self.neutron_private_net_id}
+                        'net_id': private_net_id}
 
         #  Create Sahara cluster
         cluster = self.sahara_client.clusters.create(**cluster_json)
+        self.objects_for_delete.append(
+            (self.sahara_client.clusters.delete, cluster.id))
+        self.addCleanup(fuel_health.test.call_until_true,
+                        self.is_sahara_resource_deleted, 300, 3,
+                        self.sahara_client.clusters, cluster.id)
 
         #  Wait for change cluster state for metric: cluster.update
         def check_status():
@@ -336,9 +342,9 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             return cluster_state in ['Waiting', 'Active', 'Error']
         fuel_health.test.call_until_true(check_status, 300, 1)
 
-        self.objects_for_delete.append((self.sahara_client.clusters.delete,
-                                        cluster.id))
+        #  Delete cluster
         self.sahara_client.clusters.delete(cluster.id)
+
         return cluster
 
     def glance_helper(self):
