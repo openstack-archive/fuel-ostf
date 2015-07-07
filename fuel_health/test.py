@@ -43,7 +43,7 @@ class BaseTestCase(unittest2.TestCase,
         cls.config = config.FuelConfig()
 
 
-def call_until_true(func, duration, sleep_for, arg=None):
+def call_until_true(func, duration, sleep_for, *args):
     """Call the given function until it returns True (and return True) or
     until the specified duration (in seconds) elapses (and return
     False).
@@ -57,8 +57,8 @@ def call_until_true(func, duration, sleep_for, arg=None):
     now = time.time()
     timeout = now + duration
     while now < timeout:
-        if arg:
-            if func(arg):
+        if args:
+            if func(*args):
                 return True
         elif func():
             return True

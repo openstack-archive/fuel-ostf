@@ -15,8 +15,6 @@
 import logging
 import time
 
-from saharaclient.api import base as sab
-
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import nmanager
 
@@ -226,7 +224,7 @@ class SaharaTestsManager(nmanager.PlatformServicesBaseClass):
         """
 
         LOG.debug('Deleting resource "{0}"...'.format(resource_id))
-        if self._is_resource_deleted(resource_client, resource_id):
+        if self.is_resource_deleted(resource_client, resource_id):
             return
         resource_client.delete(resource_id)
         self._wait_for_deletion(resource_client, resource_id)
@@ -237,28 +235,10 @@ class SaharaTestsManager(nmanager.PlatformServicesBaseClass):
 
         start = time.time()
         while time.time() - start < self.delete_timeout:
-            if self._is_resource_deleted(resource_client, resource_id):
+            if self.is_resource_deleted(resource_client, resource_id):
                 return
             time.sleep(self.request_timeout)
 
         self.fail('Request timed out. '
                   'Timed out while waiting for one of the test resources '
                   'to delete within {0} seconds.'.format(self.delete_timeout))
-
-    def _is_resource_deleted(self, resource_client, resource_id):
-        """This method checks whether the resource is deleted or not.
-
-        The API request is wrapped in try/except block to correctly handle
-        "404 Not Found" exception. If the resource doesn't exist, this method
-        will return True. Otherwise it will return False.
-        """
-
-        try:
-            resource_client.get(resource_id)
-        except sab.APIException as sahara_api_exc:
-            if sahara_api_exc.error_code == 404:
-                LOG.debug('Resource "{0}" not found.'.format(resource_id))
-                return True
-            self.fail(sahara_api_exc.message)
-
-        return False
