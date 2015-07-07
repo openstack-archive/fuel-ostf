@@ -71,7 +71,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             'ImageId': self.config.compute.image_name
         }
         if 'neutron' in self.config.network.network_provider:
-            parameters['network'] = self.private_net
+            parameters['network'], _ = self.create_network_resources()
             template = self.load_template(
                 'heat_create_neutron_stack_template.yaml')
         else:
@@ -231,7 +231,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             'ImageId': self.config.compute.image_name
         }
         if 'neutron' in self.config.network.network_provider:
-            parameters['network'] = self.private_net
+            parameters['network'], _ = self.create_network_resources()
             template = self.load_template(
                 'heat_create_neutron_stack_template.yaml')
         else:
@@ -418,7 +418,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             'ImageId': self.config.compute.image_name
         }
         if 'neutron' in self.config.network.network_provider:
-            parameters['network'] = self.private_net
+            parameters['network'], _ = self.create_network_resources()
             template = self.load_template(
                 'heat_create_neutron_stack_template.yaml')
         else:
@@ -519,7 +519,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             'ImageId': self.config.compute.image_name
         }
         if 'neutron' in self.config.network.network_provider:
-            parameters['network'] = self.private_net
+            parameters['network'], _ = self.create_network_resources()
             template = self.load_template(
                 'heat_update_neutron_stack_template.yaml')
         else:
@@ -640,7 +640,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         }
 
         if 'neutron' in self.config.network.network_provider:
-            parameters['Subnet'] = self.private_net
+            parameters['Subnet'], _ = self.create_network_resources()
             template = self.load_template('heat_autoscaling_neutron.yaml')
         else:
             template = self.load_template('heat_autoscaling_nova.yaml')
@@ -780,7 +780,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             'ImageId': self.config.compute.image_name
         }
         if 'neutron' in self.config.network.network_provider:
-            parameters['network'] = self.private_net
+            parameters['network'], _ = self.create_network_resources()
             template = self.load_template(
                 'heat_create_neutron_stack_template.yaml')
         else:
