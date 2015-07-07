@@ -34,7 +34,6 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         if cls.manager.clients_initialized:
             cls.wait_interval = cls.config.compute.build_interval
             cls.wait_timeout = cls.config.compute.build_timeout
-            cls.private_net = 'net04'
             cls.objects_for_delete = []
             cls.nova_notifications = ['memory', 'vcpus', 'disk.root.size',
                                       'disk.ephemeral.size']
@@ -101,6 +100,15 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         if (not self.config.compute.compute_nodes and
                 not self.config.compute.use_vcenter):
             self.skipTest('There are no compute nodes')
+
+    def create_server(self, name, **kwargs):
+        server = self._create_server(self.compute_client, name, **kwargs)
+        self.addCleanup(fuel_health.test.call_until_true,
+                        self.is_resource_deleted, 300, 3,
+                        self.compute_client.servers, server.id)
+        self.addCleanup(self.compute_client.servers.delete, server.id)
+
+        return server
 
     def create_alarm(self, **kwargs):
         """This method provides creation of alarm."""
@@ -274,12 +282,7 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             router["id"],
             {"router": {"name": rand_name("ceilo-router-update")}})
 
-        external_network = None
-        for network in self.neutron_client.list_networks()["networks"]:
-            if network.get("router:external"):
-                external_network = network
-        if not external_network:
-            self.fail('Can not find external network')
+        external_network = self.find_external_network()
         try:
             body = {
                 "floatingip": {
@@ -308,14 +311,15 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             flavor.id for flavor in
             self.compute_client.flavors.list() if flavor.name == 'm1.small')
 
-        #  Create json for node grou
+        private_net_id, floating_ip_pool = self.create_network_resources()
+        #  Create json for node group
         node_group = {'name': 'all-in-one',
                       'flavor_id': flavor_id,
                       'node_processes': ['nodemanager', 'datanode',
                                          'resourcemanager', 'namenode',
                                          'historyserver'],
                       'count': 1,
-                      'floating_ip_pool': self.floating_ip_pool,
+                      'floating_ip_pool': floating_ip_pool,
                       'auto_security_group': True}
 
         #  Create json for Sahara cluster
@@ -325,10 +329,15 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                         'default_image_id': image_id,
                         'cluster_configs': {'HDFS': {'dfs.replication': 1}},
                         'node_groups': [node_group],
-                        'net_id': self.neutron_private_net_id}
+                        'net_id': private_net_id}
 
         #  Create Sahara cluster
         cluster = self.sahara_client.clusters.create(**cluster_json)
+        self.objects_for_delete.append(
+            (self.sahara_client.clusters.delete, cluster.id))
+        self.addCleanup(fuel_health.test.call_until_true,
+                        self.is_resource_deleted, 300, 3,
+                        self.sahara_client.clusters, cluster.id)
 
         #  Wait for change cluster state for metric: cluster.update
         def check_status():
@@ -336,9 +345,9 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             return cluster_state in ['Waiting', 'Active', 'Error']
         fuel_health.test.call_until_true(check_status, 300, 1)
 
-        self.objects_for_delete.append((self.sahara_client.clusters.delete,
-                                        cluster.id))
+        #  Delete cluster
         self.sahara_client.clusters.delete(cluster.id)
+
         return cluster
 
     def glance_helper(self):
