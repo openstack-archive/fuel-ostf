@@ -22,29 +22,30 @@ import traceback
 
 import fuel_health.common.ssh
 from fuel_health.common.utils.data_utils import rand_name
-import fuel_health.nmanager
+from fuel_health import nmanager
 import fuel_health.test
 
 
 LOG = logging.getLogger(__name__)
 
 
-class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
-    """Base class for Heat openstack sanity and smoke tests."""
+class HeatBaseTest(nmanager.PlatformServicesBaseClass):
+    """Base class for Heat OpenStack sanity, smoke and platform tests."""
 
     @classmethod
     def setUpClass(cls):
         super(HeatBaseTest, cls).setUpClass()
 
-        if cls.manager.clients_initialized:
-            if cls.heat_client is None:
-                cls.fail('Heat is unavailable.')
-            cls.wait_interval = cls.config.compute.build_interval
-            cls.wait_timeout = cls.config.compute.build_timeout
+        cls.wait_interval = cls.config.compute.build_interval
+        cls.wait_timeout = cls.config.compute.build_timeout
 
     def setUp(self):
         super(HeatBaseTest, self).setUp()
+
         self.check_clients_state()
+
+        if self.heat_client is None:
+            self.fail('Heat is unavailable.')
         if not self.find_micro_flavor():
             self.fail('m1.micro flavor was not created.')
 
