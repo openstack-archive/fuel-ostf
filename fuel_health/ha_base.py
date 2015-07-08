@@ -96,7 +96,7 @@ class RabbitSanityClass(BaseTestCase):
             return output
 
     def get_conf_values(self, variable="rabbit_password",
-                        sections="DEFAULT",
+                        sections="oslo_messaging_rabbit",
                         conf_path="/etc/nova/nova.conf"):
         cmd = ("python -c 'import ConfigParser; "
                "cfg=ConfigParser.ConfigParser(); "
@@ -117,9 +117,10 @@ class RabbitSanityClass(BaseTestCase):
         if not self._controllers:
             self.fail('There are no online controllers')
         pwd = self.get_conf_values().strip()
+        userid = self.get_conf_values(variable="rabbit_userid").strip()
         for host in self._controllers:
             try:
-                conn = Connection(host, userid='nova',
+                conn = Connection(host, userid=userid,
                                   password=pwd,
                                   virtual_host='/', port=5673)
                 conn.connect()
