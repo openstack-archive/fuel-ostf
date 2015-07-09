@@ -30,7 +30,8 @@ class TestDeplTagsGetter(base.BaseUnitTest):
             'attrs': {
                 'deployment_tags': set(
                     ['ha', 'rhel', 'additional_components',
-                     'murano', 'nova_network', 'public_on_all_nodes']),
+                     'murano', 'nova_network', 'public_on_all_nodes',
+                     'enable_without_ceph']),
                 'release_version': '2015.2-1.0'
             }
         }
@@ -43,6 +44,8 @@ class TestDeplTagsGetter(base.BaseUnitTest):
                            json=cluster['cluster_attributes'])
             m.register_uri('GET', '/api/releases/3',
                            json=cluster['release_data'])
+            m.register_uri('GET', '/api/nodes?cluster_id=3',
+                           json=cluster['cluster_node'])
             res = mixins._get_cluster_attrs(expected['cluster_id'])
 
         self.assertEqual(res, expected['attrs'])

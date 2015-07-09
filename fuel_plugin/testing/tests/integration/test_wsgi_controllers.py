@@ -47,7 +47,7 @@ class TestTestSetsController(base.BaseWSGITest):
         ]
 
         cluster_id = self.expected['cluster']['id']
-        self.mock_api_for_cluster(cluster_id)
+        self.self.mock_api_for_cluster(cluster_id)
 
         resp = self.app.get(
             '/v1/testsets/{0}'.format(cluster_id)
