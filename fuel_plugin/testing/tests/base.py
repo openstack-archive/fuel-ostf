@@ -74,6 +74,8 @@ CLUSTERS = {
             'operating_system': 'rhel',
             'version': '2015.2-1.0',
         },
+        'cluster_node': {
+        },
         'cluster_attributes': {
             'editable': {
                 'additional_components': {
@@ -201,6 +203,11 @@ class BaseIntegrationTest(BaseUnitTest):
             'GET',
             '/api/releases/{0}'.format(release_id),
             json=cluster['release_data'])
+
+        self.requests_mock.register_uri(
+            'GET',
+            '/api/nodes?cluster_id={0}'.format(cluster_id),
+            json=cluster['cluster_nodes'])
 
         self.requests_mock.register_uri(
             'GET',
