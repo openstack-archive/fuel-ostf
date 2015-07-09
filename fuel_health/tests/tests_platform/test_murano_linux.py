@@ -390,7 +390,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
                     self.environment.id, session.id)
 
         fail_msg = "Deployment was not completed correctly. "
-        self.environment = self.verify(1800, self.deploy_check,
+        self.environment = self.verify(2400, self.deploy_check,
                                        7, fail_msg, 'deployment is going',
                                        self.environment)
 
