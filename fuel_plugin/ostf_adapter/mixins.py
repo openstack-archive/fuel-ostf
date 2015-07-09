@@ -127,7 +127,18 @@ def _get_cluster_attrs(cluster_id, token=None):
         cfg.CONF.adapter.nailgun_host, cfg.CONF.adapter.nailgun_port,
         'api/releases/{0}'.format(release_id))
 
+    nodes_url = URL.format(
+        cfg.CONF.adapter.nailgun_host, cfg.CONF.adapter.nailgun_port,
+        '/api/nodes?cluster_id={0}'.format(cluster_id))
+    nodes_response = REQ_SES.get(nodes_url).json()
+    if 'objects' in nodes_response:
+        nodes_response = nodes_response['objects']
+    enable_without_ceph = filter(lambda node: 'ceph-osd' in node['roles'],
+                                 nodes_response)
+
     deployment_tags = set()
+    if not enable_without_ceph:
+        deployment_tags.add('enable_without_ceph')
 
     fuel_version = response.get('fuel_version')
     if fuel_version:
