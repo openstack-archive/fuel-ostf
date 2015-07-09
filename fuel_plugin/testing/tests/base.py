@@ -74,6 +74,8 @@ CLUSTERS = {
             'operating_system': 'rhel',
             'version': '2015.2-1.0',
         },
+        'cluster_node': {
+        },
         'cluster_attributes': {
             'editable': {
                 'additional_components': {
@@ -204,8 +206,36 @@ class BaseIntegrationTest(BaseUnitTest):
 
         self.requests_mock.register_uri(
             'GET',
+            '/api/nodes?cluster_id={0}'.format(cluster_id),
+            json=cluster['cluster_nodes'])
+
+        self.requests_mock.register_uri(
+            'GET',
             '/api/clusters/{0}/attributes'.format(cluster_id),
             json=cluster['cluster_attributes'])
+
+    def mock_api_for_cluster_integr(self, cluster_id):
+        """Mock requests to Nailgun to mimic behavior of
+        Nailgun's API
+        """
+        cluster = CLUSTERS[cluster_id]
+        release_id = cluster['cluster_meta']['release_id']
+
+        self.requests_mock.register_uri(
+            'GET',
+            '/api/clusters/{0}'.format(cluster_id),
+            json=cluster['cluster_meta'])
+
+        self.requests_mock.register_uri(
+            'GET',
+            '/api/releases/{0}'.format(release_id),
+            json=cluster['release_data'])
+
+        self.requests_mock.register_uri(
+            'GET',
+            '/api/clusters/{0}/attributes'.format(cluster_id),
+            json=cluster['cluster_attributes'])
+
 
 
 class BaseWSGITest(BaseIntegrationTest):

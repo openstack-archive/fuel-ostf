@@ -22,12 +22,12 @@ class WsgiInterfaceTest(base.BaseWSGITest):
 
     def test_get_all_tests(self):
         cluster_id = 1
-        self.mock_api_for_cluster(cluster_id)
+        self.mock_api_for_cluster_integr(cluster_id)
         self.app.get('/v1/tests/{0}'.format(cluster_id))
 
     def test_get_all_testsets(self):
         cluster_id = 1
-        self.mock_api_for_cluster(cluster_id)
+        self.mock_api_for_cluster_integr(cluster_id)
         self.app.get('/v1/testsets/{0}'.format(cluster_id))
 
     def test_get_one_testruns(self):
@@ -38,8 +38,8 @@ class WsgiInterfaceTest(base.BaseWSGITest):
 
     @mock.patch.object(models.TestRun, 'start')
     def test_post_testruns(self, mstart):
-        self.mock_api_for_cluster(3)
-        self.mock_api_for_cluster(4)
+        self.mock_api_for_cluster_integr(3)
+        self.mock_api_for_cluster_integr(4)
 
         testruns = [
             {
@@ -73,5 +73,5 @@ class WsgiInterfaceTest(base.BaseWSGITest):
 
     def test_get_last_testruns(self):
         cluster_id = 1
-        self.mock_api_for_cluster(cluster_id)
+        self.mock_api_for_cluster_integr(cluster_id)
         self.app.get('/v1/testruns/last/{0}'.format(cluster_id))

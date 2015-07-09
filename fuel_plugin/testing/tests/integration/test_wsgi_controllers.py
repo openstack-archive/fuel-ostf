@@ -22,7 +22,7 @@ class TestTestsController(base.BaseWSGITest):
 
     def test_get(self):
         cluster_id = self.expected['cluster']['id']
-        self.mock_api_for_cluster(cluster_id)
+        self.mock_api_for_cluster_integr(cluster_id)
         resp = self.app.get(
             '/v1/tests/{0}'.format(cluster_id)
         )
@@ -47,7 +47,7 @@ class TestTestSetsController(base.BaseWSGITest):
         ]
 
         cluster_id = self.expected['cluster']['id']
-        self.mock_api_for_cluster(cluster_id)
+        self.self.mock_api_for_cluster_integr(cluster_id)
 
         resp = self.app.get(
             '/v1/testsets/{0}'.format(cluster_id)
@@ -89,7 +89,7 @@ class TestTestRunsController(base.BaseWSGITest):
         self.nose_plugin_patcher.start()
 
         self.cluster_id = self.expected['cluster']['id']
-        self.mock_api_for_cluster(self.cluster_id)
+        self.mock_api_for_cluster_integr(self.cluster_id)
 
     def tearDown(self):
         super(TestTestRunsController, self).tearDown()
@@ -276,7 +276,7 @@ class TestClusterRedeployment(base.BaseWSGITest):
 class TestVersioning(base.BaseWSGITest):
     def test_discover_tests_with_versions(self):
         cluster_id = 6
-        self.mock_api_for_cluster(cluster_id)
+        self.mock_api_for_cluster_integr(cluster_id)
         self.app.get('/v1/testsets/{0}'.format(cluster_id))
 
         self.expected = {
