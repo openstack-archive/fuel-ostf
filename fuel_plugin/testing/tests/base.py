@@ -135,7 +135,7 @@ CLUSTERS = {
                 'common': {}
             }
         }
-    }
+    },
 }
 
 
@@ -201,6 +201,11 @@ class BaseIntegrationTest(BaseUnitTest):
             'GET',
             '/api/releases/{0}'.format(release_id),
             json=cluster['release_data'])
+
+        self.requests_mock.register_uri(
+            'GET',
+            '/api/nodes?cluster_id={0}'.format(cluster_id),
+            json=cluster['cluster_nodes'])
 
         self.requests_mock.register_uri(
             'GET',
