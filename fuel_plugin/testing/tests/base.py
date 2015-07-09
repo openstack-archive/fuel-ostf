@@ -42,6 +42,8 @@ CLUSTERS = {
             'operating_system': 'rhel',
             'version': '2015.2-1.0',
         },
+        'cluster_node': {
+        },
         'cluster_attributes': {
             'editable': {
                 'additional_components': {},
@@ -58,6 +60,8 @@ CLUSTERS = {
             'operating_system': 'ubuntu',
             'version': '2015.2-1.0',
         },
+        'cluster_node': {
+        },
         'cluster_attributes': {
             'editable': {
                 'additional_components': {},
@@ -73,6 +77,8 @@ CLUSTERS = {
         'release_data': {
             'operating_system': 'rhel',
             'version': '2015.2-1.0',
+        },
+        'cluster_node': {
         },
         'cluster_attributes': {
             'editable': {
@@ -97,6 +103,8 @@ CLUSTERS = {
             'operating_system': 'none',
             'version': '2015.2-1.0',
         },
+        'cluster_node': {
+        },
         'cluster_attributes': {
             'editable': {
                 'additional_components': {},
@@ -113,6 +121,8 @@ CLUSTERS = {
             'operating_system': 'none',
             'version': '2015.2-1.0',
         },
+        'cluster_node': {
+        },
         'cluster_attributes': {
             'editable': {
                 'additional_components': {},
@@ -128,6 +138,8 @@ CLUSTERS = {
         'release_data': {
             'operating_system': '',
             'version': '2015.2-6.0',
+        },
+        'cluster_node': {
         },
         'cluster_attributes': {
             'editable': {
@@ -204,6 +216,11 @@ class BaseIntegrationTest(BaseUnitTest):
 
         self.requests_mock.register_uri(
             'GET',
+            '/api/nodes?cluster_id={0}'.format(cluster_id),
+            json=cluster['cluster_nodes'])
+
+        self.requests_mock.register_uri(
+            'GET',
             '/api/clusters/{0}/attributes'.format(cluster_id),
             json=cluster['cluster_attributes'])
 
@@ -217,7 +234,8 @@ class BaseWSGITest(BaseIntegrationTest):
             'cluster': {
                 'id': 1,
                 'deployment_tags': set(['ha', 'rhel', 'nova_network',
-                                        'public_on_all_nodes'])
+                                        'public_on_all_nodes',
+                                        'enable_without_ceph'])
             },
             'test_sets': ['general_test',
                           'stopped_test', 'ha_deployment_test',
