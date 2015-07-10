@@ -12,3 +12,5 @@ Ideally tests should be runned with tox, e.g:
 
     tox
 
+TEST TEST TEST
+
