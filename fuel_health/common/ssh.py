@@ -202,7 +202,7 @@ class Client(object):
         channel.shutdown_write()
         out_data = []
         err_data = []
-
+        LOG.debug("Run cmd {0} on vm {1}".format(command, vm))
         select_params = [channel], [], [], self.channel_timeout
         while True:
             ready = select.select(*select_params)
@@ -222,9 +222,14 @@ class Client(object):
             if channel.closed and not err_chunk and not out_chunk:
                 break
         if 0 != exit_status:
+            LOG.warning(
+                'Command {0} finishes with non-zero exit code {1}'.format(
+                    command, exit_status))
             raise exceptions.SSHExecCommandFailed(
                 command=command, exit_status=exit_status,
                 strerror=''.join(err_data).join(out_data))
+        LOG.debug('Current result {0} {1} {2}'.format(
+            command, err_data, out_data))
         return ''.join(out_data)
 
     def close_ssh_connection(self, connection):
