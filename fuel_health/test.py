@@ -81,11 +81,9 @@ class TestCase(BaseTestCase):
         super(TestCase, cls).setUpClass()
         cls.manager = cls.manager_class()
         for attr_name in cls.manager.client_attr_names:
-            # Ensure that pre-existing class attributes won't be
-            # accidentally overriden.
-            assert not hasattr(cls, attr_name)
-            client = getattr(cls.manager, attr_name)
-            setattr(cls, attr_name, client)
+            if hasattr(cls, attr_name):
+                client = getattr(cls.manager, attr_name)
+                setattr(cls, attr_name, client)
         cls.resource_keys = {}
         cls.os_resources = []
 
