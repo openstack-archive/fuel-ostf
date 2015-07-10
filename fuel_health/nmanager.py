@@ -391,14 +391,22 @@ class OfficialClientTest(fuel_health.test.TestCase):
         for i in range(retries):
             try:
                 result = method(*args, **kwargs)
-                LOG.debug("Command execution successful.")
-                return result
+                LOG.debug("Command execution successful. "
+                          "Result {0}".format(result))
+                if 'False' in result:
+                    raise exceptions.SSHExecCommandFailed(
+                        'Command {0} finishes with False'.format(
+                            kwargs.get('command')))
+                else:
+                    return result
             except Exception as exc:
                 LOG.debug(traceback.format_exc())
                 LOG.debug("%s. Another"
                           " effort needed." % exc)
                 time.sleep(timeout)
-
+        if 'ping' not in kwargs.get('command'):
+            self.fail('Execution command on Instance fails '
+                      'with unexpected result. ')
         self.fail("Instance is not reachable by IP.")
 
     def check_clients_state(self):
@@ -780,6 +788,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                 self.usr, self.pwd,
                                 key_filename=self.key,
                                 timeout=timeout)
+                LOG.debug('Host is {0}'.format(host))
 
             except Exception:
                 LOG.debug(traceback.format_exc())
@@ -789,9 +798,10 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                       command=cmd,
                                       user='cirros',
                                       password='cubswin:)',
-                                      vm=ip_address)
+                                      vm=ip_address, cmd=cmd)
 
         # TODO(???) Allow configuration of execution and sleep duration.
+
         return fuel_health.test.call_until_true(run_cmd, 40, 1)
 
     def _check_vm_connectivity(self, ip_address, timeout, retries):
