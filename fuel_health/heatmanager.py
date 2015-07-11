@@ -29,7 +29,7 @@ import fuel_health.test
 LOG = logging.getLogger(__name__)
 
 
-class HeatBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
+class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
     """Base class for Heat openstack sanity and smoke tests."""
 
     @classmethod
