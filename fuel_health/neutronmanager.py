@@ -46,7 +46,7 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
                 external_network = network
 
         if not external_network:
-            self.fail('Can not find external network')
+            self.fail('Cannot find the external network.')
 
         gw_info = {
             "network_id": external_network["id"],
