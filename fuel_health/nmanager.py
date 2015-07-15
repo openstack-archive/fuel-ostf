@@ -798,7 +798,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                       command=cmd,
                                       user='cirros',
                                       password='cubswin:)',
-                                      vm=ip_address, cmd=cmd)
+                                      vm=ip_address)
 
         # TODO(???) Allow configuration of execution and sleep duration.
 
