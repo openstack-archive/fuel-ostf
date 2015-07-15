@@ -18,6 +18,8 @@ import paramiko.ssh_exception as exc
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health import exceptions
 from fuel_health import nmanager
+from keystoneclient.openstack.common.apiclient.exceptions import Unauthorized
+from keystoneclient.v2_0 import Client as keystoneclient
 
 LOG = logging.getLogger(__name__)
 
@@ -102,3 +104,29 @@ class SanityConfigurationTest(nmanager.SanityChecksTest):
                 msg='Default credentials value for {0} is using. '
                 'We kindly recommend to change all defaults'.format(key),
                 failed_step='1')
+
+    def test_003_check_default_keystone_credential_usage(self):
+            """Check usage of default credentials for keystone on master node
+            Target component: Configuration
+
+            Scenario:
+                1. Check default credentials for keystone on master node are
+                 changed.
+            Duration: 20 s.
+             Available since release: 2015.1.0-7.0
+            """
+
+            usr = self.config.master.keystone_user
+            pwd = self.config.master.keystone_password
+            url = 'http://{0}:5000/v2.0'.format(self.config.nailgun_host)
+
+            try:
+                keystone = keystoneclient(username=usr,
+                                          password=pwd,
+                                          auth_url=url)
+                keystone.authenticate()
+            except Unauthorized:
+                pass
+            else:
+                self.fail('Step 1 failed: Default credentials '
+                          'for keystone on master node were not changed')
