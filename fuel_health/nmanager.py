@@ -149,7 +149,8 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                         *client_args,
                                         service_type=service_type,
                                         no_cache=True,
-                                        insecure=dscv)
+                                        insecure=dscv,
+                                        endpoint_type='internalURL')
 
     def _get_glance_client(self, version=2, username=None, password=None,
                            tenant_name=None):
@@ -164,7 +165,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         try:
             endpoint = keystone.service_catalog.url_for(
                 service_type='image',
-                endpoint_type='publicURL')
+                endpoint_type='internalURL')
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Can not initialize glance client')
             return None
@@ -185,7 +186,8 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                           username,
                                           password,
                                           tenant_name,
-                                          auth_url)
+                                          auth_url,
+                                          endpoint_type='internalURL')
 
     def _get_identity_client(self, username=None, password=None,
                              tenant_name=None, version=None):
@@ -264,7 +266,8 @@ class OfficialClientManager(fuel_health.manager.Manager):
             return muranoclient.v1.client.Client(
                 endpoint=self.config.murano.api_url,
                 token=self.token_id,
-                insecure=self.config.murano.insecure)
+                insecure=self.config.murano.insecure,
+                endpoint_type='internalURL')
         except exceptions:
             LOG.debug(traceback.format_exc())
             LOG.warning('Can not initialize murano client')
@@ -275,7 +278,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         keystone = self._get_identity_client()
         try:
             sahara_url = keystone.service_catalog.url_for(
-                service_type='data_processing', endpoint_type='publicURL')
+                service_type='data_processing', endpoint_type='internalURL')
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Endpoint for Sahara service '
                         'not found. Sahara client cannot be initialized.')
@@ -291,7 +294,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         try:
             endpoint = keystone.service_catalog.url_for(
                 service_type='metering',
-                endpoint_type='publicURL')
+                endpoint_type='internalURL')
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Can not initialize ceilometer client')
             return None
@@ -305,7 +308,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         try:
             endpoint = keystone.service_catalog.url_for(
                 service_type='network',
-                endpoint_type='publicURL')
+                endpoint_type='internalURL')
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Can not initialize neutron client')
             return None
