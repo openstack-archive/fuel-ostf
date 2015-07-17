@@ -914,6 +914,29 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
 
         return max_free_ram_mb
 
+    def get_info_about_available_resources(self, min_ram, min_hdd, min_vcpus):
+        """This function allows to get the information about resources.
+
+        We need to collect the information about available RAM, HDD and vCPUs
+        on all compute nodes for cases when we will create more than 1 VM.
+
+        This function returns the count of VMs with required parameters which
+        we can successfully run on existing cloud.
+        """
+        vms_count = 0
+        for hypervisor in self.compute_client.hypervisors.list():
+            if hypervisor.free_ram_mb >= min_ram:
+                if hypervisor.free_disk_gb >= min_hdd:
+                    if hypervisor.vcpus - hypervisor.vcpus_used >= min_vcpus:
+                        # We need to determine how many VMs we can run
+                        # on this hypervisor
+                        free_cpu = hypervisor.vcpus - hypervisor.vcpus_used
+                        k1 = int(hypervisor.free_ram_mb / min_ram)
+                        k2 = int(hypervisor.free_disk_gb / min_hdd)
+                        k3 = int(free_cpu / min_vcpus)
+                        vms_count += min(k1, k2, k3)
+        return vms_count
+
     # Methods for finding and checking Sahara images.
     def find_and_check_image(self, tag_plugin, tag_version):
         """This method finds a correctly registered image for Sahara platform
