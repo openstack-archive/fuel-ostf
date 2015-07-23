@@ -198,12 +198,13 @@ class RabbitSanityClass(BaseTestCase):
                 self.fail('Failed to delete queue')
 
 
-class TestPacemakerBase(fuel_health.cloudvalidation.CloudValidationTest):
+class TestPacemakerBase(BaseTestCase):
     """TestPacemakerStatus class base methods."""
 
     @classmethod
     def setUpClass(cls):
         super(TestPacemakerBase, cls).setUpClass()
+        cls.config = fuel_health.config.FuelConfig()
         cls.controller_names = cls.config.compute.controller_names
         cls.online_controller_names = (
             cls.config.compute.online_controller_names)
@@ -213,6 +214,8 @@ class TestPacemakerBase(fuel_health.cloudvalidation.CloudValidationTest):
         cls.online_controller_ips = cls.config.compute.online_controllers
         cls.controller_key = cls.config.compute.path_to_private_key
         cls.controller_user = cls.config.compute.ssh_user
+        cls.controllers_pwd = cls.config.compute.controller_node_ssh_password
+        cls.timeout = cls.config.compute.ssh_timeout
 
     def setUp(self):
         super(TestPacemakerBase, self).setUp()
@@ -220,6 +223,32 @@ class TestPacemakerBase(fuel_health.cloudvalidation.CloudValidationTest):
             self.skipTest('Cluster is not HA mode, skipping tests')
         if not self.online_controller_names:
             self.skipTest('There are no controller nodes')
+
+    def _run_ssh_cmd(self, host, cmd):
+        """Open SSH session with host and and execute command."""
+        try:
+            sshclient = ssh.Client(host, self.controller_user,
+                                   self.controllers_pwd,
+                                   key_filename=self.controller_key,
+                                   timeout=self.timeout)
+            return sshclient.exec_longrun_command(cmd)
+        except Exception:
+            LOG.debug(traceback.format_exc())
+            self.fail("%s command failed." % cmd)
+
+    def _run_ssh_cmd_with_exit_code(self, host, cmd):
+        """Open SSH session with host and and execute command.
+           Fail if exit code != 0
+        """
+        try:
+            sshclient = ssh.Client(host, self.controller_user,
+                                   self.controllers_pwd,
+                                   key_filename=self.controller_key,
+                                   timeout=self.timeout)
+            return sshclient.exec_command(cmd)
+        except Exception:
+            LOG.debug(traceback.format_exc())
+            self.fail("%s command failed." % cmd)
 
     def _register_resource(self, res, res_name, resources):
         if res_name not in resources:
@@ -384,4 +413,4 @@ class TestPacemakerBase(fuel_health.cloudvalidation.CloudValidationTest):
         # List of nodes, where resource is started, but not allowed to start
         disallowed = list(set(started) - set(allowed))
 
-        return (allowed, started, disallowed)
+        return allowed, started, disallowed
