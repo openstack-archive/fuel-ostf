@@ -20,7 +20,7 @@ import time
 import traceback
 
 import fuel_health
-from fuel_health.common import ssh
+from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.common.utils import data_utils
 from fuel_health.test import BaseTestCase
 
@@ -45,7 +45,7 @@ class RabbitSanityClass(BaseTestCase):
         cls.data = []
 
     def get_ssh_connection_to_controller(self, controller):
-        remote = ssh.Client(host=controller,
+        remote = SSHClient(host=controller,
                             username=self._usr,
                             password=self._pwd,
                             key_filename=self._key,
@@ -198,12 +198,13 @@ class RabbitSanityClass(BaseTestCase):
                 self.fail('Failed to delete queue')
 
 
-class TestPacemakerBase(fuel_health.cloudvalidation.CloudValidationTest):
+class TestPacemakerBase(BaseTestCase):
     """TestPacemakerStatus class base methods."""
 
     @classmethod
     def setUpClass(cls):
         super(TestPacemakerBase, cls).setUpClass()
+
         cls.controller_names = cls.config.compute.controller_names
         cls.online_controller_names = (
             cls.config.compute.online_controller_names)
@@ -211,8 +212,10 @@ class TestPacemakerBase(fuel_health.cloudvalidation.CloudValidationTest):
             set(cls.controller_names) - set(cls.online_controller_names))
 
         cls.online_controller_ips = cls.config.compute.online_controllers
+
         cls.controller_key = cls.config.compute.path_to_private_key
         cls.controller_user = cls.config.compute.ssh_user
+        cls.timeout = cls.config.compute.ssh_timeout
 
     def setUp(self):
         super(TestPacemakerBase, self).setUp()
@@ -220,6 +223,18 @@ class TestPacemakerBase(fuel_health.cloudvalidation.CloudValidationTest):
             self.skipTest('Cluster is not HA mode, skipping tests')
         if not self.online_controller_names:
             self.skipTest('There are no controller nodes')
+
+    def _run_ssh_cmd(self, ip, cmd, timeout=self.timeout):
+        """Open SSH session with host and and execute command."""
+        try:
+            sshclient = SSHClient(ip,
+                                  self.controller_user,
+                                  key_filename=self.controller_key,
+                                  timeout=timeout)
+            return sshclient.exec_longrun_command(cmd)
+        except Exception:
+            LOG.debug(traceback.format_exc())
+            self.fail("%s command failed." % cmd)
 
     def _register_resource(self, res, res_name, resources):
         if res_name not in resources:
