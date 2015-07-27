@@ -1,3 +1,5 @@
+pbr!=0.7,<1.0,>=0.6
+oslo.utils<2.0.0
 oslo.config>=1.2.1,<=1.11.0
 python-cinderclient>=1.0.7
 python-ceilometerclient>=1.0.9
