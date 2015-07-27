@@ -49,6 +49,14 @@ Requires:    python-psycopg2 >= 2.5.1
 Requires:    python-stevedore >= 0.10
 Requires:    python-oslo-serialization >= 1.0.0
 
+# transitive_reqs
+Requires: python-pbr != 0.7
+Requires: python-pbr < 1.0
+Requires: python-pbr >= 0.6
+Requires: python-oslo-utils < 2.0.0
+Requires: python-oslo-i18n <= 2.1.0
+Requires: python-debtcollector <= 0.5.0
+
 
 # test_requires
 #mock >= 1.0.1
