@@ -28,6 +28,7 @@ function usage {
   echo "  -I, --no-integration  Don't run inteagration tests"
   echo "  -t, --tests           Run a given test files"
   echo "  -h, --help            Print this usage message"
+  echo "  -c, --with-cover      Run tests with coverage"
   echo ""
   echo "Note: with no options specified, the script will try to run all available"
   echo "      tests with all available checks."
@@ -45,6 +46,7 @@ function process_options {
       -i|--integration) integration_tests=1;;
       -I|--no-integration) no_integration_tests=1;;
       -t|--tests) certain_tests=1;;
+      -c|--with-cover) coverage=1;;
       -*) testropts="$testropts $arg";;
       *) testrargs="$testrargs $arg"
     esac
@@ -75,7 +77,7 @@ no_unit_tests=0
 integration_tests=0
 no_integration_tests=0
 certain_tests=0
-
+coverage=0
 
 function run_tests {
   run_cleanup
@@ -172,6 +174,9 @@ function run_flake8 {
 
 function run_unit_tests {
   echo "Starting unit tests"
+  if [[ $coverage -eq 1 ]]; then
+    testropts="$testropts --with-coverage --cover-package fuel_plugin"
+  fi
 
   local TESTS="$ROOT/fuel_plugin/testing/tests/unit"
   local options="-vv $testropts --xunit-file $UNIT_XUNIT"
@@ -227,6 +232,9 @@ function cleardb {
 
 function run_integration_tests {
   echo "Starting integration tests"
+  if [[ $coverage -eq 1 ]]; then
+    testropts="$testropts --with-coverage --cover-package fuel_plugin"
+  fi
 
   local TESTS="$ROOT/fuel_plugin/testing/tests/integration"
   local options="-vv $testropts --xunit-file $INTEGRATION_XUNIT"
