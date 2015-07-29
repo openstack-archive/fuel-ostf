@@ -159,6 +159,23 @@ class TestMysqlStatus(fuel_health.test.BaseTestCase):
         else:
             self.skipTest("There is no RHEL deployment")
 
+    @staticmethod
+    def get_variables_from_output(output, variables):
+        """ Get values for variables, listed in 'variables' argument and
+        return dict
+        Assume that output is "| Var_name | Value |"
+        """
+        result = {}
+        for line in output:
+            if line.startswith("+"):
+                continue
+            temp = line[1:]  # slice first |
+            var, value = temp.split("|")[:2]
+            var = var.strip()
+            if var in variables:
+                result[var] = value.strip()
+        return result
+
     def test_state_of_galera_cluster(self):
         """Check galera environment state
         Target Service: HA mysql
@@ -173,40 +190,39 @@ class TestMysqlStatus(fuel_health.test.BaseTestCase):
         """
         if 'CentOS' in self.config.compute.deployment_os:
             for controller in self.controllers:
-                    command = "mysql -e \"SHOW STATUS LIKE 'wsrep_%'\""
-                    ssh_client = SSHClient(controller, self.controller_user,
-                                           key_filename=self.controller_key,
-                                           timeout=100)
-                    output = self.verify(
-                        20, ssh_client.exec_command, 1,
-                        "Verification of galera cluster node status failed",
-                        'get status from galera node',
-                        command).splitlines()[3:-2]
+                command = "mysql -e \"SHOW STATUS LIKE 'wsrep_%'\""
+                ssh_client = SSHClient(controller, self.controller_user,
+                                       key_filename=self.controller_key,
+                                       timeout=100)
+                output = self.verify(
+                    20, ssh_client.exec_command, 1,
+                    "Verification of galera cluster node status failed",
+                    'get status from galera node',
+                    command).splitlines()
 
-                    LOG.debug('output is %s' % output)
+                mysql_vars = [
+                    'wsrep_cluster_size',
+                    'wsrep_ready',
+                    'wsrep_connected'
+                ]
+                result = self.get_variables_from_output(output, mysql_vars)
 
-                    result = {}
-                    for i in output:
-                        key, value = i.split('|')[0:-2]
-                        result.update({key: value})
-                        return result
+                self.verify_response_body_content(
+                    result.get('wsrep_cluster_size', 0),
+                    str(len(self.controllers)),
+                    msg='Cluster size on %s less '
+                        'than controllers count' % controller,
+                    failed_step='2')
 
-                    self.verify_response_body_content(
-                        result.get('wsrep_cluster_size', 0),
-                        str(len(self.controllers)),
-                        msg='Cluster size on %s less '
-                            'than controllers count' % controller,
-                        failed_step='2')
+                self.verify_response_body_content(
+                    result.get(('wsrep_ready', 'OFF')), 'ON',
+                    msg='wsrep_ready on %s is not ON' % controller,
+                    failed_step='3')
 
-                    self.verify_response_body_content(
-                        result.get(('wsrep_ready', 'OFF')), 'ON',
-                        msg='wsrep_ready on %s is not ON' % controller,
-                        failed_step='3')
-
-                    self.verify_response_body_content(
-                        result.get(('wsrep_connected', 'OFF')), 'ON',
-                        msg='wsrep_connected on %s is not ON' % controller,
-                        failed_step='3')
+                self.verify_response_body_content(
+                    result.get(('wsrep_connected', 'OFF')), 'ON',
+                    msg='wsrep_connected on %s is not ON' % controller,
+                    failed_step='3')
         else:
             self.skipTest('There is no CentOs deployment')
 
@@ -225,39 +241,40 @@ class TestMysqlStatus(fuel_health.test.BaseTestCase):
         """
         if 'Ubuntu' in self.config.compute.deployment_os:
             for controller in self.controllers:
-                    command = "mysql -e \"SHOW STATUS LIKE 'wsrep_%'\""
-                    ssh_client = SSHClient(controller, self.controller_user,
-                                           key_filename=self.controller_key,
-                                           timeout=100)
-                    output = self.verify(
-                        20, ssh_client.exec_command, 1,
-                        "Verification of galera cluster node status failed",
-                        'get status from galera node',
-                        command).splitlines()[3:-2]
+                command = "mysql -e \"SHOW STATUS LIKE 'wsrep_%'\""
+                ssh_client = SSHClient(controller, self.controller_user,
+                                       key_filename=self.controller_key,
+                                       timeout=100)
+                output = self.verify(
+                    20, ssh_client.exec_command, 1,
+                    "Verification of galera cluster node status failed",
+                    'get status from galera node',
+                    command).splitlines()
 
-                    LOG.debug('output is %s' % output)
+                LOG.debug('output is %s' % output)
 
-                    result = {}
-                    for i in output:
-                        key, value = i.split('|')[0:-2]
-                        result.update({key: value})
-                        return result
+                mysql_vars = [
+                    'wsrep_cluster_size',
+                    'wsrep_ready',
+                    'wsrep_connected'
+                ]
+                result = self.get_variables_from_output(output, mysql_vars)
 
-                    self.verify_response_body_content(
-                        result.get('wsrep_cluster_size', 0),
-                        str(len(self.controllers)),
-                        msg='Cluster size on %s less '
-                            'than controllers count' % controller,
-                        failed_step='2')
+                self.verify_response_body_content(
+                    result.get('wsrep_cluster_size', 0),
+                    str(len(self.controllers)),
+                    msg='Cluster size on %s less '
+                        'than controllers count' % controller,
+                    failed_step='2')
 
-                    self.verify_response_body_content(
-                        result.get(('wsrep_ready', 'OFF')), 'ON',
-                        msg='wsrep_ready on %s is not ON' % controller,
-                        failed_step='3')
+                self.verify_response_body_content(
+                    result.get('wsrep_ready', 'OFF'), 'ON',
+                    msg='wsrep_ready on %s is not ON' % controller,
+                    failed_step='3')
 
-                    self.verify_response_body_content(
-                        result.get(('wsrep_connected', 'OFF')), 'ON',
-                        msg='wsrep_connected on %s is not ON' % controller,
-                        failed_step='3')
+                self.verify_response_body_content(
+                    result.get('wsrep_connected', 'OFF'), 'ON',
+                    msg='wsrep_connected on %s is not ON' % controller,
+                    failed_step='3')
         else:
             self.skipTest('There is no Ubuntu deployment')
