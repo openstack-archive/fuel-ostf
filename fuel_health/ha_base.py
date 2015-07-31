@@ -45,14 +45,19 @@ class RabbitSanityClass(BaseTestCase):
     @property
     def password(self):
         if self._password is None:
-            self._password = self.get_conf_values().strip()
+            self._password = self.get_hiera_values(
+                hiera_hash='rabbit_hash',
+                hash_key='password'
+            )
         return self._password
 
     @property
     def userid(self):
         if self._userid is None:
-            self._userid = self.get_conf_values(
-                variable="rabbit_userid").strip()
+            self._userid = self.get_hiera_values(
+                hiera_hash='rabbit_hash',
+                hash_key='user'
+            )
         return self._userid
 
     @property
@@ -112,20 +117,19 @@ class RabbitSanityClass(BaseTestCase):
                       ' list_channels is {0}'.format(output))
             return output
 
-    def get_conf_values(self, variable="rabbit_password",
-                        sections="oslo_messaging_rabbit",
-                        conf_path="/etc/nova/nova.conf"):
-        cmd = ("python -c 'import ConfigParser; "
-               "cfg=ConfigParser.ConfigParser(); "
-               "cfg.readfp(open('\"'{0}'\"')); "
-               "print cfg.get('\"'{1}'\"', '\"'{2}'\"')'")
+    def get_hiera_values(self, hiera_hash="rabbit_hash",
+                         hash_key="password",
+                         conf_path="/etc/hiera.yaml"):
+        cmd = ('ruby -e \'require "hiera"; '
+               'hiera = Hiera.new(:config => "{0}"); '
+               'puts hiera.lookup("{1}", {{}}, {{}})["{2}"]\'').format(
+                   conf_path, hiera_hash, hash_key)
         LOG.debug("Try to execute cmd {0}".format(cmd))
         remote = self.get_ssh_connection_to_controller(self._controllers[0])
         try:
-            res = remote.exec_command(cmd.format(
-                conf_path, sections, variable))
+            res = remote.exec_command(cmd)
             LOG.debug("result is {0}".format(res))
-            return res
+            return res.strip()
         except Exception:
             LOG.debug(traceback.format_exc())
             self.fail("Fail to get data from config")
