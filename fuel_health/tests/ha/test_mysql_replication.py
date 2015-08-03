@@ -13,7 +13,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+import json
 import logging
 import traceback
 
@@ -29,19 +29,41 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
     def setUpClass(cls):
         super(TestMysqlReplication, cls).setUpClass()
         cls.controller_ip = cls.config.compute.online_controllers[0]
-        cls.controllers = cls.config.compute.online_controllers
-        cls.controller_key = cls.config.compute.path_to_private_key
-        cls.controller_user = cls.config.compute.ssh_user
+        cls.nodes = cls.config.compute.nodes
+        cls.node_key = cls.config.compute.path_to_private_key
+        cls.node_user = cls.config.compute.ssh_user
         cls.mysql_user = 'root'
         cls.database = 'ost1' + str(data_utils.rand_int_id(100, 999))
         cls.master_ip = []
+
+        # retrieve data from controller
+        ssh_client = SSHClient(
+            cls.controller_ip, cls.node_user,
+            key_filename=cls.node_key, timeout=100)
+        hiera_cmd = "hiera database_nodes"
+        hiera_hash = ssh_client.exec_command(hiera_cmd)
+
+        # convert hiera hash to json
+        dict_str = hiera_hash.replace("=>", '": ')
+        dict_str = dict_str.replace('""', '"')
+        dict_str = dict_str.replace('nil', '0')
+
+        hiera_dict = json.loads(dict_str)
+        database_nodes = [node['name'] for node in hiera_dict.values()]
+
+        # get online nodes
+        cls.databases = []
+        for node in cls.nodes:
+            hostname = node['hostname']
+            if hostname in database_nodes and node['online']:
+                cls.databases.append(hostname)
 
     def setUp(self):
         super(TestMysqlReplication, self).setUp()
         if 'ha' not in self.config.compute.deployment_mode:
             self.skipTest('Cluster is not HA mode, skipping tests')
-        if len(self.controllers) == 1:
-            self.skipTest('There is only one controller online. '
+        if len(self.databases) == 1:
+            self.skipTest('There is only one database online. '
                           'Nothing to check')
 
     @classmethod
@@ -49,9 +71,8 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
         if cls.master_ip:
             try:
                 cmd = "mysql -e 'DROP DATABASE %s'" % cls.database
-
-                SSHClient(cls.master_ip[0], cls.controller_user,
-                          key_filename=cls.controller_key).exec_command(cmd)
+                SSHClient(cls.master_ip[0], cls.node_user,
+                          key_filename=cls.node_key).exec_command(cmd)
             except Exception:
                 LOG.debug(traceback.format_exc())
 
@@ -64,19 +85,21 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
             2. Create database on detected node
             3. Create table in created database
             4. Insert data to the created table
-            5. Get replicated data from each controller.
-            6. Verify that replicated data in the same from each controller
+            5. Get replicated data from each database node.
+            6. Verify that replicated data in the same from each database
             7. Drop created database
         Duration: 100 s.
         """
+        LOG.info("'Test MySQL replication' started")
         # Find mysql master node
         master_node_ip = []
         cmd = 'mysql -e "SHOW SLAVE STATUS\G"'
-        LOG.info("Controllers nodes are %s" % self.controllers)
-        for controller_ip in self.controllers:
+        LOG.info("Database nodes are %s" % self.databases)
+        master_node_ip.append(self.databases[0])
+        for db_node in self.databases:
             ssh_client = SSHClient(
-                controller_ip, self.controller_user,
-                key_filename=self.controller_key, timeout=100)
+                db_node, self.node_user,
+                key_filename=self.node_key, timeout=100)
             output = self.verify(
                 20, ssh_client.exec_command, 1,
                 'Can not connect to mysql. '
@@ -85,8 +108,8 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
                 'detect mysql node', cmd)
             LOG.info('output is %s' % output)
             if not output:
-                self.master_ip.append(controller_ip)
-                master_node_ip.append(controller_ip)
+                self.master_ip.append(db_node)
+                master_node_ip.append(db_node)
 
         database_name = self.database
         table_name = 'ost' + str(data_utils.rand_int_id(100, 999))
@@ -112,8 +135,8 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
 
         # create db, table, insert data on master
         LOG.info('master node ip %s' % master_node_ip[0])
-        master_ssh_client = SSHClient(master_node_ip[0], self.controller_user,
-                                      key_filename=self.controller_key,
+        master_ssh_client = SSHClient(master_node_ip[0], self.node_user,
+                                      key_filename=self.node_key,
                                       timeout=100)
 
         self.verify(20, master_ssh_client.exec_command, 2,
@@ -128,16 +151,16 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
                     create_record)
         LOG.info('create data')
 
-        # Verify that data is replicated on other controllers
-        for controller in self.controllers:
-            if controller not in master_node_ip:
-                client = SSHClient(controller,
-                                   self.controller_user,
-                                   key_filename=self.controller_key)
+        # Verify that data is replicated on other databases
+        for db_node in self.databases:
+            if db_node not in master_node_ip:
+                client = SSHClient(db_node,
+                                   self.node_user,
+                                   key_filename=self.node_key)
 
                 output = self.verify(
                     20, client.exec_command, 5,
-                    'Can not get data from controller %s' % controller,
+                    'Can not get data from database node %s' % db_node,
                     'get_record', get_record)
 
                 self.verify_response_body(output, record_data,
@@ -146,8 +169,8 @@ class TestMysqlReplication(fuel_health.test.BaseTestCase):
 
         # Drop created db
         cmd = "mysql -e 'DROP DATABASE %s'" % self.database
-        ssh_client = SSHClient(master_node_ip[0], self.controller_user,
-                               key_filename=self.controller_key)
+        ssh_client = SSHClient(master_node_ip[0], self.node_user,
+                               key_filename=self.node_key)
         self.verify(20, ssh_client.exec_command, 7,
                     'Can not delete created database',
                     'database deletion', cmd)
