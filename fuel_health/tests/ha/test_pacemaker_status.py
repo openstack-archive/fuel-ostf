@@ -30,9 +30,11 @@ class TestPacemakerStatus(ha_base.TestPacemakerBase):
           1. Get pacemaker status for each online controller
           2. Check status of online/offline controllers in pacemaker
           3. Check status of nodes where resources are started
-          4. Check list of nodes on active resources
+          4. Check that an active resource is started and not failed
           5. Check that list of resources is the same on all online controllers
-          6. Check controllers that pcs resources are started on the same nodes
+          6. Check that list of nodes where a resource is started is the same
+             on all controllers
+          7. Check controllers that pcs resources are started on the same nodes
         Duration: 10 s.
         Available since release: 2015.1.0-7.0
         """
@@ -70,7 +72,7 @@ class TestPacemakerStatus(ha_base.TestPacemakerBase):
                 'differs from the actual controllers status.'.format(fqdn))
 
         # For each fqdn, perform steps 3 and 4 (checks that pacemaker
-        # is properly working with online controolers):
+        # is properly working with online controllers):
         for fqdn in cluster_resources:
             for res_name in cluster_resources[fqdn]:
                 resource = cluster_resources[fqdn][res_name]
@@ -90,6 +92,14 @@ class TestPacemakerStatus(ha_base.TestPacemakerBase):
                         'Step 4 failed: On the controller {0}, resource {1} is'
                         ' active but is not started on any controller.'
                         .format(fqdn, res_name))
+
+                    self.verify_response_true(
+                        not resource['failed'],
+                        'Step 4 failed: On the controller {0}, resource {1} is'
+                        ' active but failed to start ({2}managed).'
+                        .format(fqdn,
+                                res_name,
+                                "un" if not resource['managed'] else ""))
 
         # Make pairs from fqdn names of controllers
         fqdns = list(cluster_resources.keys())
