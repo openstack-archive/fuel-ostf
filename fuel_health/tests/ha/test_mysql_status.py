@@ -11,7 +11,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+import json
 import logging
 
 from fuel_health.common.ssh import Client as SSHClient
@@ -24,19 +24,42 @@ class TestMysqlStatus(fuel_health.test.BaseTestCase):
     @classmethod
     def setUpClass(cls):
         super(TestMysqlStatus, cls).setUpClass()
+        cls.nodes = cls.config.compute.nodes
         cls.controller_ip = cls.config.compute.online_controllers[0]
-        cls.controllers = cls.config.compute.online_controllers
-        cls.controller_key = cls.config.compute.path_to_private_key
-        cls.controller_user = cls.config.compute.ssh_user
+        cls.node_key = cls.config.compute.path_to_private_key
+        cls.node_user = cls.config.compute.ssh_user
         cls.mysql_user = 'root'
         cls.master_ip = []
+
+        # retrieve data from controller
+        ssh_client = SSHClient(
+            cls.controller_ip, cls.node_user,
+            key_filename=cls.node_key, timeout=100)
+        hiera_cmd = "hiera database_nodes"
+        hiera_hash = ssh_client.exec_command(hiera_cmd)
+
+        # convert hiera hash to json
+        dict_str = hiera_hash.replace("=>", '": ')
+        dict_str = dict_str.replace('""', '"')
+        dict_str = dict_str.replace('nil', '0')
+
+        hiera_dict = json.loads(dict_str)
+
+        database_nodes = [node['name'] for node in hiera_dict.values()]
+
+        # get online nodes
+        cls.databases = []
+        for node in cls.nodes:
+            hostname = node['hostname']
+            if hostname in database_nodes and node['online']:
+                cls.databases.append(hostname)
 
     def setUp(self):
         super(TestMysqlStatus, self).setUp()
         if 'ha' not in self.config.compute.deployment_mode:
             self.skipTest('Cluster is not HA mode, skipping tests')
-        if len(self.controllers) == 1:
-            self.skipTest('There is only one controller online. '
+        if len(self.databases) == 1:
+            self.skipTest('There is only one database online. '
                           'Nothing to check')
 
     def test_os_databases(self):
@@ -48,18 +71,19 @@ class TestMysqlStatus(fuel_health.test.BaseTestCase):
             2. Check that amount of tables for each database is the same
         Duration: 100 s.
         """
+        LOG.info("'Test OS Databases' started")
         dbs = ['nova', 'glance', 'keystone']
         cmd = "mysql -e 'SHOW TABLES FROM %(database)s'"
         for database in dbs:
             LOG.info('Current database name is %s' % database)
             temp_set = set()
-            for node in self.config.compute.online_controllers:
-                LOG.info('Current controller node is %s' % node)
+            for node in self.databases:
+                LOG.info('Current database node is %s' % node)
                 cmd1 = cmd % {'database': database}
                 LOG.info('Try to execute command %s' % cmd1)
                 tables = SSHClient(
-                    node, self.controller_user,
-                    key_filename=self.controller_key,
+                    node, self.node_user,
+                    key_filename=self.node_key,
                     timeout=self.config.compute.ssh_timeout)
                 output = self.verify(40, tables.exec_command, 1,
                                      'Can list tables',
@@ -95,23 +119,23 @@ class TestMysqlStatus(fuel_health.test.BaseTestCase):
             # Find mysql master node
             master_node_ip = []
             cmd = 'mysql -e "SHOW SLAVE STATUS\G"'
-            LOG.info("Controllers nodes are %s" % self.controllers)
-            for controller_ip in self.controllers:
-                ssh_client = SSHClient(controller_ip, self.controller_user,
-                                       key_filename=self.controller_key,
+            LOG.info("Database nodes are %s" % self.databases)
+            for db_node in self.databases:
+                ssh_client = SSHClient(db_node, self.node_user,
+                                       key_filename=self.node_key,
                                        timeout=100)
                 output = self.verify(20, ssh_client.exec_command, 1,
                                      'Can not define master node',
                                      'master mode detection', cmd)
                 LOG.info('output is %s' % output)
                 if not output:
-                    self.master_ip.append(controller_ip)
-                    master_node_ip.append(controller_ip)
+                    self.master_ip.append(db_node)
+                    master_node_ip.append(db_node)
 
             # ssh on master node and check status
             check_master_state_cmd = 'mysql -e "SHOW MASTER STATUS\G"'
-            ssh_client = SSHClient(self.master_ip[0], self.controller_user,
-                                   key_filename=self.controller_key,
+            ssh_client = SSHClient(self.master_ip[0], self.node_user,
+                                   key_filename=self.node_key,
                                    timeout=100)
             output = self.verify(20, ssh_client.exec_command, 2,
                                  'Can not execute "SHOW MASTER STATUS" '
@@ -128,11 +152,11 @@ class TestMysqlStatus(fuel_health.test.BaseTestCase):
             # ssh on slave node and check it status
             check_slave_state_cmd = 'mysql -e "SHOW SLAVE STATUS\G"'
 
-            for controller in self.controllers:
-                if controller not in self.master_ip:
-                    client = SSHClient(controller,
-                                       self.controller_user,
-                                       key_filename=self.controller_key)
+            for db_node in self.nodes:
+                if db_node not in self.master_ip:
+                    client = SSHClient(db_node,
+                                       self.node_user,
+                                       key_filename=self.node_key)
                     output = self.verify(
                         20, client.exec_command, 4,
                         'Failed to get slave status', 'get slave status',
@@ -182,7 +206,8 @@ class TestMysqlStatus(fuel_health.test.BaseTestCase):
         Target Service: HA mysql
 
         Scenario:
-            1. Ssh on each controller and request state of galera node
+            1. Ssh on each node contains database and request state of galera
+               node
             2. For each node check cluster size
             3. For each node check status is ready
             4. For each node check that node is connected to cluster
@@ -190,10 +215,10 @@ class TestMysqlStatus(fuel_health.test.BaseTestCase):
         Deployment tags: CENTOS
         """
         if 'CentOS' in self.config.compute.deployment_os:
-            for controller in self.controllers:
+            for db_node in self.databases:
                 command = "mysql -e \"SHOW STATUS LIKE 'wsrep_%'\""
-                ssh_client = SSHClient(controller, self.controller_user,
-                                       key_filename=self.controller_key,
+                ssh_client = SSHClient(db_node, self.node_user,
+                                       key_filename=self.node_key,
                                        timeout=100)
                 output = self.verify(
                     20, ssh_client.exec_command, 1,
@@ -202,7 +227,7 @@ class TestMysqlStatus(fuel_health.test.BaseTestCase):
                     command).splitlines()
 
                 LOG.debug('mysql output from node "{0}" is \n"{1}"'.format(
-                    controller, output)
+                    db_node, output)
                 )
 
                 mysql_vars = [
@@ -214,30 +239,31 @@ class TestMysqlStatus(fuel_health.test.BaseTestCase):
 
                 self.verify_response_body_content(
                     result.get('wsrep_cluster_size', 0),
-                    str(len(self.controllers)),
+                    str(len(self.databases)),
                     msg='Cluster size on %s less '
-                        'than controllers count' % controller,
+                        'than databases count' % db_node,
                     failed_step='2')
 
                 self.verify_response_body_content(
-                    result.get(('wsrep_ready', 'OFF')), 'ON',
-                    msg='wsrep_ready on %s is not ON' % controller,
+                    result.get('wsrep_ready', 'OFF'), 'ON',
+                    msg='wsrep_ready on %s is not ON' % db_node,
                     failed_step='3')
 
                 self.verify_response_body_content(
-                    result.get(('wsrep_connected', 'OFF')), 'ON',
-                    msg='wsrep_connected on %s is not ON' % controller,
+                    result.get('wsrep_connected', 'OFF'), 'ON',
+                    msg='wsrep_connected on %s is not ON' % db_node,
                     failed_step='3')
         else:
             self.skipTest('There is no CentOs deployment')
 
-    def test_state_of_galera_cluster_ubunta(self):
+    def test_state_of_galera_cluster_ubuntu(self):
         """Check galera environment state
         Test verifies state of galera environment
         Target Service: HA mysql
 
         Scenario:
-            1. Ssh on each controller and request state of galera node
+            1. Ssh on each node contains database and request state of galera
+               node
             2. For each node check cluster size
             3. For each node check status is ready
             4. For each node check that node is connected to cluster
@@ -245,10 +271,10 @@ class TestMysqlStatus(fuel_health.test.BaseTestCase):
         Deployment tags: Ubuntu
         """
         if 'Ubuntu' in self.config.compute.deployment_os:
-            for controller in self.controllers:
+            for db_node in self.databases:
                 command = "mysql -e \"SHOW STATUS LIKE 'wsrep_%'\""
-                ssh_client = SSHClient(controller, self.controller_user,
-                                       key_filename=self.controller_key,
+                ssh_client = SSHClient(db_node, self.node_user,
+                                       key_filename=self.node_key,
                                        timeout=100)
                 output = self.verify(
                     20, ssh_client.exec_command, 1,
@@ -257,7 +283,7 @@ class TestMysqlStatus(fuel_health.test.BaseTestCase):
                     command).splitlines()
 
                 LOG.debug('mysql output from node "{0}" is \n"{1}"'.format(
-                    controller, output)
+                    db_node, output)
                 )
 
                 mysql_vars = [
@@ -269,19 +295,19 @@ class TestMysqlStatus(fuel_health.test.BaseTestCase):
 
                 self.verify_response_body_content(
                     result.get('wsrep_cluster_size', 0),
-                    str(len(self.controllers)),
+                    str(len(self.databases)),
                     msg='Cluster size on %s less '
-                        'than controllers count' % controller,
+                        'than databases count' % db_node,
                     failed_step='2')
 
                 self.verify_response_body_content(
                     result.get('wsrep_ready', 'OFF'), 'ON',
-                    msg='wsrep_ready on %s is not ON' % controller,
+                    msg='wsrep_ready on %s is not ON' % db_node,
                     failed_step='3')
 
                 self.verify_response_body_content(
                     result.get('wsrep_connected', 'OFF'), 'ON',
-                    msg='wsrep_connected on %s is not ON' % controller,
+                    msg='wsrep_connected on %s is not ON' % db_node,
                     failed_step='3')
         else:
             self.skipTest('There is no Ubuntu deployment')
