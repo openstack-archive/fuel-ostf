@@ -40,12 +40,12 @@ class TestMysqlStatus(fuel_health.test.BaseTestCase):
                           'Nothing to check')
 
     def test_os_databases(self):
-        """Check amount of tables in databases is the same on each node
+        """Check if amount of tables in databases is the same on each node
         Target Service: HA mysql
 
         Scenario:
             1. Request list of tables for os databases on each node.
-            2. Check that amount of tables for each database is the same
+            2. Check if amount of tables in databases is the same on each node
         Duration: 100 s.
         """
         dbs = ['nova', 'glance', 'keystone']

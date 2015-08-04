@@ -78,11 +78,11 @@ class SanityConfigurationTest(nmanager.SanityChecksTest):
                                   'ssh on master node were not changed')
 
     def test_002_check_default_openstack_credential_usage(self):
-        """Check usage of default credentials for Openstack cluster
+        """Check if default credentials for OpenStack cluster have changed
         Target component: Configuration
 
         Scenario:
-            1. Check default credentials for Openstack cluster are changed.
+            1. Check if default credentials for OpenStack cluster have changed.
         Duration: 20 s.
          Available since release: 2014.2-6.1
         """
@@ -95,8 +95,8 @@ class SanityConfigurationTest(nmanager.SanityChecksTest):
             self.verify_response_body_not_equal(
                 exp_content='admin',
                 act_content=cluster_data[key],
-                msg='Default credentials value for {0} is using. '
-                'We kindly recommend to change all defaults'.format(key),
+                msg='Default credentials values for are used. '
+                'We kindly recommend that you changed all defaults.',
                 failed_step='1')
 
     def test_003_check_default_keystone_credential_usage(self):
