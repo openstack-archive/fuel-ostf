@@ -220,12 +220,12 @@ class TestMysqlStatus(fuel_health.test.BaseTestCase):
                     failed_step='2')
 
                 self.verify_response_body_content(
-                    result.get(('wsrep_ready', 'OFF')), 'ON',
+                    result.get('wsrep_ready', 'OFF'), 'ON',
                     msg='wsrep_ready on %s is not ON' % controller,
                     failed_step='3')
 
                 self.verify_response_body_content(
-                    result.get(('wsrep_connected', 'OFF')), 'ON',
+                    result.get('wsrep_connected', 'OFF'), 'ON',
                     msg='wsrep_connected on %s is not ON' % controller,
                     failed_step='3')
         else:
