@@ -110,12 +110,10 @@ class RabbitSanityClass(BaseTestCase):
             self.fail('There are no online controllers')
         remote = self.get_ssh_connection_to_controller(self._controllers[0])
         output = remote.exec_command("rabbitmqctl list_channels")
-        if 'done' not in output:
-            self.fail('Get channels list command fail.')
-        else:
-            LOG.debug('Result of executing command rabbitmqctl'
-                      ' list_channels is {0}'.format(output))
-            return output
+
+        LOG.debug('Result of executing command rabbitmqctl'
+                  ' list_channels is {0}'.format(output))
+        return output
 
     def get_hiera_values(self, hiera_hash="rabbit_hash",
                          hash_key="password",
