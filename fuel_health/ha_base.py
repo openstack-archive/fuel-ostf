@@ -318,10 +318,19 @@ class TestPacemakerBase(BaseTestCase):
                 'nodes': [],
                 'started': 0,
                 'stopped': 0,
-                'active': False}
+                'active': False,
+                'managed': False,
+                'failed': False,
+            }
 
         if 'true' in res.get('active'):
             resources[res_name]['active'] = True
+
+        if 'true' in res.get('managed'):
+            resources[res_name]['managed'] = True
+
+        if 'true' in res.get('failed'):
+            resources[res_name]['failed'] = True
 
         res_role = res.get('role')
         num_nodes = int(res.get('nodes_running_on'))
@@ -349,6 +358,9 @@ class TestPacemakerBase(BaseTestCase):
                                                 # resource is started
                     'master': [node_name, ...], # Node names for 'Master'
                                                 # ('master' is also in 'nodes')
+                    'active': bool,             # Is resource active?
+                    'managed': bool,            # Is resource managed?
+                    'failed': bool,             # Has resource failed?
                   },
                   ...
                 }
