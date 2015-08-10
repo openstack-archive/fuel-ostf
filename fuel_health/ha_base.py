@@ -32,6 +32,7 @@ class RabbitSanityClass(BaseTestCase):
     def setUpClass(cls):
         cls.config = fuel_health.config.FuelConfig()
         cls._controllers = cls.config.compute.online_controllers
+        cls.nodes = cls.config.compute.nodes
         cls._usr = cls.config.compute.controller_node_ssh_user
         cls._pwd = cls.config.compute.controller_node_ssh_password
         cls._key = cls.config.compute.path_to_private_key
@@ -50,6 +51,16 @@ class RabbitSanityClass(BaseTestCase):
                 hash_key='password'
             )
         return self._password
+
+    @property
+    def amqp_hosts_name(self):
+        amqp_hosts_name = []
+        for ip, port in self.amqp_hosts:
+            for node in self.nodes:
+                ips = [data['ip'] for data in node['network_data'] if 'ip' in data.keys()]
+                if "{0}/24".format(ip) in ips and node['online']:
+                    amqp_hosts_name.append(node['hostname'])
+        return amqp_hosts_name
 
     @property
     def userid(self):
@@ -75,9 +86,10 @@ class RabbitSanityClass(BaseTestCase):
         return remote
 
     def list_nodes(self):
-        if not self._controllers:
-            self.fail('There are no online controllers')
-        remote = self.get_ssh_connection_to_controller(self._controllers[0])
+        if not self.amqp_hosts_name:
+            self.fail('There are no online rabbit nodes')
+        remote = \
+            self.get_ssh_connection_to_controller(self.amqp_hosts_name[0])
         output = remote.exec_command("rabbitmqctl cluster_status")
         substring_ind = output.find('{running_nodes')
         sub_end_ind = output.find('cluster_name')
@@ -86,11 +98,12 @@ class RabbitSanityClass(BaseTestCase):
         return num_node
 
     def pick_rabbit_master(self):
-        if not self._controllers:
-            self.fail('There are no online controllers')
-        remote = self.get_ssh_connection_to_controller(self._controllers[0])
+        if not self.amqp_hosts_name:
+            self.fail('There are no online rabbit nodes')
+        remote = \
+            self.get_ssh_connection_to_controller(self.amqp_hosts_name[0])
         LOG.info('ssh session  to node {0} was open'.format(
-            self._controllers[0]))
+            self.amqp_hosts_name[0]))
         LOG.info('Try to execute command <crm resource '
                  'status master_p_rabbitmq-server>')
         output = remote.exec_command(
@@ -106,9 +119,10 @@ class RabbitSanityClass(BaseTestCase):
         return result_str
 
     def list_channels(self):
-        if not self._controllers:
-            self.fail('There are no online controllers')
-        remote = self.get_ssh_connection_to_controller(self._controllers[0])
+        if not self.amqp_hosts_name:
+            self.fail('There are no online rabbit nodes')
+        remote = \
+            self.get_ssh_connection_to_controller(self.amqp_hosts_name[0])
         output = remote.exec_command("rabbitmqctl list_channels")
 
         LOG.debug('Result of executing command rabbitmqctl'
@@ -120,7 +134,8 @@ class RabbitSanityClass(BaseTestCase):
                          conf_path="/etc/hiera.yaml"):
         cmd = ('ruby -e \'require "hiera"; '
                'hiera = Hiera.new(:config => "{0}"); '
-               'puts hiera.lookup("{1}", {{}}, {{}})["{2}"]\'').format(
+               'puts hiera.lookup("{1}", {{}}, {{}}, nil,'
+               ' :hash)["{2}"]\'').format(
                    conf_path, hiera_hash, hash_key)
         LOG.debug("Try to execute cmd {0}".format(cmd))
         remote = self.get_ssh_connection_to_controller(self._controllers[0])
@@ -148,10 +163,10 @@ class RabbitSanityClass(BaseTestCase):
             self.fail('There are no online controllers')
         remote = self.get_ssh_connection_to_controller(self._controllers[0])
         for ip, port in self.amqp_hosts:
-            cmd = ("python -c 'import kombu; c = kombu.Connection(host=\"{0}\""
-                   ", userid=\"{1}\", password=\"{2}\", virtual_host=\"/\", "
-                   "port=\"{3}\"); c.connect()'".format(
-                       ip, self.userid, self.password, port))
+            cmd = ("python -c 'import kombu;"
+                   " c = kombu.Connection(\"amqp://{1}:{2}@{0}:{3}//\");"
+                   " c.connect()'".format(ip, self.userid,
+                                          self.password, port))
             try:
                 LOG.debug('Checking AMQP host "{0}"...'.format(ip))
                 remote.exec_command(cmd)
@@ -169,9 +184,9 @@ class RabbitSanityClass(BaseTestCase):
                 data_utils.rand_name() + data_utils.generate_uuid(),
                 ip
             )
-            cmd = ("python -c 'import kombu; c = kombu.Connection(host=\"{0}\""
-                   ", userid=\"{1}\", password=\"{2}\", virtual_host=\"/\", "
-                   "port=\"{3}\"); c.connect(); ch = c.channel(); q = kombu.Qu"
+            cmd = ("python -c 'import kombu;"
+                   " c = kombu.Connection(\"amqp://{1}:{2}@{0}:{3}//\");"
+                   " c.connect(); ch = c.channel(); q = kombu.Qu"
                    "eue(\"{4}\", channel=ch, durable=False, queue_arguments={{"
                    "\"x-expires\": 15 * 60 * 1000}}); q.declare()'".format(
                        ip, self.userid, self.password, port, test_queue))
@@ -195,9 +210,9 @@ class RabbitSanityClass(BaseTestCase):
                           "doesn't exist!".format(ip))
             test_queue = queues[0]
             id = data_utils.generate_uuid()
-            cmd = ("python -c 'import kombu; c = kombu.Connection(host=\"{0}\""
-                   ", userid=\"{1}\", password=\"{2}\", virtual_host=\"/\", "
-                   "port=\"{3}\"); c.connect(); ch = c.channel(); producer = "
+            cmd = ("python -c 'import kombu;"
+                   " c = kombu.Connection(\"amqp://{1}:{2}@{0}:{3}//\");"
+                   " c.connect(); ch = c.channel(); producer = "
                    "kombu.Producer(channel=ch, routing_key=\"{4}\"); "
                    "producer.publish(\"{5}\")'".format(
                        ip, self.userid, self.password, port, test_queue, id))
@@ -217,9 +232,9 @@ class RabbitSanityClass(BaseTestCase):
             for message in self.messages:
                 if ip in message['queue']:
                     continue
-                cmd = ("python -c 'import kombu; c = kombu.Connection(host="
-                       "\"{0}\", userid=\"{1}\", password=\"{2}\", "
-                       "virtual_host=\"/\", port=\"{3}\"); c.connect(); "
+                cmd = ("python -c 'import kombu;"
+                       " c = kombu.Connection(\"amqp://{1}:{2}@{0}:{3}//\");"
+                       " c.connect(); "
                        "ch = c.channel(); q = kombu.Queue(\"{4}\", channel=ch)"
                        "; msg = q.get(True); retval = 0 if msg.body in \"{5}\""
                        " else 1; exit(retval)'".format(
@@ -244,9 +259,9 @@ class RabbitSanityClass(BaseTestCase):
             return
         ip, port = self.amqp_hosts[0]
         for test_queue in self.queues:
-            cmd = ("python -c 'import kombu; c = kombu.Connection(host=\"{0}\""
-                   ", userid=\"{1}\", password=\"{2}\", virtual_host=\"/\", "
-                   "port=\"{3}\"); c.connect(); ch = c.channel(); q = kombu.Qu"
+            cmd = ("python -c 'import kombu;"
+                   " c = kombu.Connection(\"amqp://{1}:{2}@{0}:{3}//\");"
+                   " c.connect(); ch = c.channel(); q = kombu.Qu"
                    "eue(\"{4}\", channel=ch); q.delete();'".format(
                        ip, self.userid, self.password, port, test_queue))
             try:
