@@ -666,6 +666,7 @@ class NailgunConfig(object):
             online_controller_names.append(node['fqdn'])
         LOG.info("Online controllers ips is %s" % online_controllers_ips)
 
+        self.compute.nodes = data
         self.compute.public_ips = public_ips
         self.compute.controller_nodes = controller_ips
         self.compute.controller_names = controller_names
