@@ -17,7 +17,7 @@ import traceback
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.common.utils import data_utils
-from fuel_health.tests.ha.test_mysql_status import BaseMysqlTest
+from fuel_health.ha_base import BaseMysqlTest
 
 LOG = logging.getLogger(__name__)
 
