@@ -31,8 +31,8 @@ class RabbitSanityTest(ha_base.RabbitSanityClass):
             self.skipTest("It is not HA configuration")
         if not self._controllers:
             self.skipTest('There are no controller nodes')
-        if len(self._controllers) == 1:
-            self.skipTest('There is only one controller online. '
+        if len(self.amqp_hosts_name) == 1:
+            self.skipTest('There is only one RabbitMQ node online. '
                           'Nothing to check')
 
     def test_001_rabbitmqctl_status(self):
@@ -40,7 +40,8 @@ class RabbitSanityTest(ha_base.RabbitSanityClass):
 
         Scenario:
           1. Retrieve cluster status for each controller.
-          2. Check that numbers of rabbit nodes is the same as controllers.
+          2. Check that numbers of rabbit nodes is the same
+             in Hiera DB and in actual cluster.
           3. Check crm status for rabbit
           4. List channels
         Duration: 100 s.
@@ -49,9 +50,9 @@ class RabbitSanityTest(ha_base.RabbitSanityClass):
         self.verify(10, self.list_nodes, 1,
                     'Cannot retrieve cluster nodes')
 
-        if len(self._controllers) != self.list_nodes():
-            self.fail('Step 2 failed: Number of controllers is not equal to '
-                      'number of cluster nodes.')
+        if len(self.amqp_hosts_name) != self.list_nodes():
+            self.fail('Step 2 failed: Number of RabbitMQ nodes '
+                      'is not equal to number of cluster nodes.')
 
         res = self.verify(10, self.pick_rabbit_master, 3,
                           'Cannot retrieve crm status')
@@ -71,7 +72,8 @@ class RabbitSanityTest(ha_base.RabbitSanityClass):
         """RabbitMQ availability
         Scenario:
           1. Retrieve cluster status for each controller.
-          2. Check that numbers of rabbit nodes is the same as controllers.
+          2. Check that numbers of rabbit nodes is the same
+             in Hiera DB and in actual cluster.
           3. Check crm status for rabbit
           4. List channels
         Duration: 100 s.
@@ -79,9 +81,9 @@ class RabbitSanityTest(ha_base.RabbitSanityClass):
         """
         self.verify(10, self.list_nodes, 1, 'Cannot retrieve cluster nodes')
 
-        if len(self._controllers) != self.list_nodes():
-            self.fail('Step 2 failed: Number of controllers is not equal to '
-                      'number of cluster nodes.')
+        if len(self.amqp_hosts_name) != self.list_nodes():
+            self.fail('Step 2 failed: Number of RabbitMQ nodes '
+                      'is not equal to number of cluster nodes.')
 
         res = self.verify(10, self.pick_rabbit_master, 3,
                           'Cannot retrieve crm status')

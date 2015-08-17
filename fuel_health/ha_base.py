@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import json
 import logging
 from lxml import etree
 import traceback
@@ -55,13 +56,19 @@ class RabbitSanityClass(BaseTestCase):
     @property
     def amqp_hosts_name(self):
         amqp_hosts_name = []
+        nodes = self.get_hiera_values(hiera_hash='network_metadata',
+                                      hash_key='nodes',
+                                      json_parse=True)
         for ip, port in self.amqp_hosts:
-            for node in self.nodes:
-                ips = [data['ip'].split("/")[0]
-                       for data in node['network_data']
-                       if 'ip' in data.keys()]
-                if ip in ips and node['online']:
-                    amqp_hosts_name.append(node['hostname'])
+            for node in nodes:
+                ips = [nodes[node]['network_roles'][role]
+                       for role in nodes[node]['network_roles']]
+                if ip in ips:
+                    nailgun_nodes = [n for n in self.nodes
+                                     if nodes[node]['name'] == n['hostname']
+                                     and n['online']]
+                    if len(nailgun_nodes) == 1:
+                        amqp_hosts_name.append(nodes[node]['name'])
         return amqp_hosts_name
 
     @property
@@ -132,22 +139,37 @@ class RabbitSanityClass(BaseTestCase):
         return output
 
     def get_hiera_values(self, hiera_hash="rabbit_hash",
-                         hash_key="password",
-                         conf_path="/etc/hiera.yaml"):
+                         hash_key=None,
+                         conf_path="/etc/hiera.yaml",
+                         json_parse=False):
+
+        if hash_key is not None:
+            lookup_cmd = ('value = hiera.lookup("{0}", {{}}, '
+                          '{{}}, nil, :hash)["{1}"]').format(hiera_hash,
+                                                             hash_key)
+        else:
+            lookup_cmd = ('value = hiera.lookup("{0}", {{}},'
+                          ' {{}}, nil, :hash)').format(hiera_hash)
+        if json_parse:
+            print_cmd = 'require "json"; puts JSON.dump(value)'
+        else:
+            print_cmd = 'puts value'
+
         cmd = ('ruby -e \'require "hiera"; '
                'hiera = Hiera.new(:config => "{0}"); '
-               'puts hiera.lookup("{1}", {{}}, {{}}, nil,'
-               ' :hash)["{2}"]\'').format(
-                   conf_path, hiera_hash, hash_key)
+               '{1}; {2};\'').format(conf_path, lookup_cmd, print_cmd)
+
         LOG.debug("Try to execute cmd {0}".format(cmd))
         remote = self.get_ssh_connection_to_controller(self._controllers[0])
         try:
             res = remote.exec_command(cmd)
             LOG.debug("result is {0}".format(res))
+            if json_parse:
+                return json.loads(res.strip())
             return res.strip()
         except Exception:
             LOG.debug(traceback.format_exc())
-            self.fail("Fail to get data from config")
+            self.fail("Fail to get data from Hiera DB!")
 
     def get_amqp_hosts(self):
         if not self._controllers:
