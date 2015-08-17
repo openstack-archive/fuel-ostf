@@ -21,7 +21,6 @@ from fuel_health.common import ssh
 from fuel_health.common.utils import data_utils
 from fuel_health.test import BaseTestCase
 
-
 LOG = logging.getLogger(__name__)
 
 
