@@ -67,7 +67,7 @@ class TestMysqlReplication(BaseMysqlTest):
                                 self.node_user,
                                 key=self.node_key)
 
-        if len(databases) == 1:
+        if len(databases) <= 1:
             self.skipTest('There is only one database online. '
                           'Nothing to check')
 

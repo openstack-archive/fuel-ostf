@@ -15,12 +15,14 @@
 import logging
 
 from fuel_health.common.ssh import Client as SSHClient
-import fuel_health.test
+from fuel_health.test import BaseTestCase
 
 LOG = logging.getLogger(__name__)
 
 
-class BaseMysqlTest(fuel_health.test.BaseTestCase):
+class BaseMysqlTest(BaseTestCase):
+    """Base methods for MySQL DB tests
+    """
     @classmethod
     def setUpClass(cls):
         super(BaseMysqlTest, cls).setUpClass()
@@ -44,12 +46,16 @@ class BaseMysqlTest(fuel_health.test.BaseTestCase):
                                key_filename=key,
                                timeout=100)
 
-        hiera_cmd = 'ruby -e \'require "hiera"; ' \
-                    'puts Hiera.new().lookup("database_nodes", {}, {}).keys\''
+        hiera_cmd = 'ruby -e \'require "hiera";' \
+                    'db = Hiera.new().lookup("database_nodes", {}, {}).keys;'\
+                    'if db != [] then puts db else puts "None" end\''
         database_nodes = ssh_client.exec_command(hiera_cmd)
-        database_nodes = database_nodes.splitlines()
+        # backward compatibility for upgraded fuel
+        if 'None' in database_nodes:
+            return cls.config.compute.online_controllers
 
         # get online nodes
+        database_nodes = database_nodes.splitlines()
         databases = []
         for node in cls.config.compute.nodes:
             hostname = node['hostname']
@@ -90,7 +96,7 @@ class TestMysqlStatus(BaseMysqlTest):
                                 self.node_user,
                                 key=self.node_key)
 
-        if len(databases) == 1:
+        if len(databases) <= 1:
             self.skipTest('There is only one database online. '
                           'Nothing to check')
 
@@ -157,7 +163,7 @@ class TestMysqlStatus(BaseMysqlTest):
                                 self.controller_ip,
                                 self.node_user,
                                 key=self.node_key)
-        if len(databases) == 1:
+        if len(databases) <= 1:
             self.skipTest('There is only one database online. '
                           'Nothing to check')
 
