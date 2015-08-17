@@ -18,9 +18,9 @@ import traceback
 
 import fuel_health
 from fuel_health.common import ssh
+from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.common.utils import data_utils
 from fuel_health.test import BaseTestCase
-
 
 LOG = logging.getLogger(__name__)
 
@@ -504,3 +504,47 @@ class TestPacemakerBase(BaseTestCase):
         disallowed = list(set(started) - set(allowed))
 
         return allowed, started, disallowed
+
+
+class BaseMysqlTest(BaseTestCase):
+    """Base methods for MySQL DB tests
+    """
+    @classmethod
+    def setUpClass(cls):
+        super(BaseMysqlTest, cls).setUpClass()
+        cls.nodes = cls.config.compute.nodes
+        cls.controller_ip = cls.config.compute.online_controllers[0]
+        cls.node_key = cls.config.compute.path_to_private_key
+        cls.node_user = cls.config.compute.ssh_user
+        cls.mysql_user = 'root'
+        cls.master_ip = []
+
+    def setUp(self):
+        super(BaseMysqlTest, self).setUp()
+        if 'ha' not in self.config.compute.deployment_mode:
+            self.skipTest('Cluster is not HA mode, skipping tests')
+
+    @classmethod
+    def get_database_nodes(cls, controller_ip, username, key):
+        # retrieve data from controller
+        ssh_client = SSHClient(controller_ip,
+                               username,
+                               key_filename=key,
+                               timeout=100)
+
+        hiera_cmd = 'ruby -e \'require "hiera";' \
+                    'db = Hiera.new().lookup("database_nodes", {}, {}).keys;'\
+                    'if db != [] then puts db else puts "None" end\''
+        database_nodes = ssh_client.exec_command(hiera_cmd)
+        # backward compatibility for upgraded fuel
+        if 'None' in database_nodes:
+            return cls.config.compute.online_controllers
+
+        # get online nodes
+        database_nodes = database_nodes.splitlines()
+        databases = []
+        for node in cls.config.compute.nodes:
+            hostname = node['hostname']
+            if hostname in database_nodes and node['online']:
+                databases.append(hostname)
+        return databases
