@@ -15,47 +15,9 @@
 import logging
 
 from fuel_health.common.ssh import Client as SSHClient
-import fuel_health.test
+from fuel_health.ha_base import BaseMysqlTest
 
 LOG = logging.getLogger(__name__)
-
-
-class BaseMysqlTest(fuel_health.test.BaseTestCase):
-    @classmethod
-    def setUpClass(cls):
-        super(BaseMysqlTest, cls).setUpClass()
-        cls.nodes = cls.config.compute.nodes
-        cls.controller_ip = cls.config.compute.online_controllers[0]
-        cls.node_key = cls.config.compute.path_to_private_key
-        cls.node_user = cls.config.compute.ssh_user
-        cls.mysql_user = 'root'
-        cls.master_ip = []
-
-    def setUp(self):
-        super(BaseMysqlTest, self).setUp()
-        if 'ha' not in self.config.compute.deployment_mode:
-            self.skipTest('Cluster is not HA mode, skipping tests')
-
-    @classmethod
-    def get_database_nodes(cls, controller_ip, username, key):
-        # retrieve data from controller
-        ssh_client = SSHClient(controller_ip,
-                               username,
-                               key_filename=key,
-                               timeout=100)
-
-        hiera_cmd = 'ruby -e \'require "hiera"; ' \
-                    'puts Hiera.new().lookup("database_nodes", {}, {}).keys\''
-        database_nodes = ssh_client.exec_command(hiera_cmd)
-        database_nodes = database_nodes.splitlines()
-
-        # get online nodes
-        databases = []
-        for node in cls.config.compute.nodes:
-            hostname = node['hostname']
-            if hostname in database_nodes and node['online']:
-                databases.append(hostname)
-        return databases
 
 
 class TestMysqlStatus(BaseMysqlTest):
