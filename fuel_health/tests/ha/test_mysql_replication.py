@@ -66,6 +66,8 @@ class TestMysqlReplication(BaseMysqlTest):
                                 self.controller_ip,
                                 self.node_user,
                                 key=self.node_key)
+        if len(databases) == 1:
+            self.skipTest(self.one_db_msg)
 
         LOG.info("Database nodes are " + ", ".join(databases))
         self.master_ip = databases[0]

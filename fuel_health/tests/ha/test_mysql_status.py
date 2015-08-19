@@ -32,6 +32,7 @@ class BaseMysqlTest(BaseTestCase):
         cls.node_user = cls.config.compute.ssh_user
         cls.mysql_user = 'root'
         cls.master_ip = []
+        cls.one_db_msg = "There is only one database online. Nothing to check"
 
     def setUp(self):
         super(BaseMysqlTest, self).setUp()
@@ -39,7 +40,6 @@ class BaseMysqlTest(BaseTestCase):
             self.skipTest('Cluster is not HA mode, skipping tests')
 
     def get_database_nodes(self, controller_ip, username, key):
-        one_db_msg = "There is only one database online. Nothing to check"
         no_db_msg = ("Can not find any online database. "
                      "Check that at least one database is operable")
         # retrieve data from controller
@@ -66,8 +66,6 @@ class BaseMysqlTest(BaseTestCase):
 
         self.verify_response_body_not_equal(0, len(databases),
                                             no_db_msg, 1)
-        if len(databases) == 1:
-            self.skipTest(one_db_msg)
         return databases
 
 
@@ -102,6 +100,8 @@ class TestMysqlStatus(BaseMysqlTest):
                                 self.controller_ip,
                                 self.node_user,
                                 key=self.node_key)
+        if len(databases) == 1:
+            self.skipTest(self.one_db_msg)
 
         for database in dbs:
             LOG.info('Current database name is %s' % database)
@@ -166,6 +166,8 @@ class TestMysqlStatus(BaseMysqlTest):
                                 self.controller_ip,
                                 self.node_user,
                                 key=self.node_key)
+        if len(databases) == 1:
+            self.skipTest(self.one_db_msg)
 
         for db_node in databases:
             command = "mysql -h localhost -e \"SHOW STATUS LIKE 'wsrep_%'\""
