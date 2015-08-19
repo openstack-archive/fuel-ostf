@@ -66,10 +66,10 @@ class TestMysqlReplication(BaseMysqlTest):
                                 self.controller_ip,
                                 self.node_user,
                                 key=self.node_key)
-
+        self.verify_response_body_not_equal(0, len(databases),
+                                            self.no_db_msg, 1)
         if len(databases) == 1:
-            self.skipTest('There is only one database online. '
-                          'Nothing to check')
+            self.skipTest(self.one_db_msg)
 
         LOG.info("Database nodes are " + ", ".join(databases))
         self.master_ip = databases[0]
