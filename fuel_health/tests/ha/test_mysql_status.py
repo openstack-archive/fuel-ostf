@@ -15,14 +15,12 @@
 import logging
 
 from fuel_health.common.ssh import Client as SSHClient
-from fuel_health.test import BaseTestCase
+import fuel_health.test
 
 LOG = logging.getLogger(__name__)
 
 
-class BaseMysqlTest(BaseTestCase):
-    """Base methods for MySQL DB tests
-    """
+class BaseMysqlTest(fuel_health.test.BaseTestCase):
     @classmethod
     def setUpClass(cls):
         super(BaseMysqlTest, cls).setUpClass()
@@ -38,36 +36,25 @@ class BaseMysqlTest(BaseTestCase):
         if 'ha' not in self.config.compute.deployment_mode:
             self.skipTest('Cluster is not HA mode, skipping tests')
 
-    def get_database_nodes(self, controller_ip, username, key):
-        one_db_msg = "There is only one database online. Nothing to check"
-        no_db_msg = ("Can not find any online database. "
-                     "Check that at least one database is operable")
+    @classmethod
+    def get_database_nodes(cls, controller_ip, username, key):
         # retrieve data from controller
         ssh_client = SSHClient(controller_ip,
                                username,
                                key_filename=key,
                                timeout=100)
 
-        hiera_cmd = ('ruby -e \'require "hiera";'
-                     'db = Hiera.new().lookup("database_nodes", {}, {}).keys;'
-                     'if db != [] then puts db else puts "None" end\'')
+        hiera_cmd = 'ruby -e \'require "hiera"; ' \
+                    'puts Hiera.new().lookup("database_nodes", {}, {}).keys\''
         database_nodes = ssh_client.exec_command(hiera_cmd)
-        # backward compatibility for upgraded fuel
-        if 'None' in database_nodes:
-            databases = self.config.compute.online_controllers
-        else:
-            # get online nodes
-            database_nodes = database_nodes.splitlines()
-            databases = []
-            for node in self.config.compute.nodes:
-                hostname = node['hostname']
-                if hostname in database_nodes and node['online']:
-                    databases.append(hostname)
+        database_nodes = database_nodes.splitlines()
 
-        self.verify_response_body_not_equal(0, len(databases),
-                                            no_db_msg, 1)
-        if len(databases) == 1:
-            self.skipTest(one_db_msg)
+        # get online nodes
+        databases = []
+        for node in cls.config.compute.nodes:
+            hostname = node['hostname']
+            if hostname in database_nodes and node['online']:
+                databases.append(hostname)
         return databases
 
 
@@ -102,6 +89,10 @@ class TestMysqlStatus(BaseMysqlTest):
                                 self.controller_ip,
                                 self.node_user,
                                 key=self.node_key)
+
+        if len(databases) == 1:
+            self.skipTest('There is only one database online. '
+                          'Nothing to check')
 
         for database in dbs:
             LOG.info('Current database name is %s' % database)
@@ -166,6 +157,9 @@ class TestMysqlStatus(BaseMysqlTest):
                                 self.controller_ip,
                                 self.node_user,
                                 key=self.node_key)
+        if len(databases) == 1:
+            self.skipTest('There is only one database online. '
+                          'Nothing to check')
 
         for db_node in databases:
             command = "mysql -h localhost -e \"SHOW STATUS LIKE 'wsrep_%'\""
