@@ -47,14 +47,14 @@ class RabbitSanityTest(ha_base.RabbitSanityClass):
         Duration: 100 s.
         Deployment tags: CENTOS
         """
-        self.verify(10, self.list_nodes, 1,
+        self.verify(20, self.list_nodes, 1,
                     'Cannot retrieve cluster nodes')
 
         if len(self.amqp_hosts_name) != self.list_nodes():
             self.fail('Step 2 failed: Number of RabbitMQ nodes '
                       'is not equal to number of cluster nodes.')
 
-        res = self.verify(10, self.pick_rabbit_master, 3,
+        res = self.verify(20, self.pick_rabbit_master, 3,
                           'Cannot retrieve crm status')
 
         LOG.debug("Current res is {0}".format(res))
@@ -63,9 +63,9 @@ class RabbitSanityTest(ha_base.RabbitSanityClass):
             LOG.debug("Current res is {0}".format(res))
             self.fail('Step 3 failed: Rabbit Master node is not running.')
 
-        fail_msg_4 = 'Can not get rabbit channel list in 20 second.'
+        fail_msg_4 = 'Can not get rabbit channel list in 40 seconds.'
 
-        self.verify(20, self.list_channels, 4, fail_msg_4,
+        self.verify(40, self.list_channels, 4, fail_msg_4,
                     'Can not retrieve channels list')
 
     def test_002_rabbitmqctl_status_ubuntu(self):
@@ -79,13 +79,13 @@ class RabbitSanityTest(ha_base.RabbitSanityClass):
         Duration: 100 s.
         Deployment tags: Ubuntu
         """
-        self.verify(10, self.list_nodes, 1, 'Cannot retrieve cluster nodes')
+        self.verify(20, self.list_nodes, 1, 'Cannot retrieve cluster nodes')
 
         if len(self.amqp_hosts_name) != self.list_nodes():
             self.fail('Step 2 failed: Number of RabbitMQ nodes '
                       'is not equal to number of cluster nodes.')
 
-        res = self.verify(10, self.pick_rabbit_master, 3,
+        res = self.verify(20, self.pick_rabbit_master, 3,
                           'Cannot retrieve crm status')
 
         LOG.debug("Current res is {0}".format(res))
@@ -94,9 +94,9 @@ class RabbitSanityTest(ha_base.RabbitSanityClass):
             LOG.debug("Current res is {0}".format(res))
             self.fail('Step 3 failed: Rabbit Master node is not running.')
 
-        fail_msg_4 = 'Can not get rabbit channel list in 20 second.'
+        fail_msg_4 = 'Can not get rabbit channel list in 40 seconds.'
 
-        self.verify(20, self.list_channels, 4, fail_msg_4,
+        self.verify(40, self.list_channels, 4, fail_msg_4,
                     'Can not retrieve channels list')
 
     def test_003_rabbitmqctl_replication(self):
