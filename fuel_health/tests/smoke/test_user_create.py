@@ -104,7 +104,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                 url = self.config.horizon_url
 
             # Retrieve the CSRF token first
-            client.get(url)  # sets cookie
+            client.get(url, verify=self.config.horizon_verify_ssl)
             if not len(client.cookies):
                 login_data = dict(username=user.name,
                                   password=password,
