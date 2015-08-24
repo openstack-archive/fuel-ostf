@@ -351,7 +351,7 @@ SaharaConfig = [
     cfg.StrOpt('plugin',
                default='vanilla',
                help="Plugin name of sahara service."),
-    cfg.StrOpt('pligin_version',
+    cfg.StrOpt('plugin_version',
                default='1.1.2',
                help="Plugin version of sahara service."),
     cfg.StrOpt('tt_config',
