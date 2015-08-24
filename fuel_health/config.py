@@ -591,6 +591,7 @@ class NailgunConfig(object):
         LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
         access_data = data['editable']['access']
         common_data = data['editable']['common']
+        ssl_data = data['editable']['public_ssl']
 
         self.identity.admin_tenant_name = \
             (
@@ -611,6 +612,17 @@ class NailgunConfig(object):
         self.compute.use_vcenter = common_data['use_vcenter']['value']
         self.compute.auto_assign_floating_ip = common_data[
             'auto_assign_floating_ip']['value']
+
+        self.horizon_use_ssl = ssl_data['horizon']['value']
+        # TODO(aschultz): Once we settle on a better way to handle the ssl
+        # certificate, we can turn on validation against the mounted keys
+        #    self.horizon_verify_ssl = \
+        #        '/var/lib/fuel/keys/{cluster_id}/haproxy/public_haproxy.pem'.\
+        #        format(cluster_id=self.cluster_id)
+        # However, since the self-signed generated ssl certificate does not
+        # have either the ip address or a valid hostname that is resolvable by
+        # the fuel master we just turn off validation for now.
+        self.horizon_verify_ssl = False
 
         api_url = '/api/clusters/%s' % self.cluster_id
         cluster_data = self.req_session.get(self.nailgun_url + api_url).json()
@@ -794,9 +806,14 @@ class NailgunConfig(object):
             endpoint = keystone_vip or self.compute.public_ips[0]
             endpoint_mur_sav = management_vip \
                 or self.compute.controller_nodes[0]
-            self.horizon_url = 'http://{0}/{1}/'.format(
-                public_vip, 'dashboard')
-            self.horizon_ubuntu_url = 'http://{0}/'.format(public_vip)
+            if self.horizon_use_ssl:
+                self.horizon_proto = 'https'
+            else:
+                self.horizon_proto = 'http'
+            self.horizon_url = '{proto}://{host}/{path}/'.format(
+                proto=self.horizon_proto, host=public_vip, path='dashboard')
+            self.horizon_ubuntu_url = '{proto}://{host}/'.format(
+                proto=self.horizon_proto, host=public_vip)
             self.identity.uri = 'http://{0}:{1}/{2}/'.format(
                 endpoint, 5000, 'v2.0')
             self.murano.api_url = 'http://{0}:{1}'.format(
