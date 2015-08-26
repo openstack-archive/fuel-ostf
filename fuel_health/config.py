@@ -21,7 +21,7 @@ import os
 import sys
 import traceback
 import unittest2
-
+import os.path
 import keystoneclient
 from oslo.config import cfg
 import requests
