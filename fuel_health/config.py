@@ -707,6 +707,8 @@ class NailgunConfig(object):
             self.nailgun_url + '/api/releases/{0}'.format(release_id)).json()
         self.compute.deployment_os = release_data.get(
             'operating_system', 'failed to get os')
+        self.compute.release_version = release_data.get(
+            'version', 'failed to get release version')
 
     def _parse_networks_configuration(self):
         api_url = '/api/clusters/{0}/network_configuration/{1}'.format(

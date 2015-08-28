@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from distutils import version
 import json
 import logging
 from lxml import etree
@@ -42,9 +43,16 @@ class RabbitSanityClass(BaseTestCase):
         cls._userid = None
         cls.messages = []
         cls.queues = []
+        cls.release_version = \
+            cls.config.compute.release_version.split('-')[1]
 
     @property
     def password(self):
+        if version.StrictVersion(self.release_version)\
+                < version.StrictVersion('7.0'):
+            self._password = self.get_conf_values().strip()
+            return self._password
+
         if self._password is None:
             self._password = self.get_hiera_values(
                 hiera_hash='rabbit_hash',
@@ -55,6 +63,12 @@ class RabbitSanityClass(BaseTestCase):
     @property
     def amqp_hosts_name(self):
         amqp_hosts_name = {}
+        if version.StrictVersion(self.release_version)\
+                < version.StrictVersion('7.0'):
+            for controller_ip in self._controllers:
+                amqp_hosts_name[controller_ip] = [controller_ip, '5673']
+            return amqp_hosts_name
+
         nodes = self.get_hiera_values(hiera_hash='network_metadata',
                                       hash_key='nodes',
                                       json_parse=True)
@@ -72,6 +86,11 @@ class RabbitSanityClass(BaseTestCase):
 
     @property
     def userid(self):
+        if version.StrictVersion(self.release_version)\
+                < version.StrictVersion('7.0'):
+            self._userid = 'nova'
+            return self._userid
+
         if self._userid is None:
             self._userid = self.get_hiera_values(
                 hiera_hash='rabbit_hash',
@@ -166,6 +185,24 @@ class RabbitSanityClass(BaseTestCase):
         except Exception:
             LOG.debug(traceback.format_exc())
             self.fail("Fail to get data from Hiera DB!")
+
+    def get_conf_values(self, variable="rabbit_password",
+                        sections="DEFAULT",
+                        conf_path="/etc/nova/nova.conf"):
+        cmd = ("python -c 'import ConfigParser; "
+               "cfg=ConfigParser.ConfigParser(); "
+               "cfg.readfp(open('\"'{0}'\"')); "
+               "print cfg.get('\"'{1}'\"', '\"'{2}'\"')'")
+        LOG.debug("Try to execute cmd {0}".format(cmd))
+        remote = self.get_ssh_connection_to_controller(self._controllers[0])
+        try:
+            res = remote.exec_command(cmd.format(
+                conf_path, sections, variable))
+            LOG.debug("result is {0}".format(res))
+            return res
+        except Exception:
+            LOG.debug(traceback.format_exc())
+            self.fail("Fail to get data from config")
 
     def get_amqp_hosts(self):
         if not self._controllers:
