@@ -32,6 +32,8 @@ class BaseMysqlTest(BaseTestCase):
         cls.node_user = cls.config.compute.ssh_user
         cls.mysql_user = 'root'
         cls.master_ip = []
+        cls.release_version = \
+            cls.config.compute.release_version.split('-')[1]
         cls.one_db_msg = "There is only one database online. Nothing to check"
         cls.no_db_msg = ("Can not find any online database. "
                          "Check that at least one database is operable")
@@ -43,6 +45,8 @@ class BaseMysqlTest(BaseTestCase):
 
     @classmethod
     def get_database_nodes(cls, controller_ip, username, key):
+        if cls.release_version < '7.0':
+            return cls.config.compute.online_controllers
         # retrieve data from controller
         ssh_client = SSHClient(controller_ip,
                                username,
