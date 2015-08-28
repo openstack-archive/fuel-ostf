@@ -95,45 +95,47 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
 
         self.verify_response_true(auth,
                                   'Step 8 failed: {msg}'.format(msg=msg_s7))
-        if not self.config.fuel.horizon_ssl:
-            try:
-                # Auth in horizon with non-admin user
-                client = requests.session()
-                if self.config.compute.deployment_os == 'Ubuntu':
-                    url = self.config.horizon_ubuntu_url
-                else:
-                    url = self.config.horizon_url
 
-                # Retrieve the CSRF token first
-                client.get(url)  # sets cookie
-                if not len(client.cookies):
-                    login_data = dict(username=user.name,
-                                      password=password,
-                                      next='/')
-                    resp = client.post(url, data=login_data,
-                                       headers=dict(Referer=url))
-                    self.verify_response_status(
-                        resp.status_code,
-                        msg="Check that the request was successful. "
-                            "Please refer to OpenStack logs for more details.",
-                        failed_step=9)
-                else:
-                    login_data = dict(username=user.name,
-                                      password=password,
-                                      next='/')
-                    csrftoken = client.cookies.get('csrftoken', None)
-                    if csrftoken:
-                        login_data['csrfmiddlewaretoken'] = csrftoken
+        path_to_cert = self.config.identity.path_to_cert
 
-                    resp = client.post(url, data=login_data,
-                                       headers=dict(Referer=url))
-                    self.verify_response_status(
-                        resp.status_code,
-                        msg="Check that the request was successful. "
-                            "Please, refer to OpenStack "
-                            "logs for more details.",
-                        failed_step=9)
-            except Exception:
-                LOG.debug(traceback.format_exc())
-                self.fail("Step 10 failed: Can not authenticate in Horizon. "
-                          "Please refer to OpenStack logs for more details.")
+        try:
+            # Auth in horizon with non-admin user
+            client = requests.session()
+            if self.config.compute.deployment_os == 'Ubuntu':
+                url = self.config.identity.horizon_ubuntu_url
+            else:
+                url = self.config.identity.horizon_url
+
+            # Retrieve the CSRF token first
+            client.get(url, verify=path_to_cert)  # sets cookie
+            if not len(client.cookies):
+                login_data = dict(username=user.name,
+                                  password=password,
+                                  next='/')
+                resp = client.post(url, data=login_data,
+                                   headers=dict(Referer=url))
+                self.verify_response_status(
+                    resp.status_code,
+                    msg="Check that the request was successful. "
+                        "Please refer to OpenStack logs for more details.",
+                    failed_step=9)
+            else:
+                login_data = dict(username=user.name,
+                                  password=password,
+                                  next='/')
+                csrftoken = client.cookies.get('csrftoken', None)
+                if csrftoken:
+                    login_data['csrfmiddlewaretoken'] = csrftoken
+
+                resp = client.post(url, data=login_data,
+                                   headers=dict(Referer=url),
+                                   verify=path_to_cert)
+                self.verify_response_status(
+                    resp.status_code,
+                    msg="Check that the request was successful. "
+                        "Please, refer to OpenStack logs for more details.",
+                    failed_step=9)
+        except Exception:
+            LOG.debug(traceback.format_exc())
+            self.fail("Step 10 failed: Can not authenticate in Horizon. "
+                      "Please refer to OpenStack logs for more details.")
