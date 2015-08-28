@@ -652,6 +652,7 @@ class NailgunConfig(object):
         public_ips = []
         online_controllers_ips = []
         online_controller_names = []
+        online_controller_name_ip = {}
         for node in controller_nodes:
             public_network = next(network for network in node['network_data']
                                   if network['name'] == 'public')
@@ -664,6 +665,7 @@ class NailgunConfig(object):
         for node in online_controllers:
             online_controllers_ips.append(node['ip'])
             online_controller_names.append(node['fqdn'])
+            online_controller_name_ip[node['fqdn']] = [node['ip'], '5673']
         LOG.info("Online controllers ips is %s" % online_controllers_ips)
 
         self.compute.nodes = data
@@ -672,6 +674,7 @@ class NailgunConfig(object):
         self.compute.controller_names = controller_names
         self.compute.online_controllers = online_controllers_ips
         self.compute.online_controller_names = online_controller_names
+        self.compute.online_controller_name_ip = online_controller_name_ip
         if not cinder_nodes:
             self.volume.cinder_node_exist = False
         if not cinder_vmware_nodes:
@@ -707,6 +710,8 @@ class NailgunConfig(object):
             self.nailgun_url + '/api/releases/{0}'.format(release_id)).json()
         self.compute.deployment_os = release_data.get(
             'operating_system', 'failed to get os')
+        self.compute.release_version = release_data.get(
+            'version', 'failed to get release version')
 
     def _parse_networks_configuration(self):
         api_url = '/api/clusters/{0}/network_configuration/{1}'.format(
