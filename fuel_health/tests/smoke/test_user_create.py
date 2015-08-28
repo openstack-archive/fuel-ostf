@@ -95,16 +95,23 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
         self.verify_response_true(auth,
                                   'Step 8 failed: {msg}'.format(msg=msg_s7))
 
+        path_to_cert = self.config.identity.path_to_cert
+
+        proxies = {"http": "http://10.109.0.3:8888",
+                   "https": "http://10.109.0.3:8888"}
         try:
             # Auth in horizon with non-admin user
             client = requests.session()
             if self.config.compute.deployment_os == 'Ubuntu':
-                url = self.config.horizon_ubuntu_url
+                url = self.config.identity.horizon_ubuntu_url
+                url += 'horizon/'
             else:
-                url = self.config.horizon_url
+                url = self.config.identity.horizon_url
 
             # Retrieve the CSRF token first
-            client.get(url)  # sets cookie
+            client.get(url, cert=path_to_cert,
+                       verify=False, proxies=proxies)  # sets cookie
+
             if not len(client.cookies):
                 login_data = dict(username=user.name,
                                   password=password,
