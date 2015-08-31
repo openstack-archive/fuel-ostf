@@ -414,6 +414,9 @@ FuelConf = [
     cfg.StrOpt('dns',
                default=None,
                help="dns"),
+    cfg.BoolOpt('horizon_ssl',
+                default=False,
+                help='ssl usage')
 ]
 
 
@@ -629,6 +632,10 @@ class NailgunConfig(object):
             storage = data['editable']['storage']['volumes_ceph']['value']
             self.volume.ceph_exist = storage
         self.fuel.dns = data['editable']['external_dns'].get('value', None)
+        ssl_data = data['editable'].get('public_ssl',
+                                        {'horizon': {'value': False}})
+
+        self.fuel.horizon_ssl = ssl_data['horizon']['value']
 
     def _parse_nodes_cluster_id(self):
         api_url = '/api/nodes?cluster_id=%s' % self.cluster_id
