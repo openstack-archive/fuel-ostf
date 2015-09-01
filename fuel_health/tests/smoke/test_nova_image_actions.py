@@ -85,6 +85,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
             flavor_id = self.micro_flavors[0]
         name = rand_name('ost1_test-image')
         client = self.compute_client
+        az_name = self.get_availability_zone(image_id=image_id)
         LOG.debug("name:%s, image:%s" % (name, image_id))
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in
@@ -102,11 +103,14 @@ class TestImageAction(nmanager.SmokeChecksTest):
                           format(self.private_net))
             server = client.servers.create(name=name,
                                            image=image_id,
-                                           flavor=flavor_id, **create_kwargs)
+                                           flavor=flavor_id,
+                                           availability_zone=az_name,
+                                           **create_kwargs)
         else:
             server = client.servers.create(name=name,
                                            image=image_id,
-                                           flavor=flavor_id)
+                                           flavor=flavor_id,
+                                           availability_zone=az_name)
         self.set_resource(name, server)
         self.verify_response_body_content(
             name, server.name,
