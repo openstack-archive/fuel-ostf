@@ -73,12 +73,13 @@ class VolumesTest(nmanager.SmokeChecksTest):
         """
 
         msg_s1 = 'Volume was not created.'
+        az = 'nova'
 
         # Create volume
         volume = self.verify(120, self._create_volume, 1,
                              msg_s1,
                              "volume creation",
-                             self.volume_client)
+                             self.volume_client, availability_zone=az )
 
         self.verify(200, self._wait_for_volume_status, 2,
                     msg_s1,
@@ -157,11 +158,12 @@ class VolumesTest(nmanager.SmokeChecksTest):
         Duration: 350 s.
         """
         fail_msg_step_1 = 'Volume was not created'
+        az = 'nova'
         # Create volume
         volume = self.verify(120, self._create_boot_volume, 1,
                              fail_msg_step_1,
                              "volume creation",
-                             self.volume_client)
+                             self.volume_client, availability_zone=az)
 
         self.verify(200, self._wait_for_volume_status, 2,
                     fail_msg_step_1,
