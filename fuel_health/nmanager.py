@@ -136,8 +136,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                    "tenant_name: {tenant_name}").format(
                        username=username,
                        password=password,
-                       tenant_name=tenant_name,
-                   )
+                       tenant_name=tenant_name, )
             raise exceptions.InvalidConfiguration(msg)
 
         auth_url = self.config.identity.uri
@@ -206,8 +205,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                    "tenant_name: {tenant_name}").format(
                        username=username,
                        password=password,
-                       tenant_name=tenant_name,
-                   )
+                       tenant_name=tenant_name, )
             raise exceptions.InvalidConfiguration(msg)
 
         auth_url = self.config.identity.uri
@@ -414,6 +412,14 @@ class OfficialClientTest(fuel_health.test.TestCase):
             self.fail('Execution command on Instance fails '
                       'with unexpected result. ')
         self.fail("Instance is not reachable by IP.")
+
+    def get_availability_zone(self, image_id=None):
+        disk = self.glance_client_v1.images.get(image_id).disk_format
+        if disk == 'vmdk':
+            az_name = 'vcenter'
+        else:
+            az_name = 'nova'
+        return az_name
 
     def check_clients_state(self):
         if not self.manager.clients_initialized:
@@ -623,12 +629,15 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def _create_server(self, client, name, security_groups=None,
                        flavor_id=None, net_id=None, img_name=None,
-                       data_file=None):
+                       data_file=None, az_name=None):
 
         if img_name:
             base_image_id = self.get_image_from_name(img_name=img_name)
         else:
             base_image_id = self.get_image_from_name()
+
+        if not az_name:
+            az_name = self.get_availability_zone(image_id=base_image_id)
 
         if not flavor_id:
             if not self.find_micro_flavor():
@@ -661,6 +670,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
         server = client.servers.create(name, base_image_id,
                                        flavor_id, files=data_file,
+                                       availability_zone=az_name,
                                        **create_kwargs)
         self.verify_response_body_content(server.name,
                                           name,
@@ -1230,6 +1240,7 @@ class SmokeChecksTest(OfficialClientTest):
         name = rand_name('ost1_test-boot-volume-instance')
         base_image_id = self.get_image_from_name()
         bd_map = {'vda': volume.id + ':::0'}
+        az_name = self.get_availability_zone(image_id=base_image_id)
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in
                        self.compute_client.networks.list()
@@ -1243,11 +1254,13 @@ class SmokeChecksTest(OfficialClientTest):
                           format(self.private_net))
             server = client.servers.create(
                 name, base_image_id, self.find_micro_flavor()[0].id,
+                availability_zone=az_name,
                 **create_kwargs)
         else:
             create_kwargs = {'block_device_mapping': bd_map}
             server = client.servers.create(name, base_image_id,
                                            self.find_micro_flavor()[0].id,
+                                           availability_zone=az_name,
                                            **create_kwargs)
 
         self.verify_response_body_content(server.name,
@@ -1267,6 +1280,7 @@ class SmokeChecksTest(OfficialClientTest):
         name = rand_name('ost1_test-volume-instance')
 
         base_image_id = self.get_image_from_name(img_name=img_name)
+        az_name = self.get_availability_zone(image_id=base_image_id)
 
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in
@@ -1280,10 +1294,12 @@ class SmokeChecksTest(OfficialClientTest):
                           format(self.private_net))
             server = client.servers.create(
                 name, base_image_id, self.find_micro_flavor()[0].id,
+                availability_zone=az_name,
                 **create_kwargs)
         else:
             server = client.servers.create(name, base_image_id,
-                                           self.micro_flavors[0].id)
+                                           self.micro_flavors[0].id,
+                                           availability_zone=az_name)
 
         self.verify_response_body_content(server.name,
                                           name,
