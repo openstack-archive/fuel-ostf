@@ -174,7 +174,7 @@ function run_unit_tests {
   echo "Starting unit tests"
 
   local TESTS="$ROOT/fuel_plugin/testing/tests/unit"
-  local options="-vv $testropts --xunit-file $UNIT_XUNIT"
+  local options="-vv $testropts" # --xunit-file $UNIT_XUNIT"
   local result=0
 
   if [[ $# -ne 0 ]]; then
