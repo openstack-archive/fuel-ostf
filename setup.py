@@ -27,7 +27,7 @@ def requirements():
 setuptools.setup(
 
     name='fuel-ostf',
-    version='7.0.0',
+    version='8.0.0',
 
     description='cloud computing testing',
 
