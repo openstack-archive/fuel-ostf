@@ -1,4 +1,7 @@
-oslo.config>=1.1.1
+oslo.config<2.0.0
+oslo.serialization>=1.0.0,<1.7.0
+oslo.utils<2.0.0
+
 python-cinderclient>=1.0.7
 python-ceilometerclient>=1.0.9
 python-keystoneclient>=0.11
@@ -22,7 +25,6 @@ gevent==0.13.8
 importlib
 keystonemiddleware>=1.2.0
 kombu
-oslo.serialization>=1.0.0
 pecan>=0.3.0,<0.6.0
 psycopg2>=2.5.1
 stevedore>=0.10
