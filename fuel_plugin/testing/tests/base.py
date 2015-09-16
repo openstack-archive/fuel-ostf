@@ -190,6 +190,13 @@ class BaseIntegrationTest(BaseUnitTest):
             if transaction.nested and not transaction._parent.nested:
                 session.begin_nested()
 
+    def discovery(self):
+        """Discover dummy tests used for testsing."""
+        mixins.TEST_REPOSITORY = []
+        nose_discovery.discovery(path=TEST_PATH, session=self.session)
+        mixins.cache_test_repository(self.session)
+        self.session.flush()
+
     def tearDown(self):
         # rollback changes to database
         # made by tests
@@ -263,13 +270,6 @@ class BaseWSGITest(BaseIntegrationTest):
         self.discovery()
 
         self.app = webtest.TestApp(app.setup_app(session=self.session))
-
-    def discovery(self):
-        """Discover dummy tests used for testsing."""
-        mixins.TEST_REPOSITORY = []
-        nose_discovery.discovery(path=TEST_PATH, session=self.session)
-        mixins.cache_test_repository(self.session)
-        self.session.flush()
 
     def is_background_working(self):
         is_working = True
