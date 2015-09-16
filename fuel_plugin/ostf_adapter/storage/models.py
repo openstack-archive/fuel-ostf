@@ -173,7 +173,8 @@ class Test(BASE):
     @classmethod
     def add_result(cls, session, test_run_id, test_name, data):
         session.query(cls).\
-            filter_by(name=test_name, test_run_id=test_run_id).\
+            filter(cls.name == test_name,
+                   cls.test_run_id == test_run_id).\
             update(data, synchronize_session=False)
 
     @classmethod
