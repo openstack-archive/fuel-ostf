@@ -272,11 +272,10 @@ class OfficialClientTest(fuel_health.test.TestCase):
     @classmethod
     def _create_nano_flavor(cls):
         name = rand_name('ost1_test-flavor-nano')
-        flavorid = rand_int_id(999, 10000)
         flavor = None
         try:
             flavor = cls.compute_client.flavors.create(
-                name, 64, 1, 1, flavorid)
+                name, 64, 1, 1)
         except Exception:
             LOG.debug("OSTF test flavor cannot be created.")
             LOG.debug(traceback.format_exc())
