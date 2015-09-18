@@ -25,6 +25,7 @@ importlib
 keystonemiddleware>=1.2.0,<1.6.0
 kombu
 oslo.serialization>=1.0.0,<1.5.0
+oslo.utils<1.4.1
 pecan>=0.3.0,<0.6.0
 psycopg2>=2.5.1
 stevedore>=0.10,<1.4.0
