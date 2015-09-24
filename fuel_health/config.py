@@ -430,6 +430,24 @@ def register_heat_opts(conf):
     for opt in HeatConfig:
         conf.register_opt(opt, group='heat')
 
+# Ironic ostf ----
+
+ironic_group = cfg.OptGroup(name='ironic',
+                            title='Bare Metal Service Options')
+
+IronicConfig = [
+    cfg.StrOpt('online_conductors',
+               default=[],
+               help="Ironic online conductors"),
+]
+
+
+def register_ironic_opts(conf):
+    conf.register_group(ironic_group)
+    for opt in IronicConfig:
+        conf.register_opt(opt, group='ironic')
+
+# end ------------
 
 def process_singleton(cls):
     """Wrapper for classes... To be instantiated only one time per process."""
@@ -495,6 +513,9 @@ class FileConfig(object):
         register_heat_opts(cfg.CONF)
         register_sahara_opts(cfg.CONF)
         register_fuel_opts(cfg.CONF)
+        # Ironic ostf ----
+        register_ironic_opts(cfg.CONF)
+        # end
         self.compute = cfg.CONF.compute
         self.identity = cfg.CONF.identity
         self.network = cfg.CONF.network
@@ -504,7 +525,9 @@ class FileConfig(object):
         self.heat = cfg.CONF.heat
         self.sahara = cfg.CONF.sahara
         self.fuel = cfg.CONF.fuel
-
+        # Ironic ostf ----
+        self.ironic= cfg.CONF.ironic
+        # end
 
 class ConfigGroup(object):
     # USE SLOTS
@@ -546,6 +569,9 @@ class NailgunConfig(object):
     sahara = ConfigGroup(SaharaConfig)
     heat = ConfigGroup(HeatConfig)
     fuel = ConfigGroup(FuelConf)
+    # Ironic ostf -----
+    ironic = ConfigGroup(IronicConfig)
+    # end
 
     def __init__(self, parse=True):
         LOG.info('INITIALIZING NAILGUN CONFIG')
@@ -702,6 +728,19 @@ class NailgunConfig(object):
         ceph_nodes = filter(lambda node: 'ceph-osd' in node['roles'],
                             data)
         self.compute.ceph_nodes = ceph_nodes
+
+        # Ironic ostf -------
+        ironic_nodes = filter(lambda node: 'ironic' in node['roles'],
+                              data)
+        online_ironic = filter(
+            lambda node: 'ironic' in node['roles']
+            and node['online'] is True, data)
+        online_ironic_ips = []
+        for node in online_ironic:
+            online_ironic_ips.append(node['ip'])
+        LOG.info('Online ironic ips is {0}'.format(online_ironic_ips))
+        self.ironic.online_conductors = online_ironic_ips
+        # end --------
 
     def _parse_meta(self):
         api_url = '/api/clusters/%s' % self.cluster_id
