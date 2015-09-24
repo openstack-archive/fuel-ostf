@@ -45,9 +45,6 @@ class CeilometerBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
                                                 'router.update']
             cls.neutron_floatingip_notifications = ['ip.floating.create',
                                                     'ip.floating.update']
-            cls.glance_notifications = ['image.update', 'image.upload',
-                                        'image.delete', 'image.download',
-                                        'image.serve']
             cls.volume_notifications = ['volume', 'volume.size']
             cls.glance_notifications = ['image', 'image.size', 'image.update',
                                         'image.upload']
@@ -167,15 +164,29 @@ class CeilometerBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         for sample in notification_list:
             self.wait_for_sample_of_metric(sample, query)
 
-    def wait_samples_count(self, sample, query, count):
+    def get_samples_count(self, meter_name, query):
+        return self.ceilometer_client.statistics.list(
+            meter_name=meter_name, q=query)[0].count
+
+    def wait_samples_count(self, meter_name, query, count):
 
         def check_count():
-            samples = self.ceilometer_client.samples.list(sample, q=query)
-            return len(samples) > count
+            new_count = self.get_samples_count(meter_name, query)
+            return new_count > count
 
         if not fuel_health.test.call_until_true(check_count, 60, 1):
             self.fail('Count of samples list isn\'t '
                       'greater than expected value')
+
+    def glance_helper(self):
+        image = self.glance_client.images.create(
+            name=rand_name('ostf-ceilo-image'))
+        self.glance_client.images.update(image.id, data='data',
+                                         disk_format='qcow2',
+                                         container_format='bare')
+        self.glance_client.images.upload(image.id, 'upload_data')
+        self.glance_client.images.delete(image.id)
+        return image
 
     @classmethod
     def _clean(cls, items, client):

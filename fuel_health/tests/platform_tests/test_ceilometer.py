@@ -12,6 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from datetime import datetime as dt
+from datetime import timedelta as td
+
 from fuel_health import ceilometermanager
 from fuel_health.common.utils.data_utils import rand_name
 
@@ -95,25 +98,29 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         Target component: Ceilometer
 
         Scenario:
-        1. Request samples list for image resource.
+        1. Request count of samples stored for the last hour
+        for image resource.
         2. Create new sample for image resource.
         3. Check that created sample has the expected resource.
-        4. Get samples and compare sample lists before and after create sample.
+        4. Get count of samples and compare counts before and after
+        create sample.
         Duration: 40 s.
         Deployment tags: Ceilometer
         """
 
         self.check_image_exists()
         image_id = self.get_image_from_name()
-        query = [{'field': 'resource', 'op': 'eq', 'value': image_id}]
+        hour_ago = (dt.utcnow() - td(hours=1)).isoformat()
+        query = [{'field': 'resource', 'op': 'eq', 'value': image_id},
+                 {'field': 'timestamp', 'op': 'gt', 'value': hour_ago}]
 
         fail_msg = 'Get samples for update image is failed.'
         msg = 'Get samples for update image is successful.'
 
-        list_before_create_sample = self.verify(
-            60, self.ceilometer_client.samples.list, 1,
+        count_before_create_sample = self.verify(
+            60, self.get_samples_count, 1,
             fail_msg, msg,
-            self.glance_notifications[0], q=query)
+            self.glance_notifications[0], query)
 
         fail_msg = 'Creation sample for update image is failed.'
         msg = 'Creation sample for update image is successful.'
@@ -143,7 +150,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
             20, self.wait_samples_count, 4,
             fail_msg, msg,
             self.glance_notifications[0], query,
-            len(list_before_create_sample))
+            count_before_create_sample)
 
     def test_check_volume_notifications(self):
         """Ceilometer test to check get Cinder notifications.
@@ -185,8 +192,8 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         Duration: 300 s.
         Deployment tags: Ceilometer
         """
-        query = [{'field': 'resource', 'op': 'eq',
-                  'value': self.get_image_from_name()}]
+        image = self.glance_helper()
+        query = [{'field': 'resource', 'op': 'eq', 'value': image.id}]
 
         fail_msg = "Glance notifications are not received."
         msg = "Glance notifications are received."

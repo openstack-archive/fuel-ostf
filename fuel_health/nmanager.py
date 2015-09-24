@@ -49,6 +49,7 @@ except:
 import cinderclient.client
 import keystoneclient.v2_0.client
 import novaclient.client
+import glanceclient.client
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.common.utils.data_utils import rand_name
@@ -91,6 +92,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.traceback = traceback.format_exc()
 
         if self.clients_initialized:
+            self.glance_client = self._get_glance_client()
             self.volume_client = self._get_volume_client()
             self.heat_client = self._get_heat_client()
             self.murano_client = self._get_murano_client()
@@ -98,6 +100,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.ceilometer_client = self._get_ceilometer_client()
             self.neutron_client = self._get_neutron_client()
             self.client_attr_names = [
+                'glance_client',
                 'compute_client',
                 'identity_client',
                 'volume_client',
@@ -175,6 +178,26 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                                  tenant_name=tenant_name,
                                                  auth_url=auth_url,
                                                  insecure=dscv)
+
+    def _get_glance_client(self, version=2, username=None, password=None,
+                           tenant_name=None):
+        if not username:
+            username = self.config.identity.admin_username
+        if not password:
+            password = self.config.identity.admin_password
+        if not tenant_name:
+            tenant_name = self.config.identity.admin_tenant_name
+
+        keystone = self._get_identity_client(username, password, tenant_name)
+        try:
+            endpoint = keystone.service_catalog.url_for(
+                service_type='image',
+                endpoint_type='publicURL')
+        except keystoneclient.exceptions.EndpointNotFound:
+            LOG.warning('Can not initialize glance client')
+            return None
+        return glanceclient.client.Client(version, endpoint=endpoint,
+                                          token=keystone.auth_token)
 
     def _get_heat_client(self, username=None, password=None,
                          tenant_name=None):
