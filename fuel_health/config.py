@@ -764,7 +764,8 @@ class NailgunConfig(object):
                 password=self.identity.admin_password,
                 tenant_name=self.identity.admin_tenant_name,
                 auth_url=auth_url,
-                insecure=False)
+                insecure=False,
+                timeout=10)
             return ip
         except Exception:
             LOG.warning('Can not pass authorization '
@@ -779,8 +780,8 @@ class NailgunConfig(object):
         if not self.compute.online_controllers:
             raise exceptions.OfflineControllers()
 
-        proxies = [self.find_proxy(ip) for ip in
-                   self.compute.online_controllers]
+        proxies = [ip for ip in self.compute.online_controllers
+                   if self.find_proxy(ip) is not None]
         if not proxies:
             raise exceptions.SetProxy()
 
