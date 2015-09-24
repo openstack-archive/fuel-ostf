@@ -431,6 +431,22 @@ def register_heat_opts(conf):
         conf.register_opt(opt, group='heat')
 
 
+ironic_group = cfg.OptGroup(name='ironic',
+                            title='Bare Metal Service Options')
+
+IronicConfig = [
+    cfg.StrOpt('online_conductors',
+               default=[],
+               help="Ironic online conductors"),
+]
+
+
+def register_ironic_opts(conf):
+    conf.register_group(ironic_group)
+    for opt in IronicConfig:
+        conf.register_opt(opt, group='ironic')
+
+
 def process_singleton(cls):
     """Wrapper for classes... To be instantiated only one time per process."""
     instances = {}
@@ -495,6 +511,7 @@ class FileConfig(object):
         register_heat_opts(cfg.CONF)
         register_sahara_opts(cfg.CONF)
         register_fuel_opts(cfg.CONF)
+        register_ironic_opts(cfg.CONF)
         self.compute = cfg.CONF.compute
         self.identity = cfg.CONF.identity
         self.network = cfg.CONF.network
@@ -504,6 +521,7 @@ class FileConfig(object):
         self.heat = cfg.CONF.heat
         self.sahara = cfg.CONF.sahara
         self.fuel = cfg.CONF.fuel
+        self.ironic = cfg.CONF.ironic
 
 
 class ConfigGroup(object):
@@ -546,6 +564,7 @@ class NailgunConfig(object):
     sahara = ConfigGroup(SaharaConfig)
     heat = ConfigGroup(HeatConfig)
     fuel = ConfigGroup(FuelConf)
+    ironic = ConfigGroup(IronicConfig)
 
     def __init__(self, parse=True):
         LOG.info('INITIALIZING NAILGUN CONFIG')
@@ -702,6 +721,15 @@ class NailgunConfig(object):
         ceph_nodes = filter(lambda node: 'ceph-osd' in node['roles'],
                             data)
         self.compute.ceph_nodes = ceph_nodes
+
+        online_ironic = filter(
+            lambda node: 'ironic' in node['roles']
+            and node['online'] is True, data)
+        self.ironic.online_conductors = []
+        for node in online_ironic:
+            self.ironic.online_conductors.append(node['ip'])
+        LOG.info('Online Ironic conductors\' ips are {0}'.format(
+            self.ironic.online_conductors))
 
     def _parse_meta(self):
         api_url = '/api/clusters/%s' % self.cluster_id
