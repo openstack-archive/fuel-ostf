@@ -453,6 +453,11 @@ class TestPacemakerBase(BaseTestCase):
                 elif 'clone' in res.tag:
                     for r in res:
                         self._register_resource(r, res_name, resources)
+                elif 'group' in res.tag:
+                    for r in res:
+                        res_name_ingroup = r.get('id')
+                        self._register_resource(r, res_name_ingroup, resources)
+                        self._register_resource(r, res_name, resources)
 
         return resources
 
