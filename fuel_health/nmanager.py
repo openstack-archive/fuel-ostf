@@ -528,7 +528,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             cls.error_msg = []
             cls.flavors = []
             cls.images = []
-            cls.private_net = 'net04'
+            cls.private_net = cls.config.network.private_net
 
     def setUp(self):
         super(NovaNetworkScenarioTest, self).setUp()
@@ -1204,7 +1204,7 @@ class SmokeChecksTest(OfficialClientTest):
             cls.build_timeout = cls.config.volume.build_timeout
             cls.created_flavors = []
             cls.error_msg = []
-            cls.private_net = 'net04'
+            cls.private_net = cls.config.network.private_net
         else:
             cls.proceed = False
 

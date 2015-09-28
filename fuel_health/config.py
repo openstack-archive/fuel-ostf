@@ -258,6 +258,9 @@ NetworkGroup = [
     cfg.BoolOpt('neutron_available',
                 default=False,
                 help="Whether or not neutron is expected to be available"),
+    cfg.StrOpt('private_net',
+               default="net04",
+               help="Private network name"),
 ]
 
 
@@ -722,6 +725,11 @@ class NailgunConfig(object):
             self.cluster_id, self.network.network_provider)
         data = self.req_session.get(self.nailgun_url + api_url).json()
         self.network.raw_data = data
+        net_params = self.network.raw_data.get('networking_parameters')
+        self.network.private_net = net_params.get(
+            'internal_name', 'net04')
+        LOG.debug('Private network name is {0}'.format(
+            self.network.private_net))
 
     def _parse_cluster_generated_data(self):
         api_url = '/api/clusters/%s/generated' % self.cluster_id
