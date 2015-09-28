@@ -528,7 +528,12 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             cls.error_msg = []
             cls.flavors = []
             cls.images = []
-            cls.private_net = 'net04'
+            #FIXME(mattymo): remove legacy net04 net
+            if cls.config.quantum_config.default_private_net:
+                cls.private_net = \
+                    cls.config.quantum_config.default_private_net:
+            else:
+                cls.private_net = 'net04'
 
     def setUp(self):
         super(NovaNetworkScenarioTest, self).setUp()
@@ -1178,7 +1183,12 @@ class SmokeChecksTest(OfficialClientTest):
             cls.build_timeout = cls.config.volume.build_timeout
             cls.created_flavors = []
             cls.error_msg = []
-            cls.private_net = 'net04'
+            #FIXME(mattymo): remove legacy net04 net
+            if cls.config.quantum_config.default_private_net:
+                cls.private_net = \
+                    cls.config.quantum_config.default_private_net:
+            else:
+                cls.private_net = 'net04'
         else:
             cls.proceed = False
 
