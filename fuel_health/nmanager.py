@@ -72,7 +72,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
     """
 
     NOVACLIENT_VERSION = '2'
-    CINDERCLIENT_VERSION = '1'
+    CINDERCLIENT_VERSION = '2'
 
     def __init__(self):
         super(OfficialClientManager, self).__init__()
