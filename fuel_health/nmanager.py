@@ -72,7 +72,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
     """
 
     NOVACLIENT_VERSION = '2'
-    CINDERCLIENT_VERSION = '1'
+    CINDERCLIENT_VERSION = '2'
 
     def __init__(self):
         super(OfficialClientManager, self).__init__()
@@ -328,10 +328,10 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 if flavor.name == 'm1.micro']
 
     def _create_volume(self, client, expected_state=None, **kwargs):
-        kwargs.setdefault('display_name', rand_name('ostf-test-volume'))
+        kwargs.setdefault('name', rand_name('ostf-test-volume'))
         kwargs.setdefault('size', 1)
         volume = client.volumes.create(**kwargs)
-        self.set_resource(kwargs['display_name'], volume)
+        self.set_resource(kwargs['name'], volume)
         if expected_state:
             def await_state():
                 if client.volumes.get(volume.id).status == expected_state:
@@ -343,9 +343,9 @@ class OfficialClientTest(fuel_health.test.TestCase):
 
     def _create_snapshot(self, client, volume_id, expected_state=None,
                          **kwargs):
-        kwargs.setdefault('display_name', rand_name('ostf-test-volume'))
+        kwargs.setdefault('name', rand_name('ostf-test-volume'))
         snapshot = client.volume_snapshots.create(volume_id, **kwargs)
-        self.set_resource(kwargs['display_name'], snapshot)
+        self.set_resource(kwargs['name'], snapshot)
         if expected_state:
             def await_state():
                 if client.volume_snapshots.get(
@@ -1224,14 +1224,14 @@ class SmokeChecksTest(OfficialClientTest):
         return role
 
     def _create_boot_volume(self, client, img_name=None, **kwargs):
-        display_name = rand_name('ost1_test-bootable-volume')
+        name = rand_name('ost1_test-bootable-volume')
 
         imageRef = self.get_image_from_name(img_name=img_name)
 
         LOG.debug(
-            'Image ref is {0} for volume {1}'.format(imageRef, display_name))
+            'Image ref is {0} for volume {1}'.format(imageRef, name))
         return self._create_volume(
-            client, display_name=display_name, imageRef=imageRef, **kwargs)
+            client, name=name, imageRef=imageRef, **kwargs)
 
     def create_instance_from_volume(self, client, volume):
         if not self.find_micro_flavor():
