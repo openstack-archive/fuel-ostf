@@ -60,8 +60,24 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                                                 'router.update']
             cls.neutron_floatingip_notifications = ['ip.floating.create',
                                                     'ip.floating.update']
-            cls.volume_notifications = ['volume', 'volume.size']
-            cls.snapshot_notifications = ['snapshot', 'snapshot.size']
+            cls.volume_notifications = ['volume', 'volume.size',
+                                        'volume.create.start',
+                                        'volume.create.end',
+                                        'volume.delete.start',
+                                        'volume.delete.end',
+                                        'volume.update.start',
+                                        'volume.update.end',
+                                        'volume.resize.start',
+                                        'volume.resize.end',
+                                        'volume.attach.start',
+                                        'volume.attach.end',
+                                        'volume.detach.start',
+                                        'volume.detach.end']
+            cls.snapshot_notifications = ['snapshot', 'snapshot.size',
+                                          'snapshot.create.start',
+                                          'snapshot.create.end',
+                                          'snapshot.delete.start',
+                                          'snapshot.delete.end']
             cls.glance_notifications = ['image', 'image.size', 'image.update',
                                         'image.upload', 'image.download',
                                         'image.serve', 'image.delete']
@@ -208,6 +224,13 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         if not fuel_health.test.call_until_true(check_count, 60, 1):
             self.fail('Count of samples list isn\'t '
                       'greater than expected value')
+
+    def wait_for_volume_status(self, volume, status):
+        self.status_timeout(self.volume_client.volumes, volume.id, status)
+
+    def wait_for_snapshot_status(self, snapshot, status):
+        self.status_timeout(self.volume_client.volume_snapshots,
+                            snapshot.id, status)
 
     def identity_helper(self):
         user_pass = rand_name("ceilo-user-pass")
@@ -363,6 +386,14 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         self.glance_client.images.data(image.id)
         self.glance_client.images.delete(image.id)
         return image
+
+    def volume_helper(self, volume, instance):
+        device='/dev/vdb'
+        self.volume_client.volumes.extend(volume.id, 2)
+        self.volume_client.volumes.update(volume, display_name="test")
+        self.volume_client.volumes.attach(volume.id, instance.id, device)
+        self.volume_client.volumes.detach(volume.id)
+        self.volume_client.volumes.delete(volume.id)
 
     @staticmethod
     def cleanup_resources(object_list):
