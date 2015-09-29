@@ -134,8 +134,9 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
 
         fail_msg = 'Failed while waiting for "ACTIVE" status of instance.'
         msg = 'waiting for "ACTIVE" status of instance'
-        self.verify(200, self.wait_for_instance_status, 2,
-                    fail_msg, msg, instance, 'ACTIVE')
+        self.verify(200, self.wait_for_resource_status, 2,
+                    fail_msg, msg, self.compute_client.servers,
+                    instance.id, 'ACTIVE')
 
         fail_msg = 'Failed to get notifications.'
         msg = 'getting notifications'
@@ -238,12 +239,14 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         Target component: Ceilometer
 
         Scenario:
-            1. Create a volume.
-            2. Get volume notifications.
-            3. Create a volume snapshot.
+            1. Create an instance.
+            2. Wait for 'ACTIVE' status of the instance.
+            3. Create a volume and volume snapshot.
             4. Get volume snapshot notifications.
+            5. Get volume notifications.
+            6. Delete the instance.
 
-        Duration: 10 s.
+        Duration: 120 s.
         Deployment tags: Ceilometer
         """
 
@@ -251,29 +254,44 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
                 and not self.config.volume.ceph_exist):
             self.skipTest('There are no storage nodes for volumes.')
 
-        fail_msg = 'Failed to create volume.'
-        msg = 'creating volume'
-        volume = self.verify(60, self._create_volume, 1,
-                             fail_msg, msg, self.volume_client, 'available')
+        self.check_image_exists()
+        private_net_id, _ = self.create_network_resources()
 
-        query = [{'field': 'resource', 'op': 'eq', 'value': volume.id}]
-        fail_msg = 'Failed to get volume notifications.'
-        msg = 'getting volume notifications'
-        self.verify(600, self.wait_metrics, 2,
-                    fail_msg, msg, self.volume_notifications, query)
+        fail_msg = 'Failed to create instance.'
+        msg = 'creating instance'
+        name = rand_name('ostf-ceilo-instance-')
+        vcenter = self.config.compute.use_vcenter
+        image_name = 'TestVM-VMDK' if vcenter else None
+        instance = self.verify(300, self.create_server, 1, fail_msg, msg, name,
+                               net_id=private_net_id, img_name=image_name)
 
-        fail_msg = 'Failed to create volume snapshot.'
-        msg = 'creating volume snapshot'
-        snapshot = self.verify(60, self._create_snapshot, 3,
-                               fail_msg, msg, self.volume_client,
-                               volume.id, 'available')
+        fail_msg = 'Failed while waiting for "ACTIVE" status of instance.'
+        msg = 'waiting for "ACTIVE" status of instance'
+        self.verify(200, self.wait_for_resource_status, 2,
+                    fail_msg, msg, self.compute_client.servers,
+                    instance.id, 'ACTIVE')
+
+        fail_msg = 'Failed to create volume and volume snapshot.'
+        msg = 'creating volume and volume snapshot'
+        volume, snapshot = self.verify(60, self.volume_helper, 3,
+                                       fail_msg, msg, instance)
 
         query = [{'field': 'resource', 'op': 'eq', 'value': snapshot.id}]
         fail_msg = 'Failed to get volume snapshot notifications.'
         msg = 'getting volume snapshot notifications'
-        self.verify(600, self.wait_metrics, 4,
+        self.verify(120, self.wait_metrics, 4,
                     fail_msg, msg,
                     self.snapshot_notifications, query)
+
+        query = [{'field': 'resource', 'op': 'eq', 'value': volume.id}]
+        fail_msg = 'Failed to get volume notifications.'
+        msg = 'getting volume notifications'
+        self.verify(120, self.wait_metrics, 5,
+                    fail_msg, msg, self.volume_notifications, query)
+
+        fail_msg = 'Failed to delete the server.'
+        msg = 'deleting server'
+        self.verify(30, self._delete_server, 6, fail_msg, msg, instance)
 
     def test_check_glance_notifications(self):
         """Ceilometer test to check notifications from Glance
