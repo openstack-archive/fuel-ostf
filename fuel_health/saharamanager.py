@@ -92,8 +92,13 @@ class SaharaTestsManager(nmanager.PlatformServicesBaseClass):
                     del node_group['floating_ip_pool']
         cl_template = self.sahara_client.cluster_templates.create(
             name, plugin, hadoop_version, node_groups=node_groups, **kwargs)
-        self.addCleanup(self.delete_resource,
-                        self.sahara_client.cluster_templates, cl_template.id)
+        self.addCleanup(
+            self.delete_resource,
+            delete_method=lambda: self.sahara_client.cluster_templates.delete(
+                cl_template.id),
+            get_method=lambda: self.sahara_client.cluster_templates.get(
+                cl_template.id),
+            timeout=self.delete_timeout, sleep=self.request_timeout)
         LOG.debug('Cluster template "{0}" has been created.'.format(name))
 
         return cl_template.id
@@ -112,8 +117,12 @@ class SaharaTestsManager(nmanager.PlatformServicesBaseClass):
         cluster = self.sahara_client.clusters.create(
             name, plugin, hadoop_version, default_image_id=default_image_id,
             user_keypair_id=key_pair_name, node_groups=node_groups, **kwargs)
-        self.addCleanup(self.delete_resource,
-                        self.sahara_client.clusters, cluster.id)
+        self.addCleanup(
+            self.delete_resource,
+            delete_method=lambda: self.sahara_client.clusters.delete(
+                cluster.id),
+            get_method=lambda: self.sahara_client.clusters.get(cluster.id),
+            timeout=self.delete_timeout, sleep=self.request_timeout)
         LOG.debug('Cluster "{0}" has been created.'.format(name))
 
         return cluster.id
@@ -216,29 +225,3 @@ class SaharaTestsManager(nmanager.PlatformServicesBaseClass):
             self._run_ssh_cmd(cmd + node_ip + ' ls -a')
             LOG.debug('Node {0} is accessible via SSH.'.format(node_ip))
         LOG.debug('All cluster nodes are accessible via SSH.')
-
-    # Methods for deleting resources.
-    def delete_resource(self, resource_client, resource_id):
-        """This method deletes the resource by its ID and checks whether
-        the resource is really deleted or not.
-        """
-
-        LOG.debug('Deleting resource "{0}"...'.format(resource_id))
-        if self.is_resource_deleted(resource_client, resource_id):
-            return
-        resource_client.delete(resource_id)
-        self._wait_for_deletion(resource_client, resource_id)
-        LOG.debug('Resource "{0}" has been deleted.'.format(resource_id))
-
-    def _wait_for_deletion(self, resource_client, resource_id):
-        """This method waits for the resource deletion."""
-
-        start = time.time()
-        while time.time() - start < self.delete_timeout:
-            if self.is_resource_deleted(resource_client, resource_id):
-                return
-            time.sleep(self.request_timeout)
-
-        self.fail('Request timed out. '
-                  'Timed out while waiting for one of the test resources '
-                  'to delete within {0} seconds.'.format(self.delete_timeout))

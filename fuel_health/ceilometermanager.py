@@ -15,6 +15,7 @@
 
 
 import logging
+import time
 import traceback
 
 import neutronclient.common.exceptions as neutron_exc
@@ -60,8 +61,18 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                                                 'router.update']
             cls.neutron_floatingip_notifications = ['ip.floating.create',
                                                     'ip.floating.update']
-            cls.volume_notifications = ['volume', 'volume.size']
-            cls.snapshot_notifications = ['snapshot', 'snapshot.size']
+            cls.volume_notifications = [
+                'volume', 'volume.size', 'volume.create.start',
+                'volume.create.end', 'volume.delete.start',
+                'volume.delete.end', 'volume.update.start',
+                'volume.update.end', 'volume.resize.start',
+                'volume.resize.end', 'volume.attach.start',
+                'volume.attach.end', 'volume.detach.start',
+                'volume.detach.end']
+            cls.snapshot_notifications = [
+                'snapshot', 'snapshot.size', 'snapshot.create.start',
+                'snapshot.create.end', 'snapshot.delete.start',
+                'snapshot.delete.end']
             cls.glance_notifications = ['image', 'image.size', 'image.update',
                                         'image.upload', 'image.download',
                                         'image.serve', 'image.delete']
@@ -103,11 +114,8 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
     def create_server(self, name, **kwargs):
         server = self._create_server(self.compute_client, name, **kwargs)
-        self.addCleanup(fuel_health.test.call_until_true,
-                        self.is_resource_deleted, 300, 3,
-                        self.compute_client.servers, server.id)
-        self.addCleanup(self.compute_client.servers.delete, server.id)
-
+        self.addCleanup(self.delete_resource,
+                        self.compute_client.servers, server.id, wait=True)
         return server
 
     def create_alarm(self, **kwargs):
@@ -129,8 +137,8 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         if not alarm_state_resp == state:
             self.fail('State was not setted')
 
-    def wait_for_instance_status(self, server, status):
-        self.status_timeout(self.compute_client.servers, server.id, status)
+    def wait_for_resource_status(self, resource_client, resource_id, status):
+        self.status_timeout(resource_client, resource_id, status)
 
     def wait_for_alarm_status(self, alarm_id, status=None):
         """The method is a customization of test.status_timeout()."""
@@ -334,11 +342,12 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
         #  Create Sahara cluster
         cluster = self.sahara_client.clusters.create(**cluster_json)
-        self.objects_for_delete.append(
-            (self.sahara_client.clusters.delete, cluster.id))
-        self.addCleanup(fuel_health.test.call_until_true,
-                        self.is_resource_deleted, 300, 3,
-                        self.sahara_client.clusters, cluster.id)
+        self.addCleanup(
+            self.delete_resource,
+            delete_method=lambda: self.sahara_client.clusters.delete(
+                cluster.id),
+            get_method=lambda: self.sahara_client.clusters.get(cluster.id),
+            timeout=self.delete_timeout, sleep=self.request_timeout)
 
         #  Wait for change cluster state for metric: cluster.update
         def check_status():
@@ -363,6 +372,50 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         self.glance_client.images.data(image.id)
         self.glance_client.images.delete(image.id)
         return image
+
+    def volume_helper(self, instance):
+        device = '/dev/vdb'
+        #   Create a volume
+        volume = self.volume_client.volumes.create(
+            name=rand_name('ost1_test-ceilo-volume'), size=1)
+        self.addCleanup(
+            self.delete_resource,
+            delete_method=lambda: self.volume_client.volumes.delete(volume),
+            get_method=lambda: self.sahara_client.clusters.get(volume.id))
+        #   Wait for "Available" status of the volume
+        self.wait_for_resource_status(
+            self.volume_client.volumes, volume.id, 'available')
+        #   Resize the volume
+        self.volume_client.volumes.extend(volume, 2)
+        self.wait_for_resource_status(
+            self.volume_client.volumes, volume.id, 'available')
+        #   Create a volume snapshot
+        snapshot = self.volume_client.volume_snapshots.create(
+            volume.id, name=rand_name('ost1_test-'))
+        self.addCleanup(
+            self.delete_resource,
+            delete_method=lambda: self.volume_client.volume_snapshots.delete(
+                snapshot),
+            get_method=lambda: self.volume_client.volume_snapshots.get(
+                snapshot.id))
+        #   Wait for "Available" status of the snapshot
+        self.wait_for_resource_status(
+            self.volume_client.volume_snapshots, snapshot.id, 'available')
+        #   Update the volume name
+        self.volume_client.volumes.update(volume, name="test")
+        #   Attach the volume to the instance
+        self.volume_client.volumes.attach(volume.id, instance.id, device)
+        #   Detach the volume from the instance
+        self.volume_client.volumes.detach(volume.id)
+        #   Delete the volume snapshot
+        self.volume_client.volume_snapshots.delete(snapshot)
+        self._wait_for_deletion(
+            self.volume_client.volume_snapshots, snapshot.id)
+        #   Delete the volume
+        self.volume_client.volumes.delete(volume)
+        self._wait_for_deletion(
+            self.volume_client.volumes, volume.id)
+        return volume, snapshot
 
     @staticmethod
     def cleanup_resources(object_list):
