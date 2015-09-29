@@ -15,6 +15,7 @@
 
 
 import logging
+import time
 import traceback
 
 import neutronclient.common.exceptions as neutron_exc
@@ -60,8 +61,24 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                                                 'router.update']
             cls.neutron_floatingip_notifications = ['ip.floating.create',
                                                     'ip.floating.update']
-            cls.volume_notifications = ['volume', 'volume.size']
-            cls.snapshot_notifications = ['snapshot', 'snapshot.size']
+            cls.volume_notifications = ['volume', 'volume.size',
+                                        'volume.create.start',
+                                        'volume.create.end',
+                                        'volume.delete.start',
+                                        'volume.delete.end',
+                                        'volume.update.start',
+                                        'volume.update.end',
+                                        'volume.resize.start',
+                                        'volume.resize.end',
+                                        'volume.attach.start',
+                                        'volume.attach.end',
+                                        'volume.detach.start',
+                                        'volume.detach.end']
+            cls.snapshot_notifications = ['snapshot', 'snapshot.size',
+                                          'snapshot.create.start',
+                                          'snapshot.create.end',
+                                          'snapshot.delete.start',
+                                          'snapshot.delete.end']
             cls.glance_notifications = ['image', 'image.size', 'image.update',
                                         'image.upload', 'image.download',
                                         'image.serve', 'image.delete']
@@ -103,11 +120,8 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
     def create_server(self, name, **kwargs):
         server = self._create_server(self.compute_client, name, **kwargs)
-        self.addCleanup(fuel_health.test.call_until_true,
-                        self.is_resource_deleted, 300, 3,
-                        self.compute_client.servers, server.id)
-        self.addCleanup(self.compute_client.servers.delete, server.id)
-
+        self.addCleanup(self.delete_resource,
+                        self.compute_client.servers.delete, server.id)
         return server
 
     def create_alarm(self, **kwargs):
@@ -208,6 +222,53 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         if not fuel_health.test.call_until_true(check_count, 60, 1):
             self.fail('Count of samples list isn\'t '
                       'greater than expected value')
+
+    def wait_for_volume_status(self, volume, status):
+        self.status_timeout(self.volume_client.volumes, volume.id, status)
+
+    def wait_for_snapshot_status(self, snapshot, status):
+        self.status_timeout(self.volume_client.volume_snapshots,
+                            snapshot.id, status)
+
+    def verify_snapshot_deletion(self, snapshot):
+
+        def is_snapshot_deleted():
+            try:
+                self.volume_client.volume_snapshots.get(snapshot.id)
+            except Exception as e:
+                if e.__class__.__name__ == 'NotFound':
+                    return True
+                return False
+
+        if fuel_health.test.call_until_true(is_snapshot_deleted, 20, 10):
+            return
+        else:
+            self.fail("Cannot delete volume snapshot")
+
+    def delete_resource(self, resource_client, resource_id):
+        """This method deletes the resource by its ID and checks whether
+        the resource is really deleted or not.
+        """
+
+        LOG.debug('Deleting resource "{0}"...'.format(resource_id))
+        if self.is_resource_deleted(resource_client, resource_id):
+            return
+        resource_client.delete(resource_id)
+        self._wait_for_deletion(resource_client, resource_id)
+        LOG.debug('Resource "{0}" has been deleted.'.format(resource_id))
+
+    def _wait_for_deletion(self, resource_client, resource_id, timeout=300):
+        """This method waits for the resource deletion."""
+
+        start = time.time()
+        while time.time() - start < timeout:
+            if self.is_resource_deleted(resource_client, resource_id):
+                return
+            time.sleep(5)
+
+        self.fail('Request timed out. '
+                  'Timed out while waiting for one of the test resources '
+                  'to delete within {0} seconds.'.format(timeout))
 
     def identity_helper(self):
         user_pass = rand_name("ceilo-user-pass")
@@ -363,6 +424,24 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         self.glance_client.images.data(image.id)
         self.glance_client.images.delete(image.id)
         return image
+
+    def volume_helper(self, instance):
+        device = '/dev/vdb'
+        volume = self.volume_client.volumes.create(
+            display_name=rand_name('ostf-test-volume'), size=1)
+        self.wait_for_volume_status(volume, 'available')
+        snapshot = self.volume_client.volume_snapshots.create(
+            volume.id, display_name=rand_name('ostf-ceilo-snapshot'))
+        self.wait_for_snapshot_status(snapshot, 'available')
+        self.volume_client.volumes.extend(volume.id, 2)
+        self.volume_client.volumes.update(volume, display_name="test")
+        self.volume_client.volumes.attach(volume.id, instance.id, device)
+        self.volume_client.volumes.detach(volume.id)
+        self.delete_resource(
+            self.volume_client.volume_snapshots.delete, snapshot.id)
+        self.delete_resource(
+            self.volume_client.volumes.delete, volume.id)
+        return volume, snapshot
 
     @staticmethod
     def cleanup_resources(object_list):
