@@ -21,6 +21,7 @@ Requires:    python-argparse >= 1.2.1
 Requires:    python-oslo-config >= 1.1.1
 Requires:    python-ceilometerclient >= 1.0.9
 Requires:    python-cinderclient >= 1.0.6
+Requires:    python-ironicclient==0.3.3
 Requires:    python-keystoneclient >= 0.11
 Requires:    python-kombu >= 1:3.0.16
 Requires:    python-novaclient >= 1:2.15.0
