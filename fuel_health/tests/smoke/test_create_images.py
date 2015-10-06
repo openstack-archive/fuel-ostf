@@ -124,7 +124,7 @@ class GlanceSmokeTests(glancemanager.GlanceTest):
                     self.glance_client, self.image, group_props, prop,
                     value_prop)
 
-        fail_msg = ("Cant delete image. Please refer to Openstack logs "
+        fail_msg = ("Can't delete image. Please refer to Openstack logs "
                     "for more information.")
         self.verify(200, self.delete_image, 6, fail_msg, 'Deleting image',
                     self.glance_client, self.image.id)
