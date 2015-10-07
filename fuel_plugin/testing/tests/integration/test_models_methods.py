@@ -23,13 +23,13 @@ from fuel_plugin.ostf_adapter.storage import models
 
 class TestModelTestMethods(base.BaseIntegrationTest):
 
+    test_set_id = 'general_test'
+    cluster_id = 1
+
     def setUp(self):
         super(TestModelTestMethods, self).setUp()
 
         self.discovery()
-
-        self.test_set_id = 'general_test'
-        self.cluster_id = 1
 
         self.mock_api_for_cluster(self.cluster_id)
 
@@ -148,3 +148,139 @@ class TestModelTestMethods(base.BaseIntegrationTest):
                                            predefined_tests_names)
 
         self.assertEqual(new_test.status, 'disabled')
+
+
+class TestModelTestSetMethods(base.BaseIntegrationTest):
+
+    test_set_id = 'general_test'
+
+    def setUp(self):
+        super(TestModelTestSetMethods, self).setUp()
+        self.discovery()
+
+    def test_get_test_set(self):
+        self.assertIsNotNone(
+            models.TestSet.get_test_set(
+                self.session,
+                self.test_set_id
+            )
+        )
+        self.assertIsNone(
+            models.TestSet.get_test_set(
+                self.session,
+                'fake_test'
+            )
+        )
+
+    def test_frontend_property(self):
+        test_set = self.session.query(models.TestSet)\
+            .filter_by(id=self.test_set_id)\
+            .first()
+        expected = {'id': test_set.id, 'name': test_set.description}
+        self.assertEqual(expected, test_set.frontend)
+
+
+class TestModelTestRunMethods(base.BaseIntegrationTest):
+
+    test_set_id = 'general_test'
+    cluster_id = 1
+
+    def setUp(self):
+        super(TestModelTestRunMethods, self).setUp()
+        self.discovery()
+
+        self.mock_api_for_cluster(self.cluster_id)
+        mixins.discovery_check(self.session, self.cluster_id)
+        self.session.flush()
+
+    def check_enabled(self, expected_test_names, test_run_tests):
+        enabled_tests = [
+            test.name for test in test_run_tests
+            if test.status == 'wait_running'
+        ]
+
+        self.assertItemsEqual(expected_test_names, enabled_tests)
+
+    def test_add_test_run(self):
+        test_run = models.TestRun.add_test_run(
+            self.session, self.test_set_id,
+            self.cluster_id
+        )
+
+        for attr in ('test_set_id', 'cluster_id'):
+            self.assertEqual(getattr(self, attr), getattr(test_run, attr))
+
+        # default status for newly created test_run is 'running'
+        self.assertEqual(test_run.status, 'running')
+
+        unassigned_tests = self.session.query(models.Test)\
+            .filter_by(test_set_id=self.test_set_id)\
+            .filter_by(test_run_id=None)
+
+        test_names_from_test_set = [
+            test.name for test in unassigned_tests
+        ]
+        test_names_from_test_run = [
+            test.name for test in test_run.tests
+        ]
+        self.assertItemsEqual(test_names_from_test_run,
+                              test_names_from_test_set)
+
+    def test_add_test_run_non_default_status(self):
+        expected_status = 'finished'
+        test_run = models.TestRun.add_test_run(
+            self.session, self.test_set_id,
+            self.cluster_id, status=expected_status
+        )
+        self.assertEqual(test_run.status, expected_status)
+
+    def test_add_test_run_with_predefined_tests(self):
+        expected_test_names = [
+            test.name for test in
+            self.session.query(models.Test)
+                .filter_by(test_set_id=self.test_set_id)
+                .filter_by(test_run_id=None)
+        ][:3]
+
+        test_run = models.TestRun.add_test_run(
+            self.session, self.test_set_id,
+            self.cluster_id, tests=expected_test_names
+        )
+        self.check_enabled(expected_test_names, test_run.tests)
+
+    def test_add_test_run_tests_from_another_test_set_in_predefined(self):
+        expected_test_names = [
+            test.name for test in
+            self.session.query(models.Test)
+                .filter_by(test_set_id=self.test_set_id)
+                .filter_by(test_run_id=None)
+        ][:3]
+
+        additional_test = self.session.query(models.Test)\
+            .filter_by(test_set_id='stopped_test')\
+            .first()
+
+        tests = expected_test_names + [additional_test]
+        test_run = models.TestRun.add_test_run(
+            self.session, self.test_set_id,
+            self.cluster_id,
+            tests=tests
+        )
+
+        self.assertNotIn(
+            additional_test.name,
+            [test.name for test in test_run.tests]
+        )
+        self.check_enabled(expected_test_names, test_run.tests)
+
+    def test_update_testrun_not_finished_status(self):
+        test_run = models.TestRun.add_test_run(
+            self.session, self.test_set_id,
+            self.cluster_id
+        )
+
+        expected_status = 'stopped'
+        test_run.update(expected_status)
+
+        self.assertEqual(test_run.status, expected_status)
+        self.assertIsNone(test_run.ended_at)
