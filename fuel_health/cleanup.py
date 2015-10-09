@@ -156,6 +156,22 @@ def cleanup(cluster_deployment_info):
         except Exception:
             LOG.warning(traceback.format_exc())
 
+    if 'ironic' in cluster_deployment_info:
+        try:
+            ironic_client = manager._get_ironic_client()
+            if ironic_client is not None:
+                nodes = ironic_client.node.list()
+                for n in nodes:
+                    if "NodeTest" in ironic_client.node.extra.items():
+                        try:
+                            LOG.info('Start nodes deletion.')
+                            ironic_client.node.delete(n.uuid)
+                        except Exception as exc:
+                            LOG.debug(exc)
+        except Exception as exc:
+            LOG.warning('Something wrong with ironic client. '
+                        'Exception: {0}'.format(exc))
+
     instances_id = []
     servers = manager._get_compute_client().servers.list()
     floating_ips = manager._get_compute_client().floating_ips.list()
