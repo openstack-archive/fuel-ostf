@@ -179,7 +179,7 @@ def _get_cluster_attrs(cluster_id, token=None):
 
     additional_depl_tags = set()
 
-    comp_names = ['murano', 'sahara', 'heat', 'ceilometer']
+    comp_names = ['murano', 'sahara', 'heat', 'ceilometer', 'ironic']
 
     def processor(comp):
         if comp in comp_names:
