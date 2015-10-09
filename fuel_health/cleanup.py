@@ -157,6 +157,23 @@ def cleanup(cluster_deployment_info):
         except Exception:
             LOG.warning(traceback.format_exc())
 
+    if 'ironic' in cluster_deployment_info:
+        try:
+            ironic_client = manager._get_ironic_client()
+            if ironic_client is not None:
+                alarms = ironic_client.alarms.list()
+                for a in alarms:
+                    if a.name.startswith('ost1_test-'):
+                        try:
+                            LOG.info('Start alarms deletion.')
+                            ironic_client.alarms.delete(a.id)
+                        except Exception as exc:
+                            LOG.debug(exc)
+        except Exception as exc:
+            LOG.warning(
+                'Something wrong with ironic client. Esception: %s', exc
+            )
+
     instances_id = []
     servers = manager._get_compute_client().servers.list()
     floating_ips = manager._get_compute_client().floating_ips.list()
