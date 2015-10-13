@@ -1,0 +1,12 @@
+Verified+2: Jenkins
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Code-Review+2: Andrey Sledzinskiy <asledzinskiy@mirantis.com>
+Workflow+1: Andrey Sledzinskiy <asledzinskiy@mirantis.com>
+Code-Review+1: Igor Kalnitsky <ikalnitsky@mirantis.com>
+Code-Review+1: Alexander Kislitsky <akislitsky@mirantis.com>
+Code-Review+1: Maciej Kwiek <mkwiek@mirantis.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 13 Oct 2015 15:02:47 +0000
+Reviewed-on: https://review.openstack.org/231898
+Project: stackforge/fuel-ostf
+Branch: refs/heads/master
