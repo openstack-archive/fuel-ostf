@@ -160,11 +160,14 @@ class TestPacemakerStatus(ha_base.TestPacemakerBase):
                 '{1}, but actually started on the nodes {2}'
                 .format(rsc, disallowed, started))
 
-            # If 'allowed' is not empty than in 'started' should be at least
-            # one node where the resource is running
-            if allowed:
+            # If 'allowed' is not empty and contains:
+            #   - more than one node where resource is allowed, or
+            #   - at least one working controller node,
+            # then 'started' should contain at least one node where
+            # the resource is actually running.
+            if (len(allowed) > 1) or (set(allowed) - nailgun_offline):
                 self.verify_response_true(
-                    started,
+                    set(started) - nailgun_offline,
                     'Step 7 failed: Resource {0} allowed to start on the nodes'
-                    ' {1}, but it is not started on any node.'
-                    .format(rsc, disallowed, started))
+                    ' {1}, but it is not started on any node'
+                    .format(rsc, allowed, started))
