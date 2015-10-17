@@ -17,7 +17,7 @@ description:
   Exceptions are when maintainers are actually cores, or when maintainers
   are not available for some reason (e.g. on vacation).
 
-  [1] https://github.com/stackforge/fuel-specs/blob/master/policy/team-structure.rst
+  [1] https://github.com/openstack/fuel-specs/blob/master/policy/team-structure.rst
   [2] https://review.openstack.org/#/admin/groups/660,members
   [3] http://lists.openstack.org/pipermail/openstack-dev/2015-August/072406.html
 
