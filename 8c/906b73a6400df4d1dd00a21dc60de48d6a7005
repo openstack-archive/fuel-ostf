@@ -1,0 +1,13 @@
+Verified+2: Jenkins
+Code-Review+1: Dirk Mueller <dirk@dmllr.de>
+Code-Review+2: tatyana-leontovich <tleontovich@mirantis.com>
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Workflow+1: Vitaly Sedelnik <vsedelnik@mirantis.com>
+Code-Review+1: Vladimir Khlyunev <vkhlyunev@mirantis.com>
+Code-Review+1: venkatamahesh <venkatamaheshkotha@gmail.com>
+Code-Review+1: Clint Adams <clint@gcfm.net>
+Submitted-by: Jenkins
+Submitted-at: Mon, 19 Oct 2015 12:50:31 +0000
+Reviewed-on: https://review.openstack.org/236362
+Project: openstack/fuel-ostf
+Branch: refs/heads/stable/7.0
