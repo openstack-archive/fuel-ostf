@@ -1061,7 +1061,7 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
                   'not found.'.format(tag_plugin, tag_version))
 
     # Method for checking whether or not resource is deleted.
-    def is_resource_deleted(self, resource_client, resource_id):
+    def is_resource_deleted(self, get_method):
         """This method checks whether or not the resource is deleted.
 
         The API request is wrapped in the try/except block to correctly handle
@@ -1070,16 +1070,42 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
         """
 
         try:
-            resource_client.get(resource_id)
+            get_method()
         except Exception as exc:
             exc_msg = exc.message.lower()
             if ('not found' in exc_msg) or ('could not be found' in exc_msg):
-                LOG.debug('Resource "{0}" is deleted.'.format(resource_id))
                 return True
-
             self.fail(exc.message)
 
         return False
+
+    # Methods for deleting resources.
+    def delete_resource(self, delete_method, get_method=None, timeout=300,
+                        sleep=5):
+        """This method deletes the resource by its ID and checks whether
+        the resource is really deleted or not.
+        """
+
+        try:
+            delete_method()
+        except Exception as exc:
+            LOG.warn(exc.message)
+            return
+        if get_method:
+            self._wait_for_deletion(get_method, timeout, sleep)
+
+    def _wait_for_deletion(self, get_method, timeout, sleep):
+        """This method waits for the resource deletion."""
+
+        start = time.time()
+        while time.time() - start < timeout:
+            if self.is_resource_deleted(get_method):
+                return
+            time.sleep(sleep)
+
+        self.fail('Request timed out. '
+                  'Timed out while waiting for one of the test resources '
+                  'to delete within {0} seconds.'.format(timeout))
 
 
 class SanityChecksTest(OfficialClientTest):
