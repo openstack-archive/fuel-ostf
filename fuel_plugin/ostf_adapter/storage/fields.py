@@ -14,7 +14,7 @@
 
 from sqlalchemy.types import TypeDecorator, VARCHAR
 
-from oslo.serialization import jsonutils
+from oslo_serialization import jsonutils
 
 
 class JsonField(TypeDecorator):
