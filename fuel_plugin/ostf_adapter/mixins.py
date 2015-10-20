@@ -14,7 +14,7 @@
 
 import logging
 
-from oslo.config import cfg
+from oslo_config import cfg
 import requests
 from sqlalchemy.orm import joinedload
 

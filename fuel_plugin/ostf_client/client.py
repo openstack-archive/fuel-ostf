@@ -15,7 +15,7 @@
 import requests
 import time
 
-from oslo.serialization import jsonutils
+from oslo_serialization import jsonutils
 
 
 class TestingAdapterClient(object):
