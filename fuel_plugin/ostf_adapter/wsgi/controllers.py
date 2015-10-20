@@ -14,8 +14,8 @@
 
 import logging
 
-from oslo.config import cfg
-from oslo.serialization import jsonutils
+from oslo_config import cfg
+from oslo_serialization import jsonutils
 from pecan import abort
 from pecan import expose
 from pecan import request
@@ -41,7 +41,8 @@ class BaseRestController(rest.RestController):
                 )
                 if controller:
                     return controller, remainder[1:]
-        return super(BaseRestController, self)._handle_get(method, remainder)
+        #FIXME(dteselkin): added 4th parameter to pecan's _handle_get to support pecan 1.0.0
+        return super(BaseRestController, self)._handle_get(method, remainder, request)
 
 
 class TestsetsController(BaseRestController):
