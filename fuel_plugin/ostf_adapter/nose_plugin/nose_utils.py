@@ -23,7 +23,7 @@ import traceback
 from nose import case
 from nose.suite import ContextSuite
 
-from oslo.serialization import jsonutils
+from oslo_serialization import jsonutils
 
 LOG = logging.getLogger(__name__)
 

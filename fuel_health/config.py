@@ -23,7 +23,7 @@ import traceback
 import unittest2
 
 import keystoneclient
-from oslo.config import cfg
+from oslo_config import cfg
 import requests
 
 from fuel_health.common import log as logging
