@@ -17,7 +17,7 @@ import logging
 import os
 import signal
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from fuel_plugin.ostf_adapter.logger import ResultsLogger
 from fuel_plugin.ostf_adapter.nose_plugin import nose_storage_plugin
