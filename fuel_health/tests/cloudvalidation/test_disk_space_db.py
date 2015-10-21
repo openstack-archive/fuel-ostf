@@ -51,7 +51,7 @@ class DBSpaceTest(cloudvalidation.CloudValidationTest):
 
         Duration: 20 s.
 
-        Deployment tags: RHEL
+        Deployment tags: disabled
 
         Available since release: 2014.2-6.1
         """
