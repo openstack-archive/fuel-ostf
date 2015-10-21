@@ -747,13 +747,20 @@ class NailgunConfig(object):
             az = data['editable']['value']['availability_zones'][0]['az_name']
             self.volume.cinder_vmware_storage_az = "{0}-cinder".format(az)
 
-    def find_proxy(self, ip):
-
+    def get_keystone_vip(self):
         if 'service_endpoint' in self.network.raw_data:
             keystone_vip = self.network.raw_data['service_endpoint']
+        elif 'vips' in self.network.raw_data:
+            vips_data = self.network.raw_data['vips']
+            keystone_vip = vips_data['management']['ipaddr']
         else:
             keystone_vip = self.network.raw_data.get('management_vip', None)
 
+        return keystone_vip
+
+    def find_proxy(self, ip):
+        keystone_vip = self.get_keystone_vip()
+        LOG.debug('Keystone vip in find proxy is: {0}'.format(keystone_vip))
         auth_url = 'http://{0}:{1}/{2}/'.format(keystone_vip, 5000, 'v2.0')
 
         try:
@@ -790,13 +797,19 @@ class NailgunConfig(object):
     def set_endpoints(self):
         # NOTE(dshulyak) this is hacky convention to allow granular deployment
         # of keystone
-        if 'service_endpoint' in self.network.raw_data:
-            keystone_vip = self.network.raw_data['service_endpoint']
-            management_vip = self.network.raw_data.get('management_vip', None)
+        keystone_vip = self.get_keystone_vip()
+        LOG.debug('Keystone vip in set endpoint is: {0}'.format(keystone_vip))
+        if self.network.raw_data.get('vips', None):
+            vips_data = self.network.raw_data.get('vips')
+            management_vip = vips_data['management']['ipaddr']
+            public_vip = vips_data['public']['ipaddr']
+            LOG.debug(
+                'Found vips in network roles data, management vip is : '
+                '{0}, public vip is {1}'.format(management_vip, public_vip))
         else:
+            public_vip = self.network.raw_data.get('public_vip', None)
             management_vip = self.network.raw_data.get('management_vip', None)
-            keystone_vip = management_vip
-        public_vip = self.network.raw_data.get('public_vip', None)
+
         # workaround for api without management_vip for ha mode
         if not keystone_vip and 'ha' in self.mode:
             self._parse_ostf_api()
