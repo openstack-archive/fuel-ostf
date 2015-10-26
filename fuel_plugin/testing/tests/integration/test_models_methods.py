@@ -12,7 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime
 import six
+
+import mock
 
 from fuel_plugin.testing.tests import base
 
@@ -284,3 +287,222 @@ class TestModelTestRunMethods(base.BaseIntegrationTest):
 
         self.assertEqual(test_run.status, expected_status)
         self.assertIsNone(test_run.ended_at)
+
+    @mock.patch('fuel_plugin.ostf_adapter.storage.models.datetime')
+    def test_update_testrun_with_finished_status(self, mock_dt):
+        expected_status = 'finished'
+        expected_date = datetime.datetime.utcnow()
+        mock_dt.datetime.utcnow.return_value = expected_date
+
+        test_run = models.TestRun.add_test_run(
+            self.session, self.test_set_id,
+            self.cluster_id
+        )
+
+        test_run.update(expected_status)
+
+        self.assertEqual(test_run.status, expected_status)
+        self.assertEqual(test_run.ended_at, expected_date)
+
+    def test_get_last_test_run(self):
+        test_run = models.TestRun.add_test_run(
+            self.session, self.test_set_id,
+            self.cluster_id
+        )
+
+        last_test_run = models.TestRun.get_last_test_run(
+            self.session, self.test_set_id, self.cluster_id)
+
+        self.assertEqual(test_run, last_test_run)
+
+    @mock.patch('fuel_plugin.ostf_adapter.storage.models.nose_plugin')
+    def test_start_testrun(self, nose_plugin_mock):
+        test_set = self.session.query(models.TestSet)\
+            .filter_by(id=self.test_set_id).one()
+
+        kwargs = {
+            'session': self.session,
+            'test_set': test_set,
+            'metadata': {'cluster_id': self.cluster_id},
+            'dbpath': 'fake_db_path',
+            'token': 'fake_token',
+            'tests': None,
+        }
+
+        plugin_inst_mock = mock.Mock()
+        nose_plugin_mock.get_plugin = mock.Mock(
+            return_value=plugin_inst_mock
+        )
+
+        with mock.patch.object(
+                models.TestRun, 'is_last_running',
+                new=mock.Mock(return_value=True)) as is_last_run_mock:
+
+            frontend = models.TestRun.start(
+                **kwargs
+            )
+
+        added_test_run = self.session.query(models.TestRun)\
+            .first()
+        self.assertEqual(frontend, added_test_run.frontend)
+
+        nose_plugin_mock.get_plugin.called_once_with(test_set.driver)
+        is_last_run_mock.called_once_with(
+            self.session,
+            test_set.id,
+            self.cluster_id
+        )
+        plugin_inst_mock.run.called_once_with(
+            added_test_run, test_set, kwargs['dbpath'], None, kwargs['token']
+        )
+
+    @mock.patch('fuel_plugin.ostf_adapter.storage.models.nose_plugin')
+    def test_start_test_run_already_running(self, nose_plugin_mock):
+        test_set = self.session.query(models.TestSet)\
+            .filter_by(id=self.test_set_id).one()
+
+        kwargs = {
+            'session': self.session,
+            'test_set': test_set,
+            'metadata': {'cluster_id': self.cluster_id},
+            'dbpath': 'fake_db_path',
+            'token': 'fake_token',
+            'tests': None,
+        }
+
+        with mock.patch.object(
+                models.TestRun, 'is_last_running',
+                new=mock.Mock(return_value=False)):
+
+            frontend = models.TestRun.start(
+                **kwargs
+            )
+
+        added_test_run = self.session.query(models.TestRun)\
+            .first()
+        self.assertIsNone(added_test_run)
+
+        self.assertEqual(frontend, {})
+
+    @mock.patch('fuel_plugin.ostf_adapter.storage.models.nose_plugin')
+    def test_restart_test_run(self, nose_plugin_mock):
+        test_run = models.TestRun.add_test_run(
+            self.session, self.test_set_id,
+            self.cluster_id
+        )
+
+        kwargs = {
+            'session': self.session,
+            'ostf_os_access_creds': [],
+            'dbpath': 'fake_db_path',
+            'token': 'fake_token',
+            'tests': 'fake_tests'
+        }
+
+        plugin_inst_mock = mock.Mock()
+        nose_plugin_mock.get_plugin = mock.Mock(
+            return_value=plugin_inst_mock
+        )
+
+        with mock.patch.object(
+                models.TestRun, 'is_last_running',
+                new=mock.Mock(return_value=True)) as is_last_run_mock:
+
+            with mock.patch.object(
+                    models.Test, 'update_test_run_tests') as update_tests_mock:
+                frontend = test_run.restart(**kwargs)
+
+        self.assertEqual(test_run.frontend, frontend)
+        self.assertEqual(test_run.status, 'running')
+
+        is_last_run_mock.called_once_with(
+            self.session,
+            test_run.test_set_id,
+            test_run.cluster_id
+        )
+        nose_plugin_mock.get_plugin.assert_called_once_with(
+            test_run.test_set.driver
+        )
+        update_tests_mock.assert_called_once_with(
+            self.session, test_run.id, kwargs['tests']
+        )
+        plugin_inst_mock.run.assert_called_once_with(
+            test_run, test_run.test_set, kwargs['dbpath'],
+            kwargs['ostf_os_access_creds'], kwargs['tests'],
+            token=kwargs['token']
+        )
+
+    def test_run_restart_is_running(self):
+        test_run = models.TestRun.add_test_run(
+            self.session, self.test_set_id,
+            self.cluster_id
+        )
+
+        kwargs = {
+            'session': self.session,
+            'ostf_os_access_creds': [],
+            'dbpath': 'fake_db_path',
+            'token': 'fake_token',
+            'tests': 'fake_tests'
+        }
+
+        with mock.patch.object(
+                models.TestRun, 'is_last_running',
+                new=mock.Mock(return_value=False)) as is_last_run_mock:
+            frontend = test_run.restart(**kwargs)
+
+        is_last_run_mock.called_once_with(
+            self.session,
+            test_run.test_set_id,
+            test_run.cluster_id
+        )
+        self.assertEqual(frontend, {})
+
+    @mock.patch('fuel_plugin.ostf_adapter.storage.models.nose_plugin')
+    def test_stop_test_run(self, nose_plugin_mock):
+        test_run = models.TestRun.add_test_run(
+            self.session, self.test_set_id,
+            self.cluster_id
+        )
+
+        plugin_inst_mock = mock.Mock()
+        kill_mock = mock.Mock(return_value=True)
+        plugin_inst_mock.kill = kill_mock
+        nose_plugin_mock.get_plugin = mock.Mock(
+            return_value=plugin_inst_mock
+        )
+
+        with mock.patch.object(
+                models.Test, 'update_running_tests') as update_tests_mock:
+            frontend = test_run.stop(self.session)
+
+        self.assertEqual(frontend, test_run.frontend)
+
+        nose_plugin_mock.get_plugin.assert_called_once_with(
+            test_run.test_set.driver
+        )
+        kill_mock.assert_called_once_with(test_run)
+        update_tests_mock.assert_called_once_with(
+            self.session, test_run.id, status='stopped'
+        )
+
+    def test_is_last_running(self):
+        is_last_running = models.TestRun.is_last_running(
+            self.session, self.test_set_id, self.cluster_id
+        )
+        self.assertTrue(is_last_running)
+
+        test_run = models.TestRun.add_test_run(
+            self.session, self.test_set_id,
+            self.cluster_id
+        )
+        is_last_running = models.TestRun.is_last_running(
+            self.session, self.test_set_id, self.cluster_id
+        )
+        self.assertFalse(is_last_running)
+
+        test_run.status = 'finished'
+        is_last_running = models.TestRun.is_last_running(
+            self.session, self.test_set_id, self.cluster_id
+        )
+        self.assertTrue(is_last_running)
