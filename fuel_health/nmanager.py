@@ -535,7 +535,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         self.check_clients_state()
 
     def _run_ssh_cmd(self, cmd):
-        """Open SSH session with Controller and and execute command."""
+        """Open SSH session with Controller and execute command."""
         if not self.host:
             self.fail('Wrong test configuration: '
                       '"online_controllers" parameter is empty.')

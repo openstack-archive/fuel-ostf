@@ -363,7 +363,7 @@ class TestPacemakerBase(BaseTestCase):
             self.skipTest('There are no controller nodes')
 
     def _run_ssh_cmd(self, host, cmd):
-        """Open SSH session with host and and execute command."""
+        """Open SSH session with host and execute command."""
         try:
             sshclient = ssh.Client(host, self.controller_user,
                                    self.controllers_pwd,
@@ -375,7 +375,7 @@ class TestPacemakerBase(BaseTestCase):
             self.fail("%s command failed." % cmd)
 
     def _run_ssh_cmd_with_exit_code(self, host, cmd):
-        """Open SSH session with host and and execute command.
+        """Open SSH session with host and execute command.
            Fail if exit code != 0
         """
         try:

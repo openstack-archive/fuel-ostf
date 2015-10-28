@@ -42,7 +42,7 @@ class CloudValidationTest(nmanager.OfficialClientTest):
         self.check_clients_state()
 
     def _run_ssh_cmd(self, host, cmd):
-        """Open SSH session with host and and execute command."""
+        """Open SSH session with host and execute command."""
         try:
             sshclient = SSHClient(host, self.usr, self.pwd,
                                   key_filename=self.key, timeout=self.timeout)
@@ -52,7 +52,7 @@ class CloudValidationTest(nmanager.OfficialClientTest):
             self.fail("%s command failed." % cmd)
 
     def _run_ssh_cmd_with_exit_code(self, host, cmd):
-        """Open SSH session with host and and execute command.
+        """Open SSH session with host and execute command.
            Fail if exit code != 0
         """
         try:
