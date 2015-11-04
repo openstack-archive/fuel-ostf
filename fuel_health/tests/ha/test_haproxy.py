@@ -74,9 +74,9 @@ class HAProxyCheck(test.BaseTestCase):
             remote = SSHClient(controller, self.controller_user,
                                key_filename=self.controller_key,
                                timeout=100)
-            ignore_services = None
+            ignore_services = ['radosgw']
             if 'neutron' not in self.config.network.network_provider:
-                ignore_services = ['nova-metadata-api']
+                ignore_services.append('nova-metadata-api')
             haproxy_status = self.verify(
                 10, self._check_haproxy_backend, 1,
                 "Can't get state of backends.",
