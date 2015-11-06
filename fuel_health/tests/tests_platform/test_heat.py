@@ -592,13 +592,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             16. Wait for the stack to be deleted.
 
         Duration: 2200 s.
+        Deployment tags: Ceilometer
         """
-
-        if not self.ceilometer_client:
-            self.skipTest('This test can not be run in current configuration. '
-                          'It checks Heat autoscaling using '
-                          'Ceilometer resources, so Ceilometer '
-                          'should be installed.')
 
         self.check_image_exists()
 
