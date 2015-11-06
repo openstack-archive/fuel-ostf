@@ -782,9 +782,13 @@ class NailgunConfig(object):
                 insecure=False,
                 timeout=10)
             return ip
-        except Exception:
+        except (keystoneclient.exceptions.AuthorizationFailure,
+                keystoneclient.exceptions.Unauthorized):
+            raise exceptions.InvalidCredentials
+        except Exception as e:
             LOG.warning('Can not pass authorization '
-                        'with proxy on {0}'.format(ip))
+                        'with proxy on {0}, error: {1}'
+                        .format(ip, e))
             LOG.debug(traceback.format_exc())
 
     def set_proxy(self):

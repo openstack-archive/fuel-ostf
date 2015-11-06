@@ -84,17 +84,15 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.identity_client = self._get_identity_client()
             self.identity_v3_client = self._get_identity_client(version=3)
             self.clients_initialized = True
+        except (keystoneclient.exceptions.AuthorizationFailure,
+                keystoneclient.exceptions.Unauthorized):
+            self.keystone_error_message = \
+                exceptions.InvalidCredentials.message
         except Exception as e:
-            if e.__class__.__name__ == 'Unauthorized':
-                self.keystone_error_message = ('Unable to run test: OpenStack'
-                                               ' Authorization Failure. '
-                                               'If login or '
-                                               'password was changed, '
-                                               'please update '
-                                               'environment settings. '
-                                               'Please refer to Mirantis '
-                                               'OpenStack documentation '
-                                               'for more details.')
+            LOG.error(
+                "Unexpected error durring intialize keystoneclient: {0}"
+                .format(e)
+            )
             LOG.debug(traceback.format_exc())
             self.traceback = traceback.format_exc()
 
