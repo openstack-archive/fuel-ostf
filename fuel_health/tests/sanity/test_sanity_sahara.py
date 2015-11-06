@@ -52,7 +52,7 @@ class SaharaTemplatesTest(saharamanager.SaharaTestsManager):
 
 class VanillaTwoTemplatesTest(SaharaTemplatesTest):
     _plugin_name = 'vanilla'
-    _hadoop_version = '2.6.0'
+    _hadoop_version = '2.7.1'
     _node_processes = ['resourcemanager', 'namenode', 'secondarynamenode',
                        'oozie', 'historyserver', 'nodemanager', 'datanode']
 
@@ -71,7 +71,7 @@ class VanillaTwoTemplatesTest(SaharaTemplatesTest):
             8. Delete the cluster template
 
         Duration: 80 s.
-        Available since release: 2014.2-6.1
+        Available since release: 2015.1.0-8.0
         Deployment tags: Sahara
         """
 
