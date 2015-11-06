@@ -92,13 +92,13 @@ class SaharaClusterTest(saharamanager.SaharaTestsManager):
 
 
 class VanillaTwoClusterTest(SaharaClusterTest):
-    _plugin_name = 'vanilla'
-    _hadoop_version = '2.6.0'
-    _worker_processes = ['nodemanager', 'datanode']
-    _master_processes = ['resourcemanager', 'namenode',
-                         'oozie', 'historyserver', 'secondarynamenode']
-
     def setUp(self):
+        self._plugin_name = 'vanilla'
+        self._hadoop_version = self.mapping_versions_of_plugin.get(
+            self.config.fuel.fuel_version)
+        self._worker_processes = ['nodemanager', 'datanode']
+        self._master_processes = ['resourcemanager', 'namenode',
+                         'oozie', 'historyserver', 'secondarynamenode']
         super(VanillaTwoClusterTest, self).setUp()
 
         self.processes_map = {
