@@ -51,6 +51,14 @@ class InvalidConfiguration(FuelException):
     message = "Invalid Configuration"
 
 
+class InvalidCredentials(InvalidConfiguration):
+    message = (
+        "Authorization failure. "
+        "Please provide the valid credentials for your OpenStack environment, "
+        "and reattempt."
+    )
+
+
 class SetProxy(InvalidConfiguration):
     message = ("Can not set proxy for Health Check."
                "Make sure that network configuration "
