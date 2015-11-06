@@ -595,12 +595,6 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         Deployment tags: Ceilometer
         """
 
-        if not self.ceilometer_client:
-            self.skipTest('This test can not be run in current configuration. '
-                          'It checks Heat autoscaling using '
-                          'Ceilometer resources, so Ceilometer '
-                          'should be installed.')
-
         self.check_image_exists()
 
         # creation of test flavor
