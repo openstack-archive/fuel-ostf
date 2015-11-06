@@ -592,6 +592,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             16. Wait for the stack to be deleted.
 
         Duration: 2200 s.
+        Deployment tags: Ceilometer
         """
 
         if not self.ceilometer_client:
