@@ -93,7 +93,7 @@ class SaharaClusterTest(saharamanager.SaharaTestsManager):
 
 class VanillaTwoClusterTest(SaharaClusterTest):
     _plugin_name = 'vanilla'
-    _hadoop_version = '2.6.0'
+    _hadoop_version = '2.7.1'
     _worker_processes = ['nodemanager', 'datanode']
     _master_processes = ['resourcemanager', 'namenode',
                          'oozie', 'historyserver', 'secondarynamenode']
