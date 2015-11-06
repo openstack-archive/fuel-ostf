@@ -43,6 +43,11 @@ class SaharaTestsManager(nmanager.PlatformServicesBaseClass):
         # The path to the file where a SSH private key for Sahara tests
         # will be located.
         self.path_to_private_key = '/tmp/sahara-ostf.pem'
+        self.mapping_versions_of_plugin = {
+            "6.1": "2.4.1",
+            "7.0": "2.6.0",
+            "8.0": "2.7.1"
+        }
 
     def create_flavor(self, ram=1024, vcpus=1, disk=20):
         """This method creates a flavor for Sahara tests.

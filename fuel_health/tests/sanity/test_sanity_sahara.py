@@ -51,10 +51,14 @@ class SaharaTemplatesTest(saharamanager.SaharaTestsManager):
 
 
 class VanillaTwoTemplatesTest(SaharaTemplatesTest):
-    _plugin_name = 'vanilla'
-    _hadoop_version = '2.6.0'
-    _node_processes = ['resourcemanager', 'namenode', 'secondarynamenode',
-                       'oozie', 'historyserver', 'nodemanager', 'datanode']
+    def setUp(self):
+        self._plugin_name = 'vanilla'
+        self._hadoop_version = self.mapping_versions_of_plugin.get(
+            self.config.fuel.fuel_version)
+        self._node_processes = ['resourcemanager', 'namenode',
+                                'secondarynamenode', 'oozie', 'historyserver',
+                                'nodemanager', 'datanode']
+        super(VanillaTwoTemplatesTest, self).setUp()
 
     def test_vanilla_two_templates(self):
         """Sahara test for checking CRUD operations on Vanilla2 templates
@@ -71,7 +75,7 @@ class VanillaTwoTemplatesTest(SaharaTemplatesTest):
             8. Delete the cluster template
 
         Duration: 80 s.
-        Available since release: 2014.2-6.1
+        Available since release: 2015.1.0-8.0
         Deployment tags: Sahara
         """
 
@@ -133,7 +137,7 @@ class HDPTwoTemplatesTest(SaharaTemplatesTest):
             8. Delete the cluster template
 
         Duration: 80 s.
-        Available since release: 2014.2-6.1
+        Available since release: 2015.1.0-8.0
         Deployment tags: Sahara
         """
 
