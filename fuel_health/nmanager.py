@@ -563,7 +563,6 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         sg_name = rand_name(namestart)
         sg_desc = sg_name + " description"
         secgroup = client.security_groups.create(sg_name, sg_desc)
-        self.set_resource(sg_name, secgroup)
         self.verify_response_body_content(secgroup.name,
                                           sg_name,
                                           "Security group creation failed")
@@ -619,6 +618,17 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         try:
             for net in cls.network:
                 cls.compute_client.networks.delete(net)
+        except Exception as exc:
+            cls.error_msg.append(exc)
+            LOG.debug(traceback.format_exc())
+
+    @classmethod
+    def _clear_security_groups(cls):
+        try:
+            sec_groups = cls.compute_client.security_groups.list()
+            [cls.compute_client.security_groups.delete(group)
+             for group in sec_groups
+             if 'ost1_test-' in group.name]
         except Exception as exc:
             cls.error_msg.append(exc)
             LOG.debug(traceback.format_exc())
@@ -874,6 +884,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         super(NovaNetworkScenarioTest, cls).tearDownClass()
         if cls.manager.clients_initialized:
             cls._clean_floating_ips()
+            cls._clear_security_groups()
             cls._clear_networks()
 
 
