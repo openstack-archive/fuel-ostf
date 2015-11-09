@@ -12,6 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from datetime import datetime as dt
+from datetime import timedelta as td
+
 from fuel_health import ceilometermanager
 from fuel_health.common.utils.data_utils import rand_name
 
@@ -42,8 +45,11 @@ class CeilometerApiSmokeTests(ceilometermanager.CeilometerBaseTest):
 
         fail_msg = 'Failed to get statistic of metric.'
         msg = 'getting statistic of metric'
+        hour_ago = (dt.utcnow() - td(hours=1)).isoformat()
+        query = [{'field': 'timestamp', 'op': 'gt', 'value': hour_ago}]
+
         self.verify(600, self.wait_for_statistic_of_metric, 1,
-                    fail_msg, msg, meter_name='image')
+                    fail_msg, msg, meter_name='image', query=query)
 
         fail_msg = 'Failed to create alarm.'
         msg = 'creating alarm'
