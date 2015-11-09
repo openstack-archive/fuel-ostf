@@ -32,7 +32,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
     """
 
     def test_create_user(self):
-        """Create user and authenticate with it to Horizon
+        """Create user and authenticate with it.
         Target components: Nova, Keystone
 
         Scenario:
@@ -44,7 +44,8 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
             6. Check that user role was created successfully.
             7. Perform token authentication.
             8. Check that authentication was successful.
-            9. Send authentication request to Horizon.
+            9. Send authentication request to Horizon
+               if there is no ssl enabled.
             10. Confirm that response status is 200.
         Duration: 80 s.
         """
