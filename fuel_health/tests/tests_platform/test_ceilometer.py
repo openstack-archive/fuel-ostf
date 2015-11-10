@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
+
 from fuel_health import ceilometermanager
 from fuel_health.common.utils.data_utils import rand_name
 
@@ -24,7 +26,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         Target component: Ceilometer
 
         Scenario:
-            1. Get the statistic of a metric.
+            1. Get the statistic of a metric for the last hour.
             2. Create an alarm.
             3. Get the alarm.
             4. List alarms.
@@ -42,8 +44,12 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
 
         fail_msg = 'Failed to get statistic of metric.'
         msg = 'getting statistic of metric'
+        an_hour_ago = (datetime.datetime.now() -
+                       datetime.timedelta(hours=1)).isoformat()
+        query = [{'field': 'timestamp', 'op': 'gt', 'value': an_hour_ago}]
+
         self.verify(600, self.wait_for_statistic_of_metric, 1,
-                    fail_msg, msg, meter_name='image')
+                    fail_msg, msg, meter_name='image', query=query)
 
         fail_msg = 'Failed to create alarm.'
         msg = 'creating alarm'
@@ -199,10 +205,10 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         Target component: Ceilometer
 
         Scenario:
-            1. Request the list of samples for an image.
+            1. Get count of samples stored for the last hour for an image.
             2. Create a sample for the image.
             3. Check that the sample has the expected resource.
-            4. Get samples and compare samples lists before and after
+            4. Get count of samples and compare counts before and after
                the sample creation.
             5. Get the resource of the sample.
 
@@ -213,12 +219,15 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         self.check_image_exists()
 
         image_id = self.get_image_from_name()
-        query = [{'field': 'resource', 'op': 'eq', 'value': image_id}]
+        an_hour_ago = (datetime.datetime.now() -
+                       datetime.timedelta(hours=1)).isoformat()
+        query = [{'field': 'resource', 'op': 'eq', 'value': image_id},
+                 {'field': 'timestamp', 'op': 'gt', 'value': an_hour_ago}]
         fail_msg = 'Failed to get samples for image.'
         msg = 'getting samples for image'
-        list_before_create_sample = self.verify(
-            60, self.ceilometer_client.samples.list, 1,
-            fail_msg, msg, self.glance_notifications[0], q=query)
+        count_before_create_sample = self.verify(
+            60, self.get_samples_count, 1, fail_msg, msg,
+            self.glance_notifications[0], query)
 
         fail_msg = 'Failed to create sample for image.'
         msg = 'creating sample for image'
@@ -241,9 +250,9 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = ('Failed while waiting '
                     'for addition of new sample to samples list.')
         msg = 'waiting for addition of new sample to samples list'
-        self.verify(20, self.wait_samples_count, 4,
-                    fail_msg, msg, self.glance_notifications[0],
-                    query, len(list_before_create_sample))
+        self.verify(20, self.wait_samples_count, 4, fail_msg, msg,
+                    self.glance_notifications[0], query,
+                    count_before_create_sample)
 
         fail_msg = 'Failed to get resource of sample.'
         msg = 'getting resource of sample'

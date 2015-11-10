@@ -236,11 +236,15 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         for metric in metric_list:
             self.wait_for_sample_of_metric(metric, query)
 
-    def wait_samples_count(self, sample, query, count):
+    def get_samples_count(self, meter_name, query):
+        return self.ceilometer_client.statistics.list(
+            meter_name=meter_name, q=query)[0].count
+
+    def wait_samples_count(self, meter_name, query, count):
 
         def check_count():
-            samples = self.ceilometer_client.samples.list(sample, q=query)
-            return len(samples) > count
+            new_count = self.get_samples_count(meter_name, query)
+            return new_count > count
 
         if not fuel_health.test.call_until_true(check_count, 60, 1):
             self.fail('Count of samples list isn\'t '
