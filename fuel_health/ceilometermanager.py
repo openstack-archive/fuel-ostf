@@ -56,30 +56,6 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             cls.objects_for_delete = []
             cls.nova_notifications = ['memory', 'vcpus', 'disk.root.size',
                                       'disk.ephemeral.size']
-            cls.nova_vsphere_pollsters = ['instance', 'memory.usage',
-                                          'cpu_util',
-                                          'disk.read.requests.rate',
-                                          'disk.write.requests.rate',
-                                          'disk.read.bytes.rate',
-                                          'disk.write.bytes.rate']
-            cls.nova_instance_pollsters = ['cpu', 'cpu_util',
-                                           'disk.read.bytes',
-                                           'disk.read.bytes.rate',
-                                           'disk.read.requests',
-                                           'disk.read.requests.rate',
-                                           'disk.write.bytes',
-                                           'disk.write.bytes.rate',
-                                           'disk.write.requests',
-                                           'disk.write.requests.rate',
-                                           'instance', 'memory.resident',
-                                           'disk.capacity', 'disk.allocation',
-                                           'disk.usage', 'memory.resident']
-            cls.nova_disk_device_pollsters = [
-                'disk.device.read.requests', 'disk.device.write.requests',
-                'disk.device.read.bytes', 'disk.device.write.bytes',
-                'disk.device.read.requests.rate',
-                'disk.device.write.requests.rate',
-                'disk.device.read.bytes.rate', 'disk.device.write.bytes.rate']
             cls.neutron_network_notifications = ['network', 'network.create',
                                                  'network.update']
             cls.neutron_subnet_notifications = ['subnet', 'subnet.create',
@@ -90,19 +66,17 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                                                 'router.update']
             cls.neutron_floatingip_notifications = ['ip.floating.create',
                                                     'ip.floating.update']
-            cls.volume_notifications = [
-                'volume', 'volume.size', 'volume.create.start',
-                'volume.create.end', 'volume.delete.start',
-                'volume.delete.end', 'volume.update.start',
-                'volume.update.end', 'volume.resize.start',
-                'volume.resize.end', 'volume.attach.start',
-                'volume.attach.end', 'volume.detach.start',
-                'volume.detach.end']
-            cls.snapshot_notifications = [
-                'snapshot', 'snapshot.size', 'snapshot.create.start',
-                'snapshot.create.end', 'snapshot.delete.start',
-                'snapshot.delete.end']
-            cls.glance_notifications = ['image', 'image.size', 'image.update',
+            cls.volume_events = [
+                'volume.create.start', 'volume.create.end',
+                'volume.delete.start', 'volume.delete.end',
+                'volume.update.start', 'volume.update.end',
+                'volume.resize.start', 'volume.resize.end',
+                'volume.attach.start', 'volume.attach.end',
+                'volume.detach.start', 'volume.detach.end']
+            cls.snapshot_events = [
+                'snapshot.create.start', 'snapshot.create.end',
+                'snapshot.delete.start', 'snapshot.delete.end']
+            cls.glance_notifications = ['image.size', 'image.update',
                                         'image.upload', 'image.download',
                                         'image.serve', 'image.delete']
             cls.swift_notifications = ['storage.objects.incoming.bytes',
@@ -127,8 +101,8 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                 'identity.group.created', 'identity.group.updated',
                 'identity.group.deleted']
             cls.keystone_trust_notifications = [
-                'identity.OS-TRUST:trust.created',
-                'identity.OS-TRUST:trust.deleted']
+                'identity.trust.created',
+                'identity.trust.deleted']
             cls.sahara_cluster_notifications = [
                 'cluster.create', 'cluster.update', 'cluster.delete']
 
@@ -190,7 +164,7 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                     exp_status=status if status else "'alarm' or 'ok'",
                     act_status=actual_status))
 
-    def wait_for_sample_of_metric(self, metric, query=None, limit=100):
+    def wait_for_object_sample(self, obj, query, ceilo_obj_type):
         """This method is to wait for sample to add it to database.
         query example:
         query=[
@@ -199,20 +173,23 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         'value':'000e6838-471b-4a14-8da6-655fcff23df1'
         }]
         """
+        kwargs = {"q": query}
+        if ceilo_obj_type == 'sample':
+            method = self.ceilometer_client.samples.list
+            kwargs["meter_name"] = obj
+        elif ceilo_obj_type == "event":
+            query.append({'field': 'event_type', 'op': 'eq', 'value': obj})
+            method = self.ceilometer_client.events.list
 
         def check_status():
-            body = self.ceilometer_client.samples.list(meter_name=metric,
-                                                       q=query, limit=limit)
+            body = method(**kwargs)
             if body:
                 return True
 
-        if fuel_health.test.call_until_true(check_status, 600, 10):
-            return self.ceilometer_client.samples.list(meter_name=metric,
-                                                       q=query, limit=limit)
-        else:
-            self.fail("Timed out waiting to become sample for metric:{metric}"
-                      " with query:{query}".format(metric=metric,
-                                                   query=query))
+        if not fuel_health.test.call_until_true(check_status, 600, 10):
+            self.fail(
+                "Timed out waiting for object: {obj} "
+                "with query:{query}".format(obj=obj, query=query))
 
     def wait_for_statistic_of_metric(self, meter_name, query=None,
                                      period=None):
@@ -232,15 +209,19 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             return self.ceilometer_client.statistics.list(meter_name, q=query,
                                                           period=period)
 
-    def wait_metrics(self, metric_list, query):
-        for metric in metric_list:
-            self.wait_for_sample_of_metric(metric, query)
+    def wait_for_ceilo_objects(self, object_list, query, ceilo_obj_type):
+        for obj in object_list:
+            self.wait_for_object_sample(obj, query, ceilo_obj_type)
 
-    def wait_samples_count(self, sample, query, count):
+    def get_samples_count(self, meter_name, query):
+        return self.ceilometer_client.statistics.list(
+            meter_name=meter_name, q=query)[0].count
+
+    def wait_samples_count(self, meter_name, query, count):
 
         def check_count():
-            samples = self.ceilometer_client.samples.list(sample, q=query)
-            return len(samples) > count
+            new_count = self.get_samples_count(meter_name, query)
+            return new_count > count
 
         if not fuel_health.test.call_until_true(check_count, 60, 1):
             self.fail('Count of samples list isn\'t '
@@ -278,35 +259,35 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         user_name = rand_name("ceilo-user-update")
         tenant_name = rand_name("ceilo-tenant-update")
         tenant = self.identity_client.tenants.create(rand_name("ceilo-tenant"))
-        self.objects_for_delete.append((self.identity_client.tenants.delete,
-                                       tenant))
+        self.objects_for_delete.append((
+            self.identity_client.tenants.delete, tenant))
         self.identity_client.tenants.update(tenant.id, name=tenant_name)
-        user = self.identity_client.users.create(rand_name("ceilo-user"),
-                                                 user_pass, tenant.id)
-        self.objects_for_delete.append((self.identity_client.users.delete,
-                                       user))
+        user = self.identity_client.users.create(
+            rand_name("ceilo-user"), user_pass, tenant.id)
+        self.objects_for_delete.append((
+            self.identity_client.users.delete, user))
         self.identity_client.users.update(user, name=user_name)
         role = self.identity_v3_client.roles.create(rand_name("ceilo-role"))
-        self.identity_v3_client.roles.update(role, user=user.id,
-                                             project=tenant.id)
-        self.identity_v3_client.roles.grant(role, user=user.id,
-                                            project=tenant.id)
-        self.objects_for_delete.append((self.identity_client.roles.delete,
-                                       role))
-        user_client = self.manager_class()._get_identity_client(user_name,
-                                                                user_pass,
-                                                                tenant_name, 3)
-        trust = user_client.trusts.create(self.identity_v3_client.user_id,
-                                          user.id, [role.name], tenant.id)
-        self.objects_for_delete.append((user_client.trusts.delete,
-                                       trust))
+        self.identity_v3_client.roles.update(
+            role, user=user.id, project=tenant.id)
+        self.identity_v3_client.roles.grant(
+            role, user=user.id, project=tenant.id)
+        self.objects_for_delete.append((
+            self.identity_client.roles.delete, role))
+        user_client = self.manager_class()._get_identity_client(
+            user_name, user_pass, tenant_name, 3)
+        trust = user_client.trusts.create(
+            self.identity_v3_client.user_id, user.id, [role.name], tenant.id)
+        self.objects_for_delete.append((user_client.trusts.delete, trust))
         group = self.identity_v3_client.groups.create(rand_name("ceilo-group"))
-        self.objects_for_delete.append((self.identity_v3_client.groups.delete,
-                                        group))
+        self.objects_for_delete.append((
+            self.identity_v3_client.groups.delete, group))
         self.identity_v3_client.groups.update(
             group, name=rand_name("ceilo-group-update"))
         self.identity_v3_client.groups.delete(group)
         user_client.trusts.delete(trust)
+        self.identity_v3_client.roles.revoke(
+            role, user=user.id, project=tenant.id)
         self.identity_client.roles.delete(role)
         self.identity_client.users.delete(user)
         self.identity_client.tenants.delete(tenant)
