@@ -139,7 +139,7 @@ def cleanup(cluster_deployment_info):
                             LOG.debug(exc)
         except Exception as exc:
             LOG.warning(
-                'Something wrong with ceilometer client. Esception: %s', exc
+                'Something wrong with ceilometer client. Exception: %s', exc
             )
 
     if 'heat' in cluster_deployment_info:
