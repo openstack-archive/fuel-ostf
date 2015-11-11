@@ -40,8 +40,7 @@ class GlanceSanityTests(glancemanager.GlanceTest):
                                       1, fail_msg, "image listing",
                                       self.glance_client_v1)
 
-        fail_msg = ("Image list is unavailable. Please refer to "
-                    "OSTF logs for more information")
+        fail_msg = "Image list is unavailable. "
         self.verify_response_true(image_list_resp, fail_msg, 2)
 
     def test_glance_image_list_v2(self):
@@ -61,6 +60,5 @@ class GlanceSanityTests(glancemanager.GlanceTest):
                                       1, fail_msg, "image listing",
                                       self.glance_client)
 
-        fail_msg = ("Image list is unavailable. Please refer to "
-                    "OSTF logs for more information")
+        fail_msg = "Image list is unavailable. "
         self.verify_response_true(image_list_resp, fail_msg, 2)
