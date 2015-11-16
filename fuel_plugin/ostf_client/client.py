@@ -15,7 +15,10 @@
 import requests
 import time
 
-from oslo.serialization import jsonutils
+try:
+    from oslo.serialization import jsonutils
+except:
+    from oslo.serialization import jsonutils
 
 
 class TestingAdapterClient(object):
