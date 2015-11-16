@@ -13,7 +13,10 @@
 #    under the License.
 
 from keystonemiddleware import auth_token
-from oslo.config import cfg
+try:
+    from oslo.config import cfg
+except ImportError:
+    from oslo_config import cfg
 
 
 def setup(app):

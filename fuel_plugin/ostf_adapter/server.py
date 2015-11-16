@@ -19,7 +19,10 @@ import signal
 import sys
 
 from gevent import pywsgi
-from oslo.config import cfg
+try:
+    from oslo.config import cfg
+except ImportError:
+    from oslo_config import cfg
 
 from fuel_plugin.ostf_adapter import config as ostf_config
 from fuel_plugin.ostf_adapter import logger
