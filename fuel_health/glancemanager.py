@@ -14,7 +14,10 @@
 # under the License.
 
 import logging
-from oslo.serialization import jsonutils
+try:
+    from oslo.serialization import jsonutils
+except ImportError:
+    from oslo_serialization import jsonutils
 import random
 import StringIO
 
