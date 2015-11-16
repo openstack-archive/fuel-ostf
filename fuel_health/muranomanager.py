@@ -21,7 +21,10 @@ import time
 import traceback
 import zipfile
 
-from oslo.serialization import jsonutils
+try:
+    from oslo.serialization import jsonutils
+except ImportError:
+    from oslo_serialization import jsonutils
 
 import muranoclient.common.exceptions as exceptions
 import requests
