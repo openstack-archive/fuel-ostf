@@ -17,7 +17,11 @@ import os
 
 from alembic import command
 from alembic import config
-from oslo.config import cfg
+
+try:
+    from oslo.config import cfg
+except ImportError:
+    from oslo_config import cfg
 
 
 log = logging.getLogger(__name__)
