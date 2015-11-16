@@ -14,8 +14,14 @@
 
 import logging
 
-from oslo.config import cfg
-from oslo.serialization import jsonutils
+try:
+    from oslo.config import cfg
+except ImportError:
+    from oslo_config import cfg
+try:
+    from oslo.serialization import jsonutils
+except ImportError:
+    from oslo_serialization import jsonutils
 from pecan import abort
 from pecan import expose
 from pecan import request
