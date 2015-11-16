@@ -98,4 +98,4 @@ def init_config(args=[]):
     else:
         config_files.append(path)
 
-    cfg.CONF(args, project='ostf', default_config_files=config_files)
+    cfg.CONF(args, project='fuel_ostf', default_config_files=config_files)
