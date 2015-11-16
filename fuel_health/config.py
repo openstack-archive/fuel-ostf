@@ -23,7 +23,10 @@ import traceback
 import unittest2
 
 import keystoneclient
-from oslo.config import cfg
+try:
+    from oslo.config import cfg
+except ImportError:
+    from oslo_config import cfg
 import requests
 
 from fuel_health.common import log as logging
