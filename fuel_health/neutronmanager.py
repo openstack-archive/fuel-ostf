@@ -57,7 +57,8 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
             "router": {
                 "name": name,
                 "external_gateway_info": gw_info,
-                "tenant_id": self.tenant_id
+                "tenant_id": self.tenant_id,
+                "ha": False,
             }
         }
 
