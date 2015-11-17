@@ -339,7 +339,8 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             port["id"], {"port": {"name": rand_name("ceilo-port-update")}})
 
         router = self.neutron_client.create_router(
-            {"router": {"name": rand_name("ceilo-router")}})['router']
+            {"router": {"name": rand_name("ceilo-router"),
+                        "ha": False}})['router']
         self.addCleanup(self.cleanup_resources,
                         [(self.neutron_client.delete_router, router["id"])])
         self.neutron_client.update_router(
