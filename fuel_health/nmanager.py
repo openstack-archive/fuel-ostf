@@ -989,7 +989,8 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
                 'external_gateway_info': {
                     'network_id': ext_net['id']
                 },
-                'tenant_id': self.tenant_id
+                'tenant_id': self.tenant_id,
+                'ha': False
             }
         }
         router = self.neutron_client.create_router(router_body)['router']
