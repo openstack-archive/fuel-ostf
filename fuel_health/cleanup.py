@@ -138,9 +138,8 @@ def cleanup(cluster_deployment_info):
                         except Exception as exc:
                             LOG.debug(exc)
         except Exception as exc:
-            LOG.warning(
-                'Something wrong with ceilometer client. Exception: %s', exc
-            )
+            LOG.warning('Something wrong with ceilometer client. '
+                        'Exception: {0}'.format(exc))
 
     if 'heat' in cluster_deployment_info:
         try:
@@ -168,13 +167,13 @@ def cleanup(cluster_deployment_info):
                 for f in floating_ips:
                     if f.instance_id in instances_id:
                         try:
-                            LOG.info('Delete floating ip %s' % f.ip)
+                            LOG.info('Delete floating ip {0}'.format(f.ip))
                             manager._get_compute_client().floating_ips.delete(
                                 f.id)
                         except Exception:
                             LOG.debug(traceback.format_exc())
                 try:
-                    LOG.info('Delete server with name %s' % s.name)
+                    LOG.info('Delete server with name {0}'.format(s.name))
                     manager._get_compute_client().servers.delete(s.id)
                 except Exception:
                     LOG.debug(traceback.format_exc())
