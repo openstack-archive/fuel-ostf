@@ -1,4 +1,5 @@
 %define name fuel-ostf
+%define service_name ostf
 %{!?version: %define version 8.0.0}
 %{!?release: %define release 1}
 
@@ -17,7 +18,6 @@ BuildArch: noarch
 # fuel_health_reqs
 Requires:    python-amqplib >= 1.0.2
 Requires:    python-anyjson >= 0.3.3
-Requires:    python-argparse >= 1.2.1
 Requires:    python-oslo-config >= 1.1.1
 Requires:    python-ceilometerclient >= 1.0.9
 Requires:    python-cinderclient >= 1.0.6
@@ -35,20 +35,28 @@ Requires:    python-requests >= 1.1
 Requires:    python-unittest2 >= 0.5.1
 Requires:    PyYAML >= 3.10
 Requires:    python-testresources >= 0.2.7
+%if 0%{?rhel} >= 5 && 0%{?rhel} < 7
+Requires:    python-argparse >= 1.2.1
+%endif
 
 # fuel_ostf_reqs
 Requires:    python-keystonemiddleware >= 1.2.0
 Requires:    python-nose >= 1.3.0
 Requires:    python-sqlalchemy >= 0.7.8
-Requires:    python-sqlalchemy < 1.0
 Requires:    python-alembic >= 0.5.0
 Requires:    python-gevent >= 0.13.8
 Requires:    python-pecan >= 0.3.0
-Requires:    python-pecan < 0.6.0
 Requires:    python-psycopg2 >= 2.5.1
 Requires:    python-stevedore >= 0.10
 Requires:    python-oslo-serialization >= 1.0.0
 
+
+%if 0%{?fedora} > 16 || 0%{?rhel} > 6
+Requires(post): systemd-units
+Requires(preun): systemd-units
+Requires(postun): systemd-units
+BuildRequires: systemd-units
+%endif
 
 # test_requires
 #mock >= 1.0.1
@@ -105,8 +113,24 @@ cd %{_builddir}/%{name}-%{version} && python setup.py build
 %install
  cd %{_builddir}/%{name}-%{version} && python setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT --record=%{_builddir}/%{name}-%{version}/INSTALLED_FILES
 
+%if %{defined _unitdir}
+install -D -m644 %{_builddir}/%{name}-%{version}/%{service_name}.service %{buildroot}/%{_unitdir}/%{service_name}.service
+%endif
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files -f %{_builddir}/%{name}-%{version}/INSTALLED_FILES
 %defattr(-,root,root)
+%if %{defined _unitdir}
+/%{_unitdir}/%{service_name}.service
+
+%post
+%systemd_post %{service_name}.servive
+
+%preun
+%systemd_preun %{service_name}.service
+
+%postun
+%systemd_postun_with_restart %{service_name}.service
+%endif

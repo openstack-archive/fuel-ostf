@@ -1,0 +1,9 @@
+[Unit]
+Name=OSTF daemon
+ConditionPathExists=/etc/ostf/ostf.conf
+
+[Service]
+ExecStart=/usr/bin/ostf-server
+
+[Install]
+WantedBy=multi-user.target
