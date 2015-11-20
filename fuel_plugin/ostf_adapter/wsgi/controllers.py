@@ -41,7 +41,11 @@ class BaseRestController(rest.RestController):
                 )
                 if controller:
                     return controller, remainder[1:]
-        return super(BaseRestController, self)._handle_get(method, remainder)
+        # FIXME(dteselkin): add 4th parameter to pecan's _handle_get 
+        #                   to support pecan 1.0.0
+        return super(BaseRestController, self)._handle_get(method,
+                                                           remainder,
+                                                           request)
 
 
 class TestsetsController(BaseRestController):
