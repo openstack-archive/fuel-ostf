@@ -1,6 +1,7 @@
 %define name fuel-ostf
 %{!?version: %define version 8.0.0}
 %{!?release: %define release 1}
+%{!?rhel: %define rhel 7}
 
 Summary: cloud computing testing
 Name: %{name}
@@ -17,7 +18,6 @@ BuildArch: noarch
 # fuel_health_reqs
 Requires:    python-amqplib >= 1.0.2
 Requires:    python-anyjson >= 0.3.3
-Requires:    python-argparse >= 1.2.1
 Requires:    python-oslo-config >= 1.1.1
 Requires:    python-ceilometerclient >= 1.0.9
 Requires:    python-cinderclient >= 1.0.6
@@ -35,16 +35,17 @@ Requires:    python-requests >= 1.1
 Requires:    python-unittest2 >= 0.5.1
 Requires:    PyYAML >= 3.10
 Requires:    python-testresources >= 0.2.7
+%if 0%{rhel} < 7
+Requires:    python-argparse >= 1.2.1
+%endif
 
 # fuel_ostf_reqs
 Requires:    python-keystonemiddleware >= 1.2.0
 Requires:    python-nose >= 1.3.0
 Requires:    python-sqlalchemy >= 0.7.8
-Requires:    python-sqlalchemy < 1.0
 Requires:    python-alembic >= 0.5.0
 Requires:    python-gevent >= 0.13.8
 Requires:    python-pecan >= 0.3.0
-Requires:    python-pecan < 0.6.0
 Requires:    python-psycopg2 >= 2.5.1
 Requires:    python-stevedore >= 0.10
 Requires:    python-oslo-serialization >= 1.0.0
