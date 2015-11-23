@@ -37,7 +37,7 @@ LOG = logging.getLogger(__name__)
 
 
 class BaseRestController(rest.RestController):
-    def _handle_get(self, method, remainder):
+    def _handle_get(self, method, remainder, request=None):
         if len(remainder):
             method_name = remainder[0]
             if method.upper() in self._custom_actions.get(method_name, []):
@@ -47,7 +47,8 @@ class BaseRestController(rest.RestController):
                 )
                 if controller:
                     return controller, remainder[1:]
-        return super(BaseRestController, self)._handle_get(method, remainder)
+        return super(BaseRestController, self)._handle_get(method, remainder,
+                                                           request)
 
 
 class TestsetsController(BaseRestController):
