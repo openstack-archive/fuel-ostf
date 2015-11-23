@@ -766,14 +766,13 @@ class NailgunConfig(object):
 
         return keystone_vip
 
-    def find_proxy(self, ip):
-        keystone_vip = self.get_keystone_vip()
-        LOG.debug('Keystone vip in find proxy is: {0}'.format(keystone_vip))
+    def check_proxy_auth(self, proxy_ip, proxy_port, keystone_vip):
         auth_url = 'http://{0}:{1}/{2}/'.format(keystone_vip, 5000, 'v2.0')
-
+        os.environ['http_proxy'] = 'http://{0}:{1}'.format(proxy_ip,
+                                                           proxy_port)
         try:
-            os.environ['http_proxy'] = 'http://{0}:{1}'.format(ip, 8888)
-            LOG.warning('Try to check proxy on {0}'.format(ip))
+            LOG.debug('Trying to authenticate at "{0}" using HTTP proxy "http:'
+                      '//{1}:{2}" ...'.format(auth_url, proxy_ip, proxy_port))
             keystoneclient.v2_0.client.Client(
                 username=self.identity.admin_username,
                 password=self.identity.admin_password,
@@ -781,15 +780,29 @@ class NailgunConfig(object):
                 auth_url=auth_url,
                 insecure=False,
                 timeout=10)
-            return ip
-        except (keystoneclient.exceptions.AuthorizationFailure,
-                keystoneclient.exceptions.Unauthorized):
-            raise exceptions.InvalidCredentials
-        except Exception as e:
-            LOG.warning('Can not pass authorization '
-                        'with proxy on {0}, error: {1}'
-                        .format(ip, e))
-            LOG.debug(traceback.format_exc())
+            return True
+        except keystoneclient.exceptions.Unauthorized:
+            LOG.warning('Authorization failed at "{0}" using HTTP proxy "http:'
+                        '//{1}:{2}"!'.format(auth_url, proxy_ip, proxy_port))
+            return False
+
+    def find_proxy(self, proxy_ips, proxy_port, keystone_vip):
+        online_proxies = []
+        for proxy_ip in proxy_ips:
+            try:
+                LOG.info('Try to check proxy on {0}'.format(proxy_ip))
+                if self.check_proxy_auth(proxy_ip, proxy_port, keystone_vip):
+                    online_proxies.append({'ip': proxy_ip,
+                                           'auth_passed': True})
+                else:
+                    online_proxies.append({'ip': proxy_ip,
+                                           'auth_passed': False})
+            except Exception as e:
+                LOG.warning('Can not connect to Keystone '
+                            'with proxy on {0}, error: {1}'
+                            .format(proxy_ip, e))
+                LOG.debug(traceback.format_exc())
+        return online_proxies
 
     def set_proxy(self):
         """Sets environment property for http_proxy:
@@ -798,13 +811,20 @@ class NailgunConfig(object):
         """
         if not self.compute.online_controllers:
             raise exceptions.OfflineControllers()
-
-        proxies = [ip for ip in self.compute.online_controllers
-                   if self.find_proxy(ip) is not None]
+        keystone_vip = self.get_keystone_vip()
+        proxy_port = 8888
+        LOG.debug('Keystone VIP is: {0}'.format(keystone_vip))
+        proxies = self.find_proxy(self.compute.online_controllers,
+                                  proxy_port,
+                                  keystone_vip)
         if not proxies:
             raise exceptions.SetProxy()
-
-        os.environ['http_proxy'] = 'http://{0}:{1}'.format(proxies[0], 8888)
+        for proxy in proxies:
+            if proxy['auth_passed']:
+                os.environ['http_proxy'] = 'http://{0}:{1}'.format(proxy['ip'],
+                                                                   proxy_port)
+                return
+        raise exceptions.InvalidCredentials
 
     def set_endpoints(self):
         # NOTE(dshulyak) this is hacky convention to allow granular deployment
