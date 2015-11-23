@@ -175,14 +175,14 @@ class Test(BASE):
         session.query(cls).\
             filter(cls.name == test_name,
                    cls.test_run_id == test_run_id).\
-            update(data, synchronize_session=False)
+            update(data, synchronize_session='fetch')
 
     @classmethod
     def update_running_tests(cls, session, test_run_id, status='stopped'):
         session.query(cls). \
             filter(cls.test_run_id == test_run_id,
                    cls.status.in_(('running', 'wait_running'))). \
-            update({'status': status}, synchronize_session=False)
+            update({'status': status}, synchronize_session='fetch')
 
     @classmethod
     def update_test_run_tests(cls, session, test_run_id,
@@ -191,7 +191,7 @@ class Test(BASE):
             filter(cls.name.in_(tests_names),
                    cls.test_run_id == test_run_id). \
             update({'status': status, 'time_taken': None},
-                   synchronize_session=False)
+                   synchronize_session='fetch')
 
     def copy_test(self, test_run, predefined_tests):
         """Performs copying of tests for newly created
@@ -304,8 +304,13 @@ class TestRun(BASE):
         test_run = cls(test_set_id=test_set, cluster_id=cluster_id,
                        status=status)
         session.add(test_run)
+
         for test in tests:
-            session.add(test.copy_test(test_run, predefined_tests))
+            new_test = test.copy_test(test_run, predefined_tests)
+            session.add(new_test)
+            test_run.tests.append(new_test)
+        session.flush()
+
         return test_run
 
     @classmethod
@@ -343,7 +348,7 @@ class TestRun(BASE):
 
         session.query(cls). \
             filter(cls.id == test_run_id). \
-            update(updated_data, synchronize_session=False)
+            update(updated_data, synchronize_session='fetch')
 
     @classmethod
     def is_last_running(cls, session, test_set, cluster_id):
@@ -363,9 +368,6 @@ class TestRun(BASE):
             test_run = cls.add_test_run(
                 session, test_set.id,
                 metadata['cluster_id'], tests=tests)
-
-            # flush test_run data to db
-            session.commit()
 
             plugin.run(test_run, test_set, dbpath,
                        metadata.get('ostf_os_access_creds'), token=token)
