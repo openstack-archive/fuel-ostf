@@ -51,6 +51,10 @@ try:
     import glanceclient
 except Exception:
     LOG.warning('Glance client could not be imported')
+try:
+    import ironicclient
+except Exception:
+    LOG.warning('Ironic client could not be imported')
 
 import cinderclient.client
 import glanceclient.client
@@ -105,6 +109,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.ceilometer_client = self._get_ceilometer_client()
             self.neutron_client = self._get_neutron_client()
             self.glance_client_v1 = self._get_glance_client(version=1)
+            self.ironic_client = self._get_ironic_client()
             self.client_attr_names = [
                 'compute_client',
                 'identity_client',
@@ -116,7 +121,8 @@ class OfficialClientManager(fuel_health.manager.Manager):
                 'murano_client',
                 'sahara_client',
                 'ceilometer_client',
-                'neutron_client'
+                'neutron_client',
+                'ironic_client'
             ]
 
     def _get_compute_client(self, username=None, password=None,
@@ -315,6 +321,21 @@ class OfficialClientManager(fuel_health.manager.Manager):
         return neutronclient.neutron.client.Client(version,
                                                    token=keystone.auth_token,
                                                    endpoint_url=endpoint)
+
+    def _get_ironic_client(self, version='1'):
+        keystone = self._get_identity_client()
+        try:
+            endpoint = keystone.service_catalog.url_for(
+                service_type='baremetal',
+                endpoint_type='internalURL')
+        except keystoneclient.exceptions.EndpointNotFound:
+            LOG.warning('Can not initialize ironic client')
+            return None
+
+        return ironicclient.client.get_client(
+            version,
+            os_auth_token=keystone.auth_token,
+            ironic_url=endpoint)
 
 
 class OfficialClientTest(fuel_health.test.TestCase):
