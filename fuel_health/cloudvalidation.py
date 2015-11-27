@@ -50,15 +50,3 @@ class CloudValidationTest(nmanager.OfficialClientTest):
         except Exception:
             LOG.debug(traceback.format_exc())
             self.fail("%s command failed." % cmd)
-
-    def _run_ssh_cmd_with_exit_code(self, host, cmd):
-        """Open SSH session with host and execute command.
-           Fail if exit code != 0
-        """
-        try:
-            sshclient = SSHClient(host, self.usr, self.pwd,
-                                  key_filename=self.key, timeout=self.timeout)
-            return sshclient.exec_command(cmd)
-        except Exception:
-            LOG.debug(traceback.format_exc())
-            self.fail("%s command failed." % cmd)

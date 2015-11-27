@@ -17,11 +17,13 @@
 #    under the License.
 
 import time
+import traceback
 
 import testresources
 import unittest2
 
 from fuel_health.common import log as logging
+from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.common.test_mixins import FuelTestAssertMixin
 from fuel_health import config
 
@@ -129,3 +131,16 @@ class TestCase(BaseTestCase):
                                conf.compute.build_interval):
             self.fail("Timed out waiting to become %s"
                       % expected_status)
+
+    def run_ssh_cmd_with_exit_code(self, host, cmd):
+        """Open SSH session with host and execute command.
+
+        Fail if exit code != 0
+        """
+        try:
+            sshclient = SSHClient(host, self.usr, self.pwd,
+                                  key_filename=self.key, timeout=self.timeout)
+            return sshclient.exec_command(cmd)
+        except Exception:
+            LOG.debug(traceback.format_exc())
+            self.fail("{0} command failed.".format(cmd))
