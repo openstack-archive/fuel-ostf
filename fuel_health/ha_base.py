@@ -374,20 +374,6 @@ class TestPacemakerBase(BaseTestCase):
             LOG.debug(traceback.format_exc())
             self.fail("%s command failed." % cmd)
 
-    def _run_ssh_cmd_with_exit_code(self, host, cmd):
-        """Open SSH session with host and execute command.
-           Fail if exit code != 0
-        """
-        try:
-            sshclient = ssh.Client(host, self.controller_user,
-                                   self.controllers_pwd,
-                                   key_filename=self.controller_key,
-                                   timeout=self.timeout)
-            return sshclient.exec_command(cmd)
-        except Exception:
-            LOG.debug(traceback.format_exc())
-            self.fail("%s command failed." % cmd)
-
     def _register_resource(self, res, res_name, resources):
         if res_name not in resources:
             resources[res_name] = {
