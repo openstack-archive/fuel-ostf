@@ -47,3 +47,13 @@ class TestVersioning(unittest2.TestCase):
         Deployment tags: releases_comparison
         """
         self.assertTrue(True)
+
+    def test_simple_fake_alphabetic(self):
+        """This is simple fake test
+        for versioning checking.
+        It should be discovered for
+        releases == of >= liberty-8.0
+        Available since release: liberty-8.0
+        Deployment tags: releases_comparison
+        """
+        self.assertTrue(True)

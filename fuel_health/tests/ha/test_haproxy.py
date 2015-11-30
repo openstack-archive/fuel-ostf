@@ -67,7 +67,7 @@ class HAProxyCheck(test.BaseTestCase):
             1. Ssh on each controller and get state of HAProxy backends
             2. Check backend state for availability
         Duration: 10 s.
-        Available since release: 2015.1.0-8.0
+        Available since release: liberty-8.0
         """
         LOG.info("Controllers nodes are %s" % self.controllers)
         for controller in self.controllers:
