@@ -16,6 +16,7 @@ import fcntl
 import logging
 import os
 import signal
+import time
 
 try:
     from oslo.config import cfg
@@ -78,6 +79,8 @@ class NoseDriver(object):
         def raise_exception_handler(signum, stack_frame):
             raise InterruptTestRunException()
         signal.signal(signal.SIGUSR1, raise_exception_handler)
+
+        time.sleep(1)
 
         with engine.contexted_session(dbpath) as session:
             testrun = session.query(models.TestRun)\
