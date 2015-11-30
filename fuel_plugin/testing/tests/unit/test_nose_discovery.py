@@ -66,7 +66,7 @@ class TestNoseDiscovery(base.BaseUnitTest):
     def test_discovery(self):
         expected = {
             'test_sets_count': 10,
-            'tests_count': 29
+            'tests_count': 30
         }
 
         self.assertTrue(
@@ -187,6 +187,35 @@ class TestNoseDiscovery(base.BaseUnitTest):
                           'test_versioning.TestVersioning.'
                           'test_simple_fake_second'),
                  'available_since_release': '2015.2-6.1', },
+            ]
+        }
+
+        needed_test_set = self._find_needed_test_set(
+            expected['test_set']['id']
+        )
+        self.assertEqual(needed_test_set.available_since_release,
+                         expected['test_set']['available_since_release'])
+
+        for test in expected['tests']:
+            needed_test = self._find_needed_test(test['name'])
+            self.assertEqual(needed_test.available_since_release,
+                             test['available_since_release'])
+
+    def test_alphabetic_version_attribute(self):
+        expected = {
+            'test_set': {
+                'id': 'test_versioning',
+                'available_since_release': '2015.2-6.0',
+            },
+            'tests': [
+                {'name': ('fuel_plugin.testing.fixture.dummy_tests.'
+                          'test_versioning.TestVersioning.'
+                          'test_simple_fake_first'),
+                 'available_since_release': '2015.2-6.0', },
+                {'name': ('fuel_plugin.testing.fixture.dummy_tests.'
+                          'test_versioning.TestVersioning.'
+                          'test_simple_fake_alphabetic'),
+                 'available_since_release': 'liberty-8.0', }
             ]
         }
 
