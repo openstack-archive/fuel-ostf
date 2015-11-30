@@ -49,7 +49,7 @@ class IronicSmokeTests(ironicmanager.IronicTest):
             2. Check that ironic-conductor service is running on Ironic node.
         Duration: 60 s.
         Deployment tags: Ironic
-        Available since release: 2015.1.0-8.0
+        Available since release: liberty-8.0
         """
 
         # Step 1
@@ -78,7 +78,7 @@ class IronicSmokeTests(ironicmanager.IronicTest):
             4. Delete Ironic node.
         Duration: 60 s.
         Deployment tags: Ironic
-        Available since release: 2015.1.0-8.0
+        Available since release: liberty-8.0
         """
         # Step 1
         fail_msg = "Error creating node."
@@ -119,7 +119,7 @@ class IronicSmokeTests(ironicmanager.IronicTest):
             4. List ports.
         Duration: 80 s.
         Deployment tags: Ironic
-        Available since release: 2015.1.0-8.0
+        Available since release: liberty-8.0
         """
         fail_msg = "Can't list chassis."
         self.verify(20, self.list_chassis, 1, fail_msg, 'Chassis list')

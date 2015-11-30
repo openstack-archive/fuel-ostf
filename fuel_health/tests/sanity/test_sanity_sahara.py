@@ -137,7 +137,7 @@ class HDPTwoTemplatesTest(SaharaTemplatesTest):
             8. Delete the cluster template
 
         Duration: 80 s.
-        Available since release: 2015.1.0-8.0
+        Available since release: liberty-8.0
         Deployment tags: Sahara
         """
 

@@ -52,7 +52,7 @@ class VMBootTest(cloudvalidation.CloudValidationTest):
 
         Deployment tags: disabled
 
-        Available since release: 2015.1.0-8.0
+        Available since release: liberty-8.0
         """
 
         for host in self.computes:
