@@ -202,8 +202,8 @@ def _compare_release_versions(cluster_release_version, test_release_version):
     test_openstack_ver, test_fuel_ver = test_release_version.split('-')
 
     cond = (
-        (version.StrictVersion(cl_openstack_ver) >=
-         version.StrictVersion(test_openstack_ver))
+        (version.LooseVersion(cl_openstack_ver) >=
+         version.LooseVersion(test_openstack_ver))
         and
         (version.StrictVersion(cl_fuel_ver) >=
          version.StrictVersion(test_fuel_ver))

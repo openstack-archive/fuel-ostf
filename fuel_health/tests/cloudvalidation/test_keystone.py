@@ -50,7 +50,7 @@ class KeystoneTest(cloudvalidation.CloudValidationTest):
 
         Duration: 20 s.
 
-        Available since release: 2015.1.0-8.0
+        Available since release: liberty-8.0
         """
 
         hosts = filter(self._check_ssl_issue,
