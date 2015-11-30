@@ -66,7 +66,7 @@ class TestNoseDiscovery(base.BaseUnitTest):
     def test_discovery(self):
         expected = {
             'test_sets_count': 10,
-            'tests_count': 29
+            'tests_count': 30
         }
 
         self.assertTrue(
@@ -187,6 +187,10 @@ class TestNoseDiscovery(base.BaseUnitTest):
                           'test_versioning.TestVersioning.'
                           'test_simple_fake_second'),
                  'available_since_release': '2015.2-6.1', },
+                {'name': ('fuel_plugin.testing.fixture.dummy_tests.'
+                          'test_versioning.TestVersioning.'
+                          'test_simple_fake_alphabetic'),
+                 'available_since_release': 'liberty-8.0', }
             ]
         }
 
