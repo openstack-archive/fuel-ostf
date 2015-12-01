@@ -306,6 +306,7 @@ class TestRun(BASE):
         session.add(test_run)
         for test in tests:
             session.add(test.copy_test(test_run, predefined_tests))
+            session.commit()
         return test_run
 
     @classmethod
