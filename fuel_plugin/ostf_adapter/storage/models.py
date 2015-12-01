@@ -309,6 +309,7 @@ class TestRun(BASE):
             new_test = test.copy_test(test_run, predefined_tests)
             session.add(new_test)
             test_run.tests.append(new_test)
+            session.commit()
         session.flush()
 
         return test_run
