@@ -309,6 +309,13 @@ class TestRun(BASE):
             new_test = test.copy_test(test_run, predefined_tests)
             session.add(new_test)
             test_run.tests.append(new_test)
+            # NOTE(akostrikov) Seems there is a problem with transaction
+            # isolation, so we need not only to flush, but also to commit.
+            # We fork and then in forks we flush sql items. But it seems that
+            # it happens in transaction so we are not getting in other
+            # processes add results. So I force transaction commit to provide
+            # changes to all forks os OSTF.
+            session.commit()
         session.flush()
 
         return test_run
