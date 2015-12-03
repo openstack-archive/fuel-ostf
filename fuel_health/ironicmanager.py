@@ -16,7 +16,6 @@
 import logging
 import traceback
 
-from fuel_health.common.ssh import Client as SSHClient
 from fuel_health import exceptions
 import fuel_health.nmanager
 import fuel_health.test
@@ -69,19 +68,6 @@ class IronicTest(fuel_health.nmanager.NovaNetworkScenarioTest):
             n = self.ironic_client.node.get(node.uuid)
         return n
 
-    def _run_ssh_cmd_with_exit_code(self, host, cmd):
-        """Open SSH session with host and execute command.
-
-        Fail if exit code != 0
-        """
-        try:
-            sshclient = SSHClient(host, self.usr, self.pwd,
-                                  key_filename=self.key, timeout=self.timeout)
-            return sshclient.exec_command(cmd)
-        except Exception:
-            LOG.debug(traceback.format_exc())
-            self.fail("{0} command failed.".format(cmd))
-
     def check_service_availability(self, nodes, cmd, expected, timeout=30):
         """Check running processes on nodes.
 
@@ -90,7 +76,7 @@ class IronicTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         """
         def check_services():
             for node in nodes:
-                output = self._run_ssh_cmd_with_exit_code(node, cmd)
+                output = self.run_ssh_cmd_with_exit_code(node, cmd)
                 LOG.debug(output)
                 if expected in output:
                     return True

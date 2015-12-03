@@ -43,7 +43,7 @@ class LogRotationTest(cloudvalidation.CloudValidationTest):
         for host in self.controllers + self.computes:
             try:
                 self.verify(
-                    5, self._run_ssh_cmd_with_exit_code,
+                    5, self.run_ssh_cmd_with_exit_code,
                     1, fail_msg % host,
                     'checking logrotate', host, cmd)
             except AssertionError:
