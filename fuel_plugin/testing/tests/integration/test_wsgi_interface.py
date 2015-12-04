@@ -73,5 +73,4 @@ class WsgiInterfaceTest(base.BaseWSGITest):
 
     def test_get_last_testruns(self):
         cluster_id = 1
-        self.mock_api_for_cluster(cluster_id)
         self.app.get('/v1/testruns/last/{0}'.format(cluster_id))
