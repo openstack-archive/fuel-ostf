@@ -16,10 +16,10 @@
 import logging
 import traceback
 
-from fuel_health import exceptions
 import fuel_health.nmanager
 import fuel_health.test
 
+from ironicclient import exc as ironic_exc
 from ironicclient.common import utils
 
 LOG = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class IronicTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         """Delete particular node."""
         try:
             self.ironic_client.node.delete(node.uuid)
-        except exceptions.NotFound:
+        except ironic_exc.NotFound:
             LOG.debug(traceback.format_exc())
 
     def node_update(self, node, prop, value_prop, row='properties'):
