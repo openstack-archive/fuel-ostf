@@ -93,8 +93,13 @@ class SaharaClusterTest(saharamanager.SaharaTestsManager):
 
 class VanillaTwoClusterTest(SaharaClusterTest):
     def setUp(self):
+        mapping_versions_of_plugin = {
+            "6.1": "2.4.1",
+            "7.0": "2.6.0",
+            "8.0": "2.7.1"
+        }
         self._plugin_name = 'vanilla'
-        self._hadoop_version = self.mapping_versions_of_plugin.get(
+        self._hadoop_version = mapping_versions_of_plugin.get(
             self.config.fuel.fuel_version)
         self._worker_processes = ['nodemanager', 'datanode']
         self._master_processes = ['resourcemanager', 'namenode', 'oozie',
