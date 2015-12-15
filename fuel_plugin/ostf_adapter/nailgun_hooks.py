@@ -1,4 +1,4 @@
-#    Copyright 2013 Mirantis, Inc.
+#    Copyright 2015 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -11,6 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
+import sys
 
 from distutils import version
 import logging
@@ -25,6 +27,8 @@ from sqlalchemy import schema
 from fuel_plugin.ostf_adapter.storage import alembic_cli
 
 LOG = logging.getLogger(__name__)
+
+FUEL_VERSION_FILE_PATH = '/etc/fuel/version.yaml'
 
 
 def _get_enums(conn):
@@ -89,3 +93,13 @@ def after_initialization_environment_hook():
     """
     alembic_cli.do_apply_migrations()
     return 0
+
+
+def get_version():
+    try:
+        with open(FUEL_VERSION_FILE_PATH, 'r') as f:
+            sys.stdout.write(f.read())  # return could not be formatted
+                                        # so stdout is used
+    except IOError:
+        return "Can't obtain version info from {0}".format(
+            FUEL_VERSION_FILE_PATH)
