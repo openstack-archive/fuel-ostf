@@ -195,7 +195,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                           endpoint_type='internalURL')
 
     def _get_identity_client(self, username=None, password=None,
-                             tenant_name=None, version=None):
+                             tenant_name=None, version=None, user_domain_name=None, project_id = None):
         if not username:
             username = self.config.identity.admin_username
         if not password:
@@ -229,6 +229,8 @@ class OfficialClientManager(fuel_health.manager.Manager):
             return keystoneclient.v3.client.Client(username=username,
                                                    password=password,
                                                    project_name=tenant_name,
+                                                   user_domain_name=user_domain_name,
+                                                   project_id = project_id,
                                                    auth_url=auth_url,
                                                    insecure=dscv)
         else:
@@ -236,7 +238,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                         "supported with OSTF".format(version))
 
     def _get_heat_client(self, username=None, password=None,
-                         tenant_name=None):
+                         tenant_name=None, version=None, project_id=None,user_domain_name=None):
         if not username:
             username = self.config.identity.admin_username
         if not password:
@@ -244,7 +246,13 @@ class OfficialClientManager(fuel_health.manager.Manager):
         if not tenant_name:
             tenant_name = self.config.identity.admin_tenant_name
         dscv = self.config.identity.disable_ssl_certificate_validation
-        keystone = self._get_identity_client(username, password, tenant_name)
+        if version==3:
+            keystone = self._get_identity_client(username, password, tenant_name,
+                                                 version=3,
+                                                 user_domain_name=user_domain_name,
+                                                 project_id=project_id)
+        else:
+            keystone = self._get_identity_client(username, password, tenant_name)
         token = keystone.auth_token
         try:
             endpoint = keystone.service_catalog.url_for(
@@ -709,15 +717,27 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         with open(path) as f:
             return f.read()
 
-    def _create_floating_ip(self):
-        floating_ips_pool = self.compute_client.floating_ip_pools.list()
+    def _create_floating_ip(self, client=None):
 
-        if floating_ips_pool:
-            floating_ip = self.compute_client.floating_ips.create(
-                pool=floating_ips_pool[0].name)
-            return floating_ip
+        if client:
+            floating_ips_pool = self.client.floating_ip_pools.list()
+
+            if floating_ips_pool:
+                floating_ip = self.client.floating_ips.create(
+                    pool=floating_ips_pool[0].name)
+                return floating_ip
+            else:
+                self.fail('No available floating IP found')
+
         else:
-            self.fail('No available floating IP found')
+            floating_ips_pool = self.compute_client.floating_ip_pools.list()
+
+            if floating_ips_pool:
+                floating_ip = self.compute_client.floating_ips.create(
+                    pool=floating_ips_pool[0].name)
+                return floating_ip
+            else:
+                self.fail('No available floating IP found')
 
     def _assign_floating_ip_to_instance(self, client, server, floating_ip):
         try:
@@ -910,7 +930,7 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
         return max_free_ram_mb
 
     # Methods for creating network resources.
-    def create_network_resources(self):
+    def create_network_resources(self, project_id=None):
         """This method creates network resources.
 
         It creates a network, an internal subnet on the network, a router and
@@ -924,10 +944,10 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
         if self.config.network.network_provider == 'neutron':
             ext_net = self.find_external_network()
             net_name = data_utils.rand_name('ostf-platform-service-net-')
-            net = self._create_net(net_name)
-            subnet = self._create_internal_subnet(net)
+            net = self._create_net(net_name, project_id)
+            subnet = self._create_internal_subnet(net, project_id)
             router_name = data_utils.rand_name('ostf-platform-service-router-')
-            router = self._create_router(router_name, ext_net)
+            router = self._create_router(router_name, ext_net, project_id)
             self.neutron_client.add_interface_router(
                 router['id'], {'subnet_id': subnet['id']})
             self.addCleanup(self.neutron_client.remove_interface_router,
@@ -957,17 +977,20 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
 
         self.fail('Cannot find the external network.')
 
-    def _create_net(self, name):
+    def _create_net(self, name, project_id=None):
         """This method creates a network.
 
         All resources created by this method will be automatically deleted.
         """
 
         LOG.debug('Creating network with name "{0}"...'.format(name))
-        net_body = {
-            'network': {
-                'name': name,
-                'tenant_id': self.tenant_id
+        if project_id:
+            tenant_id = project_id
+        else:
+            tenant_id = self.tenant_id
+        net_body = {'network': {
+                    'name': name,
+                    'tenant_id': tenant_id
             }
         }
         net = self.neutron_client.create_network(net_body)['network']
@@ -976,19 +999,23 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
 
         return net
 
-    def _create_internal_subnet(self, net):
+    def _create_internal_subnet(self, net, project_id=None):
         """This method creates an internal subnet on the network.
 
         All resources created by this method will be automatically deleted.
         """
 
         LOG.debug('Creating subnet...')
+        if project_id:
+            tenant_id = project_id
+        else:
+            tenant_id = self.tenant_id
         subnet_body = {
             'subnet': {
                 'network_id': net['id'],
                 'ip_version': 4,
                 'cidr': '10.1.7.0/24',
-                'tenant_id': self.tenant_id
+                'tenant_id': tenant_id
             }
         }
         subnet = self.neutron_client.create_subnet(subnet_body)['subnet']
@@ -997,20 +1024,24 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
 
         return subnet
 
-    def _create_router(self, name, ext_net):
+    def _create_router(self, name, ext_net, project_id=None):
         """This method creates a router.
 
         All resources created by this method will be automatically deleted.
         """
 
         LOG.debug('Creating router with name "{0}"...'.format(name))
+        if project_id:
+            tenant_id = project_id
+        else:
+            tenant_id = self.tenant_id
         router_body = {
             'router': {
                 'name': name,
                 'external_gateway_info': {
                     'network_id': ext_net['id']
                 },
-                'tenant_id': self.tenant_id
+                'tenant_id': tenant_id
             }
         }
         router = self.neutron_client.create_router(router_body)['router']
@@ -1248,11 +1279,66 @@ class SmokeChecksTest(OfficialClientTest):
         self.created_flavors.remove(flavor)
         client.flavors.delete(flavor)
 
-    def _create_tenant(self, client):
-        name = rand_name('ost1_test-tenant-')
-        tenant = client.tenants.create(name)
-        self.set_resource(name, tenant)
-        return tenant
+    def _create_tenant(self, client,  project_name = None, domain_name = None):
+        if not project_name:
+            name = rand_name('ost1_test-tenant-')
+            tenant = client.tenants.create(name)
+            self.set_resource(name, tenant)
+            return tenant
+        else:
+            domain = self._get_domain_id(client, domain_name)
+            tenant = client.projects.create(project_name, domain)
+            return tenant
+
+    def _get_domain_id(self, client, domain_name):
+        try:
+            domain_id = None
+            domain = client.domains.list()
+            LOG.info("List users domain")
+            LOG.info(domain)
+            for domain in domain:
+                if domain.name == domain_name:
+                    LOG.info(domain.id)
+                    domain_id = domain.id
+            return domain_id
+        except Exception:
+            LOG.debug(traceback.format_exc())
+            self.fail("Failed: Can not get system domains.")
+
+    def _update_user(self, client, user_name, tenant, domain_name):
+        role_id = None
+        usr_id = None
+
+        # Get existing domain id
+        domain_id = self._get_domain_id(client, domain_name)
+
+        # Get user id
+        try:
+            user_id = client.users.list(domain = domain_id, project = tenant.id, default_project = tenant.id)
+            for user in user_id:
+                if user.name == user_name:
+                    usr_id = user.id
+
+        except Exception:
+            LOG.debug(traceback.format_exc())
+            self.fail("Failed: Can not get users id.")
+
+
+        # Get admin role id and add add user to project
+        try:
+            role = client.roles.list(project = tenant.id )
+            for role in role:
+                # admin it's system default user rile. This role exist on all projects and domains
+                if role.name == 'admin':
+                    print role.id
+                    role_id = role.id
+        # Get new user role on project
+            userUp = client.roles.grant(role_id, usr_id, project=tenant.id)
+        except Exception:
+            LOG.debug(traceback.format_exc())
+            self.fail("Failed: Can not get users roles.")
+
+        return userUp
 
     def _create_user(self, client, tenant_id):
         password = "123456"
@@ -1261,6 +1347,7 @@ class SmokeChecksTest(OfficialClientTest):
         user = client.users.create(name, password, email, tenant_id)
         self.set_resource(name, user)
         return user
+
 
     def _create_role(self, client):
         name = rand_name('ost1_test-role-')
@@ -1401,3 +1488,5 @@ class SmokeChecksTest(OfficialClientTest):
                 except Exception:
                     LOG.debug("OSTF test flavor cannot be deleted.")
                     LOG.debug(traceback.format_exc())
+
+

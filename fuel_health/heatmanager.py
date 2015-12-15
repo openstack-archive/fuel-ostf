@@ -46,41 +46,63 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         if not self.find_micro_flavor():
             self.fail('m1.micro flavor was not created.')
 
-    def create_flavor(self, ram=256, vcpus=1, disk=2):
+    def create_flavor(self, ram=256, vcpus=1, disk=2, client=None):
         """This method creates a flavor for Heat tests."""
 
         LOG.debug('Creation of Heat tests flavor...')
         name = rand_name('ost1_test-heat-flavor-')
-        flavor = self.compute_client.flavors.create(name, ram, vcpus, disk)
+        if client:
+            flavor = self.client.flavors.create(name, 256, 1, 2)
+        else:
+            flavor = self.compute_client.flavors.create(name, ram, vcpus, disk)
         self.addCleanup(self.compute_client.flavors.delete, flavor.id)
         LOG.debug('Flavor for Heat tests has been created.')
 
         return flavor
 
-    def get_stack(self, stack_id):
+    def get_stack(self, stack_id, client=None):
         """This method returns desired stack."""
 
         LOG.debug("Getting desired stack: {0}.".format(stack_id))
-        return self.heat_client.stacks.get(stack_id)
+        if client:
+            return client.stacks.get(stack_id)
+        else:
+            return self.heat_client.stacks.get(stack_id)
 
-    def create_stack(self, template, disable_rollback=True, parameters={}):
+    def create_stack(self, template, disable_rollback=True, parameters={}, client=None):
         """This method creates stack by given template."""
 
         LOG.debug('Creation of desired stack...')
         stack_name = rand_name('ost1_test-heat-stack-')
-        stack_id = self.heat_client.stacks.create(
-            stack_name=stack_name,
-            template=template,
-            parameters=parameters,
-            disable_rollback=disable_rollback
-        )['stack']['id']
+        if client:
+            stack_id = client.stacks.create(
+                stack_name=stack_name,
+                template=template,
+                parameters=parameters,
+                disable_rollback=disable_rollback
+            )['stack']['id']
 
-        self.addCleanup(self.delete_stack, stack_id)
+            self.addCleanup(self.delete_stack, stack_id, client)
 
-        # heat client doesn't return stack details after creation
-        # so need to request them
-        stack = self.get_stack(stack_id)
-        LOG.debug('Stack "{0}" creation finished.'.format(stack_name))
+            # heat client doesn't return stack details after creation
+            # so need to request them
+            stack = self.get_stack(stack_id)
+            LOG.debug('Stack "{0}" creation finished.'.format(stack_name))
+
+        else:
+            stack_id = self.heat_client.stacks.create(
+                stack_name=stack_name,
+                template=template,
+                parameters=parameters,
+                disable_rollback=disable_rollback
+            )['stack']['id']
+
+            self.addCleanup(self.delete_stack, stack_id)
+
+            # heat client doesn't return stack details after creation
+            # so need to request them
+            stack = self.get_stack(stack_id)
+            LOG.debug('Stack "{0}" creation finished.'.format(stack_name))
 
         return stack
 
@@ -92,7 +114,7 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             return True
         return False
 
-    def delete_stack(self, stack_id):
+    def delete_stack(self, stack_id, client=None):
         """This method deletes stack if it exists."""
 
         LOG.debug('Deletion of specified stack: {0}'.format(stack_id))
@@ -100,7 +122,10 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             LOG.debug('Stack "{0}" already deleted.'.format(stack_id))
             return
         try:
-            self.heat_client.stacks.delete(stack_id)
+            if client:
+               client.stacks.delete(stack_id)
+            else:
+                self.heat_client.stacks.delete(stack_id)
         except Exception:
             self.fail('Cleanup failed. '
                       'Impossibly to delete stack "{0}".'.format(stack_id))
@@ -155,12 +180,14 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             self.fail('Timeout exceeded while waiting for '
                       'stack status becomes {0}'.format(expected_status))
 
-    def get_instances_by_name_mask(self, mask_name):
+    def get_instances_by_name_mask(self, mask_name, client=None):
         """This method retuns list of instances with certain names."""
 
         instances = []
-
-        instance_list = self.compute_client.servers.list()
+        if client:
+            instance_list = client.servers.list()
+        else:
+            instance_list = self.compute_client.servers.list()
         LOG.debug('Instances list is {0}'.format(instance_list))
         LOG.debug('Expected instance name should inlude {0}'.format(mask_name))
 
@@ -172,7 +199,7 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         return instances
 
     def wait_for_autoscaling(self, exp_count,
-                             timeout, interval, reduced_stack_name):
+                             timeout, interval, reduced_stack_name, client=None):
         """This method checks whether autoscaling finished or not.
 
         It checks number of instances owned by stack, instances
@@ -185,8 +212,8 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         LOG.debug('Expected number of instances'
                   ' owned by stack is {0}'.format(exp_count))
 
-        def count_instances(reduced_stack_name):
-            instances = self.get_instances_by_name_mask(reduced_stack_name)
+        def count_instances(reduced_stack_name, client=None):
+            instances = self.get_instances_by_name_mask(reduced_stack_name, client)
             return len(instances) == exp_count
 
         return fuel_health.test.call_until_true(
@@ -258,3 +285,4 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         LOG.debug('List of fetched objects: {0}'.format(objects))
 
         return objects
+
