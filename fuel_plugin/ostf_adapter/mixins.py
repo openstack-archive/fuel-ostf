@@ -1,4 +1,4 @@
-#    Copyright 2013 Mirantis, Inc.
+#    Copyright 2015 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -12,7 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import logging
+
 
 try:
     from oslo.config import cfg
@@ -26,10 +28,13 @@ from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
 from fuel_plugin.ostf_adapter.storage import models
 
 
+
 LOG = logging.getLogger(__name__)
 
 
 TEST_REPOSITORY = []
+# TODO(ikutukov): remove hardcoded Nailgun API urls here and below
+NAILGUN_VERSION_API_URL = 'http://{0}:{1}/api/v1/version'
 
 
 def delete_db_data(session):
@@ -105,6 +110,18 @@ def discovery_check(session, cluster_id, token=None):
             list(cluster_data['deployment_tags'])
 
         session.merge(cluster_state)
+
+
+def get_version_string(token=None):
+    requests_session = requests.Session()
+    requests_session.trust_env = False
+    request_url = NAILGUN_VERSION_API_URL.format(cfg.CONF.adapter.nailgun_host,
+                                                 cfg.CONF.adapter.nailgun_port)
+    try:
+        response = requests_session.get(request_url).json()
+        return json.dumps(response)
+    except (ValueError, IOError, requests.exceptions.HTTPError):
+        return "Can't obtain version via Nailgun API"
 
 
 def _get_cluster_attrs(cluster_id, token=None):
