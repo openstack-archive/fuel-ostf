@@ -1,4 +1,4 @@
-#    Copyright 2013 Mirantis, Inc.
+#    Copyright 2015 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -14,6 +14,8 @@
 
 import logging
 import os
+
+from fuel_plugin.ostf_adapter import mixins
 
 try:
     from oslo.config import cfg
@@ -101,4 +103,5 @@ def init_config(args=[]):
     else:
         config_files.append(path)
 
-    cfg.CONF(args, project='fuel_ostf', default_config_files=config_files)
+    cfg.CONF(args, project='fuel_ostf', default_config_files=config_files,
+             version=mixins.get_version_string())
