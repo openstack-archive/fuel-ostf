@@ -40,8 +40,10 @@ class GlanceSmokeTests(glancemanager.GlanceTest):
             6.Delete image
 
         Duration: 130 s.
+        Deployment tags: disabled
         Available since release: 2014.2-6.1
         """
+        # TODO enable when https://bugs.launchpad.net/mos/+bug/1527224 fixed
         fail_msg = ("Error creating image. Please refer to Openstack logs "
                     "for more information.")
         self.image = self.verify(100, self.image_create, 1, fail_msg,
