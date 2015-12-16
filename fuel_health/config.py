@@ -42,9 +42,6 @@ IdentityGroup = [
     cfg.StrOpt('catalog_type',
                default='identity',
                help="Catalog type of the Identity service."),
-    cfg.BoolOpt('disable_ssl_certificate_validation',
-                default=False,
-                help="Set to True if using self-signed SSL certificates."),
     cfg.StrOpt('uri',
                default='http://localhost/',
                help="Full URI of the OpenStack Identity API (Keystone), v2"),
@@ -69,6 +66,8 @@ IdentityGroup = [
                default='nova',
                help="API key to use when authenticating as admin.",
                secret=True),
+    cfg.BoolOpt('disable_ssl_certificate_validation',
+                default=False),
 ]
 
 
@@ -422,7 +421,9 @@ FuelConf = [
                help="dns"),
     cfg.BoolOpt('horizon_ssl',
                 default=False,
-                help='ssl usage')
+                help='ssl usage'),
+    cfg.BoolOpt('ssl_data',
+                default=False)
 ]
 
 
@@ -659,7 +660,7 @@ class NailgunConfig(object):
         self.fuel.dns = data['editable']['external_dns'].get('value', None)
         ssl_data = data['editable'].get('public_ssl',
                                         {'horizon': {'value': False}})
-
+        self.fuel.ssl_data = ssl_data['services']['value']
         self.fuel.horizon_ssl = ssl_data['horizon']['value']
 
     def _parse_nodes_cluster_id(self):
@@ -791,16 +792,23 @@ class NailgunConfig(object):
             keystone_vip = self.network.raw_data['service_endpoint']
         elif 'vips' in self.network.raw_data:
             vips_data = self.network.raw_data['vips']
-            keystone_vip = vips_data['management']['ipaddr']
+            keystone_vip = vips_data['public']['ipaddr']
         else:
-            keystone_vip = self.network.raw_data.get('management_vip', None)
+            keystone_vip = self.network.raw_data.get('public_vip', None)
 
         return keystone_vip
 
     def check_proxy_auth(self, proxy_ip, proxy_port, keystone_vip):
-        auth_url = 'http://{0}:{1}/{2}/'.format(keystone_vip, 5000, 'v2.0')
-        os.environ['http_proxy'] = 'http://{0}:{1}'.format(proxy_ip,
-                                                           proxy_port)
+        if self.fuel.ssl_data:
+            auth_url = 'https://{0}:{1}/{2}/'.format(
+                keystone_vip, 5000, 'v2.0')
+            os.environ['https_proxy'] = 'http://{0}:{1}'.format(
+                proxy_ip, proxy_port)
+        else:
+            auth_url = 'http://{0}:{1}/{2}/'.format(
+                keystone_vip, 5000, 'v2.0')
+            os.environ['http_proxy'] = 'http://{0}:{1}'.format(
+                proxy_ip, proxy_port)
         try:
             LOG.debug('Trying to authenticate at "{0}" using HTTP proxy "http:'
                       '//{1}:{2}" ...'.format(auth_url, proxy_ip, proxy_port))
@@ -809,7 +817,8 @@ class NailgunConfig(object):
                 password=self.identity.admin_password,
                 tenant_name=self.identity.admin_tenant_name,
                 auth_url=auth_url,
-                insecure=False,
+                debug=True,
+                insecure=True,
                 timeout=10)
             return True
         except keystoneclient.exceptions.Unauthorized:
@@ -871,26 +880,26 @@ class NailgunConfig(object):
                 '{0}, public vip is {1}'.format(management_vip, public_vip))
         else:
             public_vip = self.network.raw_data.get('public_vip', None)
-            management_vip = self.network.raw_data.get('management_vip', None)
+            #management_vip = self.network.raw_data.get('management_vip', None)
 
         # workaround for api without management_vip for ha mode
         if not keystone_vip and 'ha' in self.mode:
             self._parse_ostf_api()
         else:
             endpoint = keystone_vip or self.compute.public_ips[0]
-            endpoint_mur_sav = management_vip \
-                or self.compute.controller_nodes[0]
-            self.horizon_url = 'http://{0}/{1}/'.format(
-                public_vip, 'dashboard')
-            self.horizon_ubuntu_url = 'http://{0}/'.format(public_vip)
-            self.identity.uri = 'http://{0}:{1}/{2}/'.format(
-                endpoint, 5000, 'v2.0')
-            self.murano.api_url = 'http://{0}:{1}'.format(
-                endpoint_mur_sav, 8082)
-            self.sahara.api_url = 'http://{0}:{1}/{2}'.format(
-                endpoint_mur_sav, 8386, 'v1.0')
-            self.heat.endpoint = 'http://{0}:{1}/{2}'.format(
-                endpoint_mur_sav, 8004, 'v1')
+            if self.fuel.ssl_data:
+                self.identity.uri = 'https://{0}:{1}/{2}/'.format(
+                    endpoint, 5000, 'v2.0')
+                self.horizon_proto = 'https'
+            else:
+                self.identity.uri = 'http://{0}:{1}/{2}/'.format(
+                    endpoint, 5000, 'v2.0')
+                self.horizon_proto = 'http'
+
+        self.horizon_url = '{proto}://{host}/{path}/'.format(
+            proto=self.horizon_proto, host=public_vip, path='dashboard')
+        self.horizon_ubuntu_url = '{proto}://{host}/'.format(
+            proto=self.horizon_proto, host=public_vip)
 
 
 def FuelConfig():
