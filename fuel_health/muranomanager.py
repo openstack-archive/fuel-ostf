@@ -56,7 +56,11 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         self.min_required_ram_mb = 4096
 
         self.murano_available = True
-        self.endpoint = self.config.murano.api_url + '/v1/'
+        self.endpoint = '{0}/v1/'.format(
+            self.identity_client.service_catalog.url_for(
+                service_type='application_catalog',
+                endpoint_type='publicURL'))
+
         self.headers = {'X-Auth-Token': self.murano_client.auth_token,
                         'content-type': 'application/json'}
         try:
@@ -125,7 +129,7 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         """
 
         resp = requests.get(self.endpoint + 'environments',
-                            headers=self.headers)
+                            headers=self.headers, verify=False)
         return resp.json()
 
     def create_environment(self, name):
@@ -180,7 +184,7 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
     def environment_delete_check(self, environment_id, timeout=60):
         resp = requests.get('{0}environments/{1}'.format(self.endpoint,
                                                          environment_id),
-                            headers=self.headers)
+                            headers=self.headers, verify=False)
         self.delete_environment(environment_id)
         point = time.time()
         while resp.status_code == 200:
@@ -189,7 +193,7 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
                           format(timeout))
             resp = requests.get('{0}environments/{1}'.format(self.endpoint,
                                                              environment_id),
-                                headers=self.headers)
+                                headers=self.headers, verify=False)
             try:
                 env = resp.json()
                 if env["status"] == "delete failure":
@@ -246,7 +250,8 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
         endpoint = '{0}environments/{1}/sessions/{2}/deploy'.format(
             self.endpoint, environment_id, session_id)
-        return requests.post(endpoint, data=None, headers=self.headers)
+        return requests.post(endpoint, data=None, headers=self.headers,
+                             verify=False)
 
     def create_service(self, environment_id, session_id, json_data):
         """This method allows to create service.
@@ -263,7 +268,7 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         endpoint = '{0}environments/{1}/services'.format(self.endpoint,
                                                          environment_id)
         return requests.post(endpoint, data=jsonutils.dumps(json_data),
-                             headers=headers).json()
+                             headers=headers, verify=False).json()
 
     def list_services(self, environment_id, session_id=None):
         """This method allows to get list of services.
@@ -341,12 +346,13 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         endpoint = '{0}environments/{1}/deployments'.format(self.endpoint,
                                                             environment_id)
         deployments = requests.get(endpoint,
-                                   headers=self.headers).json()['deployments']
+                                   headers=self.headers,
+                                   verify=False).json()['deployments']
         for deployment in deployments:
             # Save the information about all deployments
             LOG.debug("Environment state: {0}".format(deployment['state']))
             r = requests.get('{0}/{1}'.format(endpoint, deployment['id']),
-                             headers=self.headers).json()
+                             headers=self.headers, verify=False).json()
             LOG.debug("Reports: {0}".format(r))
 
             self.assertEqual('success', deployment['state'])
@@ -426,20 +432,22 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
     def get_package(self, package_id):
         resp = requests.get(self.endpoint + 'catalog/packages/{0}'.
-                            format(package_id), headers=self.headers)
+                            format(package_id), headers=self.headers,
+                            verify=False)
         self.assertEqual(200, resp.status_code)
         return resp.json()
 
     def get_package_by_fqdn(self, package_name):
         resp = requests.get(self.endpoint + 'catalog/packages',
-                            headers=self.headers)
+                            headers=self.headers, verify=False)
         for package in resp.json()["packages"]:
             if package["fully_qualified_name"] == package_name:
                 return package
 
     def delete_package(self, package_id):
         resp = requests.delete(self.endpoint + 'catalog/packages/{0}'.
-                               format(package_id), headers=self.headers)
+                               format(package_id), headers=self.headers,
+                               verify=False)
         try:
             self.assertEqual(200, resp.status_code)
         except Exception:
@@ -448,7 +456,7 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
     def get_list_categories(self):
         resp = requests.get(self.endpoint + 'catalog/packages/categories',
-                            headers=self.headers)
+                            headers=self.headers, verify=False)
 
         self.assertEqual(200, resp.status_code)
         self.assertIsInstance(resp.json()['categories'], list)
@@ -459,7 +467,7 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
             ip = self.get_ip_by_instance_name(environment, inst_name)
         else:
             ip = environment.services[0]['instance']['floatingIpAddress']
-        resp = requests.get('http://{0}/{1}'.format(ip, path))
+        resp = requests.get('http://{0}/{1}'.format(ip, path), verify=False)
         if resp.status_code == 200:
             pass
         else:
