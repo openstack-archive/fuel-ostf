@@ -45,7 +45,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
 
         self.dummy_fqdn = 'io.murano.apps.Simple'
 
-        # Flavor with 2 vCPU and 40Gb HDD will allow to sucessfully
+        # Flavor with 2 vCPU and 40Gb HDD will allow to successfully
         # deploy all Murano applications.
         self.flavor_name = rand_name("ostf_test_Murano_flavor")
         flavor = self.compute_client.flavors.create(

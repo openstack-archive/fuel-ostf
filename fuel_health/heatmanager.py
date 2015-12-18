@@ -63,8 +63,10 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         LOG.debug("Getting desired stack: {0}.".format(stack_id))
         return self.heat_client.stacks.get(stack_id)
 
-    def create_stack(self, template, disable_rollback=True, parameters={}):
+    def create_stack(self, template, disable_rollback=True, parameters=None):
         """This method creates stack by given template."""
+        if parameters is None:
+            parameters = {}
 
         LOG.debug('Creation of desired stack...')
         stack_name = rand_name('ost1_test-heat-stack-')
@@ -116,8 +118,10 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                                                 stack_id):
             self.fail('Timed out waiting for stack to be deleted.')
 
-    def update_stack(self, stack_id, template, parameters={}):
+    def update_stack(self, stack_id, template, parameters=None):
         """This method updates specified stack."""
+        if parameters is None:
+            parameters = {}
 
         self.heat_client.stacks.update(stack_id=stack_id,
                                        template=template,
@@ -145,9 +149,10 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                           'Currently in {0} status.'.format(new_status))
             elif new_status == expected_status:
                 return True
-            LOG.debug('Waiting for {0} to get to {1} status. '
-                      'Currently in {2} status.'.format(
-                      stack, expected_status, new_status))
+            LOG.debug(
+                'Waiting for {0} to get to {1} status. '
+                'Currently in {2} status.'.format(
+                    stack, expected_status, new_status))
 
         if not fuel_health.test.call_until_true(check_status,
                                                 timeout,
@@ -156,13 +161,14 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                       'stack status becomes {0}'.format(expected_status))
 
     def get_instances_by_name_mask(self, mask_name):
-        """This method retuns list of instances with certain names."""
+        """This method returns list of instances with certain names."""
 
         instances = []
 
         instance_list = self.compute_client.servers.list()
         LOG.debug('Instances list is {0}'.format(instance_list))
-        LOG.debug('Expected instance name should inlude {0}'.format(mask_name))
+        LOG.debug(
+            'Expected instance name should include {0}'.format(mask_name))
 
         for inst in instance_list:
             LOG.debug('Instance name is {0}'.format(inst.name))
@@ -171,15 +177,15 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
         return instances
 
-    def wait_for_autoscaling(self, exp_count,
-                             timeout, interval, reduced_stack_name):
-        """This method checks whether autoscaling finished or not.
+    def wait_for_autoscalling(self, exp_count,
+                              timeout, interval, reduced_stack_name):
+        """This method checks whether autoscalling finished or not.
 
         It checks number of instances owned by stack, instances
         belonging to stack are defined by special name pattern
         (reduced_stack_name). It is not possible to get stack instances
         using get_stack_objects, because instances are created as part of
-        autoscaling group resource.
+        autoscalling group resource.
         """
 
         LOG.debug('Expected number of instances'

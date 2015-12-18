@@ -28,7 +28,7 @@ import unittest2
 
 
 class TestGeminiSecond(unittest2.TestCase):
-    def test_fake_long_succes_gs(self):
+    def test_fake_long_success_gs(self):
         time.sleep(30)
         self.assertTrue(True)
 

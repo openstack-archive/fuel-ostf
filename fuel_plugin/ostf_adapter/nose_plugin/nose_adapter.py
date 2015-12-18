@@ -89,12 +89,12 @@ class NoseDriver(object):
                     LOG.error('There is no directory to store locks')
                     raise Exception('There is no directory to store locks')
 
-                aquired_locks = []
+                acquired_locks = []
                 for serie in testrun.test_set.exclusive_testsets:
                     lock_name = serie + str(testrun.cluster_id)
                     fd = open(os.path.join(lock_path, lock_name), 'w')
                     fcntl.flock(fd, fcntl.LOCK_EX)
-                    aquired_locks.append(fd)
+                    acquired_locks.append(fd)
 
                 nose_test_runner.SilentTestProgram(
                     addplugins=[nose_storage_plugin.StoragePlugin(
@@ -120,7 +120,7 @@ class NoseDriver(object):
                 models.TestRun.update_test_run(
                     session, test_run_id, updated_data)
 
-                for fd in aquired_locks:
+                for fd in acquired_locks:
                     fcntl.flock(fd, fcntl.LOCK_UN)
                     fd.close()
 

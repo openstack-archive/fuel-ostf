@@ -33,8 +33,8 @@ class VolumesTest(nmanager.SmokeChecksTest):
     def setUp(self):
         super(VolumesTest, self).setUp()
         self.check_clients_state()
-        if (not self.config.volume.cinder_node_exist
-                and not self.config.volume.ceph_exist):
+        if (not self.config.volume.cinder_node_exist and
+                not self.config.volume.ceph_exist):
             self.skipTest('There are no cinder nodes or '
                           'ceph storage for volume')
         if not self.config.compute.compute_nodes:

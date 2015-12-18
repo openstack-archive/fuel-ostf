@@ -62,7 +62,7 @@ class DiscoveryPlugin(plugins.Plugin):
                 self.session.commit()
             except Exception as e:
                 LOG.error(
-                    ('An error has occured while processing'
+                    ('An error has occurred while processing'
                      ' data entity for %s. Error message: %s'),
                     module.__name__,
                     e.message
@@ -101,7 +101,7 @@ class DiscoveryPlugin(plugins.Plugin):
                     self.session.commit()
                 except Exception as e:
                     LOG.error(
-                        ('An error has occured while '
+                        ('An error has occurred while '
                          'processing data entity for '
                          'test with name %s. Error message: %s'),
                         test_id,
