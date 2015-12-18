@@ -77,9 +77,10 @@ class RabbitSanityClass(BaseTestCase):
                 ips = [nodes[node]['network_roles'][role]
                        for role in nodes[node]['network_roles']]
                 if ip in ips:
-                    nailgun_nodes = [n for n in self.nodes
-                                     if nodes[node]['name'] == n['hostname']
-                                     and n['online']]
+                    nailgun_nodes = [
+                        n for n in self.nodes
+                        if nodes[node]['name'] == n['hostname'] and
+                        n['online']]
                     if len(nailgun_nodes) == 1:
                         amqp_hosts_name[nodes[node]['name']] = [ip, port]
         return amqp_hosts_name
@@ -269,20 +270,20 @@ class RabbitSanityClass(BaseTestCase):
                 self.fail("Can't publish message, queue created on host '{0}' "
                           "doesn't exist!".format(ip))
             test_queue = queues[0]
-            id = data_utils.generate_uuid()
+            uuid = data_utils.generate_uuid()
             cmd = ("python -c 'import kombu;"
                    " c = kombu.Connection(\"amqp://{1}:{2}@{0}:{3}//\");"
                    " c.connect(); ch = c.channel(); producer = "
                    "kombu.Producer(channel=ch, routing_key=\"{4}\"); "
                    "producer.publish(\"{5}\")'".format(
-                       ip, self.userid, self.password, port, test_queue, id))
+                       ip, self.userid, self.password, port, test_queue, uuid))
             try:
-                LOG.debug('Try to publish message {0}'.format(id))
+                LOG.debug('Try to publish message {0}'.format(uuid))
                 remote.exec_command(cmd)
             except Exception:
                 LOG.debug(traceback.format_exc())
                 self.fail("Failed to publish message!")
-            self.messages.append({'queue': test_queue, 'id': id})
+            self.messages.append({'queue': test_queue, 'id': uuid})
 
     def check_queue_message_replication(self):
         if not self._controllers:

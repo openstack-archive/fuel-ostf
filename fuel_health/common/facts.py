@@ -23,7 +23,7 @@ from fuel_health.common import log as logging
 LOG = logging.getLogger(__name__)
 
 
-class Facts:
+class Facts(object):
     __default_config_path = '/var/lib/puppet/yaml/facts/'
 
     def __init__(self, config=None):
@@ -45,9 +45,9 @@ class Facts:
 
     def _read_config(self, path):
         _file = None
-        for file in os.listdir(path):
-            if file.endswith('.yaml'):
-                _file = file
+        for filename in os.listdir(path):
+            if filename.endswith('.yaml'):
+                _file = filename
                 break
         _file = open(os.path.join(path, _file))
         self._init_parser()

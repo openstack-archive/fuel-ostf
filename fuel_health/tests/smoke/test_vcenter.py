@@ -406,7 +406,7 @@ class VcenterVolumesTest(nmanager.SmokeChecksTest):
     def setUp(self):
         super(VcenterVolumesTest, self).setUp()
         self.check_clients_state()
-        if (not self.config.volume.cinder_vmware_node_exist):
+        if not self.config.volume.cinder_vmware_node_exist:
             self.skipTest('There are no cinder-vmware nodes')
         self.check_image_exists()
 

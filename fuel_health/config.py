@@ -384,7 +384,7 @@ MuranoConfig = [
                help="Murano API Service management URL."),
     cfg.BoolOpt('insecure',
                 default=False,
-                help="This parameter allow to enable SSL encription"),
+                help="This parameter allow to enable SSL encryption"),
     cfg.StrOpt('agListnerIP',
                default='10.100.0.155',
                help="Murano SQL Cluster AG IP."),
@@ -712,8 +712,8 @@ class NailgunConfig(object):
         compute_nodes = filter(lambda node: 'compute' in node['roles'],
                                data)
         online_computes = filter(
-            lambda node: 'compute' in node['roles']
-            and node['online'] is True, data)
+            lambda node: 'compute' in node['roles'] and
+            node['online'] is True, data)
         online_computes_ips = []
         for node in online_computes:
             online_computes_ips.append(node['ip'])
@@ -729,8 +729,8 @@ class NailgunConfig(object):
         self.compute.ceph_nodes = ceph_nodes
 
         online_ironic = filter(
-            lambda node: 'ironic' in node['roles']
-            and node['online'] is True, data)
+            lambda node: 'ironic' in node['roles'] and
+            node['online'] is True, data)
         self.ironic.online_conductors = []
         for node in online_ironic:
             self.ironic.online_conductors.append(node['ip'])

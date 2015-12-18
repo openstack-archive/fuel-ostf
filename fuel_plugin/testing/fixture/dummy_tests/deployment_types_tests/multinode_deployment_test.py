@@ -51,7 +51,7 @@ class MultinodeTest(unittest.TestCase):
     def test_multi_depl(self):
         """fake empty test
         This is fake empty test
-        for mutlinode on ubuntu
+        for multinode on ubuntu
         deployment
         Duration: 1sec
         """
