@@ -19,13 +19,13 @@ from fuel_health.common.ssh import Client as SSHClient
 from fuel_health import exceptions
 from fuel_health import nmanager
 from keystoneclient.openstack.common.apiclient.exceptions import Unauthorized
-from keystoneclient.v2_0 import Client as keystoneclient
+from keystoneclient.v2_0 import Client as KeystoneClient
 
 LOG = logging.getLogger(__name__)
 
 
 class SanityConfigurationTest(nmanager.SanityChecksTest):
-    """TestClass contains tests for default creadentials usage.
+    """TestClass contains tests for default credentials usage.
     Special requirements:
         1. A controller's IP address should be specified.
         2. A compute's IP address should be specified.
@@ -115,7 +115,7 @@ class SanityConfigurationTest(nmanager.SanityChecksTest):
             url = 'http://{0}:5000/v2.0'.format(self.config.nailgun_host)
 
             try:
-                keystone = keystoneclient(username=usr,
+                keystone = KeystoneClient(username=usr,
                                           password=pwd,
                                           auth_url=url)
                 keystone.authenticate()

@@ -92,7 +92,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             'stack status becoming "CREATE_COMPLETE"',
             stack.id, 'CREATE_COMPLETE'
         )
-        res = self.get_stack_objects(
+        self.get_stack_objects(
             self.heat_client.resources, stack.id,
             key='resource_type', value='OS::Nova::Server'
         )
@@ -569,8 +569,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             stack.id
         )
 
-    def test_autoscaling(self):
-        """Check stack autoscaling
+    def test_autoscalling(self):
+        """Check stack autoscalling
         Target component: Heat
 
         Scenario:

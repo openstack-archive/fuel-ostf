@@ -27,7 +27,7 @@ import time
 import unittest2
 
 
-class Dummy_test(unittest2.TestCase):
+class DummyTest(unittest2.TestCase):
     """Class docstring is required?
     """
 

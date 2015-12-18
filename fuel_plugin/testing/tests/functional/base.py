@@ -119,8 +119,8 @@ class BaseAdapterTest(unittest.TestCase):
                 ]
             )
 
-            for test_id, test_data in tests.iteritems():
-                for data_key, data_value in test_data.iteritems():
+            for test_id, test_data in tests.items():
+                for data_key, data_value in test_data.items():
                     if not response_tests[test_id][data_key] == data_value:
                         msg = ('Actual "{4}" != expected data value '
                                '"{3}" with key "{2}" for test with id'

@@ -66,7 +66,7 @@ def _load_log_config():
 class TestsAdapter(logging.LoggerAdapter):
 
     def __init__(self, logger, project_name):
-        self.logger = logger
+        super(TestsAdapter, self).__init__(logger=logger, extra={})
         self.project = project_name
         self.regexp = re.compile(r"test_\w+\.py")
 
