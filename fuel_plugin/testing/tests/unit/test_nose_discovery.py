@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import random
+
 from mock import Mock
 from nose import case
 
@@ -63,10 +65,30 @@ class TestNoseDiscovery(base.BaseUnitTest):
     def _find_needed_test_set(self, test_set_id):
         return next(t for t in self.test_sets if t.id == test_set_id)
 
+    def test_compare_release_versions(self):
+        def cmp_version(first, second):
+            if nose_utils._compare_release_versions(first, second):
+                return 1
+            else:
+                return -1
+
+        expected = [
+            '2014.2-6.0',
+            '2014.2.2-6.1',
+            '2015.1.0-7.0',
+            'liberty-8.0'
+        ]
+
+        releases = expected[:]
+        random.shuffle(releases)
+        self.assertEqual(expected,
+                         sorted(releases,
+                                cmp=cmp_version))
+
     def test_discovery(self):
         expected = {
             'test_sets_count': 10,
-            'tests_count': 29
+            'tests_count': 30
         }
 
         self.assertTrue(
@@ -187,6 +209,10 @@ class TestNoseDiscovery(base.BaseUnitTest):
                           'test_versioning.TestVersioning.'
                           'test_simple_fake_second'),
                  'available_since_release': '2015.2-6.1', },
+                {'name': ('fuel_plugin.testing.fixture.dummy_tests.'
+                          'test_versioning.TestVersioning.'
+                          'test_simple_fake_alphabetic'),
+                 'available_since_release': 'liberty-8.0', }
             ]
         }
 
