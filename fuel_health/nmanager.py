@@ -93,7 +93,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                 exceptions.InvalidCredentials.message
         except Exception as e:
             LOG.error(
-                "Unexpected error durring intialize keystoneclient: {0}"
+                "Unexpected error during initialize keystoneclient: {0}"
                 .format(e)
             )
             LOG.debug(traceback.format_exc())
@@ -749,7 +749,9 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def _ping_ip_address(self, ip_address, timeout, retries):
         def ping():
-            cmd = "ping -q -c1 -w10 %s" % ip_address
+            cmd = "ping{v6!s} -q -c1 -w10 {ip_address!s}".format(
+                v6='6' if ':' in ip_address else '',
+                ip_address=ip_address)
 
             if self.host:
                 try:
@@ -772,7 +774,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         return fuel_health.test.call_until_true(ping, 40, 1)
 
     def _ping_ip_address_from_instance(self, ip_address, timeout,
-                                       retries, viaHost=None):
+                                       retries, viaHost=None, ipv6=False):
         def ping():
             if not (self.host or viaHost):
                 self.fail('Wrong tests configurations, one from the next '
@@ -789,7 +791,9 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             except Exception:
                 LOG.debug(traceback.format_exc())
 
-            command = "ping -q -c1 -w10 8.8.8.8"
+            command = "ping{v6!s} -q -c1 -w10 {ip_address!s}".format(
+                v6='6' if ipv6 else '',
+                ip_address='2001:4860:4860::8888' if ipv6 else '8.8.8.8')
 
             return self.retry_command(retries[0], retries[1],
                                       ssh.exec_command_on_vm,
@@ -1264,12 +1268,12 @@ class SmokeChecksTest(OfficialClientTest):
     def _create_boot_volume(self, client, img_name=None, **kwargs):
         name = rand_name('ost1_test-bootable-volume')
 
-        imageRef = self.get_image_from_name(img_name=img_name)
+        image_ref = self.get_image_from_name(img_name=img_name)
 
         LOG.debug(
-            'Image ref is {0} for volume {1}'.format(imageRef, name))
+            'Image ref is {0} for volume {1}'.format(image_ref, name))
         return self._create_volume(
-            client, name=name, imageRef=imageRef, **kwargs)
+            client, name=name, imageRef=image_ref, **kwargs)
 
     def create_instance_from_volume(self, client, volume):
         if not self.find_micro_flavor():

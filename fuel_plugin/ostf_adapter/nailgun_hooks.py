@@ -29,7 +29,7 @@ LOG = logging.getLogger(__name__)
 
 def _get_enums(conn):
     """Return names for db types.
-    Please, be awared that for sqlalchemy of version >= 1.0.0
+    Please, be aware that for sqlalchemy of version >= 1.0.0
     get_enums() method of inspection object is available for the
     purpose.
 

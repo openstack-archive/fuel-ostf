@@ -22,7 +22,7 @@ LOG = logging.getLogger(__name__)
 
 class HeatSmokeTests(heatmanager.HeatBaseTest):
     """Test class verifies Heat API calls, rollback and
-    autoscaling use-cases.
+    autoscalling use-cases.
     """
     def setUp(self):
         super(HeatSmokeTests, self).setUp()
@@ -92,7 +92,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             'stack status becoming "CREATE_COMPLETE"',
             stack.id, 'CREATE_COMPLETE'
         )
-        res = self.get_stack_objects(
+        self.get_stack_objects(
             self.heat_client.resources, stack.id,
             key='resource_type', value='OS::Nova::Server'
         )
@@ -569,8 +569,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             stack.id
         )
 
-    def test_autoscaling(self):
-        """Check stack autoscaling
+    def test_autoscalling(self):
+        """Check stack autoscalling
         Target component: Heat
 
         Scenario:
@@ -698,11 +698,11 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             vm_connection
         )
 
-        # launching the second instance during autoscaling
+        # launching the second instance during autoscalling
         self.verify(
-            480, self.wait_for_autoscaling,
-            11, 'Failed to launch the 2nd instance per autoscaling alarm.',
-            'launching the new instance per autoscaling alarm',
+            480, self.wait_for_autoscalling,
+            11, 'Failed to launch the 2nd instance per autoscalling alarm.',
+            'launching the new instance per autoscalling alarm',
             len(instances) + 1, 480, 10, reduced_stack_name
         )
 
@@ -714,11 +714,11 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             vm_connection
         )
 
-        # termination of the second instance during autoscaling
+        # termination of the second instance during autoscalling
         self.verify(
-            480, self.wait_for_autoscaling,
-            13, 'Failed to terminate the 2nd instance per autoscaling alarm.',
-            'terminating the 2nd instance per autoscaling alarm',
+            480, self.wait_for_autoscalling,
+            13, 'Failed to terminate the 2nd instance per autoscalling alarm.',
+            'terminating the 2nd instance per autoscalling alarm',
             len(instances), 480, 10, reduced_stack_name
         )
 

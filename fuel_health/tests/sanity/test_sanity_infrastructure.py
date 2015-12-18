@@ -57,7 +57,6 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             2. Check there are no failed services (with XXX state).
         Duration: 180 s.
         """
-        output = u'XXX'
         cmd = 'nova-manage service list'
         if not self.controllers:
             self.skipTest('Step 1 failed: there are no controller nodes.')

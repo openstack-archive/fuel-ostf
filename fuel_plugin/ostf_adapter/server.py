@@ -61,11 +61,11 @@ def main():
         mixins.delete_db_data(session)
         log.info('Cleaned up database.')
         # discover testsets and their tests
-        CORE_PATH = CONF.debug_tests or 'fuel_health'
+        core_path = CONF.debug_tests or 'fuel_health'
 
-        log.info('Performing nose discovery with {0}.'.format(CORE_PATH))
+        log.info('Performing nose discovery with {0}.'.format(core_path))
 
-        nose_discovery.discovery(path=CORE_PATH, session=session)
+        nose_discovery.discovery(path=core_path, session=session)
 
         # cache needed data from test repository
         mixins.cache_test_repository(session)

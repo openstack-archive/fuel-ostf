@@ -69,7 +69,7 @@ def get_description(test_obj):
 
     test_obj.test._testMethodDoc is using directly
     instead of calling test_obj.shortDescription()
-    for the sake of compability with python 2.6 where
+    for the sake of compatibility with python 2.6 where
     this method works pretty buggy.
     """
     if isinstance(test_obj, case.Test):
@@ -160,7 +160,7 @@ def get_module(module_path):
 
 
 def get_tests_to_update(test):
-    """Sometimes (e.g. unhandles exception is occured in
+    """Sometimes (e.g. unhandled exception is occurred in
     setUpClass of test case) tests can be packed in
     separate ContextSuite each. At the moment of following code
     creation depth of this packaging was unknown so
@@ -213,9 +213,8 @@ def _compare_release_versions(cluster_release_version, test_release_version):
 
 def is_test_available(cluster_data, test_entity_data):
     is_test_available = False
-    is_rel_ver_suitable = False
 
-    # if 'available_since_release' attritube of test entity
+    # if 'available_since_release' attribute of test entity
     # is empty then this test entity is available for cluster
     # in other case execute release comparator logic
     if not test_entity_data['available_since_release']:
