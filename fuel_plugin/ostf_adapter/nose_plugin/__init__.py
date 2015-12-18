@@ -23,8 +23,8 @@ def get_plugin(plugin):
     plugin_manager = _PLUGIN_MANAGER
 
     if plugin_manager is None:
-        PLUGINS_NAMESPACE = 'plugins'
-        plugin_manager = extension.ExtensionManager(PLUGINS_NAMESPACE,
+        plugins_namespace = 'plugins'
+        plugin_manager = extension.ExtensionManager(plugins_namespace,
                                                     invoke_on_load=True)
 
     _PLUGIN_MANAGER = plugin_manager

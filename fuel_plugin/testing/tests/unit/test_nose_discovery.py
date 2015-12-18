@@ -24,14 +24,14 @@ from fuel_plugin.testing.tests import base
 TEST_PATH = 'fuel_plugin/testing/fixture/dummy_tests'
 
 
-class TransactionBeginMock:
+class TransactionBeginMock(object):
     def __init__(inst, subtransactions):
         pass
 
     def __enter__(self):
         pass
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exc_type, value, traceback):
         pass
 
 

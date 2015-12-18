@@ -120,7 +120,7 @@ class TestPacemakerStatus(ha_base.TestPacemakerBase):
                 'on the controller {0}: {1} ; on the controller {2}: {3}.'
                 .format(x, set_y - set_x, y, set_x - set_y))
 
-            # 6. Check that nodes list of every resource is syncronized
+            # 6. Check that nodes list of every resource is synchronized
             for res in res_x:
                 self.verify_response_true(
                     set(res_x[res]['nodes']) == set(res_y[res]['nodes']),

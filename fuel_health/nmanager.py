@@ -94,7 +94,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                 exceptions.InvalidCredentials.message
         except Exception as e:
             LOG.error(
-                "Unexpected error durring intialize keystoneclient: {0}"
+                "Unexpected error during initialize keystoneclient: {0}"
                 .format(e)
             )
             LOG.debug(traceback.format_exc())
@@ -1271,12 +1271,12 @@ class SmokeChecksTest(OfficialClientTest):
     def _create_boot_volume(self, client, img_name=None, **kwargs):
         name = rand_name('ost1_test-bootable-volume')
 
-        imageRef = self.get_image_from_name(img_name=img_name)
+        image_ref = self.get_image_from_name(img_name=img_name)
 
         LOG.debug(
-            'Image ref is {0} for volume {1}'.format(imageRef, name))
+            'Image ref is {0} for volume {1}'.format(image_ref, name))
         return self._create_volume(
-            client, name=name, imageRef=imageRef, **kwargs)
+            client, name=name, imageRef=image_ref, **kwargs)
 
     def create_instance_from_volume(self, client, volume):
         if not self.find_micro_flavor():

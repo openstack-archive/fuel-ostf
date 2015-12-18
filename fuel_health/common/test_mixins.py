@@ -173,7 +173,7 @@ class FuelTestAssertMixin(object):
         """
         LOG.info("STEP:{0}, verify action: '{1}'".format(step, action))
         try:
-            with timeout(secs, action):
+            with Timeout(secs, action):
                 result = func(*args, **kwargs)
         except Exception as exc:
             LOG.debug(traceback.format_exc())
@@ -194,11 +194,11 @@ def _raise_TimeOut(sig, stack):
     raise TimeOutError()
 
 
-class timeout(object):
+class Timeout(object):
     """Timeout context that will stop code running within context
     if timeout is reached
 
-    >>with timeout(2):
+    >>with Timeout(2):
     ...     requests.get("http://msdn.com")
     """
     def __init__(self, timeout, action):
@@ -214,7 +214,7 @@ class timeout(object):
         if exc_type is not TimeOutError:
             return False  # never swallow other exceptions
         else:
-            LOG.info("Timeout {timeout}s exceeded for {call}".format(
+            LOG.info("Timeout {Timeout}s exceeded for {call}".format(
                 call=self.action,
                 timeout=self.timeout
             ))

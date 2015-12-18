@@ -102,7 +102,9 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         return self.neutron_client.add_interface_router(
             router["id"], {"subnet_id": subnet["id"]})
 
-    def _remove_router(self, router, subnets_id=[]):
+    def _remove_router(self, router, subnets_id=None):
+        if subnets_id is None:
+            subnets_id = []
         self.neutron_client.remove_gateway_router(router['id'])
 
         for subnet_id in subnets_id:

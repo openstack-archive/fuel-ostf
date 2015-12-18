@@ -21,7 +21,7 @@ _LOG_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 class ResultsLogger(object):
-    """Logger used to log results of OSTF tests. Resutls are stored in
+    """Logger used to log results of OSTF tests. Results are stored in
     /var/log/ostf/ dir. Each cluster has one log file per each set of tests.
     """
 
