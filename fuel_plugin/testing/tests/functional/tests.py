@@ -29,25 +29,25 @@ class AdapterTests(base.BaseAdapterTest):
 
         cls.mapping = {
             ('fuel_plugin.testing.fixture.dummy_tests.'
-             'general_test.Dummy_test.test_fast_pass'): 'fast_pass',
+             'general_test.DummyTest.test_fast_pass'): 'fast_pass',
             ('fuel_plugin.testing.fixture.dummy_tests.'
-             'general_test.Dummy_test.test_fast_error'): 'fast_error',
+             'general_test.DummyTest.test_fast_error'): 'fast_error',
             ('fuel_plugin.testing.fixture.dummy_tests.'
-             'general_test.Dummy_test.test_fast_fail'): 'fast_fail',
+             'general_test.DummyTest.test_fast_fail'): 'fast_fail',
             ('fuel_plugin.testing.fixture.dummy_tests.'
-             'general_test.Dummy_test.test_long_pass'): 'long_pass',
+             'general_test.DummyTest.test_long_pass'): 'long_pass',
             ('fuel_plugin.testing.fixture.dummy_tests.'
-             'general_test.Dummy_test.test_fail_with_step'): 'fail_step',
+             'general_test.DummyTest.test_fail_with_step'): 'fail_step',
             ('fuel_plugin.testing.fixture.dummy_tests.'
-             'general_test.Dummy_test.test_skip'): 'skip',
+             'general_test.DummyTest.test_skip'): 'skip',
             ('fuel_plugin.testing.fixture.dummy_tests.'
-             'general_test.Dummy_test.test_skip_directly'): 'skip_directly',
+             'general_test.DummyTest.test_skip_directly'): 'skip_directly',
             ('fuel_plugin.testing.fixture.dummy_tests.stopped_test.'
-             'dummy_tests_stopped.test_really_long'): 'really_long',
+             'DummyTestsStopped.test_really_long'): 'really_long',
             ('fuel_plugin.testing.fixture.dummy_tests.stopped_test.'
-             'dummy_tests_stopped.test_not_long_at_all'): 'not_long',
+             'DummyTestsStopped.test_not_long_at_all'): 'not_long',
             ('fuel_plugin.testing.fixture.dummy_tests.stopped_test.'
-             'dummy_tests_stopped.test_one_no_so_long'): 'so_long',
+             'DummyTestsStopped.test_one_no_so_long'): 'so_long',
             ('fuel_plugin.testing.fixture.dummy_tests.deployment_types_tests.'
              'ha_deployment_test.HATest.test_ha_depl'): 'ha_depl',
             ('fuel_plugin.testing.fixture.dummy_tests.deployment_types_tests.'
@@ -248,9 +248,9 @@ class AdapterTests(base.BaseAdapterTest):
         testset = "general_test"
         tests = [
             ('fuel_plugin.testing.fixture.dummy_tests.'
-             'general_test.Dummy_test.test_fast_pass'),
+             'general_test.DummyTest.test_fast_pass'),
             ('fuel_plugin.testing.fixture.dummy_tests.'
-             'general_test.Dummy_test.test_fast_error')
+             'general_test.DummyTest.test_fast_error')
         ]
         cluster_id = 1
 
@@ -268,43 +268,43 @@ class AdapterTests(base.BaseAdapterTest):
                         'status': 'disabled',
                         'name': 'Fast fail with step',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_fail_with_step'),
+                               'general_test.DummyTest.test_fail_with_step'),
                     },
                     {
                         'status': 'wait_running',
                         'name': 'And fast error',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_fast_error'),
+                               'general_test.DummyTest.test_fast_error'),
                     },
                     {
                         'status': 'disabled',
                         'name': 'Fast fail',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_fast_fail'),
+                               'general_test.DummyTest.test_fast_fail'),
                     },
                     {
                         'status': 'wait_running',
                         'name': 'fast pass test',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_fast_pass'),
+                               'general_test.DummyTest.test_fast_pass'),
                     },
                     {
                         'status': 'disabled',
                         'name': 'Will sleep 5 sec',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_long_pass'),
+                               'general_test.DummyTest.test_long_pass'),
                     },
                     {
                         'status': 'disabled',
                         'name': 'Skip',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_skip'),
+                               'general_test.DummyTest.test_skip'),
                     },
                     {
                         'status': 'disabled',
                         'name': 'Skip with exception',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_skip_directly'),
+                               'general_test.DummyTest.test_skip_directly'),
                     }
                 ],
                 'cluster_id': 1,
@@ -331,9 +331,9 @@ class AdapterTests(base.BaseAdapterTest):
         testset = "general_test"
         tests = [
             ('fuel_plugin.testing.fixture.dummy_tests.'
-             'general_test.Dummy_test.test_fast_pass'),
+             'general_test.DummyTest.test_fast_pass'),
             ('fuel_plugin.testing.fixture.dummy_tests.general_test.'
-             'Dummy_test.test_fast_fail')
+             'DummyTest.test_fast_fail')
         ]
         cluster_id = 1
 
@@ -353,43 +353,43 @@ class AdapterTests(base.BaseAdapterTest):
                         'status': 'failure',
                         'name': 'Fast fail with step',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_fail_with_step'),
+                               'general_test.DummyTest.test_fail_with_step'),
                     },
                     {
                         'status': 'error',
                         'name': 'And fast error',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_fast_error'),
+                               'general_test.DummyTest.test_fast_error'),
                     },
                     {
                         'status': 'wait_running',
                         'name': 'Fast fail',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_fast_fail'),
+                               'general_test.DummyTest.test_fast_fail'),
                     },
                     {
                         'status': 'wait_running',
                         'name': 'fast pass test',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_fast_pass'),
+                               'general_test.DummyTest.test_fast_pass'),
                     },
                     {
                         'status': 'success',
                         'name': 'Will sleep 5 sec',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_long_pass'),
+                               'general_test.DummyTest.test_long_pass'),
                     },
                     {
                         'status': 'skipped',
                         'name': 'Skip',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_skip'),
+                               'general_test.DummyTest.test_skip'),
                     },
                     {
                         'status': 'skipped',
                         'name': 'Skip with exception',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_skip_directly'),
+                               'general_test.DummyTest.test_skip_directly'),
                     }
                 ],
                 'cluster_id': 1,
@@ -417,13 +417,13 @@ class AdapterTests(base.BaseAdapterTest):
         testset = "general_test"
         tests = [
             ('fuel_plugin.testing.fixture.dummy_tests.'
-             'general_test.Dummy_test.test_fast_pass'),
+             'general_test.DummyTest.test_fast_pass'),
             ('fuel_plugin.testing.fixture.dummy_tests.'
-             'general_test.Dummy_test.test_fast_fail')
+             'general_test.DummyTest.test_fast_fail')
         ]
         disabled_test = [
             ('fuel_plugin.testing.fixture.dummy_tests.'
-             'general_test.Dummy_test.test_fast_error')
+             'general_test.DummyTest.test_fast_error')
         ]
         cluster_id = 1
 
@@ -445,43 +445,43 @@ class AdapterTests(base.BaseAdapterTest):
                         'status': 'disabled',
                         'name': 'Fast fail with step',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_fail_with_step'),
+                               'general_test.DummyTest.test_fail_with_step'),
                     },
                     {
                         'status': 'wait_running',
                         'name': 'And fast error',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_fast_error'),
+                               'general_test.DummyTest.test_fast_error'),
                     },
                     {
                         'status': 'failure',
                         'name': 'Fast fail',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_fast_fail'),
+                               'general_test.DummyTest.test_fast_fail'),
                     },
                     {
                         'status': 'success',
                         'name': 'fast pass test',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_fast_pass'),
+                               'general_test.DummyTest.test_fast_pass'),
                     },
                     {
                         'status': 'disabled',
                         'name': 'Will sleep 5 sec',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_long_pass'),
+                               'general_test.DummyTest.test_long_pass'),
                     },
                     {
                         'status': 'disabled',
                         'name': 'Skip',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_skip'),
+                               'general_test.DummyTest.test_skip'),
                     },
                     {
                         'status': 'disabled',
                         'name': 'Skip with exception',
                         'id': ('fuel_plugin.testing.fixture.dummy_tests.'
-                               'general_test.Dummy_test.test_skip_directly'),
+                               'general_test.DummyTest.test_skip_directly'),
                     }
                 ],
                 'cluster_id': 1,
@@ -502,15 +502,15 @@ class AdapterTests(base.BaseAdapterTest):
         testset = 'general_test'
         tests = [
             ('fuel_plugin.testing.fixture.dummy_tests.'
-             'general_test.Dummy_test.test_fast_pass'),
+             'general_test.DummyTest.test_fast_pass'),
             ('fuel_plugin.testing.fixture.dummy_tests.'
-             'general_test.Dummy_test.test_fast_fail'),
+             'general_test.DummyTest.test_fast_fail'),
             ('fuel_plugin.testing.fixture.dummy_tests.'
-             'general_test.Dummy_test.test_fast_pass')
+             'general_test.DummyTest.test_fast_pass')
         ]
         cluster_id = 1
 
-        # make sure that we have all needen data in db
+        # make sure that we have all needed data in db
         self.adapter.testsets(cluster_id)
 
         self.client.start_testrun(testset, cluster_id)
@@ -584,7 +584,7 @@ class AdapterTests(base.BaseAdapterTest):
                             'fuel_plugin.testing.fixture.'
                             'dummy_tests.dependent_testsets.'
                             'gemini_first_test.TestGeminiFirst.'
-                            'test_fake_long_succes_gf'
+                            'test_fake_long_success_gf'
                         ),
                         'status': 'running'
                     },
@@ -608,7 +608,7 @@ class AdapterTests(base.BaseAdapterTest):
                             'fuel_plugin.testing.fixture.'
                             'dummy_tests.dependent_testsets.'
                             'gemini_second_test.TestGeminiSecond.'
-                            'test_fake_long_succes_gs'
+                            'test_fake_long_success_gs'
                         ),
                         'status': 'wait_running'
                     },

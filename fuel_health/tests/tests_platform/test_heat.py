@@ -92,7 +92,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             'stack status becoming "CREATE_COMPLETE"',
             stack.id, 'CREATE_COMPLETE'
         )
-        res = self.get_stack_objects(
+        self.get_stack_objects(
             self.heat_client.resources, stack.id,
             key='resource_type', value='OS::Nova::Server'
         )

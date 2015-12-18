@@ -360,8 +360,8 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         Deployment tags: Ceilometer
         """
 
-        if (not self.config.volume.cinder_node_exist
-                and not self.config.volume.ceph_exist):
+        if (not self.config.volume.cinder_node_exist and
+                not self.config.volume.ceph_exist):
             self.skipTest('There are no storage nodes for volumes.')
 
         self.check_image_exists()

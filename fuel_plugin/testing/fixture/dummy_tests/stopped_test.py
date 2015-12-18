@@ -26,7 +26,7 @@ import time
 import unittest
 
 
-class dummy_tests_stopped(unittest.TestCase):
+class DummyTestsStopped(unittest.TestCase):
 
     def test_really_long(self):
         """This is long running tests

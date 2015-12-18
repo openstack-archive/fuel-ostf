@@ -139,7 +139,7 @@ class TestTestRunsController(base.BaseWSGITest):
             .one()
 
         testrun_tests = self.session.query(models.Test)\
-            .filter(models.Test.test_run_id != (None))\
+            .filter(models.Test.test_run_id is not None)\
             .all()
 
         tests_names = [
@@ -246,16 +246,16 @@ class TestClusterRedeployment(base.BaseWSGITest):
                  'MultinodeTest.test_multi_novanet_depl'),
                 ('deployment_types_tests.multinode_deployment_test.'
                  'MultinodeTest.test_multi_depl'),
-                'general_test.Dummy_test.test_fast_pass',
-                'general_test.Dummy_test.test_long_pass',
-                'general_test.Dummy_test.test_fast_fail',
-                'general_test.Dummy_test.test_fast_error',
-                'general_test.Dummy_test.test_fail_with_step',
-                'general_test.Dummy_test.test_skip',
-                'general_test.Dummy_test.test_skip_directly',
-                'stopped_test.dummy_tests_stopped.test_really_long',
-                'stopped_test.dummy_tests_stopped.test_one_no_so_long',
-                'stopped_test.dummy_tests_stopped.test_not_long_at_all',
+                'general_test.DummyTest.test_fast_pass',
+                'general_test.DummyTest.test_long_pass',
+                'general_test.DummyTest.test_fast_fail',
+                'general_test.DummyTest.test_fast_error',
+                'general_test.DummyTest.test_fail_with_step',
+                'general_test.DummyTest.test_skip',
+                'general_test.DummyTest.test_skip_directly',
+                'stopped_test.DummyTestsStopped.test_really_long',
+                'stopped_test.DummyTestsStopped.test_one_no_so_long',
+                'stopped_test.DummyTestsStopped.test_not_long_at_all',
                 ('test_environment_variables.TestEnvVariables.'
                  'test_os_credentials_env_variables')
             ]]
@@ -287,16 +287,16 @@ class TestVersioning(base.BaseWSGITest):
             'test_sets': ['general_test', 'stopped_test', 'test_versioning',
                           'environment_variables'],
             'tests': [self.ext_id + test for test in [
-                'general_test.Dummy_test.test_fast_pass',
-                'general_test.Dummy_test.test_long_pass',
-                'general_test.Dummy_test.test_fast_fail',
-                'general_test.Dummy_test.test_fast_error',
-                'general_test.Dummy_test.test_fail_with_step',
-                'general_test.Dummy_test.test_skip',
-                'general_test.Dummy_test.test_skip_directly',
-                'stopped_test.dummy_tests_stopped.test_really_long',
-                'stopped_test.dummy_tests_stopped.test_one_no_so_long',
-                'stopped_test.dummy_tests_stopped.test_not_long_at_all',
+                'general_test.DummyTest.test_fast_pass',
+                'general_test.DummyTest.test_long_pass',
+                'general_test.DummyTest.test_fast_fail',
+                'general_test.DummyTest.test_fast_error',
+                'general_test.DummyTest.test_fail_with_step',
+                'general_test.DummyTest.test_skip',
+                'general_test.DummyTest.test_skip_directly',
+                'stopped_test.DummyTestsStopped.test_really_long',
+                'stopped_test.DummyTestsStopped.test_one_no_so_long',
+                'stopped_test.DummyTestsStopped.test_not_long_at_all',
                 ('test_environment_variables.TestEnvVariables.'
                  'test_os_credentials_env_variables'),
                 'test_versioning.TestVersioning.test_simple_fake_first',
