@@ -67,7 +67,7 @@ def cleanup(cluster_deployment_info):
     constant checking of component presence in deployment info.
 
     More better way is to create separate functions for each
-    set of tests so refactoring of this chunk of code is higly
+    set of tests so refactoring of this chunk of code is highly
     appreciated.
     """
     manager = CleanUpClientManager()

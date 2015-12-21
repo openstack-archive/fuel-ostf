@@ -313,7 +313,7 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
                                                   session_id)
 
     def deploy_check(self, environment):
-        """This method allows to wait for deployment of Murano evironments.
+        """This method allows to wait for deployment of Murano environments.
 
         Input parameters:
           environment - Murano environment

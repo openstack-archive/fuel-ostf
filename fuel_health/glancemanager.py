@@ -58,7 +58,7 @@ class GlanceTest(fuel_health.nmanager.NovaNetworkScenarioTest):
     def image_create(self, client, **kwargs):
         container_format = 'bare'
         data = StringIO.StringIO(
-            ''.join([chr(random.randint(0, 255)) for i in range(1024)]))
+            ''.join([chr(random.randint(0, 255)) for _ in range(1024)]))
         disk_format = 'raw'
         image_name = rand_name('ostf_test-image_glance-')
         if client is self.glance_client_v1:

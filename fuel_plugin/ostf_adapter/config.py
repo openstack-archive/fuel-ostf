@@ -74,7 +74,9 @@ DEFAULT_CONFIG_DIR = os.path.join(os.path.abspath(
 DEFAULT_CONFIG_FILE = "ostf.conf"
 
 
-def init_config(args=[]):
+def init_config(args=None):
+    if args is None:
+        args = []
 
     config_files = []
 
@@ -91,15 +93,15 @@ def init_config(args=[]):
 
         path = os.path.join(conf_dir, conf_file)
 
-        if not (os.path.isfile(path)
-                or 'OSTF_CONFIG_DIR' in os.environ
-                or 'OSTF_CONFIG' in os.environ):
+        if not (os.path.isfile(path) or
+                'OSTF_CONFIG_DIR' in os.environ or
+                'OSTF_CONFIG' in os.environ):
             path = failsafe_path
 
     if not os.path.exists(path):
         msg = "Config file {0} not found".format(path)
         LOG.warning(msg)
-        # No need to fail here! If config doesnot exist defaults are used
+        # No need to fail here! If config does not exist defaults are used
     else:
         config_files.append(path)
 

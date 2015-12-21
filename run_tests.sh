@@ -24,8 +24,8 @@ function usage {
   echo "  -P, --no-flake8       Don't run FLAKE8 checks"
   echo "  -u, --unit            Run unit tests"
   echo "  -U, --no-unit         Don't run unit tests"
-  echo "  -i, --integration     Run integarion tests"
-  echo "  -I, --no-integration  Don't run inteagration tests"
+  echo "  -i, --integration     Run integration tests"
+  echo "  -I, --no-integration  Don't run integration tests"
   echo "  -t, --tests           Run a given test files"
   echo "  -h, --help            Print this usage message"
   echo "  -c, --with-cover      Run tests with coverage"
@@ -68,7 +68,7 @@ UNIT_XUNIT=${UNIT_XUNIT:-"$ROOT/unittests.xml"}
 
 mkdir -p $ARTIFACTS
 
-# disabled/enabled flags that are setted from the cli.
+# disabled/enabled flags that are set from the cli.
 # used for manipulating run logic.
 flake8_checks=0
 no_flake8_checks=0
