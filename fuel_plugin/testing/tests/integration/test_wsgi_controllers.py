@@ -139,7 +139,7 @@ class TestTestRunsController(base.BaseWSGITest):
             .one()
 
         testrun_tests = self.session.query(models.Test)\
-            .filter(models.Test.test_run_id != (None))\
+            .filter(models.Test.test_run_id is not None)\
             .all()
 
         tests_names = [

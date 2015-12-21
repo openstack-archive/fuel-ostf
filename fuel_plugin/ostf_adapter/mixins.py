@@ -110,31 +110,31 @@ def discovery_check(session, cluster_id, token=None):
 def _get_cluster_attrs(cluster_id, token=None):
     cluster_attrs = {}
 
-    REQ_SES = requests.Session()
-    REQ_SES.trust_env = False
+    req_ses = requests.Session()
+    req_ses.trust_env = False
 
     if token is not None:
-        REQ_SES.headers.update({'X-Auth-Token': token})
+        req_ses.headers.update({'X-Auth-Token': token})
 
-    URL = 'http://{0}:{1}/{2}'
-    NAILGUN_API_URL = 'api/clusters/{0}'
+    url = 'http://{0}:{1}/{2}'
+    nailgun_api_url = 'api/clusters/{0}'
 
-    cluster_url = NAILGUN_API_URL.format(cluster_id)
-    request_url = URL.format(cfg.CONF.adapter.nailgun_host,
+    cluster_url = nailgun_api_url.format(cluster_id)
+    request_url = url.format(cfg.CONF.adapter.nailgun_host,
                              cfg.CONF.adapter.nailgun_port,
                              cluster_url)
 
-    response = REQ_SES.get(request_url).json()
+    response = req_ses.get(request_url).json()
     release_id = response.get('release_id', 'failed to get id')
 
-    release_url = URL.format(
+    release_url = url.format(
         cfg.CONF.adapter.nailgun_host, cfg.CONF.adapter.nailgun_port,
         'api/releases/{0}'.format(release_id))
 
-    nodes_url = URL.format(
+    nodes_url = url.format(
         cfg.CONF.adapter.nailgun_host, cfg.CONF.adapter.nailgun_port,
         'api/nodes?cluster_id={0}'.format(cluster_id))
-    nodes_response = REQ_SES.get(nodes_url).json()
+    nodes_response = req_ses.get(nodes_url).json()
     if 'objects' in nodes_response:
         nodes_response = nodes_response['objects']
     enable_without_ceph = filter(lambda node: 'ceph-osd' in node['roles'],
@@ -148,7 +148,7 @@ def _get_cluster_attrs(cluster_id, token=None):
     if fuel_version:
         deployment_tags.add(fuel_version)
 
-    release_data = REQ_SES.get(release_url).json()
+    release_data = req_ses.get(release_url).json()
 
     if 'version' in release_data:
         cluster_attrs['release_version'] = release_data['version']
@@ -165,7 +165,7 @@ def _get_cluster_attrs(cluster_id, token=None):
 
     # info about murano/sahara clients installation
     request_url += '/' + 'attributes'
-    response = REQ_SES.get(request_url).json()
+    response = req_ses.get(request_url).json()
 
     public_assignment = response['editable'].get('public_network_assignment')
     if not public_assignment or \
@@ -176,7 +176,7 @@ def _get_cluster_attrs(cluster_id, token=None):
         response['editable'].get('additional_components', dict())
 
     use_vcenter = response['editable']['common'].get('use_vcenter', None)
-    libvrt_data = response['editable']['common'].get('libvirt_type', None)
+    libvirt_data = response['editable']['common'].get('libvirt_type', None)
 
     if use_vcenter and use_vcenter.get('value'):
         deployment_tags.add('use_vcenter')
@@ -218,8 +218,8 @@ def _get_cluster_attrs(cluster_id, token=None):
     if storage_depl_tags:
         deployment_tags.add('storage')
         deployment_tags.update(storage_depl_tags)
-    if libvrt_data and libvrt_data.get('value'):
-        deployment_tags.add(libvrt_data['value'])
+    if libvirt_data and libvirt_data.get('value'):
+        deployment_tags.add(libvirt_data['value'])
 
     cluster_attrs['deployment_tags'] = set(
         [tag.lower() for tag in deployment_tags]

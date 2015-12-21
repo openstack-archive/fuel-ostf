@@ -510,7 +510,7 @@ class AdapterTests(base.BaseAdapterTest):
         ]
         cluster_id = 1
 
-        # make sure that we have all needen data in db
+        # make sure that we have all needed data in db
         self.adapter.testsets(cluster_id)
 
         self.client.start_testrun(testset, cluster_id)

@@ -17,7 +17,7 @@ __profile__ = {
     "driver": "nose",
     "test_path": ("fuel_plugin/tests/functional/"
                   "dummy_tests/dependent_testsets/gemini_first.py"),
-    "description": "Inersects with gemini_second testset",
+    "description": "Intersects with gemini_second testset",
     "deployment_tags": ["dependent_tests"],
     "test_runs_ordering_priority": 10,
     "exclusive_testsets": ["gemini"]
