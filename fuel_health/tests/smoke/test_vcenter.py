@@ -60,6 +60,13 @@ class TestVcenter(nmanager.NovaNetworkScenarioTest):
                         LOG.debug(traceback.format_exc())
                         LOG.debug("Server was already deleted.")
 
+    @classmethod
+    def find_flavor_id(cls):
+        flavors = dict([flavor.ram, flavor.id]
+                       for flavor in cls.compute_client.flavors.list()
+                       if flavor.ram >= 128)
+        return flavors[sorted(flavors)[0]]
+
     def test_1_vcenter_create_servers(self):
         """vCenter: Launch instance
         Target component: Nova
@@ -73,6 +80,8 @@ class TestVcenter(nmanager.NovaNetworkScenarioTest):
         Available since release: 2014.2-6.1
         Deployment tags: use_vcenter
         """
+        img_name = 'TestVM-VMDK'
+        self.manager.config.compute.image_name = img_name
         self.check_image_exists()
         if not self.security_groups:
             self.security_groups[self.tenant_id] = self.verify(
@@ -85,7 +94,7 @@ class TestVcenter(nmanager.NovaNetworkScenarioTest):
 
         name = rand_name('ost1_test-server-smoke-')
         security_groups = [self.security_groups[self.tenant_id].name]
-        img_name = 'TestVM-VMDK'
+        flavor_id = self.find_flavor_id()
 
         server = self.verify(
             200,
@@ -93,8 +102,8 @@ class TestVcenter(nmanager.NovaNetworkScenarioTest):
             2,
             "Creating instance using the new security group has failed.",
             'image creation',
-            self.compute_client, name, security_groups, None, None, img_name
-        )
+            self.compute_client, name, security_groups, flavor_id, None,
+            img_name)
 
         self.verify(30, self._delete_server, 3,
                     "Server can not be deleted.",
@@ -117,8 +126,10 @@ class TestVcenter(nmanager.NovaNetworkScenarioTest):
 
         Duration: 300 s.
         Available since release: 2014.2-6.1
-        Deployment tags: nova_network, use_vcenter
+        Deployment tags: use_vcenter
         """
+        img_name = 'TestVM-VMDK'
+        self.manager.config.compute.image_name = img_name
         self.check_image_exists()
         if not self.security_groups:
                 self.security_groups[self.tenant_id] = self.verify(
@@ -129,13 +140,13 @@ class TestVcenter(nmanager.NovaNetworkScenarioTest):
 
         name = rand_name('ost1_test-server-smoke-')
         security_groups = [self.security_groups[self.tenant_id].name]
-        img_name = 'TestVM-VMDK'
+        flavor_id = self.find_flavor_id()
 
         server = self.verify(250, self._create_server, 2,
                              "Server can not be created.",
                              "server creation",
-                             self.compute_client, name, security_groups, None,
-                             None, img_name)
+                             self.compute_client, name, security_groups,
+                             flavor_id, None, img_name)
 
         floating_ip = self.verify(
             20,
@@ -166,11 +177,11 @@ class TestVcenter(nmanager.NovaNetworkScenarioTest):
                     'public connectivity checking from VM', ip_address,
                     30, (6, 60))
 
-        self.verify(10, self.compute_client.servers.remove_floating_ip,
+        self.verify(20, self.compute_client.servers.remove_floating_ip,
                     7, "Floating IP cannot be removed.",
                     "removing floating IP", server, floating_ip)
 
-        self.verify(10, self.compute_client.floating_ips.delete,
+        self.verify(20, self.compute_client.floating_ips.delete,
                     8, "Floating IP cannot be deleted.",
                     "floating IP deletion", floating_ip)
 
@@ -255,7 +266,13 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
     def setUp(self):
         super(TestVcenterImageAction, self).setUp()
         self.check_clients_state()
-        self.check_image_exists()
+
+    @classmethod
+    def find_flavor_id(cls):
+        flavors = dict([flavor.ram, flavor.id]
+                       for flavor in cls.compute_client.flavors.list()
+                       if flavor.ram >= 128)
+        return flavors[sorted(flavors)[0]]
 
     def _wait_for_server_status(self, server, status):
         self.status_timeout(self.compute_client.servers,
@@ -286,7 +303,8 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
         test.call_until_true(is_deletion_complete, 10, 1)
 
     def _boot_image(self, image_id):
-        if not self.micro_flavors:
+        flavor_id = self.find_flavor_id()
+        if not flavor_id:
             self.fail("Flavor for tests was not found. Seems that "
                       "something is wrong with nova services.")
 
@@ -309,7 +327,7 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
                           format(self.private_net))
             server = client.servers.create(name=name,
                                            image=image_id,
-                                           flavor=self.micro_flavors[0],
+                                           flavor=flavor_id,
                                            **create_kwargs)
         else:
             server = client.servers.create(name=name,
@@ -354,10 +372,12 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
 
         Duration: 300 s.
         Available since release: 2014.2-6.1
-        Deployment tags: nova_network, use_vcenter
+        Deployment tags: use_vcenter
         """
 
         img_name = 'TestVM-VMDK'
+        self.manager.config.compute.image_name = img_name
+        self.check_image_exists()
         image = self.verify(30, self.get_image_from_name, 1,
                             "Image can not be retrieved.",
                             "getting image by name",
@@ -408,17 +428,63 @@ class VcenterVolumesTest(nmanager.SmokeChecksTest):
         self.check_clients_state()
         if (not self.config.volume.cinder_vmware_node_exist):
             self.skipTest('There are no cinder-vmware nodes')
-        self.check_image_exists()
 
     @classmethod
     def tearDownClass(cls):
         super(VcenterVolumesTest, cls).tearDownClass()
+
+    @classmethod
+    def find_flavor_id(cls):
+        flavors = dict([flavor.ram, flavor.id]
+                       for flavor in cls.compute_client.flavors.list()
+                       if flavor.ram >= 128)
+        return flavors[sorted(flavors)[0]]
 
     def _wait_for_volume_status(self, volume, status):
         self.status_timeout(self.volume_client.volumes, volume.id, status)
 
     def _wait_for_instance_status(self, server, status):
         self.status_timeout(self.compute_client.servers, server.id, status)
+
+    def _create_server(self, client, img_name=None):
+        flavor_id = self.find_flavor_id()
+        if not flavor_id:
+            self.fail("Flavor for tests was not found. Seems that "
+                      "something is wrong with nova services.")
+
+        name = rand_name('ost1_test-volume-instance')
+
+        base_image_id = self.get_image_from_name(img_name=img_name)
+        az_name = self.get_availability_zone(image_id=base_image_id)
+
+        if 'neutron' in self.config.network.network_provider:
+            network = [net.id for net in
+                       self.compute_client.networks.list()
+                       if net.label == self.private_net]
+            if network:
+                create_kwargs = {'nics': [{'net-id': network[0]}]}
+            else:
+                self.fail("Default private network '{0}' isn't present. "
+                          "Please verify it is properly created.".
+                          format(self.private_net))
+            server = client.servers.create(
+                name, base_image_id, flavor_id,
+                availability_zone=az_name,
+                **create_kwargs)
+        else:
+            server = client.servers.create(name, base_image_id,
+                                           self.micro_flavors[0].id,
+                                           availability_zone=az_name)
+
+        self.verify_response_body_content(server.name,
+                                          name,
+                                          "Instance creation failed")
+        # The instance retrieved on creation is missing network
+        # details, necessitating retrieval after it becomes active to
+        # ensure correct details.
+        server = self._wait_server_param(client, server, 'addresses', 5, 1)
+        self.set_resource(name, server)
+        return server
 
     def test_5_vcenter_volume_create(self):
         """vCenter: Create volume and attach it to instance
@@ -427,24 +493,25 @@ class VcenterVolumesTest(nmanager.SmokeChecksTest):
         Scenario:
             1. Create a new small-size volume.
             2. Wait for volume status to become "available".
-            3. Check volume has correct name.
-            4. Create new instance.
-            5. Wait for "Active" status
-            6. Attach volume to an instance.
-            7. Check volume status is "in use".
-            8. Get information on the created volume by its id.
-            9. Detach volume from the instance.
-            10. Check volume has "available" status.
-            11. Delete volume.
-            12. Verify that volume deleted
-            13. Delete server.
+            3. Create new instance.
+            4. Wait for "Active" status
+            5. Attach volume to an instance.
+            6. Check volume status is "in use".
+            7. Get information on the created volume by its id.
+            8. Detach volume from the instance.
+            9. Check volume has "available" status.
+            10. Delete volume.
+            11. Verify that volume deleted
+            12. Delete server.
 
         Duration: 350 s.
         Available since release: 2014.2-6.1
-        Deployment tags: nova_network, use_vcenter
+        Deployment tags: use_vcenter
         """
         msg_s1 = 'Volume was not created.'
         img_name = 'TestVM-VMDK'
+        self.manager.config.compute.image_name = img_name
+        self.check_image_exists()
         az = self.config.volume.cinder_vmware_storage_az
         # Create volume
         volume = self.verify(120, self._create_volume, 1,
@@ -457,59 +524,55 @@ class VcenterVolumesTest(nmanager.SmokeChecksTest):
                     "volume becoming 'available'",
                     volume, 'available')
 
-        self.verify_response_true(
-            volume.display_name.startswith('ostf-test-volume'),
-            'Step 3 failed: {msg}'.format(msg=msg_s1))
-
         # create instance
-        instance = self.verify(200, self._create_server, 4,
+        instance = self.verify(200, self._create_server, 3,
                                "Instance creation failed. ",
                                "server creation",
                                self.compute_client, img_name)
 
-        self.verify(200, self._wait_for_instance_status, 5,
+        self.verify(200, self._wait_for_instance_status, 4,
                     'Instance status did not become "available".',
                     "instance becoming 'available'",
                     instance, 'ACTIVE')
 
         # Attach volume
-        self.verify(120, self._attach_volume_to_instance, 6,
+        self.verify(120, self._attach_volume_to_instance, 5,
                     'Volume couldn`t be attached.',
                     'volume attachment',
                     volume, instance.id)
 
-        self.verify(180, self._wait_for_volume_status, 7,
+        self.verify(180, self._wait_for_volume_status, 6,
                     'Attached volume status did not become "in-use".',
                     "volume becoming 'in-use'",
                     volume, 'in-use')
 
         # get volume details
-        self.verify(20, self.volume_client.volumes.get, 8,
+        self.verify(20, self.volume_client.volumes.get, 7,
                     "Can not retrieve volume details. ",
                     "retrieving volume details", volume.id)
 
         # detach volume
-        self.verify(50, self._detach_volume, 9,
+        self.verify(50, self._detach_volume, 8,
                     'Can not detach volume. ',
                     "volume detachment",
                     instance.id, volume.id)
 
-        self.verify(120, self._wait_for_volume_status, 10,
+        self.verify(120, self._wait_for_volume_status, 9,
                     'Volume status did not become "available".',
                     "volume becoming 'available'",
                     volume, 'available')
 
-        self.verify(50, self.volume_client.volumes.delete, 11,
+        self.verify(50, self.volume_client.volumes.delete, 10,
                     'Can not delete volume. ',
                     "volume deletion",
                     volume)
 
-        self.verify(50, self.verify_volume_deletion, 12,
+        self.verify(50, self.verify_volume_deletion, 11,
                     'Can not delete volume. ',
                     "volume deletion",
                     volume)
 
-        self.verify(30, self._delete_server, 13,
+        self.verify(30, self._delete_server, 12,
                     "Can not delete server. ",
                     "server deletion",
                     instance)
