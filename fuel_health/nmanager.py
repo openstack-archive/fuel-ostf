@@ -173,6 +173,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Can not initialize glance client')
             return None
+        LOG.debug("Token is: {token}".format(token=keystone.auth_token))
         return glanceclient.client.Client(version, endpoint=endpoint,
                                           token=keystone.auth_token)
 
@@ -245,6 +246,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         dscv = self.config.identity.disable_ssl_certificate_validation
         keystone = self._get_identity_client(username, password, tenant_name)
         token = keystone.auth_token
+        LOG.debug("Token is: {token}".format(token=keystone.auth_token))
         try:
             endpoint = keystone.service_catalog.url_for(
                 service_type='orchestration',
@@ -266,6 +268,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.config.identity.admin_password,
             self.config.identity.admin_tenant_name).auth_token
 
+        LOG.debug("Token is: {token}".format(token=self.token_id))
         try:
             return muranoclient.v1.client.Client(
                 endpoint=self.config.murano.api_url,
@@ -288,6 +291,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                         'not found. Sahara client cannot be initialized.')
             return
         auth_token = keystone.auth_token
+        LOG.debug("Token is: {token}".format(token=keystone.auth_token))
 
         return saharaclient.client.Client(sahara_api_version,
                                           sahara_url=sahara_url,
@@ -295,6 +299,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
 
     def _get_ceilometer_client(self):
         keystone = self._get_identity_client()
+        LOG.debug("Token is: {token}".format(token=keystone.auth_token))
         try:
             endpoint = keystone.service_catalog.url_for(
                 service_type='metering',
@@ -317,6 +322,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
             LOG.warning('Can not initialize neutron client')
             return None
 
+        LOG.debug("Token is: {token}".format(token=keystone.auth_token))
         return neutronclient.neutron.client.Client(version,
                                                    token=keystone.auth_token,
                                                    endpoint_url=endpoint)
@@ -331,6 +337,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
             LOG.warning('Can not initialize ironic client')
             return None
 
+        LOG.debug("Token is: {token}".format(token=keystone.auth_token))
         return ironicclient.client.get_client(
             version,
             os_auth_token=keystone.auth_token,
