@@ -143,7 +143,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
             raise exceptions.InvalidConfiguration(msg)
 
         auth_url = self.config.identity.uri
-        dscv = self.config.identity.disable_ssl_certificate_validation
 
         client_args = (username, password, tenant_name, auth_url)
 
@@ -153,8 +152,8 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                         *client_args,
                                         service_type=service_type,
                                         no_cache=True,
-                                        insecure=dscv,
-                                        endpoint_type='internalURL')
+                                        insecure=True,
+                                        endpoint_type='publicURL')
 
     def _get_glance_client(self, version=2, username=None, password=None,
                            tenant_name=None):
@@ -169,12 +168,13 @@ class OfficialClientManager(fuel_health.manager.Manager):
         try:
             endpoint = keystone.service_catalog.url_for(
                 service_type='image',
-                endpoint_type='internalURL')
+                endpoint_type='publicURL')
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Can not initialize glance client')
             return None
         return glanceclient.client.Client(version, endpoint=endpoint,
-                                          token=keystone.auth_token)
+                                          token=keystone.auth_token,
+                                          insecure=True)
 
     def _get_volume_client(self, username=None, password=None,
                            tenant_name=None):
@@ -191,7 +191,8 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                           password,
                                           tenant_name,
                                           auth_url,
-                                          endpoint_type='internalURL')
+                                          insecure=True,
+                                          endpoint_type='publicURL')
 
     def _get_identity_client(self, username=None, password=None,
                              tenant_name=None, version=None):
@@ -212,14 +213,13 @@ class OfficialClientManager(fuel_health.manager.Manager):
             raise exceptions.InvalidConfiguration(msg)
 
         auth_url = self.config.identity.uri
-        dscv = self.config.identity.disable_ssl_certificate_validation
 
         if not version or version == 2:
             return keystoneclient.v2_0.client.Client(username=username,
                                                      password=password,
                                                      tenant_name=tenant_name,
                                                      auth_url=auth_url,
-                                                     insecure=dscv)
+                                                     insecure=True)
         elif version == 3:
             helper_list = auth_url.rstrip("/").split("/")
             helper_list[-1] = "v3/"
@@ -229,7 +229,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                                    password=password,
                                                    project_name=tenant_name,
                                                    auth_url=auth_url,
-                                                   insecure=dscv)
+                                                   insecure=True)
         else:
             LOG.warning("Version:{0} for keystoneclient is not "
                         "supported with OSTF".format(version))
@@ -242,39 +242,43 @@ class OfficialClientManager(fuel_health.manager.Manager):
             password = self.config.identity.admin_password
         if not tenant_name:
             tenant_name = self.config.identity.admin_tenant_name
-        dscv = self.config.identity.disable_ssl_certificate_validation
         keystone = self._get_identity_client(username, password, tenant_name)
         token = keystone.auth_token
         try:
             endpoint = keystone.service_catalog.url_for(
                 service_type='orchestration',
-                endpoint_type='internalURL')
+                endpoint_type='publicURL')
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Can not initialize heat client, endpoint not found')
             return None
         else:
             return heatclient.v1.client.Client(endpoint=endpoint,
                                                token=token,
-                                               insecure=dscv)
+                                               insecure=True)
 
     def _get_murano_client(self):
         """This method returns Murano API client
         """
-        # Get xAuth token from Keystone
-        self.token_id = self._get_identity_client(
+        keystone = self._get_identity_client(
             self.config.identity.admin_username,
             self.config.identity.admin_password,
-            self.config.identity.admin_tenant_name).auth_token
+            self.config.identity.admin_tenant_name)
+        # Get xAuth token from Keystone
+        self.token_id = keystone.auth_token
 
         try:
-            return muranoclient.v1.client.Client(
-                endpoint=self.config.murano.api_url,
-                token=self.token_id,
-                insecure=self.config.murano.insecure,
-                endpoint_type='internalURL')
-        except exceptions:
-            LOG.debug(traceback.format_exc())
-            LOG.warning('Can not initialize murano client')
+            endpoint = keystone.service_catalog.url_for(
+                service_type='application_catalog',
+                endpoint_type='publicURL')
+        except keystoneclient.exceptions.EndpointNotFound:
+            LOG.warning('Endpoint for Murano service '
+                        'not found. Murano client cannot be initialized.')
+            return
+
+        return muranoclient.v1.client.Client(
+            endpoint,
+            token=self.token_id,
+            insecure=True)
 
     def _get_sahara_client(self):
         sahara_api_version = self.config.sahara.api_version
@@ -282,28 +286,30 @@ class OfficialClientManager(fuel_health.manager.Manager):
         keystone = self._get_identity_client()
         try:
             sahara_url = keystone.service_catalog.url_for(
-                service_type='data_processing', endpoint_type='internalURL')
+                service_type='data_processing', endpoint_type='publicURL')
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Endpoint for Sahara service '
                         'not found. Sahara client cannot be initialized.')
-            return
+            return None
         auth_token = keystone.auth_token
 
         return saharaclient.client.Client(sahara_api_version,
                                           sahara_url=sahara_url,
-                                          input_auth_token=auth_token)
+                                          input_auth_token=auth_token,
+                                          insecure=True)
 
     def _get_ceilometer_client(self):
         keystone = self._get_identity_client()
         try:
             endpoint = keystone.service_catalog.url_for(
                 service_type='metering',
-                endpoint_type='internalURL')
+                endpoint_type='publicURL')
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Can not initialize ceilometer client')
             return None
 
-        return ceilometerclient.v2.Client(endpoint=endpoint,
+        return ceilometerclient.v2.Client(endpoint=endpoint, insecure=True,
+                                          verify=False,
                                           token=lambda: keystone.auth_token)
 
     def _get_neutron_client(self, version='2.0'):
@@ -312,21 +318,22 @@ class OfficialClientManager(fuel_health.manager.Manager):
         try:
             endpoint = keystone.service_catalog.url_for(
                 service_type='network',
-                endpoint_type='internalURL')
+                endpoint_type='publicURL')
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Can not initialize neutron client')
             return None
 
         return neutronclient.neutron.client.Client(version,
                                                    token=keystone.auth_token,
-                                                   endpoint_url=endpoint)
+                                                   endpoint_url=endpoint,
+                                                   insecure=True)
 
     def _get_ironic_client(self, version='1'):
         keystone = self._get_identity_client()
         try:
             endpoint = keystone.service_catalog.url_for(
                 service_type='baremetal',
-                endpoint_type='internalURL')
+                endpoint_type='publicURL')
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Can not initialize ironic client')
             return None
@@ -334,7 +341,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         return ironicclient.client.get_client(
             version,
             os_auth_token=keystone.auth_token,
-            ironic_url=endpoint)
+            ironic_url=endpoint, insecure=True)
 
 
 class OfficialClientTest(fuel_health.test.TestCase):

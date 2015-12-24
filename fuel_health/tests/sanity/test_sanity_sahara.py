@@ -52,8 +52,12 @@ class SaharaTemplatesTest(saharamanager.SaharaTestsManager):
 
 class VanillaTwoTemplatesTest(SaharaTemplatesTest):
     def setUp(self):
+        mapping_versions_of_plugin = {
+            "6.1": "2.4.1",
+            "7.0": "2.6.0",
+            "8.0": "2.7.1"}
         self._plugin_name = 'vanilla'
-        self._hadoop_version = self.mapping_versions_of_plugin.get(
+        self._hadoop_version = mapping_versions_of_plugin.get(
             self.config.fuel.fuel_version)
         self._node_processes = ['resourcemanager', 'namenode',
                                 'secondarynamenode', 'oozie', 'historyserver',
