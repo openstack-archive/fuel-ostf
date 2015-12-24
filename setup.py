@@ -12,55 +12,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
 import setuptools
 
-
-def requirements():
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    requirements = []
-    with open('{0}/requirements.txt'.format(dir_path), 'r') as reqs:
-        requirements = reqs.readlines()
-    return requirements
-
+# In python < 2.7.4, a lazy loading of package `pbr` will break
+# setuptools if some other modules registered functions in `atexit`.
+# solution from: http://bugs.python.org/issue15881#msg170215
+try:
+    import multiprocessing # noqa
+except ImportError:
+    pass
 
 setuptools.setup(
-
-    name='fuel-ostf',
-    version='9.0.0',
-
-    description='cloud computing testing',
-
-    zip_safe=False,
-
-    classifiers=[
-        'Development Status :: 3 - Alpha',
-        'Framework :: Setuptools Plugin',
-        'Environment :: OpenStack',
-        'Intended Audience :: Information Technology',
-        'Intended Audience :: System Administrators',
-        'License :: OSI Approved :: Apache Software License',
-        'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Topic :: System :: Testing',
-    ],
-
-    include_package_data=True,
-
-    packages=setuptools.find_packages(),
-
-    install_requires=requirements(),
-
-    entry_points={
-        'plugins': [
-            ('nose = fuel_plugin.ostf_adapter.'
-             'nose_plugin.nose_adapter:NoseDriver')
-        ],
-        'console_scripts': [
-            'ostf-server = fuel_plugin.ostf_adapter.server:main',
-        ]
-    },
-
+    setup_requires=['pbr'],
+    pbr=True,
 )
