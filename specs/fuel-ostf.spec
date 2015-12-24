@@ -13,6 +13,7 @@ Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 Prefix: %{_prefix}
 BuildRequires:  python-setuptools
+BuildRequires:  python-pbr >= 1.6
 BuildArch: noarch
 
 # fuel_health_reqs
@@ -32,6 +33,7 @@ Requires:    python-saharaclient >= 0.6
 Requires:    python-swiftclient >= 2.3.1
 Requires:    python-glanceclient >= 0.14.1
 Requires:    python-paramiko >= 1.10.1
+Requires:    python-pbr >= 1.6
 Requires:    python-requests >= 1.1
 Requires:    python-unittest2 >= 0.5.1
 Requires:    PyYAML >= 3.10
