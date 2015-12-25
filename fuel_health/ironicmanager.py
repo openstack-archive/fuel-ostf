@@ -73,6 +73,7 @@ class IronicTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
         At least one controller should run ironic-api process.
         At least one Ironic node should run ironic-conductor process.
+        At least one controller should run nova-compute process.
         """
         def check_services():
             for node in nodes:
