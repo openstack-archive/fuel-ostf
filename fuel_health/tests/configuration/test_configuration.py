@@ -18,7 +18,7 @@ import paramiko.ssh_exception as exc
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health import exceptions
 from fuel_health import nmanager
-from keystoneclient.openstack.common.apiclient.exceptions import Unauthorized
+from keystoneclient.exceptions import Unauthorized
 from keystoneclient.v2_0 import Client as keystoneclient
 
 LOG = logging.getLogger(__name__)
