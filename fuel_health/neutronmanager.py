@@ -80,12 +80,32 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
         return network
 
-    def create_subnet(self, internal_network):
+    def create_subnet_v4(self, internal_network, cidr="10.0.7.0/24"):
         subnet_info = {
             "subnet": {
                 "network_id": internal_network['id'],
                 "ip_version": 4,
-                "cidr": "10.0.7.0/24",
+                "cidr": cidr,
+                "tenant_id": self.tenant_id
+            }
+        }
+
+        subnet = self.neutron_client.create_subnet(subnet_info)['subnet']
+        self.subnets.append(subnet)
+
+        return subnet
+
+    def create_subnet_v6(
+            self, internal_network,
+            cidr="2001:db8:1::/64", gateway_ip="2001:db8:1::1"):
+        subnet_info = {
+            "subnet": {
+                "network_id": internal_network['id'],
+                "ip_version": 6,
+                "ipv6_ra_mode": "slaac",
+                "ipv6_address_mode": "slaac",
+                "cidr": cidr,
+                "gateway_ip": gateway_ip,
                 "tenant_id": self.tenant_id
             }
         }
