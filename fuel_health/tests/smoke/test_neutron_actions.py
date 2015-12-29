@@ -80,7 +80,7 @@ class TestNeutron(neutronmanager.NeutronBaseTest):
                               'Network can not be created',
                               'Network creation', name)
 
-        subnet = self.verify(20, self.create_subnet, 4,
+        subnet = self.verify(20, self.create_subnet_v4, 4,
                              'Subnet can not be created',
                              'Subnet creation', network)
 
