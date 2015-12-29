@@ -95,6 +95,28 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
         return subnet
 
+    def create_subnet_dynamic(
+            self, internal_network,
+            cidr="10.0.7.0/24", gateway_ip="2001:db8:1::1"):
+        v6 = ':' in cidr
+        subnet_info = {
+            "subnet": {
+                "network_id": internal_network['id'],
+                "ip_version": 6 if v6 else 4,
+                "cidr": cidr,
+                "tenant_id": self.tenant_id
+            }
+        }
+        if v6:
+            subnet_info['subnet']["gateway_ip"] = gateway_ip
+            subnet_info['subnet']["ipv6_ra_mode"] = 'slaac'
+            subnet_info['subnet']["ipv6_address_mode"] = 'slaac'
+
+        subnet = self.neutron_client.create_subnet(subnet_info)['subnet']
+        self.subnets.append(subnet)
+
+        return subnet
+
     def uplink_subnet_to_router(self, router, subnet):
         if not self.routers.get(router['id'], None):
             self.routers[router['id']].append(subnet['id'])

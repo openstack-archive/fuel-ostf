@@ -615,6 +615,13 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 'from_port': -1,
                 'to_port': -1,
                 'cidr': '0.0.0.0/0',
+            },
+            {
+                # ping6
+                'ip_protocol': 'icmp',
+                'from_port': -1,
+                'to_port': -1,
+                'cidr': '::/0',
             }
         ]
         for ruleset in rulesets:
@@ -808,6 +815,85 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         # TODO(???) Allow configuration of execution and sleep duration.
         return fuel_health.test.call_until_true(ping, 40, 1)
 
+    @staticmethod
+    def __ping_command(dst_address, count=1, deadline=10, packetsize=56):
+        return (
+            "{ping:s} -q -c{count:d} -w{deadline:d} -s{packetsize:d}"
+            " {dst_address:s}".format(
+                ping='ping' if ':' not in dst_address else 'ping6',
+                count=count, deadline=deadline, packetsize=packetsize,
+                dst_address=dst_address))
+
+    def _ping_ip_address_v4v6(
+            self, ip_address, timeout, retries,
+            count=1, deadline=10, packetsize=56):
+        def ping():
+            cmd = self.__ping_command(
+                dst_address=ip_address,
+                count=count,
+                deadline=deadline,
+                packetsize=packetsize
+            )
+
+            if self.host:
+                try:
+                    ssh = SSHClient(self.host[0],
+                                    self.usr, self.pwd,
+                                    key_filename=self.key,
+                                    timeout=timeout)
+                except Exception:
+                    LOG.debug(traceback.format_exc())
+
+                return self.retry_command(retries[0], retries[1],
+                                          ssh.exec_command, cmd)
+
+            else:
+                self.fail('Wrong tests configurations, one from the next '
+                          'parameters are empty controller_node_name or '
+                          'controller_node_ip ')
+
+        # TODO(???) Allow configuration of execution and sleep duration.
+        return fuel_health.test.call_until_true(ping, 40, 1)
+
+    def _ping_ip_address_from_instance_v4v6(
+            self, ip_address, timeout, retries,
+            dst_address='8.8.8.8', count=1, deadline=10, packetsize=56,
+            viaHost=None):
+        def ping():
+            if not (self.host or viaHost):
+                self.fail('Wrong tests configurations, one from the next '
+                          'parameters are empty controller_node_name or '
+                          'controller_node_ip ')
+            try:
+                host = viaHost or self.host[0]
+                LOG.debug('Get ssh to instance')
+                ssh = SSHClient(host,
+                                self.usr, self.pwd,
+                                key_filename=self.key,
+                                timeout=timeout)
+
+            except Exception:
+                LOG.debug(traceback.format_exc())
+
+            command = self.__ping_command(
+                dst_address=dst_address,
+                count=count,
+                deadline=deadline,
+                packetsize=packetsize
+            )
+
+            return self.retry_command(
+                retries[0], retries[1],
+                ssh.exec_command_on_vm,
+                command=command,
+                user='cirros',
+                password='cubswin:)',
+                vm=ip_address
+            )
+
+        # TODO(???) Allow configuration of execution and sleep duration.
+        return fuel_health.test.call_until_true(ping, 40, 1)
+
     def _run_command_on_instance(self, ip_address, timeout, retries, cmd,
                                  viaHost=None):
         def run_cmd():
@@ -853,6 +939,20 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                         "Timed out waiting for %s to become "
                         "reachable. Please, check Network "
                         "configuration" % ip_address)
+
+    def _check_connectivity_from_vm_v4v6(
+            self, ip_address, timeout, retries,
+            dst_address='8.8.8.8', count=1, deadline=10, packetsize=56,
+            viaHost=None):
+        self.assertTrue(
+            self._ping_ip_address_from_instance_v4v6(
+                ip_address=ip_address,
+                timeout=timeout, retries=retries,
+                dst_address=dst_address,
+                count=count, deadline=deadline, packetsize=packetsize,
+                viaHost=viaHost),
+            "Timed out waiting for %s to become reachable. "
+            "Please, check Network configuration" % ip_address)
 
     def _run_command_from_vm(self, ip_address,
                              timeout, retries, cmd, viaHost=None):
