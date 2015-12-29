@@ -615,6 +615,13 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 'from_port': -1,
                 'to_port': -1,
                 'cidr': '0.0.0.0/0',
+            },
+            {
+                # ping6
+                'ip_protocol': 'icmp',
+                'from_port': -1,
+                'to_port': -1,
+                'cidr': '::/0',
             }
         ]
         for ruleset in rulesets:
@@ -754,9 +761,18 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                     cls.error_msg.append(exc)
                     LOG.debug(traceback.format_exc())
 
+    @staticmethod
+    def __ping_command(dst_address, count=1, deadline=10, packetsize=56):
+        return (
+            "{ping:s} -q -c{count:d} -w{deadline:d} -s{packetsize:d}"
+            " {dst_address:s}".format(
+                ping='ping' if ':' not in dst_address else 'ping6',
+                count=count, deadline=deadline, packetsize=packetsize,
+                dst_address=dst_address))
+
     def _ping_ip_address(self, ip_address, timeout, retries):
         def ping():
-            cmd = "ping -q -c1 -w10 %s" % ip_address
+            cmd = self.__ping_command(dst_address=ip_address)
 
             if self.host:
                 try:
@@ -779,7 +795,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         return fuel_health.test.call_until_true(ping, 40, 1)
 
     def _ping_ip_address_from_instance(self, ip_address, timeout,
-                                       retries, viaHost=None):
+                                       retries, dst_address='8.8.8.8',
+                                       viaHost=None):
         def ping():
             if not (self.host or viaHost):
                 self.fail('Wrong tests configurations, one from the next '
@@ -796,7 +813,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             except Exception:
                 LOG.debug(traceback.format_exc())
 
-            command = "ping -q -c1 -w10 8.8.8.8"
+            command = self.__ping_command(dst_address=dst_address)
 
             return self.retry_command(retries[0], retries[1],
                                       ssh.exec_command_on_vm,
@@ -846,13 +863,16 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def _check_connectivity_from_vm(self, ip_address,
                                     timeout, retries,
+                                    dst_address='8.8.8.8',
                                     viaHost=None):
-        self.assertTrue(self._ping_ip_address_from_instance(ip_address,
-                                                            timeout, retries,
-                                                            viaHost=viaHost),
-                        "Timed out waiting for %s to become "
-                        "reachable. Please, check Network "
-                        "configuration" % ip_address)
+        self.assertTrue(
+            self._ping_ip_address_from_instance(
+                ip_address,
+                timeout, retries,
+                dst_address=dst_address,
+                viaHost=viaHost),
+            "Timed out waiting for %s to become reachable. "
+            "Please, check Network configuration" % ip_address)
 
     def _run_command_from_vm(self, ip_address,
                              timeout, retries, cmd, viaHost=None):
