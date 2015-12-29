@@ -629,8 +629,9 @@ class NovaNetworkScenarioTest(OfficialClientTest):
     def _create_network(self, label='ost1_test-network-smoke-'):
         n_label = rand_name(label)
         cidr = self.config.network.tenant_network_cidr
+        cidr_v6 = self.config.network.tenant_network_cidr_v6
         networks = self.compute_client.networks.create(
-            label=n_label, cidr=cidr)
+            label=n_label, cidr=cidr, cidr_v6=cidr_v6)
         self.set_resource(n_label, networks)
         self.network.append(networks)
         self.verify_response_body_content(networks.label,
@@ -756,7 +757,9 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def _ping_ip_address(self, ip_address, timeout, retries):
         def ping():
-            cmd = "ping -q -c1 -w10 %s" % ip_address
+            cmd = "ping{v6} -q -c1 -w10 {ip_address}".format(
+                    v6='' if ':' not in ip_address else '6',
+                    ip_address=ip_address)
 
             if self.host:
                 try:
