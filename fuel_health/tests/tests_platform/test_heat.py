@@ -813,3 +813,94 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             'verifying if the instance was rolled back',
             len(instances) == 0
         )
+
+    def test_wait_condition(self):
+        """Check creation of stack with Wait Condition/Handle resources
+        Target component: Heat
+
+        Scenario:
+            1. Create test flavor.
+            2. Create a keypair.
+            3. Save generated private key to file on Controller node.
+            4. Create a stack using template.
+            5. Wait for the stack status to change to 'CREATE_COMPLETE'.
+            6. Delete the file with private key.
+            7. Delete the stack.
+            8. Wait for the stack to be deleted.
+
+        Duration: 820 s.
+        Available since release: 2015.1.0-8.0
+        """
+
+        self.check_image_exists()
+
+        # creation of test flavor
+        heat_flavor = self.verify(
+            50, self.create_flavor,
+            1, 'Test flavor can not be created.',
+            'flavor creation'
+        )
+
+        # creation of test keypair
+        keypair = self.verify(
+            10, self._create_keypair,
+            2, 'Keypair can not be created.',
+            'keypair creation',
+            self.compute_client
+        )
+        path_to_key = self.verify(
+            10, self.save_key_to_file,
+            3, 'Private key can not be saved to file.',
+            'saving private key to the file',
+            keypair.private_key
+        )
+
+        # definition of stack parameters
+        parameters = {
+            'key_name': keypair.name,
+            'flavor': heat_flavor.name,
+            'image': self.config.compute.image_name,
+        }
+
+        if 'neutron' in self.config.network.network_provider:
+            parameters['net'], _ = self.create_network_resources()
+            template = self.load_template('heat_wait_condition_neutron.yaml')
+        else:
+            template = self.load_template('heat_wait_condition_nova.yaml')
+
+        # creation of stack
+        fail_msg = 'Stack was not created properly.'
+        stack = self.verify(
+            20, self.create_stack,
+            4, fail_msg,
+            'stack creation',
+            template, parameters=parameters
+        )
+        self.verify(
+            600, self.wait_for_stack_status,
+            5, fail_msg,
+            'stack status becoming "CREATE_COMPLETE"',
+            stack.id, 'CREATE_COMPLETE', 600, 15
+        )
+
+        # deletion of file with keypair from vm
+        self.verify(
+            10, self.delete_key_file,
+            6, 'The file with private key can not be deleted.',
+            'deleting the file with private key',
+            path_to_key
+        )
+
+        # deletion of stack
+        self.verify(
+            20, self.heat_client.stacks.delete,
+            7, 'Can not delete stack.',
+            'deleting stack',
+            stack.id
+        )
+        self.verify(
+            100, self.wait_for_stack_deleted,
+            8, 'Can not delete stack.',
+            'deleting stack',
+            stack.id
+        )
