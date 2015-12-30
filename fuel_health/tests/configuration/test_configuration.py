@@ -50,8 +50,9 @@ class SanityConfigurationTest(nmanager.SanityChecksTest):
         Duration: 20 s.
          Available since release: 2014.2-6.1
         """
+        ip = self.config.nailgun_host
 
-        ssh_client = SSHClient('localhost',
+        ssh_client = SSHClient(ip,
                                self.config.master.master_node_ssh_user,
                                self.config.master.master_node_ssh_password,
                                timeout=self.config.master.ssh_timeout)
