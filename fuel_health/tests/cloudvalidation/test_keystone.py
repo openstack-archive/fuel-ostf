@@ -49,6 +49,7 @@ class KeystoneTest(cloudvalidation.CloudValidationTest):
             1. Check Keystone SSL certificate
 
         Duration: 20 s.
+        Deployment tags: disabled
 
         Available since release: 2015.1.0-8.0
         """
