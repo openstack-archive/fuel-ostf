@@ -16,7 +16,7 @@
 import logging
 import traceback
 
-import fuel_health.nmanager
+from fuel_health import nmanager
 import fuel_health.test
 
 from ironicclient.common import utils
@@ -25,7 +25,7 @@ from ironicclient import exc as ironic_exc
 LOG = logging.getLogger(__name__)
 
 
-class IronicTest(fuel_health.nmanager.NovaNetworkScenarioTest):
+class IronicTest(nmanager.SanityChecksTest):
     """Provide access to the python-ironicclient for calling Ironic API."""
 
     @classmethod
