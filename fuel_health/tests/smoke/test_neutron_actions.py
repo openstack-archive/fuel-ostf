@@ -62,15 +62,13 @@ class TestNeutron(neutronmanager.NeutronBaseTest):
             self.skipTest('There are no compute nodes')
 
         self.check_image_exists()
-        if not self.security_groups:
-            self.security_groups[self.tenant_id] = self.verify(
-                25, self._create_security_group, 1,
-                "Security group can not be created.",
-                'security group creation',
-                self.compute_client)
+        sec_group_name = self.verify(
+            25, self._create_security_group, 1,
+            "Security group can not be created.",
+            'security group creation',
+            self.compute_client).name
 
         name = rand_name('ost1_test-server-smoke-')
-        security_groups = [self.security_groups[self.tenant_id].name]
 
         router = self.verify(30, self.create_router, 2,
                              'Router can not be created', 'Router creation',
@@ -91,7 +89,7 @@ class TestNeutron(neutronmanager.NeutronBaseTest):
         server = self.verify(200, self._create_server, 6,
                              "Server can not be created.",
                              "server creation",
-                             self.compute_client, name, security_groups,
+                             self.compute_client, name, [sec_group_name],
                              net_id=network['id'])
 
         floating_ip = self.verify(
