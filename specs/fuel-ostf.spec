@@ -36,7 +36,7 @@ Requires:    python-requests >= 1.1
 Requires:    python-unittest2 >= 0.5.1
 Requires:    PyYAML >= 3.10
 Requires:    python-testresources >= 0.2.7
-%if 0%{?rhel} >= 5 && 0%{?rhel} < 7
+%if 0%{?rhel} >= 5 && 0%{?rhel} <= 7
 Requires:    python-argparse >= 1.2.1
 %endif
 
