@@ -20,7 +20,7 @@ from fuel_health import ironicmanager
 LOG = logging.getLogger(__name__)
 
 
-class IronicSmokeTests(ironicmanager.IronicTest):
+class IronicSanityTests(ironicmanager.IronicTest):
     """TestClass contains tests to check that Ironic nodes are operable
 
     Special requirements:
@@ -32,7 +32,7 @@ class IronicSmokeTests(ironicmanager.IronicTest):
 
     @classmethod
     def setUpClass(cls):
-        super(IronicSmokeTests, cls).setUpClass()
+        super(IronicSanityTests, cls).setUpClass()
         cls.controllers = cls.config.compute.online_controllers
         cls.conductors = cls.config.ironic.online_conductors
         if not cls.controllers:
