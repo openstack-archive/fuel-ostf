@@ -1,0 +1,11 @@
+Code-Review+2: Artem Roma <aroma@mirantis.com>
+Code-Review+1: tatyana-leontovich <tleontovich@mirantis.com>
+Code-Review+1: Maksim Malchuk <mmalchuk@mirantis.com>
+Code-Review+1: Igor Kalnitsky <ikalnitsky@mirantis.com>
+Workflow+1: Artem Roma <aroma@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 06 Jan 2016 10:47:49 +0000
+Reviewed-on: https://review.openstack.org/261325
+Project: openstack/fuel-ostf
+Branch: refs/heads/master
