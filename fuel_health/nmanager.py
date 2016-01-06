@@ -877,9 +877,10 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         LOG.debug('Current host is {0}'.format(current_host))
         available_hosts = self.get_compute_hostname()
         for host in available_hosts:
+            hostname = host.service.get('host')
             if host.hypervisor_type != 'VMware vCenter Server' and \
-               host.hypervisor_hostname != current_host:
-                return host.hypervisor_hostname
+               hostname != current_host:
+                return hostname
 
     def migrate_instance(self, instance, host_to):
         instance.live_migrate(host_to)
