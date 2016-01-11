@@ -81,7 +81,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # create stack
         fail_msg = 'Stack was not created properly.'
         stack = self.verify(
-            20, self.create_stack,
+            60, self.create_stack,
             2, fail_msg,
             'stack creation',
             template, parameters=parameters
@@ -241,7 +241,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # create stack
         fail_msg = 'Stack was not created properly.'
         stack = self.verify(
-            20, self.create_stack,
+            60, self.create_stack,
             2, fail_msg,
             'stack creation',
             template, parameters=parameters
@@ -428,7 +428,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # create stack
         fail_msg = 'Stack was not created properly.'
         stack = self.verify(
-            20, self.create_stack,
+            60, self.create_stack,
             2, fail_msg,
             'stack creation',
             template, parameters=parameters
@@ -643,7 +643,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # creation of stack
         fail_msg = 'Stack was not created properly.'
         stack = self.verify(
-            20, self.create_stack,
+            60, self.create_stack,
             5, fail_msg,
             'stack creation',
             template, parameters=parameters
@@ -871,7 +871,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # creation of stack
         fail_msg = 'Stack was not created properly.'
         stack = self.verify(
-            20, self.create_stack,
+            60, self.create_stack,
             4, fail_msg,
             'stack creation',
             template, parameters=parameters
