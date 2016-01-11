@@ -81,7 +81,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # create stack
         fail_msg = 'Stack was not created properly.'
         stack = self.verify(
-            20, self.create_stack,
+            60, self.create_stack,
             2, fail_msg,
             'stack creation',
             template, parameters=parameters
@@ -241,7 +241,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # create stack
         fail_msg = 'Stack was not created properly.'
         stack = self.verify(
-            20, self.create_stack,
+            60, self.create_stack,
             2, fail_msg,
             'stack creation',
             template, parameters=parameters
@@ -428,7 +428,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # create stack
         fail_msg = 'Stack was not created properly.'
         stack = self.verify(
-            20, self.create_stack,
+            60, self.create_stack,
             2, fail_msg,
             'stack creation',
             template, parameters=parameters
@@ -643,7 +643,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # creation of stack
         fail_msg = 'Stack was not created properly.'
         stack = self.verify(
-            20, self.create_stack,
+            60, self.create_stack,
             5, fail_msg,
             'stack creation',
             template, parameters=parameters
@@ -795,7 +795,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             fail_msg, 3
         )
         self.verify(
-            180, self.wait_for_stack_deleted,
+            300, self.wait_for_stack_deleted,
             4, 'Rollback of the stack failed.',
             'rolling back the stack after its creation failed',
             stack.id
@@ -871,7 +871,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # creation of stack
         fail_msg = 'Stack was not created properly.'
         stack = self.verify(
-            20, self.create_stack,
+            60, self.create_stack,
             4, fail_msg,
             'stack creation',
             template, parameters=parameters
