@@ -15,6 +15,8 @@
 import logging
 import time
 
+from saharaclient.api import base
+
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import nmanager
 
@@ -139,7 +141,7 @@ class SaharaTestsManager(nmanager.PlatformServicesBaseClass):
         previous_cluster_status = 'An unknown cluster status'
         start = time.time()
         while time.time() - start < self.cluster_timeout:
-            cluster = self.sahara_client.clusters.get(cluster_id)
+            cluster = self._retry(self.sahara_client.clusters.get, cluster_id)
             if cluster.status != previous_cluster_status:
                 LOG.debug('Currently cluster is '
                           'in "{0}" status.'.format(cluster.status))
@@ -152,6 +154,21 @@ class SaharaTestsManager(nmanager.PlatformServicesBaseClass):
 
         self.fail('Cluster failed to get to "Active" '
                   'status within {0} seconds.'.format(self.cluster_timeout))
+
+    # TODO(esikachev): Remove, when 1533218 will be fixed.
+    def _retry(self, method, *args, **kwargs):
+        count = 5
+        while count > 0:
+            try:
+                return method(*args, **kwargs)
+            except base.APIException as e:
+                raise e
+            except Exception as e:
+                LOG.debug('Failure: %s. Retrying...' % e)
+                time.sleep(5)
+                count -= 1
+                if count == 0:
+                    raise e
 
     def check_hadoop_services(self, cluster_id, processes_map):
         """This method checks deployment of Hadoop services on cluster.
