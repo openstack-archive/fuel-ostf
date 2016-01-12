@@ -296,7 +296,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         return saharaclient.client.Client(sahara_api_version,
                                           sahara_url=sahara_url,
                                           input_auth_token=auth_token,
-                                          insecure=True)
+                                          insecure=True, connect_retries=5)
 
     def _get_ceilometer_client(self):
         keystone = self._get_identity_client()
