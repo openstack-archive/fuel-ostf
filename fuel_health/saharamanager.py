@@ -15,6 +15,8 @@
 import logging
 import time
 
+from saharaclient.api import base
+
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import nmanager
 
