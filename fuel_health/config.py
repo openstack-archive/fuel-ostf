@@ -788,7 +788,8 @@ class NailgunConfig(object):
             self.volume.cinder_vmware_storage_az = "{0}-cinder".format(az)
 
     def get_keystone_vip(self):
-        if 'service_endpoint' in self.network.raw_data:
+        if 'service_endpoint' in self.network.raw_data \
+                and not self.fuel.ssl_data:
             keystone_vip = self.network.raw_data['service_endpoint']
         elif 'vips' in self.network.raw_data:
             vips_data = self.network.raw_data['vips']
