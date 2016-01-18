@@ -211,6 +211,13 @@ class BaseIntegrationTest(BaseUnitTest):
         cluster = CLUSTERS[cluster_id]
         release_id = cluster['cluster_meta']['release_id']
 
+        # ssl check request performs request to the root url
+        self.requests_mock.register_uri(
+            'GET',
+            '/',
+            json={}
+        )
+
         self.requests_mock.register_uri(
             'GET',
             '/api/clusters/{0}'.format(cluster_id),
