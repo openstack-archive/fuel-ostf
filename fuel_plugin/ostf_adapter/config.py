@@ -50,8 +50,7 @@ adapter_opts = [
                help=""),
     cfg.BoolOpt('auth_enable',
                 default=False,
-                help="Set True to enable auth.")
-
+                help="Set True to enable auth."),
 ]
 
 cli_opts = [

@@ -112,6 +112,7 @@ def _get_cluster_attrs(cluster_id, token=None):
 
     REQ_SES = requests.Session()
     REQ_SES.trust_env = False
+    REQ_SES.verify = False
 
     if token is not None:
         REQ_SES.headers.update({'X-Auth-Token': token})
