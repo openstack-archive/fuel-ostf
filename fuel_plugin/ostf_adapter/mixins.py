@@ -136,6 +136,20 @@ def _get_cluster_attrs(cluster_id, token=None):
         REQ_SES.headers.update({'X-Auth-Token': token})
 
     URL = 'http://{0}:{1}/{2}'
+
+    # handle situation when ssl is suddenly enabled
+    # for receiving peer [1]
+    # [1]: https://bugs.launchpad.net/fuel/8.0.x/+bug/1530318
+    try:
+        nailgun_url = URL.format(
+            cfg.CONF.adapter.nailgun_host,
+            cfg.CONF.adapter.nailgun_port,
+            ''
+        )
+        REQ_SES.get(nailgun_url, verify=True)
+    except requests.exceptions.SSLError:
+        REQ_SES.verify = cfg.CONF.fuel_ssl_cert
+
     NAILGUN_API_URL = 'api/clusters/{0}'
 
     cluster_url = NAILGUN_API_URL.format(cluster_id)

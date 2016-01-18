@@ -37,6 +37,12 @@ class TestDeplTagsGetter(base.BaseUnitTest):
         }
 
         with requests_mock.Mocker() as m:
+            m.register_uri(
+                'GET',
+                '/',
+                json={}
+            )
+
             cluster = base.CLUSTERS[expected['cluster_id']]
             m.register_uri('GET', '/api/clusters/3',
                            json=cluster['cluster_meta'])

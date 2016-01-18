@@ -52,8 +52,10 @@ adapter_opts = [
                help=""),
     cfg.BoolOpt('auth_enable',
                 default=False,
-                help="Set True to enable auth.")
-
+                help="Set True to enable auth."),
+    cfg.StrOpt('fuel_ssl_cert',
+               default='/var/lib/fuel/keys/master/nginx/nginx.cert',
+               help='')
 ]
 
 cli_opts = [
