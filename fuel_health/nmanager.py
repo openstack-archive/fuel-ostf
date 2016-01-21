@@ -286,7 +286,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
         keystone = self._get_identity_client()
         try:
             sahara_url = keystone.service_catalog.url_for(
-                service_type='data_processing', endpoint_type='publicURL')
+                service_type='data-processing', endpoint_type='publicURL')
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Endpoint for Sahara service '
                         'not found. Sahara client cannot be initialized.')
