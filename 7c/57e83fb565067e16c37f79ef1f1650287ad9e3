@@ -1,0 +1,11 @@
+Code-Review+1: Sergii Turivnyi <sturivnyi@mirantis.com>
+Code-Review+1: Vitaly Gusev <vgusev@mirantis.com>
+Code-Review+1: Kyrylo Romanenko <kromanenko@mirantis.com>
+Code-Review+2: tatyana-leontovich <tleontovich@mirantis.com>
+Workflow+1: tatyana-leontovich <tleontovich@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Thu, 21 Jan 2016 13:27:56 +0000
+Reviewed-on: https://review.openstack.org/270644
+Project: openstack/fuel-ostf
+Branch: refs/heads/stable/8.0
