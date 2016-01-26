@@ -767,8 +767,10 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 except Exception:
                     LOG.debug(traceback.format_exc())
 
-                return self.retry_command(retries[0], retries[1],
-                                          ssh.exec_command, cmd)
+                return self.retry_command(retries=retries[0],
+                                          timeout=retries[1],
+                                          method=ssh.exec_command,
+                                          command=cmd)
 
             else:
                 self.fail('Wrong tests configurations, one from the next '
