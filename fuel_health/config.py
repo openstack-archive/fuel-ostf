@@ -583,6 +583,7 @@ class NailgunConfig(object):
         self.cluster_id = os.environ.get('CLUSTER_ID', None)
         self.req_session = requests.Session()
         self.req_session.trust_env = False
+        self.req_session.verify = False
         if token:
             self.req_session.headers.update({'X-Auth-Token': token})
         if parse:
