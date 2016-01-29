@@ -24,7 +24,7 @@ resources:
           security_groups:
           - get_param: SecurityGroup
       min_size: 1
-      max_size: 2
+      max_size: 3
 
   scale_up_policy:
     type: OS::Heat::ScalingPolicy
@@ -32,7 +32,7 @@ resources:
       adjustment_type: change_in_capacity
       auto_scaling_group_id: {get_resource: my_asg}
       cooldown: 60
-      scaling_adjustment: 1
+      scaling_adjustment: 2
 
   scale_down_policy:
     type: OS::Heat::ScalingPolicy
@@ -42,31 +42,31 @@ resources:
       cooldown: 60
       scaling_adjustment: '-1'
 
-  cpu_alarm_high:
+  alarm_high:
     type: OS::Ceilometer::Alarm
     properties:
-      description: Scale-up if the average CPU > 50% for 1 minute
-      meter_name: cpu_util
-      statistic: avg
+      description: Scale-up if count of instance >= 1 for 1 minute
+      meter_name: instance
+      statistic: count
       period: 60
       evaluation_periods: 1
-      threshold: 50
+      threshold: 1
       alarm_actions:
         - {get_attr: [scale_up_policy, alarm_url]}
       matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
-      comparison_operator: gt
+      comparison_operator: le
 
-  cpu_alarm_low:
+  alarm_low:
     type: OS::Ceilometer::Alarm
     properties:
-      description: Scale-down if the average CPU < 15% for 1 minutes
-      meter_name: cpu_util
-      statistic: avg
-      period: 60
+      description: Scale-down if maximum count of instance >= 2 for 0.5 minutes
+      meter_name: instance
+      statistic: count
+      period: 30
       evaluation_periods: 1
-      threshold: 15
+      threshold: 2
       alarm_actions:
         - {get_attr: [scale_down_policy, alarm_url]}
       matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
-      comparison_operator: lt
+      comparison_operator: ge
 
