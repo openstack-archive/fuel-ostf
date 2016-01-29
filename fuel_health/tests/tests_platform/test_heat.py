@@ -583,13 +583,11 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             7. Create a floating IP.
             8. Assign the floating IP to the instance of the stack.
             9. Wait for instance is ready for load.
-            10. Load the instance CPU to initiate the stack scaling up.
-            11. Wait for the 2nd instance to be launched.
-            12. Release the instance CPU to initiate the stack scaling down.
-            13. Wait for the 2nd instance to be terminated.
-            14. Delete the file with private key.
-            15. Delete the stack.
-            16. Wait for the stack to be deleted.
+            10. Wait for the 2nd instance to be launched.
+            11. Wait for the 2nd instance to be terminated.
+            12. Delete the file with private key.
+            13. Delete the stack.
+            14. Wait for the stack to be deleted.
 
         Duration: 2200 s.
         Deployment tags: Ceilometer
@@ -690,34 +688,20 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             vm_connection, 120, 15
         )
 
-        # start of vm loading
-        self.verify(
-            60, self.load_vm_cpu,
-            10, 'Can not create a process to load VM CPU.',
-            'loading VM CPU',
-            vm_connection
-        )
 
         # launching the second instance during autoscaling
         self.verify(
             480, self.wait_for_autoscaling,
-            11, 'Failed to launch the 2nd instance per autoscaling alarm.',
+            10, 'Failed to launch the 2nd instance per autoscaling alarm.',
             'launching the new instance per autoscaling alarm',
             len(instances) + 1, 480, 10, reduced_stack_name
         )
 
-        # finish of vm loading
-        self.verify(
-            180, self.release_vm_cpu,
-            12, 'Can not kill the process on VM to turn CPU load off.',
-            'turning off VM CPU load',
-            vm_connection
-        )
 
         # termination of the second instance during autoscaling
         self.verify(
             480, self.wait_for_autoscaling,
-            13, 'Failed to terminate the 2nd instance per autoscaling alarm.',
+            11, 'Failed to terminate the 2nd instance per autoscaling alarm.',
             'terminating the 2nd instance per autoscaling alarm',
             len(instances), 480, 10, reduced_stack_name
         )
@@ -725,7 +709,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # deletion of file with keypair from vm
         self.verify(
             10, self.delete_key_file,
-            14, 'The file with private key can not be deleted.',
+            12, 'The file with private key can not be deleted.',
             'deleting the file with private key',
             path_to_key
         )
@@ -733,13 +717,13 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # deletion of stack
         self.verify(
             20, self.heat_client.stacks.delete,
-            15, 'Can not delete stack.',
+            13, 'Can not delete stack.',
             'deleting stack',
             stack.id
         )
         self.verify(
             100, self.wait_for_stack_deleted,
-            16, 'Can not delete stack.',
+            14, 'Can not delete stack.',
             'deleting stack',
             stack.id
         )
