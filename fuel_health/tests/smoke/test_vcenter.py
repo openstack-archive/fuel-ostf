@@ -267,13 +267,6 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
         super(TestVcenterImageAction, self).setUp()
         self.check_clients_state()
 
-    @classmethod
-    def find_flavor_id(cls):
-        flavors = dict([flavor.ram, flavor.id]
-                       for flavor in cls.compute_client.flavors.list()
-                       if flavor.ram >= 128)
-        return flavors[sorted(flavors)[0]]
-
     def _wait_for_server_status(self, server, status):
         self.status_timeout(self.compute_client.servers,
                             server.id,
@@ -302,11 +295,7 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
         # Block until resource deletion has completed or timed-out
         test.call_until_true(is_deletion_complete, 10, 1)
 
-    def _boot_image(self, image_id):
-        flavor_id = self.find_flavor_id()
-        if not flavor_id:
-            self.fail("Flavor for tests was not found. Seems that "
-                      "something is wrong with nova services.")
+    def _boot_image(self, image_id, flavor_id):
 
         name = rand_name('ost1_test-image')
         client = self.compute_client
@@ -362,6 +351,7 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
         Target component: Glance
 
         Scenario:
+            1. Create flavor.
             1. Get existing image by name.
             2. Launch an instance using the default image.
             3. Make snapshot of the created instance.
@@ -369,6 +359,7 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
             5. Wait while instance deleted
             6. Launch another instance from the snapshot created in step 2.
             7. Delete server.
+            9. Delete flavor.
 
         Duration: 300 s.
         Available since release: 2014.2-6.1
@@ -378,41 +369,52 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
         img_name = 'TestVM-VMDK'
         self.manager.config.compute.image_name = img_name
         self.check_image_exists()
-        image = self.verify(30, self.get_image_from_name, 1,
+
+        fail_msg = "Flavor was not created properly."
+        flavor = self.verify(30, self._create_flavors, 1,
+                             fail_msg,
+                             "flavor creation",
+                             self.compute_client, 256, 0)
+
+        image = self.verify(30, self.get_image_from_name, 2,
                             "Image can not be retrieved.",
                             "getting image by name",
                             img_name)
 
-        server = self.verify(180, self._boot_image, 2,
+        server = self.verify(180, self._boot_image, 3,
                              "Image can not be booted.",
                              "image booting",
-                             image)
+                             image, flavor.id)
 
         # snapshot the instance
-        snapshot_image_id = self.verify(700, self._create_image, 3,
+        snapshot_image_id = self.verify(700, self._create_image, 4,
                                         "Snapshot of an"
                                         " instance can not be created.",
                                         'snapshotting an instance',
                                         server)
 
-        self.verify(180, self.compute_client.servers.delete, 4,
+        self.verify(180, self.compute_client.servers.delete, 5,
                     "Instance can not be deleted.",
                     'Instance deletion',
                     server)
 
-        self.verify(180, self._wait_for_server_deletion, 5,
+        self.verify(180, self._wait_for_server_deletion, 6,
                     "Instance can not be deleted.",
                     'Wait for instance deletion complete',
                     server)
 
-        server = self.verify(700, self._boot_image, 6,
+        server = self.verify(700, self._boot_image, 7,
                              "Instance can not be launched from snapshot.",
                              'booting instance from snapshot',
-                             snapshot_image_id)
+                             snapshot_image_id, flavor.id)
 
-        self.verify(30, self._delete_server, 7,
+        self.verify(30, self._delete_server, 8,
                     "Server can not be deleted.",
                     "server deletion", server)
+
+        msg = "Flavor failed to be deleted."
+        self.verify(30, self._delete_flavors, 9, msg,
+                    "flavor deletion", self.compute_client, flavor)
 
 
 class VcenterVolumesTest(nmanager.SmokeChecksTest):
