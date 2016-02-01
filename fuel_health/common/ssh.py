@@ -121,7 +121,7 @@ class Client(object):
             LOG.debug(traceback.format_exc())
             return
 
-    def exec_command(self, cmd):
+    def exec_command(self, command):
         """Execute the specified command on the server.
 
         Note that this method is reading whole command outputs to memory, thus
@@ -136,7 +136,7 @@ class Client(object):
         channel = transport.open_session()
         channel.get_pty()
         channel.fileno()  # Register event pipe
-        channel.exec_command(cmd)
+        channel.exec_command(command)
         channel.shutdown_write()
         out_data = []
         err_data = []
@@ -147,7 +147,7 @@ class Client(object):
             if not any(ready):
                 raise exceptions.TimeoutException(
                     "Command: '{0}' executed on host '{1}'.".format(
-                        cmd, self.host))
+                        command, self.host))
             if not ready[0]:        # If there is nothing to read.
                 continue
             out_chunk = err_chunk = None
@@ -162,7 +162,7 @@ class Client(object):
         exit_status = channel.recv_exit_status()
         if 0 != exit_status:
             raise exceptions.SSHExecCommandFailed(
-                command=cmd, exit_status=exit_status,
+                command=command, exit_status=exit_status,
                 strerror=''.join(err_data).join(out_data))
         return ''.join(out_data)
 
