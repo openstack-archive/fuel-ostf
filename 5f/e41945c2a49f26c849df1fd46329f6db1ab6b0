@@ -1,0 +1,10 @@
+Code-Review+1: Igor Kalnitsky <ikalnitsky@mirantis.com>
+Code-Review+1: Valentin Kaplov <vkaplov@mirantis.com>
+Code-Review+2: Andrey Sledzinskiy <asledzinskiy@mirantis.com>
+Workflow+1: Artem Roma <aroma@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Mon, 01 Feb 2016 11:15:56 +0000
+Reviewed-on: https://review.openstack.org/274590
+Project: openstack/fuel-ostf
+Branch: refs/heads/stable/8.0
