@@ -1,0 +1,15 @@
+Code-Review+1: Alexander Kurenyshev <akurenyshev@mirantis.com>
+Code-Review+1: Vasily Gorin <vgorin@mirantis.com>
+Code-Review+1: Mikhail Samoylov <msamoylov@mirantis.com>
+Code-Review+1: Dmitry Tyzhnenko <dtyzhnenko@mirantis.com>
+Code-Review+1: Nastya Urlapova <aurlapova@mirantis.com>
+Code-Review+1: tatyana-leontovich <tleontovich@mirantis.com>
+Code-Review+1: Alexey Stepanov <astepanov@mirantis.com>
+Code-Review+2: Andrey Sledzinskiy <asledzinskiy@mirantis.com>
+Workflow+1: Andrey Sledzinskiy <asledzinskiy@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Mon, 01 Feb 2016 12:52:45 +0000
+Reviewed-on: https://review.openstack.org/273387
+Project: openstack/fuel-ostf
+Branch: refs/heads/master
