@@ -16,7 +16,6 @@
 import contextlib
 import logging
 import os
-import socket
 import time
 import traceback
 import zipfile
@@ -359,16 +358,16 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         return 'OK'
 
     def check_port_access(self, ip, port):
-        result = 1
+        output = ''
         start_time = time.time()
         while time.time() - start_time < 600:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            result = sock.connect_ex((str(ip), port))
-            sock.close()
-            if result == 0:
+            # Check VM port availability from controller node:
+            output, err = self._run_ssh_cmd("nc -z {0} {1}; echo $?"
+                                            .format(ip, port))
+            if '0' in output:
                 break
             time.sleep(5)
-        self.assertEqual(0, result, '%s port is closed on instance' % port)
+        self.assertIn('0', output, '%s port is closed on instance' % port)
 
     def port_status_check(self, environment, configurations):
         """Function which gives opportunity to check multiple instances
