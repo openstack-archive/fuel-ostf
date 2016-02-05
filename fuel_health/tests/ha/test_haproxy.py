@@ -49,7 +49,7 @@ class HAProxyCheck(test.BaseTestCase):
         :param ignore_nodes: List
         :return dict
         """
-        cmd = 'haproxy-status.sh | egrep -v "BACKEND|FRONTEND"'
+        cmd = 'fuel_haproxy-status | egrep -v "BACKEND|FRONTEND"'
 
         pos_filter = (services, nodes)
         neg_filter = (ignore_services, ignore_nodes)
