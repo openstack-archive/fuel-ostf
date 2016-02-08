@@ -1,0 +1,9 @@
+Code-Review+2: tatyana-leontovich <tleontovich@mirantis.com>
+Code-Review+1: Yaroslav Lobankov <ylobankov@mirantis.com>
+Workflow+1: Andrey Sledzinskiy <asledzinskiy@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Mon, 08 Feb 2016 16:04:03 +0000
+Reviewed-on: https://review.openstack.org/277367
+Project: openstack/fuel-ostf
+Branch: refs/heads/master
