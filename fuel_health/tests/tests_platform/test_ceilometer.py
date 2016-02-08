@@ -180,12 +180,13 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         Target component: Ceilometer
 
         Scenario:
-            1. Get count of samples stored for the last hour for an image.
-            2. Create a sample for the image.
-            3. Check that the sample has the expected resource.
-            4. Get count of samples and compare counts before and after
-               the sample creation.
-            5. Get the resource of the sample.
+            1. Create a sample for the image.
+            2. Get count of samples stored for the last hour for an image.
+            3. Create another sample for the image.
+            4. Check that the sample has the expected resource.
+            5. Get count of samples and compare counts before and after
+               the second sample creation.
+            6. Get the resource of the sample.
 
         Duration: 5 s.
         Deployment tags: Ceilometer
@@ -194,43 +195,41 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         self.check_image_exists()
 
         image_id = self.get_image_from_name()
+
+        fail_msg = 'Failed to create first sample for image.'
+        msg = 'creating first sample for image'
+        self.verify(60, self.create_image_sample, 1, fail_msg, msg, image_id)
+
         an_hour_ago = (datetime.datetime.now() -
                        datetime.timedelta(hours=1)).isoformat()
         query = [{'field': 'resource', 'op': 'eq', 'value': image_id},
                  {'field': 'timestamp', 'op': 'gt', 'value': an_hour_ago}]
         fail_msg = 'Failed to get samples for image.'
         msg = 'getting samples for image'
-        count_before_create_sample = self.verify(
-            60, self.get_samples_count, 1, fail_msg, msg, 'image', query)
+        count_before_create_second_sample = self.verify(
+            60, self.get_samples_count, 2, fail_msg, msg, 'image', query)
 
-        fail_msg = 'Failed to create sample for image.'
-        msg = 'creating sample for image'
-        sample = self.verify(60, self.ceilometer_client.samples.create, 2,
-                             fail_msg, msg,
-                             resource_id=image_id,
-                             counter_name='image',
-                             counter_type='delta',
-                             counter_unit='image',
-                             counter_volume=1,
-                             resource_metadata={'user': 'example_metadata'})
+        fail_msg = 'Failed to create second sample for image.'
+        msg = 'creating second sample for image'
+        second_sample = self.verify(60, self.create_image_sample, 1,
+                                    fail_msg, msg, image_id)
 
         fail_msg = ('Resource of sample is missing or '
                     'does not equal to the expected resource.')
-        self.verify_response_body_value(body_structure=sample[0].resource_id,
-                                        value=image_id,
-                                        msg=fail_msg,
-                                        failed_step=3)
+        self.verify_response_body_value(
+            body_structure=second_sample[0].resource_id, value=image_id,
+            msg=fail_msg, failed_step=4)
 
         fail_msg = ('Failed while waiting '
                     'for addition of new sample to samples list.')
         msg = 'waiting for addition of new sample to samples list'
-        self.verify(20, self.wait_samples_count, 4, fail_msg, msg,
-                    'image', query, count_before_create_sample)
+        self.verify(20, self.wait_samples_count, 5, fail_msg, msg,
+                    'image', query, count_before_create_second_sample)
 
         fail_msg = 'Failed to get resource of sample.'
         msg = 'getting resource of sample'
-        self.verify(20, self.ceilometer_client.resources.get, 5,
-                    fail_msg, msg, sample[0].resource_id)
+        self.verify(20, self.ceilometer_client.resources.get, 6,
+                    fail_msg, msg, second_sample[0].resource_id)
 
     @ceilometermanager.check_compute_nodes()
     def test_check_events_and_traits(self):

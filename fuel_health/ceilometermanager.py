@@ -219,6 +219,13 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         for obj in object_list:
             self.wait_for_object_sample(obj, query, ceilo_obj_type)
 
+    def create_image_sample(self, image_id):
+        sample = self.ceilometer_client.samples.create(
+            resource_id=image_id, counter_name='image', counter_type='delta',
+            counter_unit='image', counter_volume=1,
+            resource_metadata={'user': 'example_metadata'})
+        return sample
+
     def get_samples_count(self, meter_name, query):
         return self.ceilometer_client.statistics.list(
             meter_name=meter_name, q=query)[0].count
