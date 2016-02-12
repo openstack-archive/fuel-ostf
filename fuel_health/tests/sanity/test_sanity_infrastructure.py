@@ -53,33 +53,33 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Target component: OpenStack
 
         Scenario:
-            1. Execute nova-manage service list command on a controller node.
-            2. Check there are no failed services (with XXX state).
+            1. Execute nova service-list command on a controller node.
+            2. Check there are no failed services (with down state).
         Duration: 180 s.
         """
-        output = u'XXX'
-        cmd = 'nova-manage service list'
+        downstate = u'down'
+        cmd = 'source /root/openrc; nova service-list'
         if not self.controllers:
             self.skipTest('Step 1 failed: there are no controller nodes.')
         ssh_client = SSHClient(self.controllers[0],
                                self.usr, self.pwd,
                                key_filename=self.key,
                                timeout=self.timeout)
-        output = self.verify(50, ssh_client.exec_command,
-                             1, "'nova-manage' command execution failed. ",
-                             "nova-manage command execution",
+        output = self.verify(50, ssh_client.exec_command, 1,
+                             "'nova service-list' command execution failed. ",
+                             "'nova service-list' command execution",
                              cmd)
         LOG.debug(output)
         try:
             self.verify_response_true(
-                u'XXX' not in output, 'Step 2 failed: Some nova services '
+                downstate not in output, 'Step 2 failed: Some nova services '
                 'have not been started.')
         except Exception:
             LOG.info("Will sleep for 120 seconds and try again")
             LOG.debug(traceback.format_exc())
             time.sleep(120)
             self.verify_response_true(
-                u'XXX' not in output, 'Step 2 failed: Some nova services '
+                downstate not in output, 'Step 2 failed: Some nova services '
                 'have not been started.')
 
     def test_002_internet_connectivity_from_compute(self):
