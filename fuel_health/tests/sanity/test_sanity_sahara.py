@@ -55,7 +55,9 @@ class VanillaTwoTemplatesTest(SaharaTemplatesTest):
         mapping_versions_of_plugin = {
             "6.1": "2.4.1",
             "7.0": "2.6.0",
-            "8.0": "2.7.1"}
+            "8.0": "2.7.1",
+            "9.0": "2.7.1"
+        }
         self._plugin_name = 'vanilla'
         self._hadoop_version = mapping_versions_of_plugin.get(
             self.config.fuel.fuel_version)
