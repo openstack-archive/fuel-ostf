@@ -1,0 +1,14 @@
+Code-Review+1: Vadim Rovachev <vrovachev@mirantis.com>
+Code-Review+1: Ivan Berezovskiy <iberezovskiy@mirantis.com>
+Code-Review+1: Kyrylo Romanenko <kromanenko@mirantis.com>
+Code-Review+1: Anna Babich <ababich@mirantis.com>
+Code-Review+1: Artem Grechanichenko <agrechanichenko@mirantis.com>
+Code-Review+2: tatyana-leontovich <tleontovich@mirantis.com>
+Code-Review+1: Nastya Urlapova <aurlapova@mirantis.com>
+Workflow+1: tatyana-leontovich <tleontovich@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Mon, 15 Feb 2016 11:03:36 +0000
+Reviewed-on: https://review.openstack.org/279537
+Project: openstack/fuel-ostf
+Branch: refs/heads/master
