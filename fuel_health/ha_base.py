@@ -55,9 +55,17 @@ class RabbitSanityClass(BaseTestCase):
 
         if self._password is None:
             self._password = self.get_hiera_values(
-                hiera_hash='rabbit_hash',
+                hiera_hash='rabbit',
                 hash_key='password'
             )
+            # FIXME(mattmymo): Remove this after merging
+            # https://review.openstack.org/#/c/280596/
+            if self._password is None:
+                self._userid = self.get_hiera_values(
+                    hiera_hash='rabbit_hash',
+                    hash_key='password'
+                )
+
         return self._password
 
     @property
@@ -93,9 +101,16 @@ class RabbitSanityClass(BaseTestCase):
 
         if self._userid is None:
             self._userid = self.get_hiera_values(
-                hiera_hash='rabbit_hash',
+                hiera_hash='rabbit',
                 hash_key='user'
             )
+            # FIXME(mattmymo): Remove this after merging
+            # https://review.openstack.org/#/c/280596/
+            if self._userid is None:
+                self._userid = self.get_hiera_values(
+                    hiera_hash='rabbit_hash',
+                    hash_key='user'
+                )
         return self._userid
 
     def get_ssh_connection_to_controller(self, controller):
@@ -153,7 +168,7 @@ class RabbitSanityClass(BaseTestCase):
                   ' list_channels is {0}'.format(output))
         return output
 
-    def get_hiera_values(self, hiera_hash="rabbit_hash",
+    def get_hiera_values(self, hiera_hash="rabbit",
                          hash_key=None,
                          conf_path="/etc/hiera.yaml",
                          json_parse=False):
