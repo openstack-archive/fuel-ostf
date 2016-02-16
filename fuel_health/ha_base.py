@@ -55,7 +55,7 @@ class RabbitSanityClass(BaseTestCase):
 
         if self._password is None:
             self._password = self.get_hiera_values(
-                hiera_hash='rabbit_hash',
+                hiera_hash='rabbit',
                 hash_key='password'
             )
         return self._password
@@ -93,7 +93,7 @@ class RabbitSanityClass(BaseTestCase):
 
         if self._userid is None:
             self._userid = self.get_hiera_values(
-                hiera_hash='rabbit_hash',
+                hiera_hash='rabbit',
                 hash_key='user'
             )
         return self._userid
@@ -153,7 +153,7 @@ class RabbitSanityClass(BaseTestCase):
                   ' list_channels is {0}'.format(output))
         return output
 
-    def get_hiera_values(self, hiera_hash="rabbit_hash",
+    def get_hiera_values(self, hiera_hash="rabbit",
                          hash_key=None,
                          conf_path="/etc/hiera.yaml",
                          json_parse=False):
