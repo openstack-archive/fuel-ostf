@@ -103,3 +103,7 @@ class IronicTest(nmanager.SanityChecksTest):
     def list_chassis(self):
         """Get list of chassis."""
         return self.ironic_client.chassis.list()
+
+    def get_driver(self, driver):
+        """Get specified driver"""
+        return self.ironic_client.driver.get(driver)
