@@ -618,7 +618,9 @@ class NailgunConfig(object):
         response = self.req_session.get(self.nailgun_url + api_url)
         LOG.info('RESPONSE %s STATUS %s' % (api_url, response.status_code))
         data = response.json()
-        LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
+        if os.environ.get('OSTF_DEBUG_SENSITIVE_INFO', 'false').lower() in\
+                {'true', '1', 'yes', 'enabled'}:
+            LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
         access_data = data['editable']['access']
         common_data = data['editable']['common']
 
