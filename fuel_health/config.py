@@ -21,6 +21,7 @@ import os
 import sys
 import traceback
 import unittest2
+import yaml
 
 import keystoneclient
 try:
@@ -589,6 +590,12 @@ class NailgunConfig(object):
         if parse:
             self.prepare_config()
 
+    @property
+    def development_mode(self):
+        with open('/etc/nailgun/settings.yaml') as nailgun_opts:
+            nailgun_settings = yaml.safe_load(nailgun_opts)
+        return nailgun_settings['DEVELOPMENT']
+
     def prepare_config(self, *args, **kwargs):
         try:
             self._parse_meta()
@@ -618,7 +625,10 @@ class NailgunConfig(object):
         response = self.req_session.get(self.nailgun_url + api_url)
         LOG.info('RESPONSE %s STATUS %s' % (api_url, response.status_code))
         data = response.json()
-        LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
+
+        if self.development_mode:
+            LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
+
         access_data = data['editable']['access']
         common_data = data['editable']['common']
 
