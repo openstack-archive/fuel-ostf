@@ -16,11 +16,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import os
 import sys
 import traceback
 import unittest2
+from copy import deepcopy
 
 import keystoneclient
 try:
@@ -618,7 +620,23 @@ class NailgunConfig(object):
         response = self.req_session.get(self.nailgun_url + api_url)
         LOG.info('RESPONSE %s STATUS %s' % (api_url, response.status_code))
         data = response.json()
-        LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
+        # Filter out security sense data from log
+        log_data = deepcopy(data)
+        hidden_msg = 'HIDDEN BY SECURITY RULES'
+        if 'public_ssl' in log_data['editable']:
+            log_data['editable']['public_ssl']['cert_data'][
+                'value']['content'] = hidden_msg
+        if 'access' in log_data['editable']:
+            log_data['editable']['access']['password']['value'] = hidden_msg
+        if 'external_mongo' in log_data['editable']:
+            log_data['editable']['external_mongo']['mongo_password'][
+                'value'] = hidden_msg
+        if 'workloads_collector' in log_data['editable']:
+            log_data['editable']['workloads_collector']['password'][
+                'value'] = hidden_msg
+        LOG.info('RESPONSE FROM %s - %s' % (api_url, log_data))
+        del log_data
+        del hidden_msg
         access_data = data['editable']['access']
         common_data = data['editable']['common']
 
