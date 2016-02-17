@@ -133,7 +133,14 @@ class IronicSanityTests(ironicmanager.IronicTest):
         self.verify(20, self.list_chassis, 1, fail_msg, 'Chassis list')
 
         fail_msg = "Can't list drivers."
-        self.verify(20, self.list_drivers, 2, fail_msg, 'Drivers list')
+        self.drivers = self.verify(20, self.list_drivers, 2,
+                                   fail_msg, 'Drivers list')
+        LOG.debug(self.drivers)
+        self.wanted_drivers = {u'fake', u'fuel_ssh',
+                               u'fuel_ipmitool', u'fuel_libvirt'}
+        for driver in self.wanted_drivers:
+            self.verify(20, self.get_driver, 2, "Can't find driver.",
+                        'Checking drivers in list', driver)
 
         fail_msg = "Can't list nodes."
         self.verify(20, self.list_nodes, 3, fail_msg, 'Nodes list')
