@@ -677,8 +677,12 @@ class NailgunConfig(object):
         online_controllers = filter(
             lambda node: 'controller' in node['roles'] and
                          node['online'] is True, data)
-        cinder_nodes = filter(lambda node: 'cinder' in node['roles'],
-                              data)
+
+        cinder_roles = ['cinder', 'cinder-block-device']
+        cinder_nodes = filter(
+            lambda node: [cinder_role in node['roles']
+                          for cinder_role in cinder_roles], data)
+
         cinder_vmware_nodes = filter(lambda node: 'cinder-vmware' in
                                      node['roles'], data)
         controller_ips = []
