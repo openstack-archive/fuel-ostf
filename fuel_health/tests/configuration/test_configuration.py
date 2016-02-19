@@ -89,16 +89,18 @@ class SanityConfigurationTest(nmanager.SanityChecksTest):
         """
         cluster_data = {
             'password': self.config.identity.admin_password,
-            'username': self.config.identity.admin_username,
-            'tenant': self.config.identity.admin_tenant_name}
+            'username': self.config.identity.admin_username}
 
-        for key in cluster_data:
-            self.verify_response_body_not_equal(
-                exp_content='admin',
-                act_content=cluster_data[key],
-                msg='Default credentials values are used. '
-                'We kindly recommend that you changed all defaults.',
-                failed_step='1')
+        default_data = {
+            'password': 'admin',
+            'username': 'admin'}
+
+        self.verify_response_body_not_equal(
+            exp_content=default_data,
+            act_content=cluster_data,
+            msg='Default credentials values are used. '
+            'We kindly recommend that you changed all defaults.',
+            failed_step='1')
 
     def test_003_check_default_keystone_credential_usage(self):
             """Check usage of default credentials for keystone on master node
