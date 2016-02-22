@@ -45,9 +45,9 @@ class IronicSanityTests(ironicmanager.IronicTest):
         Target component: Ironic
 
         Scenario:
-            1. Check that ironic-api service is running on controller node.
-            2. Check that ironic-conductor service is running on Ironic node.
-            3. Check that nova-compute service is running on controller node.
+            1. Check that ironic-api is running on all controllers.
+            2. Check that ironic-conductor is running on all Ironic nodes.
+            3. Check that nova-compute is running on single controller node.
         Duration: 60 s.
         Deployment tags: Ironic
         Available since release: liberty-9.0
@@ -59,14 +59,14 @@ class IronicSanityTests(ironicmanager.IronicTest):
         fail_msg = 'Ironic-api service is not running.'
         action = 'checking ironic-api service'
         self.verify(60, self.check_service_availability, 1, fail_msg, action,
-                    self.controllers, cmd, expected)
+                    self.controllers, cmd, expected, len(self.controllers))
         # Step 2
         expected = u'/usr/bin/ironic-conductor'
         cmd = 'pgrep -la ironic'
         fail_msg = 'Ironic-conductor service is not running.'
         action = 'checking ironic-conductor service'
         self.verify(60, self.check_service_availability, 2, fail_msg, action,
-                    self.conductors, cmd, expected)
+                    self.conductors, cmd, expected, len(self.conductors))
         # Step 3
         expected = u'/usr/bin/nova-compute'
         cmd = 'pgrep -la nova-compute'
