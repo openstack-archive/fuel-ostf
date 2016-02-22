@@ -19,6 +19,7 @@ import traceback
 from fuel_health import nmanager
 import fuel_health.test
 
+from fuel_health.common.ssh import Client as SSHClient
 from ironicclient.common import utils
 from ironicclient import exc as ironic_exc
 
@@ -71,16 +72,21 @@ class IronicTest(nmanager.SanityChecksTest):
     def check_service_availability(self, nodes, cmd, expected, timeout=30):
         """Check running processes on nodes.
 
-        At least one controller should run ironic-api process.
-        At least one Ironic node should run ironic-conductor process.
-        At least one controller should run nova-compute process.
+        Check that output from specified command contain expected part
+        at least on one node.
         """
         def check_services():
             for node in nodes:
-                output = self.run_ssh_cmd_with_exit_code(node, cmd)
-                LOG.debug(output)
-                if expected in output:
-                    return True
+                remote = SSHClient(node, self.usr, self.pwd,
+                                   key_filename=self.key,
+                                   timeout=self.timeout)
+                try:
+                    output = remote.exec_command(cmd)
+                    LOG.debug(output)
+                    if expected in output:
+                        return True
+                except Exception:
+                    pass
             return False
 
         if not fuel_health.test.call_until_true(check_services, 30, timeout):
