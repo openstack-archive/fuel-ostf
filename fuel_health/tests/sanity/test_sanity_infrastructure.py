@@ -59,6 +59,10 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         """
         downstate = u'down'
         cmd = 'source /root/openrc; nova service-list'
+        # FIXME(mattymo): Remove this after LP#1543625 is fixed in UCA
+        if self.fuel.repo_type == 'uca':
+            cmd = '{0} | egrep -v "metadata|osapi_compute"'.format(cmd)
+
         if not self.controllers:
             self.skipTest('Step 1 failed: there are no controller nodes.')
         ssh_client = SSHClient(self.controllers[0],
