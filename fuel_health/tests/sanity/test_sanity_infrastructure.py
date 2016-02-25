@@ -43,6 +43,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         cls.key = cls.config.compute.path_to_private_key
         cls.timeout = cls.config.compute.ssh_timeout
         cls.fuel_dns = cls.config.fuel.dns
+        cls.fuel_repo_type = cls.config.fuel.repo_type
 
     @classmethod
     def tearDownClass(cls):
@@ -59,6 +60,10 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         """
         downstate = u'down'
         cmd = 'source /root/openrc; nova service-list'
+        # FIXME(mattymo): Remove this after LP#1543625 is fixed in UCA
+        if self.fuel_repo_type == 'uca':
+            cmd = '{0} | egrep -v "metadata|osapi_compute"'.format(cmd)
+
         if not self.controllers:
             self.skipTest('Step 1 failed: there are no controller nodes.')
         ssh_client = SSHClient(self.controllers[0],
