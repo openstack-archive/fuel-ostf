@@ -28,7 +28,9 @@ class BaseMysqlTest(BaseTestCase):
     def setUpClass(cls):
         super(BaseMysqlTest, cls).setUpClass()
         cls.nodes = cls.config.compute.nodes
-        cls.controller_ip = cls.config.compute.online_controllers[0]
+        cls.controllers = cls.config.compute.online_controllers
+        if cls.controllers:
+            cls.controller_ip = cls.controllers[0]        
         cls.node_key = cls.config.compute.path_to_private_key
         cls.node_user = cls.config.compute.ssh_user
         cls.mysql_user = 'root'
@@ -43,6 +45,8 @@ class BaseMysqlTest(BaseTestCase):
         super(BaseMysqlTest, self).setUp()
         if 'ha' not in self.config.compute.deployment_mode:
             self.skipTest('Cluster is not HA mode, skipping tests')
+        if not self.controllers:
+            self.skipTest('All cluster controllers are offline')
 
     @classmethod
     def get_database_nodes(cls, controller_ip, username, key):
