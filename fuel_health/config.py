@@ -663,6 +663,8 @@ class NailgunConfig(object):
                                         {'horizon': {'value': False}})
         self.fuel.ssl_data = ssl_data['services']['value']
         self.fuel.horizon_ssl = ssl_data['horizon']['value']
+        self.compute.controller_node_ssh_user = \
+            data['editable']['service_user']['name']['value']
 
     def _parse_nodes_cluster_id(self):
         api_url = '/api/nodes?cluster_id=%s' % self.cluster_id
@@ -773,6 +775,8 @@ class NailgunConfig(object):
         if 'RHEL' in self.compute.deployment_os:
             storage = data['storage']['volumes_ceph']
             self.volume.ceph_exist = storage
+        self.compute.controller_node_ssh_password = \
+            data['service_user']['password']
 
     def _parse_ostf_api(self):
         api_url = '/api/ostf/%s' % self.cluster_id

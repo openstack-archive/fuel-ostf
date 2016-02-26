@@ -38,7 +38,7 @@ class TestMysqlReplication(BaseMysqlTest):
     def tearDownClass(cls):
         if cls.master_ip:
             try:
-                cmd = "mysql -h localhost -e 'DROP DATABASE %s'" % cls.database
+                cmd = "sudo -i mysql -h localhost -e 'DROP DATABASE %s'" % cls.database
                 SSHClient(cls.master_ip, cls.node_user,
                           key_filename=cls.node_key).exec_command(cmd)
             except Exception:
@@ -75,7 +75,7 @@ class TestMysqlReplication(BaseMysqlTest):
         self.master_ip = databases[0]
 
         # check that mysql is running on all hosts
-        cmd = 'mysql -h localhost -e "" '
+        cmd = 'sudo -i mysql -h localhost -e ";" '
         for db_node in databases:
             ssh_client = SSHClient(
                 db_node, self.node_user,
@@ -92,32 +92,32 @@ class TestMysqlReplication(BaseMysqlTest):
         record_data = str(data_utils.rand_int_id(1000000000, 9999999999))
 
         create_database = (
-            'mysql -h localhost -e "CREATE DATABASE IF NOT EXISTS '
+            'sudo -i mysql -h localhost -e "CREATE DATABASE IF NOT EXISTS '
             '{database}" '.format(database=database_name)
         )
 
         create_table = (
-            'mysql -h localhost -e'
+            'sudo -i mysql -h localhost -e'
             ' "CREATE TABLE IF NOT EXISTS {database}.{table}'
             ' (data VARCHAR(100))" '.format(database=database_name,
                                             table=table_name)
         )
 
         create_record = (
-            'mysql -h localhost -e "INSERT INTO {database}.{table} (data) '
+            'sudo -i mysql -h localhost -e "INSERT INTO {database}.{table} (data) '
             'VALUES({data})" '.format(database=database_name,
                                       table=table_name,
                                       data=record_data)
         )
 
         get_record = (
-            'mysql -h localhost -e "SELECT * FROM {database}.{table} '
+            'sudo -i mysql -h localhost -e "SELECT * FROM {database}.{table} '
             'WHERE data = \"{data}\"" '.format(database=database_name,
                                                table=table_name,
                                                data=record_data)
         )
 
-        drop_db = "mysql -h localhost -e 'DROP DATABASE {database}'".format(
+        drop_db = "sudo -i mysql -h localhost -e 'DROP DATABASE {database}'".format(
             database=database_name
         )
 

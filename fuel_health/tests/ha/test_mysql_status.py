@@ -30,7 +30,7 @@ class BaseMysqlTest(BaseTestCase):
         cls.nodes = cls.config.compute.nodes
         cls.controller_ip = cls.config.compute.online_controllers[0]
         cls.node_key = cls.config.compute.path_to_private_key
-        cls.node_user = cls.config.compute.ssh_user
+        cls.node_user = cls.config.compute.controller_node_ssh_user
         cls.mysql_user = 'root'
         cls.master_ip = []
         cls.release_version = \
@@ -55,7 +55,7 @@ class BaseMysqlTest(BaseTestCase):
                                key_filename=key,
                                timeout=100)
 
-        hiera_cmd = ('ruby -e \'require "hiera";'
+        hiera_cmd = ('sudo ruby -e \'require "hiera";'
                      'db = Hiera.new().lookup("database_nodes", {}, {}).keys;'
                      'if db != [] then puts db else puts "None" end\'')
         database_nodes = ssh_client.exec_command(hiera_cmd)
@@ -91,7 +91,7 @@ class TestMysqlStatus(BaseMysqlTest):
         """
         LOG.info("'Test OS Databases' started")
         dbs = ['nova', 'glance', 'keystone']
-        cmd = "mysql -h localhost -e 'SHOW TABLES FROM %(database)s'"
+        cmd = "sudo -i mysql -h localhost -e 'SHOW TABLES FROM %(database)s'"
 
         databases = self.verify(20, self.get_database_nodes,
                                 1, "Can not get database hostnames. Check that"
@@ -174,7 +174,7 @@ class TestMysqlStatus(BaseMysqlTest):
             self.skipTest(self.one_db_msg)
 
         for db_node in databases:
-            command = "mysql -h localhost -e \"SHOW STATUS LIKE 'wsrep_%'\""
+            command = "sudo -i mysql -h localhost -e \"SHOW STATUS LIKE 'wsrep_%'\""
             ssh_client = SSHClient(db_node, self.node_user,
                                    key_filename=self.node_key,
                                    timeout=100)
