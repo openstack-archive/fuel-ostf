@@ -677,6 +677,11 @@ class NailgunConfig(object):
                                         {'horizon': {'value': False}})
         self.fuel.ssl_data = ssl_data['services']['value']
         self.fuel.horizon_ssl = ssl_data['horizon']['value']
+        if 'service_user' in data['editable']:
+            self.compute.controller_node_ssh_user = \
+                data['editable']['service_user']['name']['value']
+            self.compute.controller_node_ssh_password =\
+                data['editable']['service_user']['password']['value']
 
     def _parse_nodes_cluster_id(self):
         api_url = '/api/nodes?cluster_id=%s' % self.cluster_id
