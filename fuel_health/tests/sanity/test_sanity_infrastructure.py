@@ -58,7 +58,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Duration: 180 s.
         """
         downstate = u'down'
-        cmd = 'source /root/openrc; nova service-list'
+        cmd = 'source ~/openrc; nova service-list'
         if not self.controllers:
             self.skipTest('Step 1 failed: there are no controller nodes.')
         ssh_client = SSHClient(self.controllers[0],
