@@ -41,7 +41,7 @@ class TestPacemakerStatus(ha_base.TestPacemakerBase):
         # 1. Get pacemaker status
         cluster_resources = {}
         nodes = {}
-        cmd = 'pcs status xml'
+        cmd = 'sudo pcs status xml'
         for i, ip in enumerate(self.online_controller_ips):
             fqdn = self.online_controller_names[i]
             err_msg = ('Cannot get pacemaker status. Execution of the "{0}" '
@@ -132,7 +132,7 @@ class TestPacemakerStatus(ha_base.TestPacemakerBase):
         # allowed to start this resource, and not started on other nodes.
 
         # Get pacemaker constraints
-        cmd = 'cibadmin --query --scope constraints'
+        cmd = 'sudo cibadmin --query --scope constraints'
         err_msg = ('Cannot get pacemaker constraints. Execution of the "{0}" '
                    'failed on the controller {0}.'
                    .format(cmd, self.online_controller_names[0]))

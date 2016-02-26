@@ -28,7 +28,7 @@ class HAProxyCheck(test.BaseTestCase):
         super(HAProxyCheck, cls).setUpClass()
         cls.controllers = cls.config.compute.online_controllers
         cls.controller_key = cls.config.compute.path_to_private_key
-        cls.controller_user = cls.config.compute.ssh_user
+        cls.controller_user = cls.config.compute.controller_node_ssh_user
 
     def setUp(self):
         super(HAProxyCheck, self).setUp()
@@ -49,7 +49,7 @@ class HAProxyCheck(test.BaseTestCase):
         :param ignore_nodes: List
         :return dict
         """
-        cmd = 'haproxy-status.sh | egrep -v "BACKEND|FRONTEND"'
+        cmd = 'sudo haproxy-status.sh | egrep -v "BACKEND|FRONTEND"'
 
         pos_filter = (services, nodes)
         neg_filter = (ignore_services, ignore_nodes)
