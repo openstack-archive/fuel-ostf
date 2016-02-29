@@ -3,7 +3,7 @@ description:
   For Fuel team structure and contribution policy, see [1].
 
   This is repository level MAINTAINERS file. All contributions to this
-  repository must be approved by one or more Core Reviewers [2].
+  repository must be approved by one or more Core Reviewers  [2].
   If you are contributing to files (or create new directories) in
   root folder of this repository, please contact Core Reviewers for
   review and merge requests.
