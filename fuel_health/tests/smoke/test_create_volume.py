@@ -153,8 +153,9 @@ class VolumesTest(nmanager.SmokeChecksTest):
             3. Launch instance from created volume.
             4. Wait for "Active" status.
             5. Delete instance.
-            6. Delete volume.
-            7. Verify that volume deleted
+            6. Wait for volume status to become available
+            7. Delete volume.
+            8. Verify that volume deleted
         Duration: 350 s.
         """
         fail_msg_step_1 = 'Volume was not created'
@@ -186,12 +187,17 @@ class VolumesTest(nmanager.SmokeChecksTest):
                     "server deletion",
                     instance)
 
-        self.verify(50, self.volume_client.volumes.delete, 6,
+        self.verify(200, self._wait_for_volume_status, 6,
+                    'Volume status did not become "available".',
+                    "volume becoming 'available'",
+                    volume, 'available')
+
+        self.verify(50, self.volume_client.volumes.delete, 7,
                     'Can not delete volume. ',
                     "volume deletion",
                     volume)
 
-        self.verify(50, self.verify_volume_deletion, 7,
+        self.verify(50, self.verify_volume_deletion, 8,
                     'Can not delete volume. ',
                     "volume deletion",
                     volume)
