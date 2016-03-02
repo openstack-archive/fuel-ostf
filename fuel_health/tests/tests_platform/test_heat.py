@@ -28,6 +28,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         super(HeatSmokeTests, self).setUp()
         if not self.config.compute.compute_nodes:
             self.skipTest('There are no compute nodes')
+        self.min_required_ram_mb = 7000
 
     def test_advanced_actions(self):
         """Advanced stack actions: suspend, resume and check
@@ -51,7 +52,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             15. Check that instance owned by stack is in 'ACTIVE' status.
             16. Delete the stack and wait for the stack to be deleted.
 
-        Duration: 660 s.
+        Duration: 900 s.
         Available since release: 2014.2-6.1
         """
 
@@ -81,13 +82,13 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # create stack
         fail_msg = 'Stack was not created properly.'
         stack = self.verify(
-            60, self.create_stack,
+            90, self.create_stack,
             2, fail_msg,
             'stack creation',
             template, parameters=parameters
         )
         self.verify(
-            300, self.wait_for_stack_status,
+            420, self.wait_for_stack_status,
             3, fail_msg,
             'stack status becoming "CREATE_COMPLETE"',
             stack.id, 'CREATE_COMPLETE'
@@ -106,7 +107,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             stack.id
         )
         self.verify(
-            60, self.wait_for_stack_status,
+            90, self.wait_for_stack_status,
             5, fail_msg,
             'stack status becoming "SUSPEND_COMPLETE"',
             stack.id, 'SUSPEND_COMPLETE'
@@ -134,7 +135,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             stack.id
         )
         self.verify(
-            60, self.wait_for_stack_status,
+            90, self.wait_for_stack_status,
             9, fail_msg,
             'stack status becoming "RESUME_COMPLETE"',
             stack.id, 'RESUME_COMPLETE'
@@ -162,7 +163,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             stack.id
         )
         self.verify(
-            60, self.wait_for_stack_status,
+            90, self.wait_for_stack_status,
             13, fail_msg,
             'stack status becoming "CHECK_COMPLETE"',
             stack.id, 'CHECK_COMPLETE'
@@ -212,7 +213,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             9. Get the stack template details.
             10. Delete the stack and wait for the stack to be deleted.
 
-        Duration: 560 s.
+        Duration: 720 s.
         """
 
         self.check_image_exists()
@@ -241,13 +242,13 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # create stack
         fail_msg = 'Stack was not created properly.'
         stack = self.verify(
-            60, self.create_stack,
+            90, self.create_stack,
             2, fail_msg,
             'stack creation',
             template, parameters=parameters
         )
         self.verify(
-            300, self.wait_for_stack_status,
+            420, self.wait_for_stack_status,
             3, fail_msg,
             'stack status becoming "CREATE_COMPLETE"',
             stack.id, 'CREATE_COMPLETE'
@@ -365,7 +366,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # delete stack
         fail_msg = 'Can not delete stack.'
         self.verify(
-            20, self.heat_client.stacks.delete,
+            30, self.heat_client.stacks.delete,
             10, fail_msg,
             'deleting stack',
             stack.id
@@ -399,7 +400,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             14. Delete the stack.
             15. Wait for the stack to be deleted.
 
-        Duration: 950 s.
+        Duration: 1140 s.
         """
 
         self.check_image_exists()
@@ -428,13 +429,13 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # create stack
         fail_msg = 'Stack was not created properly.'
         stack = self.verify(
-            60, self.create_stack,
+            90, self.create_stack,
             2, fail_msg,
             'stack creation',
             template, parameters=parameters
         )
         self.verify(
-            300, self.wait_for_stack_status,
+            420, self.wait_for_stack_status,
             3, fail_msg,
             'stack status becoming "CREATE_COMPLETE"',
             stack.id, 'CREATE_COMPLETE'
@@ -449,7 +450,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         )
 
         stack = self.verify(
-            20, self.update_stack,
+            30, self.update_stack,
             4, fail_msg,
             'updating stack, changing resource name',
             stack.id,
@@ -486,7 +487,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         parameters['InstanceType'] = flavor.name
 
         stack = self.verify(
-            20, self.update_stack,
+            30, self.update_stack,
             8, fail_msg,
             'updating stack, changing instance flavor',
             stack.id,
@@ -527,7 +528,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                 'heat_update_nova_stack_template.yaml')
 
         stack = self.verify(
-            20, self.update_stack,
+            30, self.update_stack,
             11, fail_msg,
             'updating stack, changing template',
             stack.id,
@@ -557,7 +558,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         # delete stack
         fail_msg = 'Can not delete stack.'
         self.verify(
-            20, self.heat_client.stacks.delete,
+            30, self.heat_client.stacks.delete,
             14, fail_msg,
             'deleting stack',
             stack.id
@@ -594,6 +595,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         """
 
         self.check_image_exists()
+
+        self.check_required_resources(self.min_required_ram_mb)
 
         # creation of test flavor
         heat_flavor = self.verify(
@@ -739,7 +742,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
                of the stack.
             5. Verify the instance of the stack has been deleted.
 
-        Duration: 310 s.
+        Duration: 470 s.
         """
         self.check_image_exists()
 
@@ -766,7 +769,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         fail_msg = 'Stack creation was not started.'
         stack = self.verify(
-            60, self.create_stack,
+            90, self.create_stack,
             2, fail_msg,
             'starting stack creation',
             template, disable_rollback=False, parameters=parameters
@@ -777,7 +780,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             fail_msg, 3
         )
         self.verify(
-            300, self.wait_for_stack_deleted,
+            420, self.wait_for_stack_deleted,
             4, 'Rollback of the stack failed.',
             'rolling back the stack after its creation failed',
             stack.id
@@ -790,7 +793,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         fail_msg = 'The stack instance rollback failed.'
         self.verify(
-            20, self.assertTrue,
+            30, self.assertTrue,
             5, fail_msg,
             'verifying if the instance was rolled back',
             len(instances) == 0
@@ -815,6 +818,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         """
 
         self.check_image_exists()
+
+        self.check_required_resources(self.min_required_ram_mb)
 
         # creation of test flavor
         heat_flavor = self.verify(
