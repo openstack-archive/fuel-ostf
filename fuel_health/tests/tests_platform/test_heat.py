@@ -28,6 +28,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         super(HeatSmokeTests, self).setUp()
         if not self.config.compute.compute_nodes:
             self.skipTest('There are no compute nodes')
+        self.min_required_ram_mb = 7000
 
     def test_advanced_actions(self):
         """Advanced stack actions: suspend, resume and check
@@ -595,6 +596,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         self.check_image_exists()
 
+        self.check_required_resources(self.min_required_ram_mb)
+
         # creation of test flavor
         heat_flavor = self.verify(
             50, self.create_flavor,
@@ -815,6 +818,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         """
 
         self.check_image_exists()
+
+        self.check_required_resources(self.min_required_ram_mb)
 
         # creation of test flavor
         heat_flavor = self.verify(
