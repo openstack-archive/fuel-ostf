@@ -28,6 +28,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         super(HeatSmokeTests, self).setUp()
         if not self.config.compute.compute_nodes:
             self.skipTest('There are no compute nodes')
+        self.min_required_ram_mb = 7000
 
     def test_advanced_actions(self):
         """Advanced stack actions: suspend, resume and check
@@ -595,6 +596,18 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         self.check_image_exists()
 
+        vms_count = self.get_info_about_available_resources(
+            self.min_required_ram_mb, 40, 2)
+        if vms_count < 1:
+            msg = ('This test requires more hardware resources of your '
+                   'OpenStack cluster: your cloud should allow to create '
+                   'at least 1 VM with {0} MB of RAM, {1} HDD and {2} vCPUs. '
+                   'You need to remove some resources or add compute nodes '
+                   'to have an ability to run this OSTF test.'
+                   .format(self.min_required_ram_mb, 40, 2))
+            LOG.debug(msg)
+            self.skipTest(msg)
+
         # creation of test flavor
         heat_flavor = self.verify(
             50, self.create_flavor,
@@ -815,6 +828,18 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         """
 
         self.check_image_exists()
+
+        vms_count = self.get_info_about_available_resources(
+            self.min_required_ram_mb, 40, 2)
+        if vms_count < 1:
+            msg = ('This test requires more hardware resources of your '
+                   'OpenStack cluster: your cloud should allow to create '
+                   'at least 1 VM with {0} MB of RAM, {1} HDD and {2} vCPUs. '
+                   'You need to remove some resources or add compute nodes '
+                   'to have an ability to run this OSTF test.'
+                   .format(self.min_required_ram_mb, 40, 2))
+            LOG.debug(msg)
+            self.skipTest(msg)
 
         # creation of test flavor
         heat_flavor = self.verify(
