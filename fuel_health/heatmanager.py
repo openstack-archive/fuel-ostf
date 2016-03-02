@@ -258,3 +258,16 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         LOG.debug('List of fetched objects: {0}'.format(objects))
 
         return objects
+
+    def check_required_resources(self, min_required_ram_mb=4096, hdd=40, vCpu=2):
+        vms_count = self.get_info_about_available_resources(
+            min_required_ram_mb, hdd, vCpu)
+        if vms_count < 1:
+            msg = ('This test requires more hardware resources of your '
+                   'OpenStack cluster: your cloud should allow to create '
+                   'at least 1 VM with {0} MB of RAM, {1} HDD and {2} vCPUs. '
+                   'You need to remove some resources or add compute nodes '
+                   'to have an ability to run this OSTF test.'
+                   .format(min_required_ram_mb, hdd, vCpu))
+            LOG.debug(msg)
+            self.skipTest(msg)
