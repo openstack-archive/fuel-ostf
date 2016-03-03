@@ -1,0 +1,11 @@
+Code-Review+1: Nastya Urlapova <aurlapova@mirantis.com>
+Code-Review+2: tatyana-leontovich <tleontovich@mirantis.com>
+Code-Review+1: Evgeny Sikachev <esikachev@mirantis.com>
+Code-Review+1: Artem Panchenko <apanchenko@mirantis.com>
+Workflow+1: tatyana-leontovich <tleontovich@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Thu, 03 Mar 2016 09:41:56 +0000
+Reviewed-on: https://review.openstack.org/287667
+Project: openstack/fuel-ostf
+Branch: refs/heads/master
