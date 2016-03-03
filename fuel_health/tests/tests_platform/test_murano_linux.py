@@ -37,9 +37,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
         super(MuranoDeployLinuxServicesTests, self).setUp()
         self.check_clients_state()
 
-        self.doc_link = ('http://docs.mirantis.com/openstack/fuel/'
-                         'fuel-{0}/user-guide.html#platform-tests-'
-                         'description'.format(self.config.fuel.fuel_version))
+        self.doc_link = 'https://www.fuel-infra.org/#fueldocs'
 
         self.image = self.find_murano_image('linux')
 
@@ -198,7 +196,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
 
         if not self.image:
             msg = ('Murano image was not properly registered or was not '
-                   'uploaded at all. Please refer to the Mirantis OpenStack '
+                   'uploaded at all. Please refer to the Fuel '
                    'documentation ({0}) to find out how to upload and/or '
                    'register image for Murano.'.format(self.doc_link))
             LOG.debug(msg)
@@ -307,7 +305,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
 
         if not self.image:
             msg = ('Murano image was not properly registered or was not '
-                   'uploaded at all. Please refer to the Mirantis OpenStack '
+                   'uploaded at all. Please refer to the Fuel '
                    'documentation ({0}) to find out how to upload and/or '
                    'register image for Murano.'.format(self.doc_link))
             LOG.debug(msg)

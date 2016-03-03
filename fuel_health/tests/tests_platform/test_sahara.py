@@ -29,9 +29,7 @@ class SaharaClusterTest(saharamanager.SaharaTestsManager):
     def setUp(self):
         super(SaharaClusterTest, self).setUp()
 
-        doc_link = ('http://docs.mirantis.com/'
-                    'openstack/fuel/fuel-{0}/operations.html#sahara-'
-                    'test-prepare'.format(self.config.fuel.fuel_version))
+        doc_link = 'https://www.fuel-infra.org/#fueldocs'
 
         max_free_ram_mb = (
             self.get_max_free_compute_node_ram(self.min_required_ram_mb))
@@ -48,7 +46,7 @@ class SaharaClusterTest(saharamanager.SaharaTestsManager):
                                                   self._hadoop_version)
         if not self.image_id:
             msg = ('Sahara image was not correctly registered or it was not '
-                   'uploaded at all. Please refer to the Mirantis OpenStack '
+                   'uploaded at all. Please refer to the Fuel '
                    'documentation ({0}) to find out how to upload and/or '
                    'register image for Sahara.'.format(doc_link))
             LOG.debug(msg)
