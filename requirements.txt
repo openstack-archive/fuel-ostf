@@ -19,7 +19,7 @@ testresources>=0.2.4
 nose
 SQLAlchemy>=0.9.9,<1.1.0
 alembic>=0.8.0
-amqp>=1.4.0
+amqp>=1.4.0,<2.0
 anyjson>=0.3.3
 gevent
 keystonemiddleware>=2.0.0,!=2.4.0
