@@ -55,6 +55,7 @@ try:
 except Exception:
     LOG.warning('Ironic client could not be imported')
 
+import aodhclient.client
 import cinderclient.client
 import glanceclient.client
 import keystoneclient
@@ -67,6 +68,8 @@ from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import exceptions
 import fuel_health.manager
 import fuel_health.test
+import keystoneauth1.identity
+import keystoneauth1.session
 
 
 class OfficialClientManager(fuel_health.manager.Manager):
@@ -109,6 +112,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.neutron_client = self._get_neutron_client()
             self.glance_client_v1 = self._get_glance_client(version=1)
             self.ironic_client = self._get_ironic_client()
+            self.aodh_client = self._get_aodh_client()
             self.client_attr_names = [
                 'compute_client',
                 'identity_client',
@@ -121,7 +125,8 @@ class OfficialClientManager(fuel_health.manager.Manager):
                 'sahara_client',
                 'ceilometer_client',
                 'neutron_client',
-                'ironic_client'
+                'ironic_client',
+                'aodh_client'
             ]
 
     def _get_compute_client(self, username=None, password=None,
@@ -221,9 +226,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                                      auth_url=auth_url,
                                                      insecure=True)
         elif version == 3:
-            helper_list = auth_url.rstrip("/").split("/")
-            helper_list[-1] = "v3/"
-            auth_url = "/".join(helper_list)
+            auth_url = self.config.identity.uri_v3
 
             return keystoneclient.v3.client.Client(username=username,
                                                    password=password,
@@ -342,6 +345,19 @@ class OfficialClientManager(fuel_health.manager.Manager):
             version,
             os_auth_token=keystone.auth_token,
             ironic_url=endpoint, insecure=True)
+
+    def _get_aodh_client(self, version='2'):
+        username = self.config.identity.admin_username
+        password = self.config.identity.admin_password
+        tenant = self.config.identity.admin_tenant_name
+        auth_url = self.config.identity.uri_v3
+        auth = keystoneauth1.identity.v3.Password(
+            auth_url=auth_url, username=username,
+            password=password, project_name=tenant,
+            user_domain_id=self.identity_client.user_domain_id,
+            project_domain_id=self.identity_client.project_domain_id)
+        sess = keystoneauth1.session.Session(auth=auth, verify=False)
+        return aodhclient.client.Client(version, sess)
 
 
 class OfficialClientTest(fuel_health.test.TestCase):
