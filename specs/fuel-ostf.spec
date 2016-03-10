@@ -17,6 +17,7 @@ BuildRequires:  python-pbr >= 1.6
 BuildArch: noarch
 
 # fuel_health_reqs
+Requires:    python-aodhclient >= 0.1.0
 Requires:    python-amqplib >= 1.0.2
 Requires:    python-anyjson >= 0.3.3
 Requires:    python-oslo-config >= 1.1.1
