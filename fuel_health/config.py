@@ -898,10 +898,14 @@ class NailgunConfig(object):
             if self.fuel.ssl_data:
                 self.identity.uri = 'https://{0}:{1}/{2}/'.format(
                     endpoint, 5000, 'v2.0')
+                self.identity.uri_v3 = 'https://{0}:{1}/{2}/'.format(
+                    endpoint, 5000, 'v3')
                 self.horizon_proto = 'https'
             else:
                 self.identity.uri = 'http://{0}:{1}/{2}/'.format(
                     endpoint, 5000, 'v2.0')
+                self.identity.uri_v3 = 'http://{0}:{1}/{2}/'.format(
+                    endpoint, 5000, 'v3')
                 self.horizon_proto = 'http'
 
         self.horizon_url = '{proto}://{host}/{path}/'.format(
