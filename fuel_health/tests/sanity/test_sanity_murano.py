@@ -33,7 +33,7 @@ class MuranoSanityTests(muranomanager.MuranoTest):
 
         Duration: 10 s.
 
-        Deployment tags: Murano
+        Deployment tags: Murano | murano_plugin
         """
 
         fail_msg = "Can't create environment. Murano API isn't available. "
@@ -55,7 +55,7 @@ class MuranoSanityTests(muranomanager.MuranoTest):
 
         Duration: 10 s.
 
-        Deployment tags: Murano
+        Deployment tags: Murano | murano_plugin
         """
         fail_msg = "Can't get list of categories. Murano API isn't available. "
         self.verify(10, self.get_list_categories, 1, fail_msg,
@@ -70,8 +70,23 @@ class MuranoSanityTests(muranomanager.MuranoTest):
 
         Duration: 10 s.
 
-        Deployment tags: Murano
+        Deployment tags: Murano | murano_plugin, murano_without_glare
         """
         fail_msg = "Can't get list of packages. Murano API isn't available. "
         self.verify(10, self.get_list_packages, 1, fail_msg,
                     "getting list of packages")
+
+    def test_get_list_artifacts_packages(self):
+        """Get list of Murano Artifact applications packages
+        Target component: Murano
+
+        Scenario:
+            1. Send request to get list of packages
+
+        Duration: 10 s.
+
+        Deployment tags: Murano | murano_plugin, murano_use_glare
+        """
+        fail_msg = "Can't get list of packages. Murano API isn't available. "
+        self.verify(10, self.get_list_packages, 1, fail_msg,
+                    "getting list of packages", artifacts=True)
