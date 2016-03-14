@@ -43,7 +43,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
 
         self.dummy_fqdn = 'io.murano.apps.Simple'
 
-        # Flavor with 2 vCPU and 40Gb HDD will allow to sucessfully
+        # Flavor with 2 vCPU and 40Gb HDD will allow to successfully
         # deploy all Murano applications.
         self.flavor_name = rand_name("ostf_test_Murano_flavor")
         flavor = self.compute_client.flavors.create(
@@ -70,7 +70,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
             10. Send request to delete package.
 
         Duration: 1200 s.
-        Deployment tags: Murano, Heat
+        Deployment tags: Murano | murano_plugin
         Available since release: 2014.2-6.1
         """
 
@@ -178,7 +178,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
             8. Send request to delete environment.
 
         Duration: 2140 s.
-        Deployment tags: Murano, Heat
+        Deployment tags: Murano | murano_plugin
         Available since release: 2014.2-6.0
         """
 
@@ -287,7 +287,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
             11. Send request to delete environment.
 
         Duration: 2140 s.
-        Deployment tags: Murano, Heat
+        Deployment tags: Murano
         Available since release: 2014.2-6.1
         """
 

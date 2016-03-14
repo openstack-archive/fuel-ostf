@@ -30,9 +30,7 @@ from sqlalchemy.orm import joinedload
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
 from fuel_plugin.ostf_adapter.storage import models
 
-
 LOG = logging.getLogger(__name__)
-
 
 TEST_REPOSITORY = []
 # TODO(ikutukov): remove hardcoded Nailgun API urls here and below
@@ -241,6 +239,12 @@ def _get_cluster_attrs(cluster_id, token=None):
 
     for comp in comp_names:
         processor(comp)
+
+    detach_murano = response['editable'].get('detach-murano', None)
+    if detach_murano:
+        murano_plugin_enabled = detach_murano['metadata'].get('enabled', None)
+        if murano_plugin_enabled:
+            additional_depl_tags.add('murano_plugin')
 
     storage_components = response['editable'].get('storage', dict())
 
