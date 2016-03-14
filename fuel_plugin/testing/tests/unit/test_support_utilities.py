@@ -108,3 +108,35 @@ class TestDeplTagsGetter(base.BaseUnitTest):
             res = mixins._get_cluster_attrs(expected['cluster_id'])
 
         self.assertEqual(res, expected['attrs'])
+
+
+class TestDeplMuranoPluginTags(base.BaseUnitTest):
+
+    def setUp(self):
+        config.init_config([])
+
+    def test_get_murano_plugin_tags(self):
+        expected = {
+            'cluster_id': 9,
+            'attrs': {
+                'deployment_tags': set(
+                    ['multinode', 'ubuntu', 'additional_components',
+                     'murano_plugin', 'nova_network', 'public_on_all_nodes',
+                     'enable_without_ceph', 'computes_without_dpdk']),
+                'release_version': '2016.1-9.0'
+            }
+        }
+
+        with requests_mock.Mocker() as m:
+            cluster = base.CLUSTERS[expected['cluster_id']]
+            m.register_uri('GET', '/api/clusters/3',
+                           json=cluster['cluster_meta'])
+            m.register_uri('GET', '/api/clusters/3/attributes',
+                           json=cluster['cluster_attributes'])
+            m.register_uri('GET', '/api/releases/3',
+                           json=cluster['release_data'])
+            m.register_uri('GET', '/api/nodes?cluster_id=3',
+                           json=cluster['cluster_node'])
+            res = mixins._get_cluster_attrs(expected['cluster_id'])
+
+        self.assertEqual(res, expected['attrs'])
