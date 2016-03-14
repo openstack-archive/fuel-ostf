@@ -54,6 +54,11 @@ try:
     import ironicclient
 except Exception:
     LOG.warning('Ironic client could not be imported')
+try:
+    import muranoclient.glance.client as art_client
+except Exception:
+    LOG.exception()
+    LOG.warning('Artifacts client could not be imported')
 
 import aodhclient.client
 import cinderclient.client
@@ -113,6 +118,8 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.glance_client_v1 = self._get_glance_client(version=1)
             self.ironic_client = self._get_ironic_client()
             self.aodh_client = self._get_aodh_client()
+            self.artifacts_client = self._get_artifacts_client()
+            self.murano_art_client = self._get_murano_client(artifacts=True)
             self.client_attr_names = [
                 'compute_client',
                 'identity_client',
@@ -126,7 +133,9 @@ class OfficialClientManager(fuel_health.manager.Manager):
                 'ceilometer_client',
                 'neutron_client',
                 'ironic_client',
-                'aodh_client'
+                'aodh_client',
+                'artifacts_client',
+                'murano_art_client'
             ]
 
     def _get_compute_client(self, username=None, password=None,
@@ -261,7 +270,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                                token=token,
                                                insecure=True)
 
-    def _get_murano_client(self):
+    def _get_murano_client(self, artifacts=False):
         """This method returns Murano API client
         """
         keystone = self._get_identity_client(
@@ -280,10 +289,16 @@ class OfficialClientManager(fuel_health.manager.Manager):
                         'not found. Murano client cannot be initialized.')
             return
 
-        return muranoclient.v1.client.Client(
-            endpoint,
-            token=self.token_id,
-            insecure=True)
+        if artifacts:
+            return muranoclient.v1.client.Client(
+                endpoint,
+                token=self.token_id,
+                insecure=True, artifacts_client=self.artifacts_client)
+        else:
+            return muranoclient.v1.client.Client(
+                endpoint,
+                token=self.token_id,
+                insecure=True)
 
     def _get_sahara_client(self):
         sahara_api_version = self.config.sahara.api_version
@@ -347,6 +362,21 @@ class OfficialClientManager(fuel_health.manager.Manager):
             version,
             os_auth_token=keystone.auth_token,
             ironic_url=endpoint, insecure=True)
+
+    def _get_artifacts_client(self, version='1'):
+        keystone = self._get_identity_client()
+        try:
+            endpoint = keystone.service_catalog.url_for(
+                service_type='artifact',
+                endpoint_type='publicURL')
+        except keystoneclient.exceptions.EndpointNotFound:
+            LOG.warning('Can not initialize artifacts client')
+            return None
+        return art_client.Client(endpoint=endpoint,
+                                 type_name='murano',
+                                 type_version=version,
+                                 token=keystone.auth_token,
+                                 insecure=True)
 
     def _get_aodh_client(self, version='2'):
         username = self.config.identity.admin_username
