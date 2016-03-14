@@ -242,6 +242,16 @@ def _get_cluster_attrs(cluster_id, token=None):
     for comp in comp_names:
         processor(comp)
 
+    if 'detach-murano' in response['editable']:
+        murano = response['editable']['detach-murano']['metadata'].get(
+            'enabled', None)
+        if murano and 'murano' not in additional_depl_tags:
+            additional_depl_tags.add('murano')
+            LOG.info('Murano enabled via plugin installation.')
+    else:
+        LOG.info("Murano plugin is not installed. Using standard "
+                 "murano discover mechanism.")
+
     storage_components = response['editable'].get('storage', dict())
 
     storage_comp = ['volumes_ceph', 'images_ceph', 'ephemeral_ceph',
