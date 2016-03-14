@@ -30,9 +30,7 @@ from sqlalchemy.orm import joinedload
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
 from fuel_plugin.ostf_adapter.storage import models
 
-
 LOG = logging.getLogger(__name__)
-
 
 TEST_REPOSITORY = []
 # TODO(ikutukov): remove hardcoded Nailgun API urls here and below
@@ -241,6 +239,35 @@ def _get_cluster_attrs(cluster_id, token=None):
 
     for comp in comp_names:
         processor(comp)
+
+    # TODO(freerunner): Rework murano part after removal murano from the box
+    murano_settings = response['editable'].get('murano_settings', None)
+    # NOTE(freerunner): Murano settings appears only if murano enabled
+    murano_artifacts = None
+    if murano_settings:
+        murano_artifacts = (murano_settings
+                            ['murano_glance_artifacts_plugin']['value'])
+    detach_murano = response['editable'].get('detach-murano', None)
+    murano_plugin_enabled = None
+    if detach_murano:
+        murano_plugin_enabled = detach_murano['metadata'].get('enabled', None)
+        if murano_plugin_enabled:
+            additional_depl_tags.add('murano_plugin')
+
+    # TODO(freerunner): Rework GLARE discover mechanism after
+    # TODO(freerunner): removal murano from the box
+    if murano_artifacts:
+        additional_depl_tags.add('murano_use_glare')
+    # NOTE(freerunner): Murano plugin will always support only one version
+    elif detach_murano and murano_plugin_enabled and (
+            detach_murano['metadata']['versions'][0]
+            ['murano_glance_artifacts'].get('value', None)):
+        additional_depl_tags.add('murano_use_glare')
+    # NOTE(freerunner): Set this tag only if murano is present
+    elif murano_plugin_enabled or murano_settings:
+        additional_depl_tags.add('murano_without_glare')
+    else:
+        pass
 
     storage_components = response['editable'].get('storage', dict())
 
