@@ -423,10 +423,7 @@ FuelConf = [
                 default=False,
                 help='ssl usage'),
     cfg.BoolOpt('ssl_data',
-                default=False),
-    cfg.StrOpt('repo_type',
-               default='fuel',
-               help='Repository type')
+                default=False)
 ]
 
 
@@ -624,7 +621,6 @@ class NailgunConfig(object):
         LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
         access_data = data['editable']['access']
         common_data = data['editable']['common']
-        repo_data = data['editable']['repo_setup']
 
         self.identity.admin_tenant_name = \
             (
@@ -662,8 +658,6 @@ class NailgunConfig(object):
         if deployment_os != 'RHEL':
             storage = data['editable']['storage']['volumes_ceph']['value']
             self.volume.ceph_exist = storage
-        if repo_data.get('repo_type', None):
-            self.fuel.repo_type = repo_data['repo_type']['value']
         self.fuel.dns = data['editable']['external_dns'].get('value', None)
         ssl_data = data['editable'].get('public_ssl',
                                         {'horizon': {'value': False}})
