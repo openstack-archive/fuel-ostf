@@ -234,11 +234,33 @@ CLUSTERS = {
             'editable': {
                 'additional_components': {},
                 'common': {}
+                        }
+        }
+    },
+    9: {
+        'cluster_meta': {
+            'release_id': 9,
+            'mode': 'multinode'
+        },
+        'release_data': {
+            'operating_system': 'ubuntu',
+            'version': '2016.1-9.0'
+        },
+        'cluster_node': {
+        },
+        'cluster_attributes': {
+            'editable': {
+                'detach-murano': {
+                    'metadata': {
+                        'enabled': True
+                    }
+                },
+                'additional_components': {},
+                'common': {}
             }
         }
     }
 }
-
 
 class BaseUnitTest(unittest2.TestCase):
     """Base class for all unit tests."""
