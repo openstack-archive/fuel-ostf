@@ -401,61 +401,61 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
             if inst_name in service['instance']['name']:
                 return service['instance']['floatingIpAddress']
 
-    def get_list_packages(self):
+    def get_list_packages(self, artifacts=False):
         try:
-            packages = self.murano_client.packages.list()
+            if artifacts:
+                packages = self.murano_art_client.packages.list()
+            else:
+                packages = self.murano_client.packages.list()
         except exceptions.ClientException:
             self.fail("Can not get list of packages")
-        packages_list = list(packages)
-        LOG.debug('Packages List: {0}'.format(packages_list))
-        self.assertIsInstance(packages_list, list)
-        return packages_list
+        LOG.debug('Packages List: {0}'.format(packages))
+        self.assertIsInstance(packages, list)
+        return packages
 
-    def generate_fqn_list(self):
+    def generate_fqn_list(self, artifacts=False):
         fqn_list = []
-        packages = self.get_list_packages()
+        packages = self.get_list_packages(artifacts)
         for package in packages:
             fqn_list.append(package.to_dict()['fully_qualified_name'])
         LOG.debug('FQN List: {0}'.format(fqn_list))
         return fqn_list
 
-    def upload_package(self, package_name, body, app):
+    def upload_package(self, package_name, body, app, artifacts=False):
         files = {'%s' % package_name: open(app, 'rb')}
-        package = self.murano_client.packages.create(body, files)
+        if artifacts:
+            package = self.murano_art_client.packages.create(body, files)
+        else:
+            package = self.murano_client.packages.create(body, files)
         self.packages.append(package)
         return package
 
-    def package_exists(self, *packages):
-        fqn_list = self.generate_fqn_list()
+    def package_exists(self, artifacts=False, *packages):
+        fqn_list = self.generate_fqn_list(artifacts)
         LOG.debug("Response for packages is {0}".format(fqn_list))
         for package in packages:
             if package not in fqn_list:
                 return False
         return True
 
-    def get_package(self, package_id):
-        resp = requests.get(self.endpoint + 'catalog/packages/{0}'.
-                            format(package_id), headers=self.headers,
-                            verify=False)
-        self.assertEqual(200, resp.status_code)
-        return resp.json()
+    def get_package(self, package_id, artifacts=False):
+        if artifacts:
+            package = self.murano_art_client.packages.get(package_id)
+        else:
+            package = self.murano_client.packages.get(package_id)
+        return package
 
-    def get_package_by_fqdn(self, package_name):
-        resp = requests.get(self.endpoint + 'catalog/packages',
-                            headers=self.headers, verify=False)
-        for package in resp.json()["packages"]:
-            if package["fully_qualified_name"] == package_name:
+    def get_package_by_fqdn(self, package_name, artifacts=False):
+        package_list = self.get_list_packages(artifacts)
+        for package in package_list:
+            if package.to_dict()["fully_qualified_name"] == package_name:
                 return package
 
-    def delete_package(self, package_id):
-        resp = requests.delete(self.endpoint + 'catalog/packages/{0}'.
-                               format(package_id), headers=self.headers,
-                               verify=False)
-        try:
-            self.assertEqual(200, resp.status_code)
-        except Exception:
-            self.assertEqual(404, resp.status_code)
-            LOG.debug("Package not exists.")
+    def delete_package(self, package_id, artifacts=False):
+        if artifacts:
+            self.murano_art_client.packages.delete(package_id)
+        else:
+            self.murano_client.packages.delete(package_id)
 
     def get_list_categories(self):
         resp = requests.get(self.endpoint + 'catalog/packages/categories',
