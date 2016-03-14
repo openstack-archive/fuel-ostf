@@ -236,7 +236,121 @@ CLUSTERS = {
                 'common': {}
             }
         }
-    }
+    },
+    9: {
+        'cluster_meta': {
+            'release_id': 9,
+            'mode': 'multinode'
+        },
+        'release_data': {
+            'operating_system': 'ubuntu',
+            'version': '2016.1-9.0'
+        },
+        'cluster_node': {
+        },
+        'cluster_attributes': {
+            'editable': {
+                'detach-murano': {
+                    'metadata': {
+                        'enabled': True,
+                        'versions': [
+                            {
+                                'murano_glance_artifacts': {
+                                    "value": True
+                                }
+                            }
+                        ]
+                    }
+                },
+                'additional_components': {},
+                'common': {}
+            }
+        }
+    },
+    10: {
+        'cluster_meta': {
+            'release_id': 10,
+            'mode': 'multinode'
+        },
+        'release_data': {
+            'operating_system': 'ubuntu',
+            'version': '2016.1-9.0'
+        },
+        'cluster_node': {
+        },
+        'cluster_attributes': {
+            'editable': {
+                'detach-murano': {
+                    'metadata': {
+                        'enabled': True,
+                        'versions': [
+                            {
+                                'murano_glance_artifacts': {
+                                    "value": False
+                                }
+                            }
+                        ]
+                    }
+                },
+                'additional_components': {},
+                'common': {}
+            }
+        }
+    },
+    11: {
+        'cluster_meta': {
+            'release_id': 11,
+            'mode': 'multinode'
+        },
+        'release_data': {
+            'operating_system': 'ubuntu',
+            'version': '2016.1-9.0'
+        },
+        'cluster_node': {
+        },
+        'cluster_attributes': {
+            'editable': {
+                'additional_components': {
+                    'murano': {
+                        'value': True
+                    }
+                },
+                'murano_settings': {
+                    'murano_glance_artifacts_plugin': {
+                        'value': True
+                    }
+                },
+                'common': {}
+            }
+        }
+    },
+    12: {
+        'cluster_meta': {
+            'release_id': 12,
+            'mode': 'multinode'
+        },
+        'release_data': {
+            'operating_system': 'ubuntu',
+            'version': '2016.1-9.0'
+        },
+        'cluster_node': {
+        },
+        'cluster_attributes': {
+            'editable': {
+                'additional_components': {
+                    'murano': {
+                        'value': True
+                    }
+                },
+                'murano_settings': {
+                    'murano_glance_artifacts_plugin': {
+                        'value': False
+                    }
+                },
+                'common': {}
+            }
+        }
+    },
 }
 
 
