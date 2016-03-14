@@ -108,3 +108,96 @@ class TestDeplTagsGetter(base.BaseUnitTest):
             res = mixins._get_cluster_attrs(expected['cluster_id'])
 
         self.assertEqual(res, expected['attrs'])
+
+
+class TestDeplMuranoTags(base.BaseUnitTest):
+
+    def setUp(self):
+        config.init_config([])
+
+        self.expected = {
+            'cluster_id': 9,
+            'attrs': {
+                'deployment_tags': set(
+                    ['multinode', 'ubuntu', 'additional_components',
+                     'nova_network', 'public_on_all_nodes',
+                     'enable_without_ceph', 'computes_without_dpdk']),
+                'release_version': '2016.1-9.0'
+            }
+        }
+
+    def test_get_murano_plugin_tags_with_artifacts(self):
+        expected = self.expected
+        expected['attrs']['deployment_tags'].append('murano_plugin')
+        expected['attrs']['deployment_tags'].append('murano_use_glare')
+
+        with requests_mock.Mocker() as m:
+            cluster = base.CLUSTERS[expected['cluster_id']]
+            m.register_uri('GET', '/api/clusters/9',
+                           json=cluster['cluster_meta'])
+            m.register_uri('GET', '/api/clusters/9/attributes',
+                           json=cluster['cluster_attributes'])
+            m.register_uri('GET', '/api/releases/9',
+                           json=cluster['release_data'])
+            m.register_uri('GET', '/api/nodes?cluster_id=9',
+                           json=cluster['cluster_node'])
+            res = mixins._get_cluster_attrs(expected['cluster_id'])
+
+        self.assertEqual(res, expected['attrs'])
+
+    def test_get_murano_plugin_tags_without_artifacts(self):
+        expected = self.expected
+        expected['attrs']['deployment_tags'].append('murano_plugin')
+        expected['attrs']['deployment_tags'].append('murano_without_glare')
+
+        with requests_mock.Mocker() as m:
+            cluster = base.CLUSTERS[expected['cluster_id']]
+            m.register_uri('GET', '/api/clusters/10',
+                           json=cluster['cluster_meta'])
+            m.register_uri('GET', '/api/clusters/10/attributes',
+                           json=cluster['cluster_attributes'])
+            m.register_uri('GET', '/api/releases/10',
+                           json=cluster['release_data'])
+            m.register_uri('GET', '/api/nodes?cluster_id=10',
+                           json=cluster['cluster_node'])
+            res = mixins._get_cluster_attrs(expected['cluster_id'])
+
+        self.assertEqual(res, expected['attrs'])
+
+    def test_get_murano_tags_with_artifacts(self):
+        expected = self.expected
+        expected['attrs']['deployment_tags'].append('murano')
+        expected['attrs']['deployment_tags'].append('murano_use_glare')
+
+        with requests_mock.Mocker() as m:
+            cluster = base.CLUSTERS[expected['cluster_id']]
+            m.register_uri('GET', '/api/clusters/11',
+                           json=cluster['cluster_meta'])
+            m.register_uri('GET', '/api/clusters/11/attributes',
+                           json=cluster['cluster_attributes'])
+            m.register_uri('GET', '/api/releases/11',
+                           json=cluster['release_data'])
+            m.register_uri('GET', '/api/nodes?cluster_id=11',
+                           json=cluster['cluster_node'])
+            res = mixins._get_cluster_attrs(expected['cluster_id'])
+
+        self.assertEqual(res, expected['attrs'])
+
+    def test_get_murano_tags_without_artifacts(self):
+        expected = self.expected
+        expected['attrs']['deployment_tags'].append('murano')
+        expected['attrs']['deployment_tags'].append('murano_without_glare')
+
+        with requests_mock.Mocker() as m:
+            cluster = base.CLUSTERS[expected['cluster_id']]
+            m.register_uri('GET', '/api/clusters/12',
+                           json=cluster['cluster_meta'])
+            m.register_uri('GET', '/api/clusters/12/attributes',
+                           json=cluster['cluster_attributes'])
+            m.register_uri('GET', '/api/releases/12',
+                           json=cluster['release_data'])
+            m.register_uri('GET', '/api/nodes?cluster_id=12',
+                           json=cluster['cluster_node'])
+            res = mixins._get_cluster_attrs(expected['cluster_id'])
+
+        self.assertEqual(res, expected['attrs'])
