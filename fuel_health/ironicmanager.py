@@ -19,6 +19,7 @@ import traceback
 from fuel_health import nmanager
 import fuel_health.test
 
+from fuel_health.common.ssh import Client as SSHClient
 from ironicclient.common import utils
 from ironicclient import exc as ironic_exc
 
@@ -68,22 +69,38 @@ class IronicTest(nmanager.SanityChecksTest):
             n = self.ironic_client.node.get(node.uuid)
         return n
 
-    def check_service_availability(self, nodes, cmd, expected, timeout=30):
+    def check_service_availability(self, nodes, cmd, expected,
+                                   succeed_nodes=1):
         """Check running processes on nodes.
 
-        At least one controller should run ironic-api process.
-        At least one Ironic node should run ironic-conductor process.
-        At least one controller should run nova-compute process.
+        Check that output from specified command contain expected part.
+
+        :param nodes: List of nodes to check command.
+        :param cmd: Command that is executed.
+        :param expected: Expected output.
+        :param succeed_nodes: Indicates if check should succeed on specified
+            number of nodes.
         """
         def check_services():
+            succeed_count = 0
             for node in nodes:
-                output = self.run_ssh_cmd_with_exit_code(node, cmd)
-                LOG.debug(output)
-                if expected in output:
-                    return True
-            return False
+                remote = SSHClient(node, self.usr, self.pwd,
+                                   key_filename=self.key,
+                                   timeout=self.timeout)
+                try:
+                    output = remote.exec_command(cmd)
+                    LOG.debug(output)
+                    if expected in output:
+                        succeed_count += 1
+                except Exception:
+                    pass
+            if succeed_count == succeed_nodes:
+                return True
+            else:
+                return False
 
-        if not fuel_health.test.call_until_true(check_services, 30, timeout):
+        if not fuel_health.test.call_until_true(check_services, 30,
+                                                self.timeout):
             self.fail('Failed to discover service {0} '
                       'within specified timeout'.format(expected))
         return True
