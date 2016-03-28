@@ -122,7 +122,7 @@ class VanillaTwoTemplatesTest(SaharaTemplatesTest):
 
 class HDPTwoTemplatesTest(SaharaTemplatesTest):
     _plugin_name = 'ambari'
-    _hadoop_version = '2.2'
+    _hadoop_version = '2.3'
     _node_processes = ["Ambari", "YARN Timeline Server", "DataNode",
                        "MapReduce History Server", "NameNode", "NodeManager",
                        "Oozie", "ResourceManager", "SecondaryNameNode",
