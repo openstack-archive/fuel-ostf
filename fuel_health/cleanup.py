@@ -22,7 +22,6 @@ sys.path.append(path)
 
 import logging
 import requests
-import traceback
 
 from fuel_health import exceptions
 import fuel_health.nmanager
@@ -87,8 +86,8 @@ def cleanup(cluster_deployment_info):
                            log_message='Start sahara node'
                                        ' group template deletion',
                            delete_type='id')
-        except Exception:
-            LOG.warning(traceback.format_exc())
+        except Exception as exc:
+            LOG.exception(exc)
 
     if 'murano' in cluster_deployment_info:
         try:
@@ -107,9 +106,9 @@ def cleanup(cluster_deployment_info):
                             LOG.info('Start environment deletion.')
                             requests.delete('{0}environments/{1}'.format(
                                 endpoint, e['id']), headers=headers)
-                        except Exception:
+                        except Exception as exc:
                             LOG.warning('Failed to delete murano environment')
-                            LOG.debug(traceback.format_exc())
+                            LOG.exception(exc)
 
             if compute_client is not None:
                 flavors = compute_client.flavors.list()
@@ -118,12 +117,12 @@ def cleanup(cluster_deployment_info):
                         try:
                             LOG.info('Start flavor deletion.')
                             compute_client.flavors.delete(flavor.id)
-                        except Exception:
+                        except Exception as exc:
                             LOG.warning('Failed to delete flavor')
-                            LOG.debug(traceback.format_exc())
+                            LOG.exception(exc)
 
-        except Exception:
-            LOG.warning(traceback.format_exc())
+        except Exception as exc:
+            LOG.exception(exc)
 
     if 'ceilometer' in cluster_deployment_info:
         try:
@@ -151,10 +150,10 @@ def cleanup(cluster_deployment_info):
                         try:
                             LOG.info('Start stacks deletion.')
                             heat_client.stacks.delete(s.id)
-                        except Exception:
-                            LOG.debug(traceback.format_exc())
-        except Exception:
-            LOG.warning(traceback.format_exc())
+                        except Exception as exc:
+                            LOG.exception(exc)
+        except Exception as exc:
+            LOG.exception(exc)
 
     if 'ironic' in cluster_deployment_info:
         try:
@@ -186,13 +185,13 @@ def cleanup(cluster_deployment_info):
                             LOG.info('Delete floating ip {0}'.format(f.ip))
                             manager._get_compute_client().floating_ips.delete(
                                 f.id)
-                        except Exception:
-                            LOG.debug(traceback.format_exc())
+                        except Exception as exc:
+                            LOG.exception(exc)
                 try:
                     LOG.info('Delete server with name {0}'.format(s.name))
                     manager._get_compute_client().servers.delete(s.id)
-                except Exception:
-                    LOG.debug(traceback.format_exc())
+                except Exception as exc:
+                    LOG.exception(exc)
     else:
         LOG.info('No servers found')
 
@@ -200,8 +199,8 @@ def cleanup(cluster_deployment_info):
             try:
                 LOG.info('Wait for server terminations')
                 manager.wait_for_server_termination(s)
-            except Exception:
-                LOG.debug(traceback.format_exc())
+            except Exception as exc:
+                LOG.exception(exc)
 
     _delete_it(manager._get_compute_client().keypairs,
                'Start keypair deletion')
@@ -233,13 +232,13 @@ def _delete_it(client, log_message, name='ost1_test-', delete_type='name'):
                             client.delete(item)
                         else:
                             client.delete(item.id)
-                    except Exception:
-                        LOG.debug(traceback.format_exc())
+                    except Exception as exc:
+                        LOG.exception(exc)
             except AttributeError:
                 if item.display_name.startswith(name):
                     client.delete(item)
-    except Exception:
-        LOG.warning(traceback.format_exc())
+    except Exception as exc:
+        LOG.exception(exc)
 
 
 if __name__ == "__main__":
