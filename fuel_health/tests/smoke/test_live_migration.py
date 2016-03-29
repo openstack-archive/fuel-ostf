@@ -13,7 +13,6 @@
 # under the License.
 
 import logging
-import traceback
 
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import nmanager
@@ -60,8 +59,8 @@ class TestInstanceLiveMigration(nmanager.NovaNetworkScenarioTest):
                         self._delete_server(server)
                         self.servers.remove(server)
                     except Exception:
-                        LOG.debug(traceback.format_exc())
-                        LOG.debug("Server was already deleted.")
+                        LOG.exception("Server {0} already \
+                                      deleted.".format(server))
 
     def test_001_live_migration(self):
         """Instance live migration
