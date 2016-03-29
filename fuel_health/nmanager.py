@@ -17,7 +17,6 @@
 import logging
 import os
 import time
-import traceback
 
 import fuel_health.common.utils.data_utils as data_utils
 
@@ -27,32 +26,37 @@ LOG = logging.getLogger(__name__)
 try:
     import heatclient.v1.client
 except Exception:
+    LOG.exception()
     LOG.warning('Heatclient could not be imported.')
 try:
     import muranoclient.v1.client
 except Exception:
-    LOG.debug(traceback.format_exc())
+    LOG.exception()
     LOG.warning('Muranoclient could not be imported.')
 try:
     import saharaclient.client
 except Exception:
-    LOG.debug(traceback.format_exc())
+    LOG.exception()
     LOG.warning('Sahara client could not be imported.')
 try:
     import ceilometerclient.v2.client
 except Exception:
+    LOG.exception()
     LOG.warning('Ceilometer client could not be imported.')
 try:
     import neutronclient.neutron.client
 except Exception:
+    LOG.exception()
     LOG.warning('Neutron client could not be imported.')
 try:
     import glanceclient
 except Exception:
+    LOG.exception()
     LOG.warning('Glance client could not be imported')
 try:
     import ironicclient
 except Exception:
+    LOG.exception()
     LOG.warning('Ironic client could not be imported')
 
 import cinderclient.client
@@ -96,8 +100,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
                 "Unexpected error durring intialize keystoneclient: {0}"
                 .format(e)
             )
-            LOG.debug(traceback.format_exc())
-            self.traceback = traceback.format_exc()
+            LOG.exception("Unexpected error durring intialize keystoneclient")
 
         if self.clients_initialized:
             self.glance_client = self._get_glance_client()
@@ -407,10 +410,10 @@ class OfficialClientTest(fuel_health.test.TestCase):
         def is_deletion_complete():
             try:
                 server.get()
-            except Exception as e:
-                if e.__class__.__name__ == 'NotFound':
+            except Exception as exc:
+                if exc.__class__.__name__ == 'NotFound':
                     return True
-                LOG.debug(traceback.format_exc())
+                LOG.exception()
                 return False
 
         fuel_health.test.call_until_true(
@@ -429,9 +432,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 else:
                     return result
             except Exception as exc:
-                LOG.debug(traceback.format_exc())
-                LOG.debug("%s. Another"
-                          " effort needed." % exc)
+                LOG.debug("%s. Another effort needed." % exc)
                 time.sleep(timeout)
         if 'ping' not in kwargs.get('command'):
             self.fail('Execution command on Instance fails '
@@ -469,7 +470,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                       .format(image=self.manager.config.compute.image_name)
                       )
         except nova_exc.ClientException:
-            LOG.debug(traceback.format_exc())
+            LOG.exception()
             self.fail("Image can not be retrieved. "
                       "Please refer to OpenStack logs for more details")
 
@@ -481,7 +482,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                     cls.compute_client.flavors.delete(flavor)
                 except Exception as exc:
                     cls.error_msg.append(exc)
-                    LOG.debug(traceback.format_exc())
+                    LOG.exception()
 
     @classmethod
     def _clean_images(cls):
@@ -491,7 +492,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                     cls.glance_client.images.delete(image_id)
                 except Exception as exc:
                     cls.error_msg.append(exc)
-                    LOG.debug(traceback.format_exc())
+                    LOG.exception()
 
     @classmethod
     def tearDownClass(cls):
@@ -505,12 +506,12 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 # OpenStack resources are assumed to have a delete()
                 # method which destroys the resource...
                 thing.delete()
-            except Exception as e:
+            except Exception as exc:
                 # If the resource is already missing, mission accomplished.
-                if e.__class__.__name__ == 'NotFound':
+                if exc.__class__.__name__ == 'NotFound':
                     continue
-                cls.error_msg.append(e)
-                LOG.debug(traceback.format_exc())
+                cls.error_msg.append(exc)
+                LOG.exception()
 
             def is_deletion_complete():
                 # Deletion testing is only required for objects whose
@@ -519,13 +520,13 @@ class OfficialClientTest(fuel_health.test.TestCase):
                     return True
                 try:
                     thing.get()
-                except Exception as e:
+                except Exception as exc:
                     # Clients are expected to return an exception
                     # called 'NotFound' if retrieval fails.
-                    if e.__class__.__name__ == 'NotFound':
+                    if exc.__class__.__name__ == 'NotFound':
                         return True
-                    cls.error_msg.append(e)
-                    LOG.debug(traceback.format_exc())
+                    cls.error_msg.append(exc)
+                    LOG.exception()
                 return False
 
             # Block until resource deletion has completed or timed-out
@@ -570,7 +571,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                   key_filename=self.key, timeout=self.timeout)
             return sshclient.exec_longrun_command(cmd)
         except Exception:
-            LOG.debug(traceback.format_exc())
+            LOG.exception()
             self.fail("%s command failed." % cmd)
 
     def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
@@ -621,7 +622,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             try:
                 client.security_group_rules.create(secgroup.id, **ruleset)
             except Exception:
-                LOG.debug(traceback.format_exc())
+                LOG.exception()
                 self.fail("Failed to create rule in security group.")
 
         return secgroup
@@ -645,7 +646,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 cls.compute_client.networks.delete(net)
         except Exception as exc:
             cls.error_msg.append(exc)
-            LOG.debug(traceback.format_exc())
+            LOG.exception()
 
     @classmethod
     def _clear_security_groups(cls):
@@ -656,7 +657,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
              if 'ost1_test-' in group.name]
         except Exception as exc:
             cls.error_msg.append(exc)
-            LOG.debug(traceback.format_exc())
+            LOG.exception()
 
     def _list_networks(self):
         nets = self.compute_client.networks.list()
@@ -739,7 +740,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         try:
             client.servers.add_floating_ip(server, floating_ip)
         except Exception:
-            LOG.debug(traceback.format_exc())
+            LOG.exception()
             self.fail('Can not assign floating ip to instance')
 
     @classmethod
@@ -752,7 +753,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                     cls.compute_client.floating_ips.delete(ip)
                 except Exception as exc:
                     cls.error_msg.append(exc)
-                    LOG.debug(traceback.format_exc())
+                    LOG.exception()
 
     def _ping_ip_address(self, ip_address, timeout, retries):
         def ping():
@@ -765,7 +766,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                     key_filename=self.key,
                                     timeout=timeout)
                 except Exception:
-                    LOG.debug(traceback.format_exc())
+                    LOG.exception()
 
                 return self.retry_command(retries=retries[0],
                                           timeout=retries[1],
@@ -796,7 +797,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                 timeout=timeout)
 
             except Exception:
-                LOG.debug(traceback.format_exc())
+                LOG.exception()
 
             command = "ping -q -c1 -w10 8.8.8.8"
 
@@ -827,7 +828,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 LOG.debug('Host is {0}'.format(host))
 
             except Exception:
-                LOG.debug(traceback.format_exc())
+                LOG.exception()
 
             return self.retry_command(retries[0], retries[1],
                                       ssh.exec_command_on_vm,
@@ -1402,5 +1403,4 @@ class SmokeChecksTest(OfficialClientTest):
                 try:
                     cls.compute_client.flavors.delete(cls.created_flavors)
                 except Exception:
-                    LOG.debug("OSTF test flavor cannot be deleted.")
-                    LOG.debug(traceback.format_exc())
+                    LOG.exception("OSTF test flavor cannot be deleted.")

@@ -17,7 +17,6 @@
 #    under the License.
 
 import time
-import traceback
 
 import testresources
 import unittest2
@@ -142,5 +141,5 @@ class TestCase(BaseTestCase):
                                   key_filename=self.key, timeout=self.timeout)
             return sshclient.exec_command(cmd)
         except Exception:
-            LOG.debug(traceback.format_exc())
+            LOG.exception("Failed while opening ssh session with host")
             self.fail("{0} command failed.".format(cmd))
