@@ -15,7 +15,6 @@
 # under the License.
 
 import logging
-import traceback
 
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import nmanager
@@ -57,7 +56,7 @@ class TestVcenter(nmanager.NovaNetworkScenarioTest):
                         self._delete_server(server)
                         self.servers.remove(server)
                     except Exception:
-                        LOG.debug(traceback.format_exc())
+                        LOG.exception("Server was already deleted.")
                         LOG.debug("Server was already deleted.")
 
     @classmethod
@@ -231,7 +230,7 @@ class TestVcenter(nmanager.NovaNetworkScenarioTest):
                 if addr.startswith('novanetwork'):
                     instance_ip = server.addresses[addr][0]['addr']
         except Exception:
-            LOG.debug(traceback.format_exc())
+            LOG.exception()
             self.fail("Step 3 failed: cannot get instance details. "
                       "Please refer to OpenStack logs for more details.")
 
@@ -289,7 +288,7 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
                     if e.__class__.__name__ == 'NotFound':
                         return True
                     self.error_msg.append(e)
-                    LOG.debug(traceback.format_exc())
+                    LOG.exception(e)
                 return False
 
         # Block until resource deletion has completed or timed-out
