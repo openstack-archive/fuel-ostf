@@ -14,7 +14,6 @@
 # under the License.
 
 import logging
-import traceback
 
 from fuel_health import nmanager
 import fuel_health.test
@@ -51,8 +50,8 @@ class IronicTest(nmanager.SanityChecksTest):
         """Delete particular node."""
         try:
             self.ironic_client.node.delete(node.uuid)
-        except ironic_exc.NotFound:
-            LOG.debug(traceback.format_exc())
+        except ironic_exc.NotFound as exc:
+            LOG.exception(exc)
 
     def node_update(self, node, prop, value_prop, row='properties'):
         """Add property with value to node properties."""

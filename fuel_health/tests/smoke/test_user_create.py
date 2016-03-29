@@ -15,8 +15,6 @@
 # under the License.
 
 import logging
-import traceback
-
 import requests
 
 from fuel_health import nmanager
@@ -131,7 +129,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                         "Please, refer to OpenStack "
                         "logs for more details.",
                     failed_step=9)
-        except Exception:
-            LOG.debug(traceback.format_exc())
+        except Exception as exc:
+            LOG.exception(exc)
             self.fail("Step 10 failed: Can not authenticate in Horizon. "
                       "Please refer to OpenStack logs for more details.")

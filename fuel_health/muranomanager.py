@@ -17,7 +17,6 @@ import contextlib
 import logging
 import os
 import time
-import traceback
 import zipfile
 
 try:
@@ -78,14 +77,14 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
                 for environment_id in self.environments:
                     try:
                         self.delete_environment(environment_id)
-                    except Exception:
-                        LOG.warning(traceback.format_exc())
+                    except Exception as exc:
+                        LOG.exception(exc)
             if self.packages:
                 for package in self.packages:
                     try:
                         self.delete_package(package.id)
-                    except Exception:
-                        LOG.warning(traceback.format_exc())
+                    except Exception as exc:
+                        LOG.exception(exc)
 
         super(MuranoTest, self).tearDown()
 
