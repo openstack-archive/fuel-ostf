@@ -16,7 +16,6 @@
 
 import functools
 import logging
-import traceback
 
 import neutronclient.common.exceptions as neutron_exc
 
@@ -474,7 +473,7 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             try:
                 method(resource)
             except Exception:
-                LOG.debug(traceback.format_exc())
+                LOG.exception()
 
     @classmethod
     def tearDownClass(cls):

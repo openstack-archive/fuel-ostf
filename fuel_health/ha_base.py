@@ -16,7 +16,6 @@ from distutils import version
 import json
 import logging
 from lxml import etree
-import traceback
 
 import fuel_health
 from fuel_health.common import ssh
@@ -198,7 +197,7 @@ class RabbitSanityClass(BaseTestCase):
                 return json.loads(res.strip())
             return res.strip()
         except Exception:
-            LOG.debug(traceback.format_exc())
+            LOG.exception("Fail to get data from Hiera DB!")
             self.fail("Fail to get data from Hiera DB!")
 
     def get_conf_values(self, variable="rabbit_password",
@@ -216,7 +215,7 @@ class RabbitSanityClass(BaseTestCase):
             LOG.debug("result is {0}".format(res))
             return res
         except Exception:
-            LOG.debug(traceback.format_exc())
+            LOG.exception("Fail to get data from config")
             self.fail("Fail to get data from config")
 
     def get_amqp_hosts(self):
@@ -244,7 +243,7 @@ class RabbitSanityClass(BaseTestCase):
                 LOG.debug('Checking AMQP host "{0}"...'.format(ip))
                 remote.exec_command(cmd)
             except Exception:
-                LOG.debug(traceback.format_exc())
+                LOG.exception("Failed to establish AMQP connection")
                 self.fail("Failed to establish AMQP connection to {1}/tcp "
                           "port on {0} from controller node!".format(ip, port))
 
@@ -270,7 +269,7 @@ class RabbitSanityClass(BaseTestCase):
                 self.queues.append(test_queue)
                 remote.exec_command(cmd)
             except Exception:
-                LOG.debug(traceback.format_exc())
+                LOG.exception("Failed to declare queue on host")
                 self.fail("Failed to declare queue on host {0}".format(ip))
 
     def publish_message(self):
@@ -295,7 +294,7 @@ class RabbitSanityClass(BaseTestCase):
                 LOG.debug('Try to publish message {0}'.format(id))
                 remote.exec_command(cmd)
             except Exception:
-                LOG.debug(traceback.format_exc())
+                LOG.exception("Failed to publish message!")
                 self.fail("Failed to publish message!")
             self.messages.append({'queue': test_queue, 'id': id})
 
@@ -321,7 +320,7 @@ class RabbitSanityClass(BaseTestCase):
                               'replicated over the cluster...'.format(id))
                     remote.exec_command(cmd)
                 except Exception:
-                    LOG.debug(traceback.format_exc())
+                    LOG.exception('Failed to check message replication!')
                     self.fail('Failed to check message replication!')
                 self.messages.remove(message)
                 break
@@ -347,7 +346,7 @@ class RabbitSanityClass(BaseTestCase):
                 remote.exec_command(cmd)
                 self.queues.remove(test_queue)
             except Exception:
-                LOG.debug(traceback.format_exc())
+                LOG.exception('Failed to delete queue')
                 self.fail('Failed to delete queue "{0}"!'.format(test_queue))
 
 
@@ -386,7 +385,7 @@ class TestPacemakerBase(BaseTestCase):
                                    timeout=self.timeout)
             return sshclient.exec_longrun_command(cmd)
         except Exception:
-            LOG.debug(traceback.format_exc())
+            LOG.exception("Failed on run ssh cmd")
             self.fail("%s command failed." % cmd)
 
     def _register_resource(self, res, res_name, resources):
