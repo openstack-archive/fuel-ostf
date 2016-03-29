@@ -14,7 +14,6 @@
 #    under the License.
 
 import logging
-import traceback
 
 import fuel_health.nmanager
 
@@ -125,7 +124,7 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
                     cls.compute_client.floating_ips.delete(ip)
                 except Exception as exc:
                     cls.error_msg.append(exc)
-                    LOG.debug(traceback.format_exc())
+                    LOG.exception(exc)
 
     @classmethod
     def _clear_networks(cls):
@@ -135,7 +134,7 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
              if 'ost1_' in srv.name]
         except Exception as exc:
             cls.error_msg.append(exc)
-            LOG.debug(traceback.format_exc())
+            LOG.exception(exc)
         for router in cls.routers:
             try:
                 cls.neutron_client.remove_gateway_router(
@@ -147,21 +146,21 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
                 cls.neutron_client.delete_router(router)
             except Exception as exc:
                 cls.error_msg.append(exc)
-                LOG.debug(traceback.format_exc())
+                LOG.exception(exc)
 
         for subnet in cls.subnets:
             try:
                 cls.neutron_client.delete_subnet(subnet['id'])
             except Exception as exc:
                 cls.error_msg.append(exc)
-                LOG.debug(traceback.format_exc())
+                LOG.exception(exc)
 
         for network in cls.networks:
             try:
                 cls.neutron_client.delete_network(network['id'])
             except Exception as exc:
                 cls.error_msg.append(exc)
-                LOG.debug(traceback.format_exc())
+                LOG.exception(exc)
 
         try:
             sec_groups = cls.compute_client.security_groups.list()
@@ -170,7 +169,7 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
              if 'ost1_test-secgroup-smoke' in group.name]
         except Exception as exc:
             cls.error_msg.append(exc)
-            LOG.debug(traceback.format_exc())
+            LOG.exception(exc)
 
     @classmethod
     def tearDownClass(cls):
