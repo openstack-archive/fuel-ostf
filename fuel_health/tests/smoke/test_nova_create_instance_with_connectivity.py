@@ -16,7 +16,6 @@
 # under the License.
 
 import logging
-import traceback
 
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import nmanager
@@ -61,8 +60,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                     try:
                         self._delete_server(server)
                         self.servers.remove(server)
-                    except Exception:
-                        LOG.debug(traceback.format_exc())
+                    except Exception as exc:
+                        LOG.exception(exc)
                         LOG.debug("Server was already deleted.")
 
     def test_001_create_keypairs(self):
@@ -277,8 +276,8 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                 compute = getattr(server, 'OS-EXT-SRV-ATTR:host')
             else:
                 compute = None
-        except Exception:
-            LOG.debug(traceback.format_exc())
+        except Exception as exc:
+            LOG.exception(exc)
             self.fail("Step 3 failed: cannot get instance details. "
                       "Please refer to OpenStack logs for more details.")
 

@@ -141,6 +141,6 @@ class TestCase(BaseTestCase):
             sshclient = SSHClient(host, self.usr, self.pwd,
                                   key_filename=self.key, timeout=self.timeout)
             return sshclient.exec_command(cmd)
-        except Exception:
-            LOG.debug(traceback.format_exc())
+        except Exception as exc:
+            LOG.exception(exc)
             self.fail("{0} command failed.".format(cmd))

@@ -14,7 +14,6 @@
 #    under the License.
 
 import logging
-import traceback
 
 LOG = logging.getLogger(__name__)
 
@@ -47,6 +46,6 @@ class CloudValidationTest(nmanager.OfficialClientTest):
             sshclient = SSHClient(host, self.usr, self.pwd,
                                   key_filename=self.key, timeout=self.timeout)
             return sshclient.exec_longrun_command(cmd)
-        except Exception:
-            LOG.debug(traceback.format_exc())
+        except Exception as exc:
+            LOG.exception(exc)
             self.fail("%s command failed." % cmd)

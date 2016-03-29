@@ -13,7 +13,6 @@
 # under the License.
 
 import logging
-import traceback
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.common.utils import data_utils
@@ -41,8 +40,8 @@ class TestMysqlReplication(BaseMysqlTest):
                 cmd = "mysql -h localhost -e 'DROP DATABASE %s'" % cls.database
                 SSHClient(cls.master_ip, cls.node_user,
                           key_filename=cls.node_key).exec_command(cmd)
-            except Exception:
-                LOG.debug(traceback.format_exc())
+            except Exception as exe:
+                LOG.exception(exe)
 
     def test_mysql_replication(self):
         """Check data replication over mysql
