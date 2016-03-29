@@ -15,7 +15,6 @@
 # under the License.
 
 import logging
-import traceback
 
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import nmanager
@@ -71,7 +70,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
                     if e.__class__.__name__ == 'NotFound':
                         return True
                     self.error_msg.append(e)
-                    LOG.debug(traceback.format_exc())
+                    LOG.exception()
                 return False
 
         # Block until resource deletion has completed or timed-out

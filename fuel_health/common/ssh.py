@@ -20,7 +20,6 @@ import os
 import select
 import socket
 import time
-import traceback
 import warnings
 
 LOG = logging.getLogger(__name__)
@@ -118,7 +117,7 @@ class Client(object):
                 _timed_out = self._is_timed_out(self.timeout, _start_time)
             ssh.close()
         except (EOFError, paramiko.AuthenticationException, socket.error):
-            LOG.debug(traceback.format_exc())
+            LOG.exception('Closed on connecting to server')
             return
 
     def exec_command(self, command):
@@ -172,7 +171,7 @@ class Client(object):
             connection = self._get_ssh_connection()
             connection.close()
         except paramiko.AuthenticationException:
-            LOG.debug(traceback.format_exc())
+            LOG.exception()
             return False
 
         return True

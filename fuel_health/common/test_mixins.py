@@ -15,7 +15,6 @@
 # under the License.
 
 import signal
-import traceback
 
 from fuel_health.common import log as logging
 
@@ -176,7 +175,7 @@ class FuelTestAssertMixin(object):
             with timeout(secs, action):
                 result = func(*args, **kwargs)
         except Exception as exc:
-            LOG.debug(traceback.format_exc())
+            LOG.exception()
             if type(exc) is AssertionError:
                 msg = str(exc)
             self.fail("Step %s failed: " % step + msg +
