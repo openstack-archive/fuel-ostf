@@ -22,6 +22,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import joinedload, relationship, object_mapper
 
+from fuel_plugin import consts
 from fuel_plugin.ostf_adapter import nose_plugin
 from fuel_plugin.ostf_adapter.storage import engine
 from fuel_plugin.ostf_adapter.storage import fields
@@ -115,17 +116,6 @@ class Test(BASE):
 
     __tablename__ = 'tests'
 
-    STATES = (
-        'wait_running',
-        'running',
-        'failure',
-        'success',
-        'error',
-        'stopped',
-        'disabled',
-        'skipped'
-    )
-
     id = sa.Column(sa.Integer(), primary_key=True)
     name = sa.Column(sa.String(512))
     title = sa.Column(sa.String(512))
@@ -133,7 +123,7 @@ class Test(BASE):
     duration = sa.Column(sa.String(512))
     message = sa.Column(sa.Text())
     traceback = sa.Column(sa.Text())
-    status = sa.Column(sa.Enum(*STATES, name='test_states'))
+    status = sa.Column(sa.Enum(consts.TEST_STATUSES, name='test_states'))
     step = sa.Column(sa.Integer())
     time_taken = sa.Column(sa.Float())
     meta = sa.Column(fields.JsonField())
@@ -178,15 +168,19 @@ class Test(BASE):
             update(data, synchronize_session='fetch')
 
     @classmethod
-    def update_running_tests(cls, session, test_run_id, status='stopped'):
+    def update_running_tests(cls, session, test_run_id,
+                             status=consts.TEST_STATUSES.stopped):
         session.query(cls). \
             filter(cls.test_run_id == test_run_id,
-                   cls.status.in_(('running', 'wait_running'))). \
+                   cls.status.in_(
+                       (consts.TEST_STATUSES.running,
+                        consts.TEST_STATUSES.wait_running))). \
             update({'status': status}, synchronize_session='fetch')
 
     @classmethod
     def update_test_run_tests(cls, session, test_run_id,
-                              tests_names, status='wait_running'):
+                              tests_names,
+                              status=consts.TEST_STATUSES.wait_running):
         session.query(cls). \
             filter(cls.name.in_(tests_names),
                    cls.test_run_id == test_run_id). \
@@ -205,9 +199,9 @@ class Test(BASE):
                 setattr(new_test, column.key, getattr(self, column.key))
         new_test.test_run_id = test_run.id
         if predefined_tests and new_test.name not in predefined_tests:
-            new_test.status = 'disabled'
+            new_test.status = consts.TEST_STATUSES.disabled
         else:
-            new_test.status = 'wait_running'
+            new_test.status = consts.TEST_STATUSES.wait_running
         return new_test
 
 
@@ -215,14 +209,10 @@ class TestRun(BASE):
 
     __tablename__ = 'test_runs'
 
-    STATES = (
-        'running',
-        'finished'
-    )
-
     id = sa.Column(sa.Integer(), primary_key=True)
     cluster_id = sa.Column(sa.Integer(), nullable=False)
-    status = sa.Column(sa.Enum(*STATES, name='test_run_states'),
+    status = sa.Column(sa.Enum(consts.TESTRUN_STATUSES,
+                               name='test_run_states'),
                        nullable=False)
     meta = sa.Column(fields.JsonField())
     started_at = sa.Column(sa.DateTime, default=datetime.datetime.utcnow)
@@ -262,10 +252,10 @@ class TestRun(BASE):
     @property
     def enabled_tests(self):
         return [test.name for test
-                in self.tests if test.status != 'disabled']
+                in self.tests if test.status != consts.TEST_STATUSES.disabled]
 
     def is_finished(self):
-        return self.status == 'finished'
+        return self.status == consts.TESTRUN_STATUSES.finished
 
     @property
     def frontend(self):
@@ -284,7 +274,8 @@ class TestRun(BASE):
         return test_run_data
 
     @classmethod
-    def add_test_run(cls, session, test_set, cluster_id, status='running',
+    def add_test_run(cls, session, test_set, cluster_id,
+                     status=consts.TESTRUN_STATUSES.running,
                      tests=None):
         """Creates new test_run object with given data
         and makes copy of tests that will be bound
@@ -350,7 +341,7 @@ class TestRun(BASE):
 
     @classmethod
     def update_test_run(cls, session, test_run_id, updated_data):
-        if updated_data.get('status') in ['finished']:
+        if updated_data.get('status') in [consts.TESTRUN_STATUSES.finished]:
             updated_data['ended_at'] = datetime.datetime.utcnow()
 
         session.query(cls). \
@@ -392,7 +383,7 @@ class TestRun(BASE):
                                    self.cluster_id):
             plugin = nose_plugin.get_plugin(self.test_set.driver)
 
-            self.update('running')
+            self.update(consts.TEST_STATUSES.running)
             if tests:
                 Test.update_test_run_tests(
                     session, self.id, tests)
@@ -409,5 +400,5 @@ class TestRun(BASE):
         killed = plugin.kill(self)
         if killed:
             Test.update_running_tests(
-                session, self.id, status='stopped')
+                session, self.id, status=consts.TEST_STATUSES.stopped)
         return self.frontend
