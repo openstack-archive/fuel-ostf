@@ -22,6 +22,7 @@ try:
 except ImportError:
     from oslo_config import cfg
 
+from fuel_plugin import consts
 from fuel_plugin.ostf_adapter.logger import ResultsLogger
 from fuel_plugin.ostf_adapter.nose_plugin import nose_storage_plugin
 from fuel_plugin.ostf_adapter.nose_plugin import nose_test_runner
@@ -114,7 +115,7 @@ class NoseDriver(object):
             except Exception:
                 LOG.exception('Test run ID: %s', test_run_id)
             finally:
-                updated_data = {'status': 'finished',
+                updated_data = {'status': consts.TESTRUN_STATUSES.finished,
                                 'pid': None}
 
                 models.TestRun.update_test_run(

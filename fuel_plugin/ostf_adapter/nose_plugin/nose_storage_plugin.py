@@ -22,6 +22,7 @@ try:
 except ImportError:
     from oslo_config import cfg
 
+from fuel_plugin import consts
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
 from fuel_plugin.ostf_adapter.storage import models
 
@@ -72,7 +73,7 @@ class StoragePlugin(plugins.Plugin):
             test_id,
             data
         )
-        if data['status'] != 'running':
+        if data['status'] != consts.TEST_STATUSES.running:
             test_name = nose_utils.get_description(test)["title"]
             self.results_log.log_results(
                 test_id,
@@ -93,11 +94,11 @@ class StoragePlugin(plugins.Plugin):
         if err:
             exc_type, exc_value, exc_traceback = err
 
-            if not status == 'error':
+            if not status == consts.TEST_STATUSES.error:
                 data['step'], data['message'] = \
                     nose_utils.format_failure_message(exc_value)
 
-            if status != 'skipped':
+            if status != consts.TEST_STATUSES.skipped:
                 data['traceback'] = nose_utils.format_exception(err)
 
         tests_to_update = nose_utils.get_tests_to_update(test)
@@ -107,26 +108,30 @@ class StoragePlugin(plugins.Plugin):
         self.session.commit()
 
     def addSuccess(self, test, capt=None):
-        self._add_message(test, status='success')
+        self._add_message(test, status=consts.TEST_STATUSES.success)
 
     def addFailure(self, test, err):
         LOG.error('%s', test.id(), exc_info=err)
-        self._add_message(test, err=err, status='failure')
+        self._add_message(
+            test, err=err, status=consts.TEST_STATUSES.failure)
 
     def addError(self, test, err):
         if err[0] is AssertionError:
             LOG.error('%s', test.id(), exc_info=err)
-            self._add_message(test, err=err, status='failure')
+            self._add_message(
+                test, err=err, status=consts.TEST_STATUSES.failure)
         elif issubclass(err[0], plugins.skip.SkipTest):
             LOG.warning('%s is skipped', test.id())
-            self._add_message(test, err=err, status='skipped')
+            self._add_message(
+                test, err=err, status=consts.TEST_STATUSES.skipped)
         else:
             LOG.error('%s', test.id(), exc_info=err)
-            self._add_message(test, err=err, status='error')
+            self._add_message(
+                test, err=err, status=consts.TEST_STATUSES.error)
 
     def beforeTest(self, test):
         self._start_time = time.time()
-        self._add_message(test, status='running')
+        self._add_message(test, status=consts.TEST_STATUSES.running)
 
     def describeTest(self, test):
         return test.test._testMethodDoc
