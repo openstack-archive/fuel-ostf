@@ -1,0 +1,14 @@
+Code-Review+1: Vladimir Khlyunev <vkhlyunev@mirantis.com>
+Code-Review+1: Artem Panchenko <apanchenko@mirantis.com>
+Code-Review+1: Victor Ryzhenkin <vryzhenkin@mirantis.com>
+Code-Review+1: Kyrylo Romanenko <kromanenko@mirantis.com>
+Code-Review+1: Sergii Turivnyi <sturivnyi@mirantis.com>
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Code-Review+2: tatyana-leontovich <tleontovich@mirantis.com>
+Workflow+1: Andrey Sledzinskiy <asledzinskiy@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 30 Mar 2016 16:58:40 +0000
+Reviewed-on: https://review.openstack.org/291156
+Project: openstack/fuel-ostf
+Branch: refs/heads/master
