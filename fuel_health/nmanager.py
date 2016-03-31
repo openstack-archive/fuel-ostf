@@ -268,7 +268,7 @@ class OfficialClientManager(fuel_health.manager.Manager):
 
         try:
             endpoint = keystone.service_catalog.url_for(
-                service_type='application_catalog',
+                service_type='application-catalog',
                 endpoint_type='publicURL')
         except keystoneclient.exceptions.EndpointNotFound:
             LOG.warning('Endpoint for Murano service '
