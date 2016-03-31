@@ -57,11 +57,14 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         self.murano_available = True
         self.endpoint = '{0}/v1/'.format(
             self.identity_client.service_catalog.url_for(
-                service_type='application_catalog',
+                service_type='application-catalog',
                 endpoint_type='publicURL'))
 
-        self.headers = {'X-Auth-Token': self.murano_client.auth_token,
-                        'content-type': 'application/json'}
+        self.headers = {
+            'X-Auth-Token': self.murano_client.http_client.auth_token,
+            'content-type': 'application/json'
+        }
+
         try:
             self.list_environments()
         except exceptions.CommunicationError:
