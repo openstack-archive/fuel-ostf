@@ -29,6 +29,7 @@ from pecan import rest
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
+from fuel_plugin import consts
 from fuel_plugin.ostf_adapter import mixins
 from fuel_plugin.ostf_adapter.storage import models
 
@@ -190,9 +191,9 @@ class TestrunsController(BaseRestController):
 
                 test_run = models.TestRun.get_test_run(request.session,
                                                        test_run['id'])
-                if status == 'stopped':
+                if status == consts.TESTRUN_STATUSES.stopped:
                     data.append(test_run.stop(request.session))
-                elif status == 'restarted':
+                elif status == consts.TESTRUN_STATUSES.restarted:
                     data.append(test_run.restart(request.session,
                                                  cfg.CONF.adapter.dbpath,
                                                  ostf_os_access_creds,
