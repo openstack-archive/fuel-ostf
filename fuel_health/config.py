@@ -719,8 +719,8 @@ class NailgunConfig(object):
         compute_nodes = filter(lambda node: 'compute' in node['roles'],
                                data)
         online_computes = filter(
-            lambda node: 'compute' in node['roles']
-            and node['online'] is True, data)
+            lambda node: 'compute' in node['roles'] and
+                         node['online'] is True, data)
         online_computes_ips = []
         for node in online_computes:
             online_computes_ips.append(node['ip'])
@@ -730,6 +730,16 @@ class NailgunConfig(object):
         for node in compute_nodes:
             compute_ips.append(node['ip'])
         LOG.info("COMPUTES IPS %s" % compute_ips)
+        sriov_physnets = []
+        compute_ids = [node['id'] for node in online_computes]
+        for compute_id in compute_ids:
+            api_url = '/api/nodes/{}/interfaces'.format(compute_id)
+            ifaces_resp = self.req_session.get(self.nailgun_url + api_url).json()
+            for iface in ifaces_resp:
+                if iface['interface_properties']['sriov']['enabled']:
+                    sriov_physnets.append(
+                        iface['interface_properties']['sriov']['physnet'])
+        self.compute.sriov_physnets = sriov_physnets
         self.compute.compute_nodes = compute_ips
         ceph_nodes = filter(lambda node: 'ceph-osd' in node['roles'],
                             data)
