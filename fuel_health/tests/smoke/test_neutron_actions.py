@@ -144,3 +144,100 @@ class TestNeutron(neutronmanager.NeutronBaseTest):
                     "Subnet deletion", subnet)
         self.verify(20, self._remove_network, 16,
                     "Network can not be deleted", "Network deletion", network)
+
+    def test_check_sriov_instance_connectivity(self):
+            """Check network connectivity from SRIOV instance via floating IP
+            Target component: Neutron
+
+            Scenario:
+                1. Create a new security group (if it doesn`t exist yet).
+                2. Create SR-IOV port
+                3. Create an instance using new security group and SR-IOV port.
+                4. Create a new floating IP
+                5. Assign the new floating IP to the instance.
+                6. Check connectivity to the floating IP using ping command.
+                7. Check that public IP 8.8.8.8 can be pinged from instance.
+                8. Disassociate server floating ip.
+                9. Delete floating ip
+                10. Delete server.
+                11. Delete SR-IOV port
+            Duration: 300 s.
+
+            Deployment tags: sriov
+            """
+            self.check_image_exists()
+            if not self.security_groups:
+                self.security_groups[self.tenant_id] = self.verify(
+                    25, self._create_security_group, 1,
+                    "Security group can not be created.",
+                    'security group creation',
+                    self.compute_client)
+
+            name = rand_name('ost1_test-server-sriov-')
+            security_groups = [self.security_groups[self.tenant_id].name]
+
+            network = [net.id for net in
+                       self.compute_client.networks.list()
+                       if net.label == self.private_net]
+
+            port = self.verify(
+                20,
+                self._create_port,
+                2,
+                "SRIOV port can not be created.",
+                'SRIOV port creation',
+                net_id=network[0], vnic_type='direct')
+
+            server = self.verify(250, self._create_server, 3,
+                                 "Server can not be created.",
+                                 "server creation",
+                                 self.compute_client, name, security_groups,
+                                 port=port, net_id=network[0])
+
+            floating_ip = self.verify(
+                20,
+                self._create_floating_ip,
+                4,
+                "Floating IP can not be created.",
+                'floating IP creation')
+
+            self.verify(20, self._assign_floating_ip_to_instance,
+                        5, "Floating IP can not be assigned.",
+                        'floating IP assignment',
+                        self.compute_client, server, floating_ip)
+
+            self.floating_ips.append(floating_ip)
+
+            ip_address = floating_ip.ip
+            LOG.info('is address is  {0}'.format(ip_address))
+            LOG.debug(ip_address)
+
+            self.verify(600, self._check_vm_connectivity, 6,
+                        "VM connectivity doesn`t function properly.",
+                        'VM connectivity checking', ip_address,
+                        30, (9, 60))
+
+            self.verify(600, self._check_connectivity_from_vm,
+                        7, ("Connectivity to 8.8.8.8 from the VM doesn`t "
+                            "function properly."),
+                        'public connectivity checking from VM', ip_address,
+                        30, (9, 60))
+
+            self.verify(20, self.compute_client.servers.remove_floating_ip,
+                        8, "Floating IP cannot be removed.",
+                        "removing floating IP", server, floating_ip)
+
+            self.verify(20, self.compute_client.floating_ips.delete,
+                        9, "Floating IP cannot be deleted.",
+                        "floating IP deletion", floating_ip)
+
+            if self.floating_ips:
+                self.floating_ips.remove(floating_ip)
+
+            self.verify(30, self._delete_server, 10,
+                        "Server can not be deleted. ",
+                        "server deletion", server)
+
+            self.verify(30, self.neutron_client.delete_port, 11,
+                        "Port can not be deleted. ",
+                        "port deletion", port)

@@ -31,6 +31,7 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         cls.networks = []
         cls.floating_ips = []
         cls.security_groups = {}
+        cls.ports = []
 
     def setUp(self):
         super(NeutronBaseTest, self).setUp()
