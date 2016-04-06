@@ -31,6 +31,7 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
         cls.networks = []
         cls.floating_ips = []
         cls.security_groups = {}
+        cls.ports = []
 
     def setUp(self):
         super(NeutronBaseTest, self).setUp()
@@ -173,7 +174,17 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
             LOG.debug(traceback.format_exc())
 
     @classmethod
+    def _cleanup_ports(cls):
+        for port in cls.ports:
+            try:
+                cls.neutron_client.delete_port(port['port']['id'])
+            except Exception as exc:
+                cls.error_msg.append(exc)
+                LOG.debug(traceback.format_exc())
+
+    @classmethod
     def tearDownClass(cls):
         super(NeutronBaseTest, cls)
         cls._clean_floating_ips()
         cls._clear_networks()
+        cls._cleanup_ports()
