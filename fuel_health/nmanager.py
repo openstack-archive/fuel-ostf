@@ -569,6 +569,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             cls.error_msg = []
             cls.flavors = []
             cls.images = []
+            cls.ports = []
             cls.private_net = cls.config.network.private_net
 
     def setUp(self):
@@ -654,6 +655,22 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                           "Network creation failed")
         return networks
 
+    def _create_port(self, net_id, vnic_type, label='ost1_test-port-'):
+        n_label = rand_name(label)
+        port_data = {
+            'name': n_label,
+            'binding:vnic_type': vnic_type,
+            'network_id': net_id,
+        }
+        port = self.neutron_client.create_port({'port': port_data})
+        self.set_resource(n_label, port)
+        self.ports.append(port)
+        LOG.debug(port)
+        self.verify_response_body_content(port['port']['name'],
+                                          n_label,
+                                          "Port creation failed")
+        return port
+
     @classmethod
     def _clear_networks(cls):
         try:
@@ -680,7 +697,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def _create_server(self, client, name, security_groups=None,
                        flavor_id=None, net_id=None, img_name=None,
-                       data_file=None, az_name=None):
+                       data_file=None, az_name=None, port=None):
+        create_kwargs = {}
 
         if img_name:
             base_image_id = self.get_image_from_name(img_name=img_name)
@@ -702,6 +720,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             security_groups = [self._create_security_group(
                 self.compute_client).name]
         if 'neutron' in self.config.network.network_provider:
+            create_kwargs['nics'] = []
             if net_id:
                 network = [net_id]
             else:
@@ -709,15 +728,17 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                            self.compute_client.networks.list()
                            if net.label == self.private_net]
 
-            if network:
-                create_kwargs = {'nics': [{'net-id': network[0]}],
-                                 'security_groups': security_groups}
+            if port:
+                create_kwargs['nics'].append({'port-id': port['port']['id']})
             else:
-                self.fail("Default private network '{0}' isn't present. "
-                          "Please verify it is properly created.".
-                          format(self.private_net))
-        else:
-            create_kwargs = {'security_groups': security_groups}
+                if network:
+                    create_kwargs['nics'].append({'net-id': network[0]})
+                else:
+                    self.fail("Default private network '{0}' isn't present. "
+                              "Please verify it is properly created.".
+                              format(self.private_net))
+
+        create_kwargs['security_groups'] = security_groups
 
         server = client.servers.create(name, base_image_id,
                                        flavor_id, files=data_file,
