@@ -1,6 +1,6 @@
 %define name fuel-ostf
 %define service_name ostf
-%{!?version: %define version 9.0.0}
+%{!?version: %define version 10.0.0}
 %{!?release: %define release 1}
 
 Summary: cloud computing testing
