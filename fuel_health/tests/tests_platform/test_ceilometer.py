@@ -252,7 +252,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         Deployment tags: Ceilometer
         """
 
-        event_type = 'compute.instance.update'
+        event_type = 'compute.instance.create.start'
 
         self.check_image_exists()
         private_net_id, _ = self.create_network_resources()
@@ -283,11 +283,8 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
                     'list.'.format(event_type=event_type))
         msg = ('searching event with "{event_type}" type in event type '
                'list'.format(event_type=event_type))
-        an_hour_ago = (datetime.datetime.now() -
-                       datetime.timedelta(hours=1)).isoformat()
-        query = [
-            {'field': 'event_type', 'op': 'eq', 'value': event_type},
-            {'field': 'start_timestamp', 'op': 'gt', 'value': an_hour_ago}]
+
+        query = [{'field': 'event_type', 'op': 'eq', 'value': event_type}]
         events_list = self.verify(60, self.ceilometer_client.events.list, 4,
                                   fail_msg, msg, query, limit=1000)
 
