@@ -160,7 +160,21 @@ def _get_cluster_attrs(cluster_id, token=None):
     enable_without_ceph = filter(lambda node: 'ceph-osd' in node['roles'],
                                  nodes_response)
 
+    sriov_compute_ids = []
+    compute_ids = [node['id'] for node in nodes_response
+                   if "compute" in node['roles']]
+    for compute_id in compute_ids:
+        ifaces_url = URL.format(
+            cfg.CONF.adapter.nailgun_host, cfg.CONF.adapter.nailgun_port,
+            'api/nodes/{id}/interfaces'.format(id=compute_id))
+        ifaces_resp = REQ_SES.get(ifaces_url).json()
+        for iface in ifaces_resp:
+            if iface['interface_properties']['sriov']['enabled']:
+                sriov_compute_ids.append(compute_id)
+
     deployment_tags = set()
+    if sriov_compute_ids:
+        deployment_tags.add('sriov')
     if not enable_without_ceph:
         deployment_tags.add('enable_without_ceph')
 
