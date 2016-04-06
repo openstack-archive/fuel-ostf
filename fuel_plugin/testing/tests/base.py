@@ -147,7 +147,48 @@ CLUSTERS = {
                 'common': {}
             }
         }
-    }
+    },
+    7: {
+        'cluster_meta': {
+            'release_id': 7,
+            'mode': 'ha'
+        },
+        'release_data': {
+            'operating_system': 'rhel',
+            'version': '2015.2-1.0',
+        },
+        'cluster_node': [
+            {
+                "hostname": "node-1",
+                'id': "1",
+                'roles': "compute"
+            },
+        ],
+        'node_interfaces': [
+            {
+                'interface_properties': {
+                    'sriov':
+                        {
+                            'enabled': 'true'
+                        }
+                }
+
+            }
+        ],
+        'cluster_attributes': {
+            'editable': {
+                'additional_components': {
+                    'murano': {
+                        'value': True
+                    },
+                    'sahara': {
+                        'value': False
+                    }
+                },
+                'common': {}
+            }
+        }
+    },
 }
 
 
