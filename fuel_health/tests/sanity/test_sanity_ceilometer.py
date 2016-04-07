@@ -40,8 +40,8 @@ class CeilometerApiTests(ceilometermanager.CeilometerBaseTest):
                     1, fail_msg, 'getting list of meters', q)
 
         fail_msg = 'Failed to get list of alarms.'
-        self.verify(60, self.aodh_client.alarm.list,
-                    2, fail_msg, 'getting list of alarms', 'threshold')
+        self.verify(60, self.ceilometer_client.alarms.list,
+                    2, fail_msg, 'getting list of alarms')
 
         fail_msg = 'Failed to get list of resources.'
         an_hour_ago = (datetime.datetime.now() -
