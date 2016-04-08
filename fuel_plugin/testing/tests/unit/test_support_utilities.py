@@ -49,3 +49,21 @@ class TestDeplTagsGetter(base.BaseUnitTest):
             res = mixins._get_cluster_attrs(expected['cluster_id'])
 
         self.assertEqual(res, expected['attrs'])
+
+    def test_dpdk_deployment_tag(self):
+        expected = {
+            'cluster_id': 8,
+            'attrs': {
+                'deployment_tags': set(
+                    ['dpdk']),
+                'release_version': '2015.2-1.0'
+            }
+        }
+
+        with requests_mock.Mocker() as m:
+            cluster = base.CLUSTERS[expected['cluster_id']]
+            m.register_uri('GET', '/api/nodes/1/interfaces',
+                           json=cluster['node_interfaces'])
+            res = mixins._get_cluster_attrs(expected['cluster_id'])
+
+        self.assertEqual(res, expected['attrs'])
