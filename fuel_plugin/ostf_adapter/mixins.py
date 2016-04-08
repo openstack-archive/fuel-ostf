@@ -161,6 +161,7 @@ def _get_cluster_attrs(cluster_id, token=None):
                                  nodes_response)
 
     sriov_compute_ids = []
+    dpdk_compute_ids = []  # Check env has computes with DPDK
     compute_ids = [node['id'] for node in nodes_response
                    if "compute" in node['roles']]
     for compute_id in compute_ids:
@@ -171,10 +172,17 @@ def _get_cluster_attrs(cluster_id, token=None):
         for iface in ifaces_resp:
             if iface['interface_properties']['sriov']['enabled']:
                 sriov_compute_ids.append(compute_id)
+            if iface['interface_properties']['dpdk']['enabled']:
+                dpdk_compute_ids.append(compute_id)
 
     deployment_tags = set()
+
     if sriov_compute_ids:
         deployment_tags.add('sriov')
+
+    if dpdk_compute_ids:
+        deployment_tags.add('dpdk')
+
     if not enable_without_ceph:
         deployment_tags.add('enable_without_ceph')
 
