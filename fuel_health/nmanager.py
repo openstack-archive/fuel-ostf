@@ -1250,7 +1250,7 @@ class SmokeChecksTest(OfficialClientTest):
         super(SmokeChecksTest, self).setUp()
         self.check_clients_state()
 
-    def _create_flavors(self, client, ram, disk, vcpus=1):
+    def _create_flavors(self, client, ram, disk, vcpus=1, use_huge_page=False):
         name = rand_name('ost1_test-flavor-')
         flavorid = rand_int_id()
         exist_ids = [flavor.id for flavor
@@ -1261,6 +1261,14 @@ class SmokeChecksTest(OfficialClientTest):
         flavor = client.flavors.create(name=name, ram=ram, disk=disk,
                                        vcpus=vcpus, flavorid=flavorid)
         self.created_flavors.append(flavor)
+
+        if use_huge_page:
+            # change settings to flavor use hugepage
+            flavor_metadata = flavor.get_keys()
+            logging.info(flavor_metadata)
+            flavor_metadata['hw:mem_page_size']='2048'
+            flavor.set_keys(flavor_metadata)
+
         return flavor
 
     def _delete_flavors(self, client, flavor):
