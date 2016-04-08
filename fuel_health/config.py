@@ -730,6 +730,17 @@ class NailgunConfig(object):
         for node in compute_nodes:
             compute_ips.append(node['ip'])
         LOG.info("COMPUTES IPS %s" % compute_ips)
+
+        # Find first compute with enabled DPDK
+        dpdk_compute_fqdn = None
+        for compute in online_computes:
+            api_url = '/api/nodes/{}/interfaces'.format(compute['id'])
+            ifaces_resp = self.req_session.get(self.nailgun_url + api_url).json()
+            for iface in ifaces_resp:
+                if iface['interface_properties']['dpdk']['enabled']:
+                    dpdk_compute_fqdn = compute['fqdn']
+                    break
+
         self.compute.compute_nodes = compute_ips
         ceph_nodes = filter(lambda node: 'ceph-osd' in node['roles'],
                             data)
