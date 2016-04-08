@@ -147,6 +147,39 @@ CLUSTERS = {
                 'common': {}
             }
         }
+    },
+    8: {
+        'cluster_meta': {
+            'release_id': 8,
+            'mode': 'ha'
+        },
+        'release_data': {
+            'operating_system': 'rhel',
+            'version': '2015.2-1.0',
+        },
+        'cluster_node': [
+            {
+                "hostname": "node-1",
+                'id': "1",
+                'roles': "compute"
+            },
+        ],
+        'node_interfaces': [
+            {
+                'interface_properties': {
+                    'dpdk': {
+                        'enabled': 'true'
+                    }
+                }
+
+            }
+        ],
+        'cluster_attributes': {
+            'editable': {
+                'additional_components': {},
+                'common': {}
+            }
+        }
     }
 }
 
