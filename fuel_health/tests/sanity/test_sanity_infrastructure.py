@@ -37,6 +37,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
     def setUpClass(cls):
         super(SanityInfrastructureTest, cls).setUpClass()
         cls.controllers = cls.config.compute.online_controllers
+        cls.controller_names = cls.config.compute.online_controller_names
         cls.computes = cls.config.compute.online_computes
         cls.usr = cls.config.compute.controller_node_ssh_user
         cls.pwd = cls.config.compute.controller_node_ssh_password
@@ -58,7 +59,10 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Duration: 180 s.
         """
         downstate = u'down'
-        cmd = 'source /root/openrc; nova service-list'
+        cmd = "source /root/openrc"
+        for controller in self.controller_names:
+            cmd += '; nova service-list --host {0}'.format(controller)
+
         if not self.controllers:
             self.skipTest('Step 1 failed: there are no controller nodes.')
         ssh_client = SSHClient(self.controllers[0],
