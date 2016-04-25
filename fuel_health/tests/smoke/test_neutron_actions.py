@@ -56,7 +56,7 @@ class TestNeutron(neutronmanager.NeutronBaseTest):
 
         Duration: 300 s.
 
-        Deployment tags: neutron
+        Deployment tags: neutron, computes_without_dpdk
         """
         if not self.config.compute.compute_nodes:
             self.skipTest('There are no compute nodes')
