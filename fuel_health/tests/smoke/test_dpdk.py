@@ -53,7 +53,7 @@ class TestDPDK(neutronmanager.NeutronBaseTest, nmanager.SmokeChecksTest):
             18. Remove network
         Duration: 300 s.
 
-        Deployment tags: dpdk
+        Deployment tags: computes_with_dpdk
         """
         if not self.config.compute.dpdk_compute_fqdn:
             self.skipTest('There are no compute nodes with DPDK')

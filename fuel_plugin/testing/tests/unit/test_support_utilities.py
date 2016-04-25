@@ -83,8 +83,9 @@ class TestDeplTagsGetter(base.BaseUnitTest):
             'cluster_id': 8,
             'attrs': {
                 'deployment_tags': set(
-                    ['dpdk', 'neutron', 'enable_without_ceph', 'ha',
-                     'public_on_all_nodes', 'rhel']),
+                    ['computes_with_dpdk', 'neutron', 'enable_without_ceph',
+                     'ha', 'public_on_all_nodes', 'rhel',
+                     'computes_with_dpdk']),
                 'release_version': '2015.2-1.0'
             }
         }
@@ -100,7 +101,9 @@ class TestDeplTagsGetter(base.BaseUnitTest):
             m.register_uri('GET', '/api/nodes?cluster_id=8',
                            json=cluster['cluster_node'])
             m.register_uri('GET', '/api/nodes/1/interfaces',
-                           json=cluster['node_interfaces'])
+                           json=cluster['node_interfaces'][0])
+            m.register_uri('GET', '/api/nodes/2/interfaces',
+                           json=cluster['node_interfaces'][1])
             res = mixins._get_cluster_attrs(expected['cluster_id'])
 
         self.assertEqual(res, expected['attrs'])

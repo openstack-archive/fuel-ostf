@@ -184,7 +184,9 @@ def _get_cluster_attrs(cluster_id, token=None):
         deployment_tags.add('sriov')
 
     if dpdk_compute_ids:
-        deployment_tags.add('dpdk')
+        deployment_tags.add('computes_with_dpdk')
+    if not dpdk_compute_ids or set(compute_ids) - set(dpdk_compute_ids):
+        deployment_tags.add('computes_without_dpdk')
 
     if not enable_without_ceph:
         deployment_tags.add('enable_without_ceph')
