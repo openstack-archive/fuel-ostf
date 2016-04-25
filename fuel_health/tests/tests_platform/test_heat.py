@@ -400,7 +400,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             14. Delete the stack.
             15. Wait for the stack to be deleted.
 
-        Duration: 1140 s.
+        Duration: 1300 s.
         """
 
         self.check_image_exists()
@@ -494,7 +494,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             template, parameters=parameters
         )
         self.verify(
-            100, self.wait_for_stack_status,
+            150, self.wait_for_stack_status,
             9, fail_msg,
             'stack status becoming "UPDATE_COMPLETE"',
             stack.id, 'UPDATE_COMPLETE'
@@ -535,7 +535,7 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             template, parameters=parameters
         )
         self.verify(
-            180, self.wait_for_stack_status,
+            300, self.wait_for_stack_status,
             12, fail_msg,
             'stack status becoming "UPDATE_COMPLETE"',
             stack.id, 'UPDATE_COMPLETE'
