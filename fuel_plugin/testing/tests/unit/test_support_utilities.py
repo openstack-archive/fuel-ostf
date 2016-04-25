@@ -31,7 +31,7 @@ class TestDeplTagsGetter(base.BaseUnitTest):
                 'deployment_tags': set(
                     ['ha', 'rhel', 'additional_components',
                      'murano', 'nova_network', 'public_on_all_nodes',
-                     'enable_without_ceph']),
+                     'enable_without_ceph', 'computes_without_dpdk']),
                 'release_version': '2015.2-1.0'
             }
         }
@@ -57,7 +57,8 @@ class TestDeplTagsGetter(base.BaseUnitTest):
                 'deployment_tags': set(
                     ['ha', 'rhel', 'additional_components',
                      'murano', 'nova_network', 'public_on_all_nodes',
-                     'enable_without_ceph', 'sriov']),
+                     'enable_without_ceph', 'sriov',
+                     'computes_without_dpdk']),
                 'release_version': '2015.2-1.0'
             }
         }
@@ -83,8 +84,9 @@ class TestDeplTagsGetter(base.BaseUnitTest):
             'cluster_id': 8,
             'attrs': {
                 'deployment_tags': set(
-                    ['dpdk', 'neutron', 'enable_without_ceph', 'ha',
-                     'public_on_all_nodes', 'rhel']),
+                    ['computes_with_dpdk', 'neutron', 'enable_without_ceph',
+                     'ha', 'public_on_all_nodes', 'rhel',
+                     'computes_without_dpdk']),
                 'release_version': '2015.2-1.0'
             }
         }
@@ -100,7 +102,9 @@ class TestDeplTagsGetter(base.BaseUnitTest):
             m.register_uri('GET', '/api/nodes?cluster_id=8',
                            json=cluster['cluster_node'])
             m.register_uri('GET', '/api/nodes/1/interfaces',
-                           json=cluster['node_interfaces'])
+                           json=cluster['node-1_interfaces'])
+            m.register_uri('GET', '/api/nodes/2/interfaces',
+                           json=cluster['node-2_interfaces'])
             res = mixins._get_cluster_attrs(expected['cluster_id'])
 
         self.assertEqual(res, expected['attrs'])

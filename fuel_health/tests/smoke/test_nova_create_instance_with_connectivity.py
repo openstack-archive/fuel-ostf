@@ -304,7 +304,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             5. Delete floating ip.
             6. Delete instance.
         Duration: 200 s.
-        Deployment tags: enable_without_ceph
+        Deployment tags: enable_without_ceph, computes_without_dpdk
         Available since release: 2014.2-6.1
         """
         self.check_image_exists()
