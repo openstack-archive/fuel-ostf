@@ -244,8 +244,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
             5. Check event traits description.
             6. Check that event exists for expected instance.
             7. Get information about expected event.
-            8. Get list of all traits for expected event type and trait name.
-            9. Delete the instance.
+            8. Delete the instance.
 
         Duration: 40 s.
 
@@ -311,18 +310,9 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         self.verify(60, self.ceilometer_client.events.get, 7,
                     fail_msg, msg, message_id)
 
-        fail_msg = ('Failed to get list of all traits for "{event_type}" '
-                    'event type and "{trait_name}" trait name.'.format(
-                        event_type=event_type, trait_name=traits[0]))
-        msg = ('getting list of all traits for "{event_type}" event type and '
-               '"{trait_name}" trait name'.format(event_type=event_type,
-                                                  trait_name=traits[0]))
-        self.verify(60, self.ceilometer_client.traits.list, 8, fail_msg, msg,
-                    event_type, traits[0])
-
         fail_msg = 'Failed to delete the instance.'
         msg = 'instance deleting'
-        self.verify(60, self._delete_server, 9, fail_msg, msg, instance)
+        self.verify(60, self._delete_server, 8, fail_msg, msg, instance)
 
     @ceilometermanager.check_compute_nodes()
     def test_check_volume_events(self):
