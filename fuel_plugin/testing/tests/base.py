@@ -204,8 +204,13 @@ CLUSTERS = {
                 'id': "1",
                 'roles': "compute"
             },
+            {
+                "hostname": "node-2",
+                'id': "2",
+                'roles': "compute"
+            },
         ],
-        'node_interfaces': [
+        'node-1_interfaces': [
             {
                 'interface_properties': {
                     'dpdk': {
@@ -213,7 +218,17 @@ CLUSTERS = {
                     }
                 }
 
-            }
+            },
+        ],
+        'node-2_interfaces':[
+            {
+                'interface_properties': {
+                    'dpdk': {
+                        'available': 'false'
+                    }
+                }
+
+            },
         ],
         'cluster_attributes': {
             'editable': {
