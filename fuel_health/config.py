@@ -737,7 +737,8 @@ class NailgunConfig(object):
             ifaces_resp = self.req_session.get(
                 self.nailgun_url + api_url).json()
             for iface in ifaces_resp:
-                if iface['interface_properties']['sriov']['enabled']:
+                if ('sriov' in iface['interface_properties'] and
+                        iface['interface_properties']['sriov']['enabled']):
                     sriov_physnets.append(
                         iface['interface_properties']['sriov']['physnet'])
         self.compute.sriov_physnets = sriov_physnets
