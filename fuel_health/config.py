@@ -206,6 +206,9 @@ ComputeGroup = [
     cfg.StrOpt('libvirt_type',
                default='qemu',
                help="Type of hypervisor to use."),
+    cfg.BoolOpt('use_vcenter',
+                default=False,
+                help="Usage of vCenter"),
 ]
 
 
