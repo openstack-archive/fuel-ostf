@@ -16,7 +16,6 @@
 
 import logging
 import time
-import traceback
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health import nmanager
@@ -80,7 +79,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                 'have not been started.')
         except Exception:
             LOG.info("Will sleep for 120 seconds and try again")
-            LOG.debug(traceback.format_exc())
+            LOG.exception()
             time.sleep(120)
             self.verify_response_true(
                 downstate not in output, 'Step 2 failed: Some nova services '

@@ -19,7 +19,6 @@ from __future__ import print_function
 
 import os
 import sys
-import traceback
 import unittest2
 
 import keystoneclient
@@ -613,8 +612,7 @@ class NailgunConfig(object):
         except exceptions.SetProxy as exc:
             raise exc
         except Exception:
-            LOG.warning('Something wrong with endpoints')
-            LOG.debug(traceback.format_exc())
+            LOG.exception('Something wrong with endpoints')
 
     def _parse_cluster_attributes(self):
         api_url = '/api/clusters/%s/attributes' % self.cluster_id
@@ -873,11 +871,9 @@ class NailgunConfig(object):
                 else:
                     online_proxies.append({'ip': proxy_ip,
                                            'auth_passed': False})
-            except Exception as e:
-                LOG.warning('Can not connect to Keystone '
-                            'with proxy on {0}, error: {1}'
-                            .format(proxy_ip, e))
-                LOG.debug(traceback.format_exc())
+            except Exception:
+                LOG.exception('Can not connect to Keystone with proxy \
+                             on {0}'.format(proxy_ip))
         return online_proxies
 
     def set_proxy(self):
@@ -916,7 +912,8 @@ class NailgunConfig(object):
                 '{0}, public vip is {1}'.format(management_vip, public_vip))
         else:
             public_vip = self.network.raw_data.get('public_vip', None)
-            #management_vip = self.network.raw_data.get('management_vip', None)
+            # management_vip = self.network.raw_data.get('management_vip',
+            #    None)
 
         # workaround for api without management_vip for ha mode
         if not keystone_vip and 'ha' in self.mode:
