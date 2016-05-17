@@ -59,9 +59,11 @@ class BaseMysqlTest(BaseTestCase):
                                key_filename=key,
                                timeout=100)
 
-        hiera_cmd = ('ruby -e \'require "hiera";'
-                     'db = Hiera.new().lookup("database_nodes", {}, {}).keys;'
+        hiera_cmd = ('ruby -e \'require "hiera"; '
+                     'db_h = Hiera.new().lookup("database_nodes", {}, {}); '
+                     'db = db_h.keys.map{|k| db_h[k]["name"]}; '
                      'if db != [] then puts db else puts "None" end\'')
+
         database_nodes = ssh_client.exec_command(hiera_cmd)
         # get online nodes
         database_nodes = database_nodes.splitlines()
