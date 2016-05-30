@@ -86,7 +86,8 @@ class HAProxyCheck(test.BaseTestCase):
 
             dead_backends = filter(lambda x: 'DOWN' in x,
                                    haproxy_status.splitlines())
-            LOG.debug("Dead backends {0}".format(dead_backends))
+            error_message = "Step 2 failed: Dead back-ends {0}"\
+                .format(dead_backends)
+            LOG.debug(error_message)
             self.verify_response_true(
-                len(dead_backends) == 0,
-                "Step 2 failed: Some haproxy backend has down state.")
+                len(dead_backends) == 0, error_message)
