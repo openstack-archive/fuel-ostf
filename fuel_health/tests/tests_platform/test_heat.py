@@ -88,10 +88,10 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             template, parameters=parameters
         )
         self.verify(
-            420, self.wait_for_stack_status,
+            420, self.wait_for_stack_complete_action,
             3, fail_msg,
             'stack status becoming "CREATE_COMPLETE"',
-            stack.id, 'CREATE_COMPLETE'
+            stack, 'CREATE'
         )
         res = self.get_stack_objects(
             self.heat_client.resources, stack.id,
@@ -107,10 +107,10 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             stack.id
         )
         self.verify(
-            90, self.wait_for_stack_status,
+            90, self.wait_for_stack_complete_action,
             5, fail_msg,
             'stack status becoming "SUSPEND_COMPLETE"',
-            stack.id, 'SUSPEND_COMPLETE'
+            stack, 'SUSPEND'
         )
         res = self.get_stack_objects(
             self.heat_client.resources, stack.id,
@@ -135,10 +135,10 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             stack.id
         )
         self.verify(
-            90, self.wait_for_stack_status,
+            90, self.wait_for_stack_complete_action,
             9, fail_msg,
             'stack status becoming "RESUME_COMPLETE"',
-            stack.id, 'RESUME_COMPLETE'
+            stack, 'RESUME'
         )
         res = self.get_stack_objects(
             self.heat_client.resources, stack.id,
@@ -163,10 +163,10 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             stack.id
         )
         self.verify(
-            90, self.wait_for_stack_status,
+            90, self.wait_for_stack_complete_action,
             13, fail_msg,
             'stack status becoming "CHECK_COMPLETE"',
-            stack.id, 'CHECK_COMPLETE'
+            stack, 'CHECK'
         )
         res = self.get_stack_objects(
             self.heat_client.resources, stack.id,
@@ -248,10 +248,10 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             template, parameters=parameters
         )
         self.verify(
-            420, self.wait_for_stack_status,
+            420, self.wait_for_stack_complete_action,
             3, fail_msg,
             'stack status becoming "CREATE_COMPLETE"',
-            stack.id, 'CREATE_COMPLETE'
+            stack, 'CREATE'
         )
 
         # get stack details
@@ -435,10 +435,10 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             template, parameters=parameters
         )
         self.verify(
-            420, self.wait_for_stack_status,
+            420, self.wait_for_stack_complete_action,
             3, fail_msg,
             'stack status becoming "CREATE_COMPLETE"',
-            stack.id, 'CREATE_COMPLETE'
+            stack, 'CREATE'
         )
 
         fail_msg = 'Can not update stack.'
@@ -457,10 +457,10 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             template, parameters=parameters
         )
         self.verify(
-            100, self.wait_for_stack_status,
+            100, self.wait_for_stack_complete_action,
             5, fail_msg,
             'stack status becoming "UPDATE_COMPLETE"',
-            stack.id, 'UPDATE_COMPLETE'
+            stack, 'UPDATE'
         )
 
         instances = self.get_stack_objects(
@@ -494,10 +494,10 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             template, parameters=parameters
         )
         self.verify(
-            150, self.wait_for_stack_status,
+            150, self.wait_for_stack_complete_action,
             9, fail_msg,
             'stack status becoming "UPDATE_COMPLETE"',
-            stack.id, 'UPDATE_COMPLETE'
+            stack, 'UPDATE'
         )
         instances = self.get_stack_objects(
             self.heat_client.resources, stack.id,
@@ -535,10 +535,10 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             template, parameters=parameters
         )
         self.verify(
-            300, self.wait_for_stack_status,
+            300, self.wait_for_stack_complete_action,
             12, fail_msg,
             'stack status becoming "UPDATE_COMPLETE"',
-            stack.id, 'UPDATE_COMPLETE'
+            stack, 'UPDATE'
         )
 
         instances = self.get_stack_objects(
@@ -650,10 +650,10 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             template, parameters=parameters
         )
         self.verify(
-            600, self.wait_for_stack_status,
+            600, self.wait_for_stack_complete_action,
             6, fail_msg,
             'stack status becoming "CREATE_COMPLETE"',
-            stack.id, 'CREATE_COMPLETE', 600, 15
+            stack, 'CREATE', 600, 15
         )
 
         reduced_stack_name = '{0}-{1}'.format(
@@ -864,10 +864,10 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             template, parameters=parameters
         )
         self.verify(
-            600, self.wait_for_stack_status,
+            600, self.wait_for_stack_complete_action,
             5, fail_msg,
             'stack status becoming "CREATE_COMPLETE"',
-            stack.id, 'CREATE_COMPLETE', 600, 15
+            stack, 'CREATE', 600, 15
         )
 
         # deletion of file with keypair from vm

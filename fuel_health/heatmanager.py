@@ -124,8 +124,8 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
                                        parameters=parameters)
         return self.get_stack(stack_id)
 
-    def wait_for_stack_status(self, stack_id, expected_status,
-                              timeout=None, interval=None):
+    def wait_for_stack_complete_action(self, initial_stack, expected_action,
+                                       timeout=None, interval=None):
         """The method is a customization of test.status_timeout().
 
         It addresses `stack_status` instead of `status` field and
@@ -137,23 +137,41 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
         if interval is None:
             interval = self.wait_interval
 
+        if expected_action not in (
+                'CREATE', 'DELETE', 'UPDATE', 'ROLLBACK', 'SUSPEND',
+                'RESUME', 'ADOPT', 'SNAPSHOT', 'CHECK'):
+            raise TypeError(
+                'Invalid value for argumen expected_action: {!r}'.format(
+                    expected_action))
+
         def check_status():
-            stack = self.get_stack(stack_id)
-            new_status = stack.stack_status
-            if 'FAIL' in new_status:
+            stack = self.get_stack(initial_stack.id)
+            action, status = stack.stack_status.split('_', 1)
+
+            if status == 'FAIL':
                 self.fail('Failed to get to expected status. '
-                          'Currently in {0} status.'.format(new_status))
-            elif new_status == expected_status:
-                return True
-            LOG.debug('Waiting for {0} to get to {1} status. '
-                      'Currently in {2} status.'.format(
-                      stack, expected_status, new_status))
+                          'Currently in {0} status.'.format(status))
+
+            check = [
+                status == 'IN_PROGRESS',
+                action != expected_action]
+            if expected_action == 'UPDATE':
+                check.append(initial_stack.updated_time == stack.updated_time)
+
+            if any(check):
+                LOG.debug(
+                    'Waiting for {0} to get to complete {1} action. '
+                    'Currently in {2} status.'.format(
+                        stack, expected_action, stack.stack_status))
+                return
+
+            return True
 
         if not fuel_health.test.call_until_true(check_status,
                                                 timeout,
                                                 interval):
             self.fail('Timeout exceeded while waiting for '
-                      'stack status becomes {0}'.format(expected_status))
+                      'stack complete {0} action'.format(expected_action))
 
     def get_instances_by_name_mask(self, mask_name):
         """This method retuns list of instances with certain names."""
