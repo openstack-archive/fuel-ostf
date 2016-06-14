@@ -74,7 +74,7 @@ class GlanceTest(fuel_health.nmanager.NovaNetworkScenarioTest):
             image = client.images.create(name=image_name,
                                          container_format=container_format,
                                          disk_format=disk_format, **kwargs)
-            client.images.upload(image.id, 'dummy_data')
+            client.images.upload(image.id, data)
             self.images.append(image.id)
             return image
 
