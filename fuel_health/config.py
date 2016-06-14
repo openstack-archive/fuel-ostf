@@ -848,13 +848,11 @@ class NailgunConfig(object):
         if self.fuel.ssl_data:
             auth_url = 'https://{0}:{1}/{2}/'.format(
                 keystone_vip, 5000, 'v2.0')
-            os.environ['https_proxy'] = 'http://{0}:{1}'.format(
-                proxy_ip, proxy_port)
         else:
             auth_url = 'http://{0}:{1}/{2}/'.format(
                 keystone_vip, 5000, 'v2.0')
-            os.environ['http_proxy'] = 'http://{0}:{1}'.format(
-                proxy_ip, proxy_port)
+        os.environ['http_proxy'] = 'http://{0}:{1}'.format(
+            proxy_ip, proxy_port)
         try:
             LOG.debug('Trying to authenticate at "{0}" using HTTP proxy "http:'
                       '//{1}:{2}" ...'.format(auth_url, proxy_ip, proxy_port))
@@ -866,10 +864,16 @@ class NailgunConfig(object):
                 debug=True,
                 insecure=True,
                 timeout=10)
+            # NOTE(freerunner): Whether or not we should purge proxies after
+            # NOTE(freerunner): checks
+            del os.environ['http_proxy']
             return True
         except keystoneclient.exceptions.Unauthorized:
             LOG.warning('Authorization failed at "{0}" using HTTP proxy "http:'
                         '//{1}:{2}"!'.format(auth_url, proxy_ip, proxy_port))
+            # NOTE(freerunner): Whether or not we should purge proxies after
+            # NOTE(freerunner): checks
+            del os.environ['http_proxy']
             return False
 
     def find_proxy(self, proxy_ips, proxy_port, keystone_vip):
