@@ -22,6 +22,9 @@ parameters:
   net:
     description: Name of net to use for server
     type: string
+  floating_net:
+    description: Name of the net for floating ip
+    type: string
 
 resources:
   wait_condition:
@@ -42,7 +45,7 @@ resources:
       flavor: {get_param: flavor}
       key_name: {get_param: key_name}
       networks:
-          - network: {get_param: net}
+          - port: {get_resource: port}
       user_data_format: RAW
       user_data:
         str_replace:
@@ -51,20 +54,50 @@ resources:
             # Below are some examples of the various ways signals
             # can be sent to the Handle resource
             # Simple success signal
-            wc_notify --data-binary '{"status": "SUCCESS"}'
+            wc_notify -k --data-binary '{"status": "SUCCESS"}'
             # Or you optionally can specify any of the additional fields
-            wc_notify --data-binary '{"status": "SUCCESS", "reason": "signal2"}'
-            wc_notify --data-binary '{"status": "SUCCESS", "reason": "signal3", "data": "data3"}'
-            wc_notify --data-binary '{"status": "SUCCESS", "reason": "signal4", "data": "data4"}'
+            wc_notify -k --data-binary '{"status": "SUCCESS", "reason": "signal2"}'
+            wc_notify -k --data-binary '{"status": "SUCCESS", "reason": "signal3", "data": "data3"}'
+            wc_notify -k --data-binary '{"status": "SUCCESS", "reason": "signal4", "data": "data4"}'
             # If you require control of the ID, you can pass it.
             # The ID should be unique, unless you intend for duplicate
             # signals to overrite each other.  The following two calls
             # do the exact same thing, and will be treated as one signal
             # (You can prove this by changing count above to 7)
-            wc_notify --data-binary '{"status": "SUCCESS", "id": "5"}'
-            wc_notify --data-binary '{"status": "SUCCESS", "id": "5"}'
+            wc_notify -k --data-binary '{"status": "SUCCESS", "id": "5"}'
+            wc_notify -k --data-binary '{"status": "SUCCESS", "id": "5"}'
             # Example of sending a failure signal, optionally
             # reason, id, and data can be specified as above
-            # wc_notify --data-binary '{"status": "FAILURE"}'
+            # wc_notify -k --data-binary '{"status": "FAILURE"}'
           params:
             wc_notify: { get_attr: ['wait_handle', 'curl_cli'] }
+
+  floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: {get_param: floating_net}
+      port_id: {get_resource: port}
+
+  port:
+   type: OS::Neutron::Port
+   properties:
+     network_id: {get_param: net}
+     security_groups: [{ get_resource: server_security_group }]
+
+  server_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: security-group
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+
+outputs:
+  curl_cli:
+    value: { get_attr: ['wait_handle', 'curl_cli'] }
+  wc_data:
+    value: { get_attr: ['wait_condition', 'data'] }
