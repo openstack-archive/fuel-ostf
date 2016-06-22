@@ -79,6 +79,7 @@ import fuel_health.manager
 import fuel_health.test
 import keystoneauth1.identity
 import keystoneauth1.session
+import pmeter
 
 
 class OfficialClientManager(fuel_health.manager.Manager):
@@ -346,10 +347,12 @@ class OfficialClientManager(fuel_health.manager.Manager):
             LOG.warning('Can not initialize neutron client')
             return None
 
-        return neutronclient.neutron.client.Client(version,
-                                                   token=keystone.auth_token,
-                                                   endpoint_url=endpoint,
-                                                   insecure=True)
+        nc = pmeter.EnhancedNeutronClient(version,
+                                          token=keystone.auth_token,
+                                          endpoint_url=endpoint,
+                                          insecure=True)
+
+        return nc
 
     def _get_ironic_client(self, version='1'):
         keystone = self._get_identity_client()
