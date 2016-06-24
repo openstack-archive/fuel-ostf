@@ -242,11 +242,17 @@ def _get_cluster_attrs(cluster_id, token=None):
 
     # TODO(freerunner): Rework murano part after removal murano from the box
     murano_settings = response['editable'].get('murano_settings', None)
+    # murano_glance_artifacts_plugin was moved from additional components
+    # in mitaka, thus for old environments it should taken from them
+    murano_glance_artifacts_plugin = murano_settings.get(
+        'murano_glance_artifacts_plugin',
+        additional_components.get('murano_glance_artifacts_plugin')
+    )
     # NOTE(freerunner): Murano settings appears only if murano enabled
     murano_artifacts = None
-    if murano_settings:
-        murano_artifacts = (murano_settings
-                            ['murano_glance_artifacts_plugin']['value'])
+    if murano_glance_artifacts_plugin:
+        murano_artifacts = murano_glance_artifacts_plugin['value']
+
     detach_murano = response['editable'].get('detach-murano', None)
     murano_plugin_enabled = None
     if detach_murano:
