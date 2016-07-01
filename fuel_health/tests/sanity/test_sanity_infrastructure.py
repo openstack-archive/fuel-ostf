@@ -37,6 +37,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         super(SanityInfrastructureTest, cls).setUpClass()
         cls.controllers = cls.config.compute.online_controllers
         cls.controller_names = cls.config.compute.online_controller_names
+        cls.cinder_names = cls.config.volume.cinder_names
         cls.computes = cls.config.compute.online_computes
         cls.usr = cls.config.compute.controller_node_ssh_user
         cls.pwd = cls.config.compute.controller_node_ssh_password
@@ -48,8 +49,8 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
     def tearDownClass(cls):
         pass
 
-    def test_001_services_state(self):
-        """Check that required services are running
+    def test_001_nova_services_state(self):
+        """Check that required Nova services are running
         Target component: OpenStack
 
         Scenario:
@@ -85,7 +86,85 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                 downstate not in output, 'Step 2 failed: Some nova services '
                 'have not been started.')
 
-    def test_002_internet_connectivity_from_compute(self):
+    def test_002_neutron_services_state(self):
+        """Check that required Neutron services are running
+        Target component: OpenStack
+
+        Scenario:
+            1. Execute nova neutron agent-list command on a controller node.
+            2. Check there are no failed services (with False state).
+        Duration: 180 s.
+        """
+        downstate = u'False'
+        cmd = "source /root/openrc"
+        for controller in self.controller_names:
+            cmd += '; neutron agent-list --host {0}'.format(controller)
+
+        if not self.controllers:
+            self.skipTest('Step 1 failed: there are no controller nodes.')
+        ssh_client = SSHClient(self.controllers[0],
+                               self.usr, self.pwd,
+                               key_filename=self.key,
+                               timeout=self.timeout)
+        output = self.verify(50, ssh_client.exec_command, 1,
+                             "'neutron agent-list' command execution failed. ",
+                             "'neutron agent-list' command execution",
+                             cmd)
+        LOG.debug(output)
+        try:
+            self.verify_response_true(
+                downstate not in output, 'Step 2 failed: Some neutron services'
+                ' have not been started.')
+        except Exception:
+            LOG.info("Will sleep for 120 seconds and try again")
+            LOG.exception()
+            time.sleep(120)
+            self.verify_response_true(
+                downstate not in output, 'Step 2 failed: Some neutron services'
+                ' have not been started.')
+
+    def test_003_cinder_services_state(self):
+        """Check that required cinder services are running
+        Target component: OpenStack
+
+        Scenario:
+            1. Execute cinder service-list command on a controller node.
+            2. Check there are no failed services (with down state).
+        Duration: 180 s.
+        """
+        if not self.config.volume.cinder_node_exist:
+            self.skipTest('There are no cinder nodes')
+
+        downstate = u'down'
+        cmd = "source /root/openrc"
+        for cinder_node in self.config.volume.cinder_names:
+            cmd += '; cinder service-list --host {0}'.format(cinder_node)
+
+        #if not self.controllers:
+        #    self.skipTest('Step 1 failed: there are no controller nodes.')
+        ssh_client = SSHClient(self.controllers[0],
+                               self.usr, self.pwd,
+                               key_filename=self.key,
+                               timeout=self.timeout)
+        output = self.verify(50, ssh_client.exec_command, 1,
+                             "'cinder service-list' command execution "
+                             "failed. ",
+                             "'cinder service-list' command execution",
+                             cmd)
+        LOG.debug(output)
+        try:
+            self.verify_response_true(
+                downstate not in output, 'Step 2 failed: Some cinder services '
+                'have not been started.')
+        except Exception:
+            LOG.info("Will sleep for 120 seconds and try again")
+            LOG.exception()
+            time.sleep(120)
+            self.verify_response_true(
+                downstate not in output, 'Step 2 failed: Some cinder services '
+                'have not been started.')
+
+    def test_004_internet_connectivity_from_compute(self):
         """Check internet connectivity from a compute
         Target component: OpenStack
 
@@ -111,7 +190,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                     "'ping' command",
                     2, 30, ssh_client.exec_command, cmd)
 
-    def test_003_dns_resolution(self):
+    def test_005_dns_resolution(self):
         """Check DNS resolution on compute node
         Target component: OpenStack
 
