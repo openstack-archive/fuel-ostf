@@ -705,6 +705,7 @@ class NailgunConfig(object):
         public_ips = []
         online_controllers_ips = []
         online_controller_names = []
+        cinder_nodes_names = []
         for node in controller_nodes:
             public_network = next(network for network in node['network_data']
                                   if network['name'] == 'public')
@@ -727,6 +728,9 @@ class NailgunConfig(object):
         self.compute.online_controller_names = online_controller_names
         if not cinder_nodes:
             self.volume.cinder_node_exist = False
+        for cinder_node in cinder_nodes:
+            cinder_nodes_names.append(cinder_node['fqdn'])
+        self.volume.cinder_nodes_names = cinder_nodes_names
         if not cinder_vmware_nodes:
             self.volume.cinder_vmware_node_exist = False
 
