@@ -109,7 +109,7 @@ class TestNeutron(neutronmanager.NeutronBaseTest):
         self.floating_ips.append(floating_ip)
 
         ip_address = floating_ip.ip
-        LOG.info('is address is  {0}'.format(ip_address))
+        LOG.info('IP address is {0}'.format(ip_address))
         LOG.debug(ip_address)
 
         self.verify(600, self._check_vm_connectivity, 9,
@@ -212,7 +212,7 @@ class TestNeutron(neutronmanager.NeutronBaseTest):
             self.floating_ips.append(floating_ip)
 
             ip_address = floating_ip.ip
-            LOG.info('is address is  {0}'.format(ip_address))
+            LOG.info('IP address is {0}'.format(ip_address))
             LOG.debug(ip_address)
 
             self.verify(600, self._check_vm_connectivity, 6,
