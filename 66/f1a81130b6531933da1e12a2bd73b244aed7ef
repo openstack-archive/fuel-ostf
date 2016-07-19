@@ -1,0 +1,14 @@
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Code-Review+1: sryabin <sryabin@mirantis.com>
+Code-Review+1: Ilya Kharin <akscram@gmail.com>
+Code-Review+1: Dmitry Pyzhov <dpyzhov+gerrit@mirantis.com>
+Code-Review+1: Vladimir Khlyunev <vkhlyunev@mirantis.com>
+Code-Review+1: Andrew Maksimov <amaksimov@mirantis.com>
+Code-Review+2: tatyana-leontovich <tleontovich@mirantis.com>
+Workflow+1: Andrey Sledzinskiy <asledzinskiy@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 19 Jul 2016 14:09:19 +0000
+Reviewed-on: https://review.openstack.org/338854
+Project: openstack/fuel-ostf
+Branch: refs/heads/stable/mitaka
