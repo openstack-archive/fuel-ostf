@@ -594,6 +594,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         Deployment tags: Ceilometer
         """
 
+        LOG.debug(self.identity_client.endpoints.list())
+
         self.check_image_exists()
 
         self.check_required_resources(self.min_required_ram_mb)
@@ -680,6 +682,9 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             self.compute_client, instances[0], floating_ip
         )
 
+        LOG.debug(self.identity_client.endpoints.list())
+        LOG.debug(self.identity_client.endpoints.list())
+
         # vm connection check
         vm_connection = ('ssh -o StrictHostKeyChecking=no -i {0} {1}@{2}'.
                          format(path_to_key, 'cirros', floating_ip.ip))
@@ -691,6 +696,9 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             vm_connection, 120, 15
         )
 
+        LOG.debug(self.identity_client.endpoints.list())
+        LOG.debug(self.identity_client.endpoints.list())
+
         # launching the second instance during autoscaling
         self.verify(
             720, self.wait_for_autoscaling,
@@ -698,6 +706,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
             'launching the new instance per autoscaling alarm',
             len(instances) + 2, 720, 10, reduced_stack_name
         )
+
+        LOG.debug(self.identity_client.endpoints.list())
 
         # termination of the second instance during autoscaling
         self.verify(
