@@ -1,0 +1,10 @@
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Code-Review+2: tatyana-leontovich <tleontovich@mirantis.com>
+Code-Review+1: Artem Panchenko <apanchenko@mirantis.com>
+Workflow+1: Nastya Urlapova <aurlapova@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Mon, 08 Aug 2016 11:15:42 +0000
+Reviewed-on: https://review.openstack.org/325909
+Project: openstack/fuel-ostf
+Branch: refs/heads/stable/mitaka
