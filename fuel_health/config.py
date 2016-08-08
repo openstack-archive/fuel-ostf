@@ -752,10 +752,18 @@ class NailgunConfig(object):
             ifaces_resp = self.req_session.get(
                 self.nailgun_url + api_url).json()
             for iface in ifaces_resp:
-                if ('sriov' in iface['interface_properties'] and
-                        iface['interface_properties']['sriov']['enabled']):
-                    sriov_physnets.append(
-                        iface['interface_properties']['sriov']['physnet'])
+                if 'interface_properties' in iface:
+                    if ('sriov' in iface['interface_properties'] and
+                            iface['interface_properties'][
+                                'sriov']['enabled']):
+                        sriov_physnets.append(
+                            iface['interface_properties']['sriov']['physnet'])
+                else:
+                    if ('sriov' in iface['attributes'] and
+                            iface['attributes']['sriov']['enabled']['value']):
+                        sriov_physnets.append(
+                            iface['attributes']['sriov']['physnet']['value'])
+
         self.compute.sriov_physnets = sriov_physnets
 
         # Find first compute with enabled DPDK
@@ -764,11 +772,22 @@ class NailgunConfig(object):
             ifaces_resp = self.req_session.get(
                 self.nailgun_url + api_url).json()
             for iface in ifaces_resp:
-                if 'dpdk' in iface['interface_properties']:
-                    if 'enabled' in iface['interface_properties']['dpdk']:
-                        if iface['interface_properties']['dpdk']['enabled']:
-                            self.compute.dpdk_compute_fqdn = compute['fqdn']
-                            break
+                if 'interface_properties' in iface:
+                    if 'dpdk' in iface['interface_properties']:
+                        if 'enabled' in iface['interface_properties']['dpdk']:
+                            if iface['interface_properties'][
+                                    'dpdk']['enabled']:
+                                self.compute.dpdk_compute_fqdn = compute[
+                                    'fqdn']
+                                break
+                else:
+                    if 'dpdk' in iface['attributes']:
+                        if 'enabled' in iface['attributes']['dpdk']:
+                            if iface['attributes']['dpdk'][
+                                    'enabled']['value']:
+                                self.compute.dpdk_compute_fqdn = compute[
+                                    'fqdn']
+                                break
 
         self.compute.compute_nodes = compute_ips
         ceph_nodes = filter(lambda node: 'ceph-osd' in node['roles'],
