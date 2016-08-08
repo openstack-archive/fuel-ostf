@@ -168,13 +168,22 @@ def _get_cluster_attrs(cluster_id, token=None):
             'api/nodes/{id}/interfaces'.format(id=compute_id))
         ifaces_resp = REQ_SES.get(ifaces_url).json()
         for iface in ifaces_resp:
-            if ('sriov' in iface['interface_properties'] and
-                    iface['interface_properties']['sriov']['enabled']):
-                sriov_compute_ids.append(compute_id)
-            if 'dpdk' in iface['interface_properties']:
-                if 'enabled' in iface['interface_properties']['dpdk']:
-                    if iface['interface_properties']['dpdk']['enabled']:
-                        dpdk_compute_ids.append(compute_id)
+            if 'interface_properties' in iface:
+                if ('sriov' in iface['interface_properties'] and
+                        iface['interface_properties']['sriov']['enabled']):
+                    sriov_compute_ids.append(compute_id)
+                if 'dpdk' in iface['interface_properties']:
+                    if 'enabled' in iface['interface_properties']['dpdk']:
+                        if iface['interface_properties']['dpdk']['enabled']:
+                            dpdk_compute_ids.append(compute_id)
+            else:
+                if ('sriov' in iface['attributes'] and
+                        iface['attributes']['sriov']['enabled']['value']):
+                    sriov_compute_ids.append(compute_id)
+                if 'dpdk' in iface['attributes']:
+                    if 'enabled' in iface['attributes']['dpdk']:
+                        if iface['attributes']['dpdk']['enabled']['value']:
+                            dpdk_compute_ids.append(compute_id)
 
     deployment_tags = set()
 
