@@ -55,7 +55,9 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         Duration: 900 s.
         Available since release: 2014.2-6.1
         """
-
+        # TODO: remove below after bug will be fixed
+        msg = 'The test is temporary skipped due to LP bug #1611382'
+        self.skipTest(msg)
         self.check_image_exists()
 
         # create test flavor
@@ -215,7 +217,9 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         Duration: 720 s.
         """
-
+        # TODO: remove below after bug will be fixed
+        msg = 'The test is temporary skipped due to LP bug #1611382'
+        self.skipTest(msg)
         self.check_image_exists()
 
         # create test flavor
@@ -402,7 +406,9 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         Duration: 1300 s.
         """
-
+        # TODO: remove below after bug will be fixed
+        msg = 'The test is temporary skipped due to LP bug #1611382'
+        self.skipTest(msg)
         self.check_image_exists()
 
         # create test flavor
@@ -744,6 +750,9 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         Duration: 470 s.
         """
+        # TODO: remove below after bug will be fixed
+        msg = 'The test is temporary skipped due to LP bug #1611382'
+        self.skipTest(msg)
         self.check_image_exists()
 
         # create test flavor

@@ -81,6 +81,9 @@ class TestInstanceLiveMigration(nmanager.NovaNetworkScenarioTest):
         Deployment tags: ephemeral_ceph
         Available since release: 2014.2-6.1
         """
+        # TODO: remove below after bug will be fixed
+        msg = 'The test is temporary skipped due to LP bug #1611382'
+        self.skipTest(msg)
         self.check_image_exists()
         if not self.security_groups:
             self.security_groups[self.tenant_id] = self.verify(
