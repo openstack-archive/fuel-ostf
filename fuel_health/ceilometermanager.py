@@ -15,7 +15,7 @@
 
 
 import functools
-import logging
+from oslo_log import log as logging
 
 import neutronclient.common.exceptions as neutron_exc
 

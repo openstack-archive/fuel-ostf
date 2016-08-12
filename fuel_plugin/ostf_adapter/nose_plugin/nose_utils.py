@@ -14,7 +14,7 @@
 
 from distutils import version
 import itertools
-import logging
+from oslo_log import log as logging
 import multiprocessing
 import os
 import re

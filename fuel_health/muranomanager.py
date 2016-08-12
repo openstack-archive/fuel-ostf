@@ -14,7 +14,7 @@
 # under the License.
 
 import contextlib
-import logging
+from oslo_log import log as logging
 import os
 import time
 import zipfile

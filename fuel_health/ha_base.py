@@ -14,7 +14,7 @@
 
 from distutils import version
 import json
-import logging
+from oslo_log import log as logging
 from lxml import etree
 
 import fuel_health

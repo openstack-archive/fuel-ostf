@@ -14,7 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
+from oslo_log import log as logging
 import time
 
 from fuel_health.common.ssh import Client as SSHClient

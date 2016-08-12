@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
+from oslo_log import log as logging
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health import test

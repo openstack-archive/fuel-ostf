@@ -13,7 +13,7 @@
 #    under the License.
 
 
-import logging
+from oslo_log import log as logging
 import os
 import signal
 import sys

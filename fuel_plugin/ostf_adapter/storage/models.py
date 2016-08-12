@@ -13,7 +13,7 @@
 #    under the License.
 
 import datetime
-import logging
+from oslo_log import log as logging
 
 import sqlalchemy as sa
 from sqlalchemy import desc

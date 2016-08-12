@@ -13,7 +13,7 @@
 # under the License.
 
 from distutils import version
-import logging
+from oslo_log import log as logging
 
 from fuel_health.common.ssh import Client as SSHClient
 from fuel_health.test import BaseTestCase

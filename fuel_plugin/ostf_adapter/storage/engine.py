@@ -13,7 +13,7 @@
 #    under the License.
 
 import contextlib
-import logging
+from oslo_log import log as logging
 
 from sqlalchemy import create_engine, orm
 

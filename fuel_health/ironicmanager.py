@@ -13,7 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
+ifrom oslo_log import log as logging
 
 from fuel_health import nmanager
 import fuel_health.test

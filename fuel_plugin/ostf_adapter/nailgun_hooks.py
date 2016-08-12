@@ -13,7 +13,7 @@
 #    under the License.
 
 from distutils import version
-import logging
+from oslo_log import log as logging
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import reflection

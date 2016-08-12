@@ -17,7 +17,7 @@
 
 import ConfigParser
 import inspect
-import logging
+from oslo_log import log as logging
 import logging.config
 import os
 import re
