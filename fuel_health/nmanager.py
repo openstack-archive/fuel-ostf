@@ -726,6 +726,9 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         nets = self.compute_client.networks.list()
         return nets
 
+    def _list_services(self, host=None):
+        return self.compute_client.services.list(host=host)
+
     def _create_server(self, client, name, security_groups=None,
                        flavor_id=None, net_id=None, img_name=None,
                        data_file=None, az_name=None, port=None):
