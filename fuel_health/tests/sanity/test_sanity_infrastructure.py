@@ -59,32 +59,40 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         Duration: 180 s.
         """
         downstate = u'down'
-        cmd = "source /root/openrc"
-        for controller in self.controller_names:
-            cmd += '; nova service-list --host {0}'.format(controller)
+
+        def get_controllers_down_states():
+            states = {}
+            for controller in self.controller_names:
+                svc = self._list_services(self.compute_client, host=controller)
+                down = [True for service in svc if service.state == downstate]
+                if any(down):
+                    states[controller] = True
+            return states
 
         if not self.controllers:
             self.skipTest('Step 1 failed: there are no controller nodes.')
-        ssh_client = SSHClient(self.controllers[0],
-                               self.usr, self.pwd,
-                               key_filename=self.key,
-                               timeout=self.timeout)
-        output = self.verify(50, ssh_client.exec_command, 1,
-                             "'nova service-list' command execution failed. ",
-                             "'nova service-list' command execution",
-                             cmd)
+
+        output = self.verify(
+            50, get_controllers_down_states, 1,
+            "'nova service-list' command execution failed. ",
+            "'nova service-list' command execution",
+        )
+
         LOG.debug(output)
         try:
             self.verify_response_true(
-                downstate not in output, 'Step 2 failed: Some nova services '
-                'have not been started.')
+                len(output) == 0,
+                'Step 2 failed: Some nova services have not been started.')
         except Exception:
             LOG.info("Will sleep for 120 seconds and try again")
             LOG.debug(traceback.format_exc())
             time.sleep(120)
+            # Re-collect data silently
+            output = get_controllers_down_states()
+            LOG.debug(output)
             self.verify_response_true(
-                downstate not in output, 'Step 2 failed: Some nova services '
-                'have not been started.')
+                len(output) == 0,
+                'Step 2 failed: Some nova services have not been started.')
 
     def test_002_internet_connectivity_from_compute(self):
         """Check internet connectivity from a compute

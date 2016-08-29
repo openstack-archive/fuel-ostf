@@ -1260,8 +1260,8 @@ class SanityChecksTest(OfficialClientTest):
         limits = client.limits.get()
         return limits
 
-    def _list_services(self, client):
-        services = client.services.list()
+    def _list_services(self, client, host=None, binary=None):
+        services = client.services.list(host=host, binary=binary)
         return services
 
     def _list_users(self, client):
