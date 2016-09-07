@@ -16,11 +16,11 @@
 
 import mock
 
-from fuel_plugin.ostf_adapter.logger import ResultsLogger
+from fuel_plugin.ostf_adapter import logger
 from fuel_plugin.testing.tests import base
 
 
-@mock.patch.object(ResultsLogger, '_init_file_logger')
+@mock.patch.object(logger.ResultsLogger, '_init_file_logger')
 class TestResultsLogger(base.BaseUnitTest):
 
     def get_logger(self, **kwargs):
@@ -29,7 +29,7 @@ class TestResultsLogger(base.BaseUnitTest):
             'cluster_id': 1,
         }
         options.update(kwargs)
-        return ResultsLogger(**options)
+        return logger.ResultsLogger(**options)
 
     def test_filename(self, m_init_logger):
         logger = self.get_logger(testset='testset_name',

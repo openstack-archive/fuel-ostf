@@ -18,7 +18,7 @@ import logging
 from fuel_health import nmanager
 import fuel_health.test
 
-from fuel_health.common.ssh import Client as SSHClient
+from fuel_health.common import ssh
 from ironicclient.common import utils
 from ironicclient import exc as ironic_exc
 
@@ -83,9 +83,9 @@ class IronicTest(nmanager.SanityChecksTest):
         def check_services():
             succeed_count = 0
             for node in nodes:
-                remote = SSHClient(node, self.usr, self.pwd,
-                                   key_filename=self.key,
-                                   timeout=self.timeout)
+                remote = ssh.Client(node, self.usr, self.pwd,
+                                    key_filename=self.key,
+                                    timeout=self.timeout)
                 try:
                     output = remote.exec_command(cmd)
                     LOG.debug(output)

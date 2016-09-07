@@ -15,13 +15,13 @@
 from distutils import version
 import logging
 
-from fuel_health.common.ssh import Client as SSHClient
-from fuel_health.test import BaseTestCase
+from fuel_health.common import ssh
+from fuel_health import test
 
 LOG = logging.getLogger(__name__)
 
 
-class BaseMysqlTest(BaseTestCase):
+class BaseMysqlTest(test.BaseTestCase):
     """Base methods for MySQL DB tests
     """
     @classmethod
@@ -54,10 +54,10 @@ class BaseMysqlTest(BaseTestCase):
                 < version.StrictVersion('7.0'):
             return cls.config.compute.online_controllers
         # retrieve data from controller
-        ssh_client = SSHClient(controller_ip,
-                               username,
-                               key_filename=key,
-                               timeout=100)
+        ssh_client = ssh.Client(controller_ip,
+                                username,
+                                key_filename=key,
+                                timeout=100)
 
         hiera_cmd = ('ruby -e \'require "hiera"; '
                      'db_h = Hiera.new().lookup("database_nodes", {}, {}); '
@@ -118,7 +118,7 @@ class TestMysqlStatus(BaseMysqlTest):
                 LOG.info('Current database node is %s' % node)
                 cmd1 = cmd % {'database': database}
                 LOG.info('Try to execute command %s' % cmd1)
-                tables = SSHClient(
+                tables = ssh.Client(
                     node, self.node_user,
                     key_filename=self.node_key,
                     timeout=self.config.compute.ssh_timeout)
@@ -181,9 +181,9 @@ class TestMysqlStatus(BaseMysqlTest):
 
         for db_node in databases:
             command = "mysql -h localhost -e \"SHOW STATUS LIKE 'wsrep_%'\""
-            ssh_client = SSHClient(db_node, self.node_user,
-                                   key_filename=self.node_key,
-                                   timeout=100)
+            ssh_client = ssh.Client(db_node, self.node_user,
+                                    key_filename=self.node_key,
+                                    timeout=100)
             output = self.verify(
                 20, ssh_client.exec_command, 2,
                 "Verification of galera cluster node status failed",

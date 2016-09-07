@@ -71,7 +71,7 @@ import keystoneclient
 import novaclient.client
 import novaclient.exceptions as nova_exc
 
-from fuel_health.common.ssh import Client as SSHClient
+from fuel_health.common import ssh as f_ssh
 from fuel_health.common.utils.data_utils import rand_int_id
 from fuel_health.common.utils.data_utils import rand_name
 from fuel_health import exceptions
@@ -614,8 +614,9 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                       '"online_controllers" parameter is empty.')
 
         try:
-            sshclient = SSHClient(self.host[0], self.usr, self.pwd,
-                                  key_filename=self.key, timeout=self.timeout)
+            sshclient = f_ssh.Client(self.host[0], self.usr, self.pwd,
+                                     key_filename=self.key,
+                                     timeout=self.timeout)
             return sshclient.exec_longrun_command(cmd)
         except Exception:
             LOG.exception()
@@ -828,10 +829,10 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
             if self.host:
                 try:
-                    ssh = SSHClient(self.host[0],
-                                    self.usr, self.pwd,
-                                    key_filename=self.key,
-                                    timeout=timeout)
+                    ssh = f_ssh.Client(self.host[0],
+                                       self.usr, self.pwd,
+                                       key_filename=self.key,
+                                       timeout=timeout)
                 except Exception:
                     LOG.exception()
 
@@ -858,10 +859,10 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             try:
                 host = viaHost or self.host[0]
                 LOG.debug('Get ssh to instance')
-                ssh = SSHClient(host,
-                                self.usr, self.pwd,
-                                key_filename=self.key,
-                                timeout=timeout)
+                ssh = f_ssh.Client(host,
+                                   self.usr, self.pwd,
+                                   key_filename=self.key,
+                                   timeout=timeout)
 
             except Exception:
                 LOG.exception()
@@ -888,10 +889,10 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             try:
                 host = viaHost or self.host[0]
                 LOG.debug('Get ssh to instance')
-                ssh = SSHClient(host,
-                                self.usr, self.pwd,
-                                key_filename=self.key,
-                                timeout=timeout)
+                ssh = f_ssh.Client(host,
+                                   self.usr, self.pwd,
+                                   key_filename=self.key,
+                                   timeout=timeout)
                 LOG.debug('Host is {0}'.format(host))
 
             except Exception:

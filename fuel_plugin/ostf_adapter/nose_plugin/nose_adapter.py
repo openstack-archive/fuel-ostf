@@ -23,7 +23,7 @@ except ImportError:
     from oslo_config import cfg
 
 from fuel_plugin import consts
-from fuel_plugin.ostf_adapter.logger import ResultsLogger
+from fuel_plugin.ostf_adapter import logger
 from fuel_plugin.ostf_adapter.nose_plugin import nose_storage_plugin
 from fuel_plugin.ostf_adapter.nose_plugin import nose_test_runner
 from fuel_plugin.ostf_adapter.nose_plugin import nose_utils
@@ -58,7 +58,7 @@ class NoseDriver(object):
         else:
             argv_add = [test_set.test_path] + test_set.additional_arguments
 
-        results_log = ResultsLogger(test_set.id, test_run.cluster_id)
+        results_log = logger.ResultsLogger(test_set.id, test_run.cluster_id)
 
         lock_path = cfg.CONF.adapter.lock_dir
         test_run.pid = nose_utils.run_proc(self._run_tests,

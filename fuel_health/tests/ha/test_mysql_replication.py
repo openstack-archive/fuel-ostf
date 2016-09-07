@@ -14,14 +14,14 @@
 
 import logging
 
-from fuel_health.common.ssh import Client as SSHClient
+from fuel_health.common import ssh
 from fuel_health.common.utils import data_utils
-from fuel_health.tests.ha.test_mysql_status import BaseMysqlTest
+from fuel_health.tests.ha import test_mysql_status
 
 LOG = logging.getLogger(__name__)
 
 
-class TestMysqlReplication(BaseMysqlTest):
+class TestMysqlReplication(test_mysql_status.BaseMysqlTest):
     @classmethod
     def setUpClass(cls):
         super(TestMysqlReplication, cls).setUpClass()
@@ -38,8 +38,8 @@ class TestMysqlReplication(BaseMysqlTest):
         if cls.master_ip:
             try:
                 cmd = "mysql -h localhost -e 'DROP DATABASE %s'" % cls.database
-                SSHClient(cls.master_ip, cls.node_user,
-                          key_filename=cls.node_key).exec_command(cmd)
+                ssh.Client(cls.master_ip, cls.node_user,
+                           key_filename=cls.node_key).exec_command(cmd)
             except Exception:
                 LOG.exception("Failed to connect to mysql cmd:{0}".format(cmd))
 
@@ -76,7 +76,7 @@ class TestMysqlReplication(BaseMysqlTest):
         # check that mysql is running on all hosts
         cmd = 'mysql -h localhost -e "" '
         for db_node in databases:
-            ssh_client = SSHClient(
+            ssh_client = ssh.Client(
                 db_node, self.node_user,
                 key_filename=self.node_key, timeout=100)
             self.verify(
@@ -122,9 +122,9 @@ class TestMysqlReplication(BaseMysqlTest):
 
         # create db, table, insert data on one node
         LOG.info('target node ip/hostname: "{0}" '.format(self.master_ip))
-        master_ssh_client = SSHClient(self.master_ip, self.node_user,
-                                      key_filename=self.node_key,
-                                      timeout=100)
+        master_ssh_client = ssh.Client(self.master_ip, self.node_user,
+                                       key_filename=self.node_key,
+                                       timeout=100)
 
         self.verify(20, master_ssh_client.exec_command, 2,
                     'Database creation failed', 'create database',
@@ -141,9 +141,9 @@ class TestMysqlReplication(BaseMysqlTest):
         # Verify that data is replicated on other databases
         for db_node in databases:
             if db_node != self.master_ip:
-                client = SSHClient(db_node,
-                                   self.node_user,
-                                   key_filename=self.node_key)
+                client = ssh.Client(db_node,
+                                    self.node_user,
+                                    key_filename=self.node_key)
 
                 output = self.verify(
                     20, client.exec_command, 5,
@@ -155,8 +155,8 @@ class TestMysqlReplication(BaseMysqlTest):
                                           failed_step='6')
 
         # Drop created db
-        ssh_client = SSHClient(self.master_ip, self.node_user,
-                               key_filename=self.node_key)
+        ssh_client = ssh.Client(self.master_ip, self.node_user,
+                                key_filename=self.node_key)
         self.verify(20, ssh_client.exec_command, 7,
                     'Can not delete created database',
                     'database deletion', drop_db)
