@@ -850,7 +850,8 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
         }
 
         if 'neutron' in self.config.network.network_provider:
-            parameters['net'], _ = self.create_network_resources()
+            private, public = self.create_network_resources()
+            parameters['net'], parameters['floating_net'] = private, public
             template = self.load_template('heat_wait_condition_neutron.yaml')
         else:
             template = self.load_template('heat_wait_condition_nova.yaml')
