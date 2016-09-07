@@ -12,12 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
-
 from fuel_health import heatmanager
-
-
-LOG = logging.getLogger(__name__)
 
 
 class HeatSmokeTests(heatmanager.HeatBaseTest):

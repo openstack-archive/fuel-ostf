@@ -14,7 +14,6 @@
 
 from distutils import version
 import itertools
-import logging
 import multiprocessing
 import os
 import re
@@ -27,8 +26,6 @@ try:
     from oslo.serialization import jsonutils
 except ImportError:
     from oslo_serialization import jsonutils
-
-LOG = logging.getLogger(__name__)
 
 
 def parse_json_file(file_path):

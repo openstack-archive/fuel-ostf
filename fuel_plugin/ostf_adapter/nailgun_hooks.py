@@ -13,7 +13,6 @@
 #    under the License.
 
 from distutils import version
-import logging
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import reflection
@@ -23,8 +22,6 @@ from sqlalchemy.pool import NullPool
 from sqlalchemy import schema
 
 from fuel_plugin.ostf_adapter.storage import alembic_cli
-
-LOG = logging.getLogger(__name__)
 
 
 def _get_enums(conn):

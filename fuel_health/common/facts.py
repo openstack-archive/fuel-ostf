@@ -17,11 +17,6 @@
 import os
 import yaml
 
-from fuel_health.common import log as logging
-
-
-LOG = logging.getLogger(__name__)
-
 
 class Facts:
     __default_config_path = '/var/lib/puppet/yaml/facts/'

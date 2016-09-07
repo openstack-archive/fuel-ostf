@@ -12,8 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
-
 try:
     from oslo.config import cfg
 except ImportError:
@@ -32,9 +30,6 @@ from sqlalchemy.orm import joinedload
 from fuel_plugin import consts
 from fuel_plugin.ostf_adapter import mixins
 from fuel_plugin.ostf_adapter.storage import models
-
-
-LOG = logging.getLogger(__name__)
 
 
 class BaseRestController(rest.RestController):
