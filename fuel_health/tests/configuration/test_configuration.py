@@ -15,10 +15,10 @@
 import logging
 import paramiko.ssh_exception as exc
 
-from fuel_health.common.ssh import Client as SSHClient
+from fuel_health.common import ssh
 from fuel_health import exceptions
 from fuel_health import nmanager
-from keystoneclient.exceptions import Unauthorized
+from keystoneclient import exceptions as k_exceptions
 from keystoneclient.v2_0 import Client as keystoneclient
 
 LOG = logging.getLogger(__name__)
@@ -52,10 +52,10 @@ class SanityConfigurationTest(nmanager.SanityChecksTest):
         """
         ip = self.config.nailgun_host
 
-        ssh_client = SSHClient(ip,
-                               self.config.master.master_node_ssh_user,
-                               self.config.master.master_node_ssh_password,
-                               timeout=self.config.master.ssh_timeout)
+        ssh_client = ssh.Client(ip,
+                                self.config.master.master_node_ssh_user,
+                                self.config.master.master_node_ssh_password,
+                                timeout=self.config.master.ssh_timeout)
         cmd = "date"
         output = []
         try:
@@ -122,7 +122,7 @@ class SanityConfigurationTest(nmanager.SanityChecksTest):
                                           password=pwd,
                                           auth_url=url)
                 keystone.authenticate()
-            except Unauthorized:
+            except k_exceptions.Unauthorized:
                 pass
             else:
                 self.fail('Step 1 failed: Default credentials '

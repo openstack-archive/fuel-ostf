@@ -17,7 +17,7 @@
 import logging
 import time
 
-from fuel_health.common.ssh import Client as SSHClient
+from fuel_health.common import ssh
 from fuel_health import nmanager
 
 LOG = logging.getLogger(__name__)
@@ -108,11 +108,11 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
         cmd = "ping -q -c1 -w10 8.8.8.8"
 
-        ssh_client = SSHClient(self.computes[0],
-                               self.usr,
-                               self.pwd,
-                               key_filename=self.key,
-                               timeout=self.timeout)
+        ssh_client = ssh.Client(self.computes[0],
+                                self.usr,
+                                self.pwd,
+                                key_filename=self.key,
+                                timeout=self.timeout)
         self.verify(100, self.retry_command, 1,
                     "'ping' command failed. Looks like there is no "
                     "Internet connection on the compute node.",
@@ -137,11 +137,11 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
 
         dns = self.fuel_dns.spit(',') if self.fuel_dns else ['8.8.8.8']
 
-        ssh_client = SSHClient(self.computes[0],
-                               self.usr,
-                               self.pwd,
-                               key_filename=self.key,
-                               timeout=self.timeout)
+        ssh_client = ssh.Client(self.computes[0],
+                                self.usr,
+                                self.pwd,
+                                key_filename=self.key,
+                                timeout=self.timeout)
         expected_output = "{0}.in-addr.arpa domain name pointer".format(dns[0])
 
         cmd = "host {0}".format(dns[0])

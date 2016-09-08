@@ -15,7 +15,7 @@
 import functools
 import unittest
 
-from fuel_plugin.ostf_client.client import TestingAdapterClient
+from fuel_plugin.ostf_client import client
 
 
 class EmptyResponseError(Exception):
@@ -66,10 +66,10 @@ class Response(object):
 class AdapterClientProxy(object):
 
     def __init__(self, url):
-        self.client = TestingAdapterClient(url)
+        self.client = client.TestingAdapterClient(url)
 
     def __getattr__(self, item):
-        if item in TestingAdapterClient.__dict__:
+        if item in client.TestingAdapterClient.__dict__:
             call = getattr(self.client, item)
             return self._decorate_call(call)
 

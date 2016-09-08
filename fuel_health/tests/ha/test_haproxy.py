@@ -14,7 +14,7 @@
 
 import logging
 
-from fuel_health.common.ssh import Client as SSHClient
+from fuel_health.common import ssh
 from fuel_health import test
 
 
@@ -71,9 +71,9 @@ class HAProxyCheck(test.BaseTestCase):
         """
         LOG.info("Controllers nodes are %s" % self.controllers)
         for controller in self.controllers:
-            remote = SSHClient(controller, self.controller_user,
-                               key_filename=self.controller_key,
-                               timeout=100)
+            remote = ssh.Client(controller, self.controller_user,
+                                key_filename=self.controller_key,
+                                timeout=100)
             ignore_services = []
             if 'neutron' not in self.config.network.network_provider:
                 ignore_services.append('nova-metadata-api')

@@ -17,7 +17,7 @@ import logging
 
 LOG = logging.getLogger(__name__)
 
-from fuel_health.common.ssh import Client as SSHClient
+from fuel_health.common import ssh
 
 from fuel_health import nmanager
 
@@ -43,8 +43,8 @@ class CloudValidationTest(nmanager.OfficialClientTest):
     def _run_ssh_cmd(self, host, cmd):
         """Open SSH session with host and execute command."""
         try:
-            sshclient = SSHClient(host, self.usr, self.pwd,
-                                  key_filename=self.key, timeout=self.timeout)
+            sshclient = ssh.Client(host, self.usr, self.pwd,
+                                   key_filename=self.key, timeout=self.timeout)
             return sshclient.exec_longrun_command(cmd)
         except Exception:
             LOG.exception('Failure on ssh run cmd')

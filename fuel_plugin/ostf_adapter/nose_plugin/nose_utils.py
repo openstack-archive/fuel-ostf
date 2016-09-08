@@ -20,7 +20,7 @@ import re
 import traceback
 
 from nose import case
-from nose.suite import ContextSuite
+from nose import suite
 
 try:
     from oslo.serialization import jsonutils
@@ -169,7 +169,7 @@ def get_tests_to_update(test):
 
     if isinstance(test, case.Test):
         tests.append(test)
-    elif isinstance(test, ContextSuite):
+    elif isinstance(test, suite.ContextSuite):
         for sub_test in test._tests:
             tests.extend(get_tests_to_update(sub_test))
 

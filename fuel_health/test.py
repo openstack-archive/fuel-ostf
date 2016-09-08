@@ -22,8 +22,8 @@ import testresources
 import unittest2
 
 from fuel_health.common import log as logging
-from fuel_health.common.ssh import Client as SSHClient
-from fuel_health.common.test_mixins import FuelTestAssertMixin
+from fuel_health.common import ssh
+from fuel_health.common import test_mixins
 from fuel_health import config
 
 
@@ -32,7 +32,7 @@ LOG = logging.getLogger(__name__)
 
 class BaseTestCase(unittest2.TestCase,
                    testresources.ResourcedTestCase,
-                   FuelTestAssertMixin):
+                   test_mixins.FuelTestAssertMixin):
 
     def __init__(self, *args, **kwargs):
         super(BaseTestCase, self).__init__(*args, **kwargs)
@@ -137,8 +137,8 @@ class TestCase(BaseTestCase):
         Fail if exit code != 0
         """
         try:
-            sshclient = SSHClient(host, self.usr, self.pwd,
-                                  key_filename=self.key, timeout=self.timeout)
+            sshclient = ssh.Client(host, self.usr, self.pwd,
+                                   key_filename=self.key, timeout=self.timeout)
             return sshclient.exec_command(cmd)
         except Exception:
             LOG.exception("Failed while opening ssh session with host")
