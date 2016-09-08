@@ -16,11 +16,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from fuel_health.common import log as logging
 import fuel_health.config
-
-
-LOG = logging.getLogger(__name__)
 
 
 class Manager(object):
