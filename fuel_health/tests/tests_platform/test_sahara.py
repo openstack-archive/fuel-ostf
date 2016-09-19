@@ -96,6 +96,7 @@ class VanillaTwoClusterTest(SaharaClusterTest):
             "7.0": "2.6.0",
             "8.0": "2.7.1",
             "9.0": "2.7.1",
+            "9.1": "2.7.1",
             "10.0": "2.7.1"
         }
         self._plugin_name = 'vanilla'
