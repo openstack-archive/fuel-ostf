@@ -183,7 +183,7 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
         self.murano_client.environments.delete(environment_id)
         return self.environments.remove(environment_id)
 
-    def environment_delete_check(self, environment_id, timeout=60):
+    def environment_delete_check(self, environment_id, timeout=120):
         resp = requests.get('{0}environments/{1}'.format(self.endpoint,
                                                          environment_id),
                             headers=self.headers, verify=False)
@@ -203,7 +203,7 @@ class MuranoTest(fuel_health.nmanager.PlatformServicesBaseClass):
             except Exception:
                 LOG.debug("Failed to get environment status "
                           "or environment no more exists")
-            time.sleep(5)
+            time.sleep(1)
 
     def create_session(self, environment_id):
         """This method allows to create session for environment.
