@@ -1,0 +1,10 @@
+Verified+1: Fuel CI <fuel-ci-bot@mirantis.com>
+Code-Review+2: tatyana-leontovich <tleontovich@mirantis.com>
+Code-Review+1: Volodymyr Shypyguzov <vshypyguzov@mirantis.com>
+Workflow+1: tatyana-leontovich <tleontovich@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 04 Oct 2016 09:32:50 +0000
+Reviewed-on: https://review.openstack.org/377334
+Project: openstack/fuel-ostf
+Branch: refs/heads/master
