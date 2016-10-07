@@ -690,18 +690,18 @@ class HeatSmokeTests(heatmanager.HeatBaseTest):
 
         # launching the second instance during autoscaling
         self.verify(
-            720, self.wait_for_autoscaling,
+            1500, self.wait_for_autoscaling,
             10, 'Failed to launch the 2nd instance per autoscaling alarm.',
             'launching the new instance per autoscaling alarm',
-            len(instances) + 2, 720, 10, reduced_stack_name
+            len(instances) + 2, 1500, 10, reduced_stack_name
         )
 
         # termination of the second instance during autoscaling
         self.verify(
-            720, self.wait_for_autoscaling,
+            1500, self.wait_for_autoscaling,
             11, 'Failed to terminate the 2nd instance per autoscaling alarm.',
             'terminating the 2nd instance per autoscaling alarm',
-            len(instances) + 1, 720, 11, reduced_stack_name
+            len(instances) + 1, 1500, 11, reduced_stack_name
         )
 
         # deletion of file with keypair from vm
