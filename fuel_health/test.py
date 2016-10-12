@@ -81,7 +81,7 @@ class TestCase(BaseTestCase):
         cls.manager = cls.manager_class()
         for attr_name in cls.manager.client_attr_names:
             # Ensure that pre-existing class attributes won't be
-            # accidentally overriden.
+            # accidentally overridden.
             assert not hasattr(cls, attr_name)
             client = getattr(cls.manager, attr_name)
             setattr(cls, attr_name, client)
