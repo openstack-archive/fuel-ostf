@@ -1,0 +1,8 @@
+Code-Review+2: tatyana-leontovich <tleontovich@mirantis.com>
+Workflow+1: Alexey Shtokolov <ashtokolov@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 14 Oct 2016 14:54:39 +0000
+Reviewed-on: https://review.openstack.org/386601
+Project: openstack/fuel-ostf
+Branch: refs/heads/stable/newton
