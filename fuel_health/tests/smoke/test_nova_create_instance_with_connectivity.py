@@ -154,7 +154,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             self.compute_client, name, security_groups
         )
 
-        self.verify(30, self._delete_server, 3,
+        self.verify(60, self._delete_server, 3,
                     "Server can not be deleted.",
                     "server deletion", server)
 
@@ -232,7 +232,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         if self.floating_ips:
             self.floating_ips.remove(floating_ip)
 
-        self.verify(30, self._delete_server, 9,
+        self.verify(60, self._delete_server, 9,
                     "Server can not be deleted. ",
                     "server deletion", server)
 
@@ -285,7 +285,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
                     'public connectivity checking from VM',
                     instance_ip, 30, (9, 30), compute)
 
-        self.verify(30, self._delete_server, 4,
+        self.verify(60, self._delete_server, 4,
                     "Server can not be deleted. ",
                     "server deletion", server)
 
@@ -361,6 +361,6 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
         if self.floating_ips:
             self.floating_ips.remove(floating_ip)
 
-        self.verify(30, self._delete_server, 6,
+        self.verify(60, self._delete_server, 6,
                     "Server can not be deleted. ",
                     "server deletion", server)

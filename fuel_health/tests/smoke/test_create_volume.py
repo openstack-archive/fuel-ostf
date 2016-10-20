@@ -136,7 +136,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
                     "volume deletion",
                     volume)
 
-        self.verify(30, self._delete_server, 13,
+        self.verify(60, self._delete_server, 13,
                     "Can not delete server. ",
                     "server deletion",
                     instance)
@@ -180,7 +180,7 @@ class VolumesTest(nmanager.SmokeChecksTest):
                     "instance becoming 'ACTIVE'",
                     instance, 'ACTIVE')
 
-        self.verify(30, self._delete_server, 5,
+        self.verify(60, self._delete_server, 5,
                     "Can not delete server. ",
                     "server deletion",
                     instance)
