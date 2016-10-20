@@ -183,6 +183,6 @@ class TestImageAction(nmanager.SmokeChecksTest):
                              'booting instance from snapshot',
                              snapshot_image_id)
 
-        self.verify(30, self._delete_server, 7,
+        self.verify(60, self._delete_server, 7,
                     "Server can not be deleted.",
                     "server deletion", server)

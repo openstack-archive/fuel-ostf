@@ -381,7 +381,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
 
         fail_msg = 'Failed to delete the server.'
         msg = 'deleting server'
-        self.verify(30, self._delete_server, 6, fail_msg, msg, instance)
+        self.verify(60, self._delete_server, 6, fail_msg, msg, instance)
 
     def test_check_glance_notifications(self):
         """Ceilometer test to check notifications from Glance
