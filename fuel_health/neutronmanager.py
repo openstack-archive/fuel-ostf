@@ -184,7 +184,7 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
 
     @classmethod
     def tearDownClass(cls):
-        super(NeutronBaseTest, cls)
+        super(NeutronBaseTest, cls).tearDownClass()
         cls._clean_floating_ips()
         cls._clear_networks()
         cls._cleanup_ports()
