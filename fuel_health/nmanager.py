@@ -948,7 +948,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         for host in available_hosts:
             hostname = host.service.get('host')
             if host.hypervisor_type != 'VMware vCenter Server' and \
-               hostname != current_host:
+               host.state == 'up' and hostname != current_host:
                 return hostname
 
     def migrate_instance(self, instance, host_to):
