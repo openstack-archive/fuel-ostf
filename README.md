@@ -1,3 +1,10 @@
+Team and repository tags
+========================
+
+[![Team and repository tags](http://governance.openstack.org/badges/fuel-ostf.svg)](http://governance.openstack.org/reference/tags/index.html)
+
+<!-- Change things from this point on -->
+
 Fuel OSTF tests
 ===============
 After OpenStack installation via Fuel, it is very important to understand whether it was successful and if it is ready for work. Fuel-ostf provides a set of health checks to be run against from Fuel console check the proper operation of all system components in typical conditions.
