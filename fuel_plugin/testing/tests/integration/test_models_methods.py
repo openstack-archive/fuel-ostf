@@ -13,7 +13,6 @@
 #    under the License.
 
 import datetime
-import six
 
 import mock
 
@@ -60,7 +59,7 @@ class TestModelTestMethods(base.BaseIntegrationTest):
             .first()
 
     def check_model_obj_attrs(self, obj, attrs):
-        for attr_name, attr_val in six.iteritems(attrs):
+        for attr_name, attr_val in attrs.items():
             self.assertEqual(attr_val, getattr(obj, attr_name))
 
     def test_add_result(self):
