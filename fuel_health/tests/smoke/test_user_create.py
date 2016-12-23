@@ -128,6 +128,6 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
                         "logs for more details.",
                     failed_step=9)
         except Exception:
-            LOG.exception()
+            LOG.exception("")
             self.fail("Step 10 failed: Can not authenticate in Horizon. "
                       "Please refer to OpenStack logs for more details.")
