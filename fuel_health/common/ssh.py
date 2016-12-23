@@ -169,7 +169,7 @@ class Client(object):
             connection = self._get_ssh_connection()
             connection.close()
         except paramiko.AuthenticationException:
-            LOG.exception()
+            LOG.exception("")
             return False
 
         return True

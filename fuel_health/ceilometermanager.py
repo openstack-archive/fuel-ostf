@@ -473,7 +473,7 @@ class CeilometerBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
             try:
                 method(resource)
             except Exception:
-                LOG.exception()
+                LOG.exception("")
 
     @classmethod
     def tearDownClass(cls):
