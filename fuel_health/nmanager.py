@@ -26,42 +26,42 @@ LOG = logging.getLogger(__name__)
 try:
     import heatclient.v1.client
 except Exception:
-    LOG.exception()
+    LOG.exception("")
     LOG.warning('Heatclient could not be imported.')
 try:
     import muranoclient.v1.client
 except Exception:
-    LOG.exception()
+    LOG.exception("")
     LOG.warning('Muranoclient could not be imported.')
 try:
     import saharaclient.client
 except Exception:
-    LOG.exception()
+    LOG.exception("")
     LOG.warning('Sahara client could not be imported.')
 try:
     import ceilometerclient.v2.client
 except Exception:
-    LOG.exception()
+    LOG.exception("")
     LOG.warning('Ceilometer client could not be imported.')
 try:
     import neutronclient.neutron.client
 except Exception:
-    LOG.exception()
+    LOG.exception("")
     LOG.warning('Neutron client could not be imported.')
 try:
     import glanceclient
 except Exception:
-    LOG.exception()
+    LOG.exception("")
     LOG.warning('Glance client could not be imported')
 try:
     import ironicclient
 except Exception:
-    LOG.exception()
+    LOG.exception("")
     LOG.warning('Ironic client could not be imported')
 try:
     import muranoclient.glance.client as art_client
 except Exception:
-    LOG.exception()
+    LOG.exception("")
     LOG.warning('Artifacts client could not be imported')
 
 import aodhclient.client
@@ -516,7 +516,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                       .format(image=self.manager.config.compute.image_name)
                       )
         except nova_exc.ClientException:
-            LOG.exception()
+            LOG.exception("")
             self.fail("Image can not be retrieved. "
                       "Please refer to OpenStack logs for more details")
 
@@ -619,7 +619,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                      timeout=self.timeout)
             return sshclient.exec_longrun_command(cmd)
         except Exception:
-            LOG.exception()
+            LOG.exception("")
             self.fail("%s command failed." % cmd)
 
     def _create_keypair(self, client, namestart='ost1_test-keypair-smoke-'):
@@ -670,7 +670,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             try:
                 client.security_group_rules.create(secgroup.id, **ruleset)
             except Exception:
-                LOG.exception()
+                LOG.exception("")
                 self.fail("Failed to create rule in security group.")
 
         return secgroup
@@ -808,7 +808,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         try:
             client.servers.add_floating_ip(server, floating_ip)
         except Exception:
-            LOG.exception()
+            LOG.exception("")
             self.fail('Can not assign floating ip to instance')
 
     @classmethod
@@ -834,7 +834,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                        key_filename=self.key,
                                        timeout=timeout)
                 except Exception:
-                    LOG.exception()
+                    LOG.exception("")
 
                 return self.retry_command(retries=retries[0],
                                           timeout=retries[1],
@@ -865,7 +865,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                                    timeout=timeout)
 
             except Exception:
-                LOG.exception()
+                LOG.exception("")
 
             command = "ping -q -c1 -w10 8.8.8.8"
 
@@ -896,7 +896,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
                 LOG.debug('Host is {0}'.format(host))
 
             except Exception:
-                LOG.exception()
+                LOG.exception("")
 
             return self.retry_command(retries[0], retries[1],
                                       ssh.exec_command_on_vm,

@@ -227,7 +227,7 @@ class TestVcenter(nmanager.NovaNetworkScenarioTest):
                 if addr.startswith('novanetwork'):
                     instance_ip = server.addresses[addr][0]['addr']
         except Exception:
-            LOG.exception()
+            LOG.exception("")
             self.fail("Step 3 failed: cannot get instance details. "
                       "Please refer to OpenStack logs for more details.")
 
@@ -285,7 +285,7 @@ class TestVcenterImageAction(nmanager.SmokeChecksTest):
                     if e.__class__.__name__ == 'NotFound':
                         return True
                     self.error_msg.append(e)
-                    LOG.exception()
+                    LOG.exception("")
                 return False
 
         # Block until resource deletion has completed or timed-out
