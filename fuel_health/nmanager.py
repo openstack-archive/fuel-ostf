@@ -18,6 +18,9 @@ import logging
 import os
 import time
 
+from keystoneauth1.identity import V2Password
+from keystoneauth1.session import Session as KeystoneSession
+
 import fuel_health.common.utils.data_utils as data_utils
 
 LOG = logging.getLogger(__name__)
@@ -94,6 +97,8 @@ class OfficialClientManager(fuel_health.manager.Manager):
         self.clients_initialized = False
         self.traceback = ''
         self.keystone_error_message = None
+
+        self._keystone_session = None
         self.compute_client = self._get_compute_client()
         try:
             self.identity_client = self._get_identity_client()
@@ -141,32 +146,22 @@ class OfficialClientManager(fuel_health.manager.Manager):
                 'murano_art_client'
             ]
 
-    def _get_compute_client(self, username=None, password=None,
-                            tenant_name=None):
-        if not username:
-            username = self.config.identity.admin_username
-        if not password:
-            password = self.config.identity.admin_password
-        if not tenant_name:
-            tenant_name = self.config.identity.admin_tenant_name
+    @property
+    def keystone_session(self):
+        if not self._keystone_session:
+            auth = V2Password(
+                auth_url=self.config.identity.uri,
+                username=self.config.identity.admin_username,
+                password=self.config.identity.admin_password,
+                tenant_name=self.config.identity.admin_tenant_name)
 
-        if None in (username, password, tenant_name):
-            msg = ("Missing required credentials for identity client. "
-                   "username: {username}, password: {password}, "
-                   "tenant_name: {tenant_name}").format(
-                       username=username,
-                       password=password,
-                       tenant_name=tenant_name, )
-            raise exceptions.InvalidConfiguration(msg)
+            self._keystone_session = KeystoneSession(auth=auth, verify=False)
+        return self._keystone_session
 
-        auth_url = self.config.identity.uri
-
-        client_args = (username, password, tenant_name, auth_url)
-
-        # Create our default Nova client to use in testing
+    def _get_compute_client(self):
         service_type = self.config.compute.catalog_type
         return novaclient.client.Client(self.NOVACLIENT_VERSION,
-                                        *client_args,
+                                        session=self.keystone_session,
                                         service_type=service_type,
                                         no_cache=True,
                                         insecure=True,
