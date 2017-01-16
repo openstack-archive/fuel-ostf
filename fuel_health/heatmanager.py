@@ -14,13 +14,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 import os
 
 import fuel_health.common.ssh
 from fuel_health.common.utils.data_utils import rand_name
 import fuel_health.nmanager
 import fuel_health.test
+from oslo_log import log as logging
 
 
 LOG = logging.getLogger(__name__)

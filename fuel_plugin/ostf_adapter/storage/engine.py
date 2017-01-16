@@ -13,10 +13,10 @@
 #    under the License.
 
 import contextlib
-import logging
 
 from sqlalchemy import create_engine, orm
 
+from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 

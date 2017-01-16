@@ -13,7 +13,7 @@
 # under the License.
 
 from distutils import version
-import logging
+from oslo_log import log as logging
 
 from fuel_health.common import ssh
 from fuel_health import test

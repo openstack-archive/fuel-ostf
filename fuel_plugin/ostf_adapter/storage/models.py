@@ -13,7 +13,6 @@
 #    under the License.
 
 import datetime
-import logging
 
 import sqlalchemy as sa
 from sqlalchemy import desc
@@ -21,6 +20,8 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import joinedload, relationship, object_mapper
+
+from oslo_log import log as logging
 
 from fuel_plugin import consts
 from fuel_plugin.ostf_adapter import nose_plugin

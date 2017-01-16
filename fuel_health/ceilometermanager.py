@@ -15,9 +15,9 @@
 
 
 import functools
-import logging
 
 import neutronclient.common.exceptions as neutron_exc
+from oslo_log import log as logging
 
 from fuel_health.common.utils.data_utils import rand_name
 import fuel_health.nmanager

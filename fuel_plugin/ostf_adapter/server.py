@@ -13,10 +13,11 @@
 #    under the License.
 
 
-import logging
 import os
 import signal
 import sys
+
+from oslo_log import log as logging
 
 from gevent import pywsgi
 try:
