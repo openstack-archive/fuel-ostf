@@ -14,10 +14,11 @@
 # under the License.
 
 import contextlib
-import logging
 import os
 import time
 import zipfile
+
+from oslo_log import log as logging
 
 try:
     from oslo.serialization import jsonutils

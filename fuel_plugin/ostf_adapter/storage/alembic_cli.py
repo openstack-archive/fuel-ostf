@@ -12,11 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 import os
 
 from alembic import command
 from alembic import config
+
+from oslo_log import log as logging
 
 try:
     from oslo.config import cfg

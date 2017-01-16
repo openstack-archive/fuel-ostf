@@ -12,7 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
 import paramiko.ssh_exception as exc
 
 from fuel_health.common import ssh
@@ -20,6 +19,7 @@ from fuel_health import exceptions
 from fuel_health import nmanager
 from keystoneclient import exceptions as k_exceptions
 from keystoneclient.v2_0 import Client as keystoneclient
+from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 

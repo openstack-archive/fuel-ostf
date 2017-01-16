@@ -14,12 +14,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
 import os
 import time
 
 from keystoneauth1.identity import V2Password
 from keystoneauth1.session import Session as KeystoneSession
+from oslo_log import log as logging
 
 import fuel_health.common.utils.data_utils as data_utils
 

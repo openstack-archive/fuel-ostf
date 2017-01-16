@@ -13,12 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 import os
 import select
 import socket
 import time
 import warnings
+
+from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 

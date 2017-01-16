@@ -13,9 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log as logging
+
 import ConfigParser
 import inspect
-import logging
 import logging.config
 import os
 import re

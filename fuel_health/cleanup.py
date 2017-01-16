@@ -20,7 +20,8 @@ import time
 path = os.getcwd()
 sys.path.append(path)
 
-import logging
+from oslo_log import log as logging
+
 import requests
 
 from fuel_health import exceptions

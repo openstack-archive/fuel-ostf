@@ -13,14 +13,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
-
 from fuel_health import nmanager
 import fuel_health.test
 
 from fuel_health.common import ssh
 from ironicclient.common import utils
 from ironicclient import exc as ironic_exc
+from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 

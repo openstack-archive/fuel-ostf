@@ -13,9 +13,10 @@
 #    under the License.
 
 import fcntl
-import logging
 import os
 import signal
+
+from oslo_log import log as logging
 
 try:
     from oslo.config import cfg
