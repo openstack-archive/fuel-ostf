@@ -1175,7 +1175,7 @@ class PlatformServicesBaseClass(NovaNetworkScenarioTest):
         try:
             delete_method()
         except Exception as exc:
-            LOG.warning(exc.message)
+            LOG.warning(str(exc))
             return
         if get_method:
             self._wait_for_deletion(get_method, timeout, sleep)
