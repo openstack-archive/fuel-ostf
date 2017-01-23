@@ -460,7 +460,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
                 return False
 
         fuel_health.test.call_until_true(
-            is_deletion_complete, 20, 10)
+            is_deletion_complete, 21, 5)
 
     def retry_command(self, retries, timeout, method, *args, **kwargs):
         for i in range(retries):
