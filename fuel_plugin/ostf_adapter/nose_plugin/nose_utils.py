@@ -157,7 +157,7 @@ def get_module(module_path):
 
 
 def get_tests_to_update(test):
-    """Sometimes (e.g. unhandles exception is occured in
+    """Sometimes (e.g. unhandles exception is occurred in
     setUpClass of test case) tests can be packed in
     separate ContextSuite each. At the moment of following code
     creation depth of this packaging was unknown so
