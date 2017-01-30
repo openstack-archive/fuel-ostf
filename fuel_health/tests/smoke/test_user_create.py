@@ -28,7 +28,7 @@ class TestUserTenantRole(nmanager.SmokeChecksTest):
     """
 
     def test_create_user(self):
-        """Create user and authenticate with it.
+        """Create user and authenticate with it
         Target components: Nova, Keystone
 
         Scenario:
