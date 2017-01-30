@@ -110,12 +110,15 @@ class NeutronBaseTest(fuel_health.nmanager.NovaNetworkScenarioTest):
                 router['id'], {"subnet_id": subnet_id})
 
         self.neutron_client.delete_router(router['id'])
+        self.routers.pop(router['id'])
 
     def _remove_subnet(self, subnet):
-        return self.neutron_client.delete_subnet(subnet['id'])
+        self.neutron_client.delete_subnet(subnet['id'])
+        self.subnets.remove(subnet)
 
     def _remove_network(self, network):
         self.neutron_client.delete_network(network['id'])
+        self.networks.remove(network)
 
     @classmethod
     def _clean_floating_ips(cls):
