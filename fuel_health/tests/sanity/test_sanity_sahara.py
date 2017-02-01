@@ -61,7 +61,7 @@ class VanillaTwoTemplatesTest(SaharaTemplatesTest):
         }
         self._plugin_name = 'vanilla'
         self._hadoop_version = mapping_versions_of_plugin.get(
-            self.config.fuel.fuel_version)
+            self.config.fuel.fuel_version, "2.7.1")
         self._node_processes = ['resourcemanager', 'namenode',
                                 'secondarynamenode', 'oozie', 'historyserver',
                                 'nodemanager', 'datanode']
@@ -180,4 +180,4 @@ class HDPTwoTemplatesTest(SaharaTemplatesTest):
 
         fail_msg = 'Failed to delete cluster template.'
         self.verify(10, self.sahara_client.cluster_templates.delete, 8,
-                    fail_msg, 'deleting cluster template', cl_template.id)
+                fail_msg, 'deleting cluster template', cl_template.id)

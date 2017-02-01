@@ -101,7 +101,7 @@ class VanillaTwoClusterTest(SaharaClusterTest):
         }
         self._plugin_name = 'vanilla'
         self._hadoop_version = mapping_versions_of_plugin.get(
-            self.config.fuel.fuel_version)
+            self.config.fuel.fuel_version, "2.7.1")
         self._worker_processes = ['nodemanager', 'datanode']
         self._master_processes = ['resourcemanager', 'namenode', 'oozie',
                                   'historyserver', 'secondarynamenode']
