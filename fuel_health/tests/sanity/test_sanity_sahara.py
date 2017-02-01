@@ -61,7 +61,7 @@ class VanillaTwoTemplatesTest(SaharaTemplatesTest):
         }
         self._plugin_name = 'vanilla'
         self._hadoop_version = mapping_versions_of_plugin.get(
-            self.config.fuel.fuel_version)
+            self.config.fuel.fuel_version, "2.7.1")
         self._node_processes = ['resourcemanager', 'namenode',
                                 'secondarynamenode', 'oozie', 'historyserver',
                                 'nodemanager', 'datanode']
