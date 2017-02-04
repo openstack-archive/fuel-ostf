@@ -44,7 +44,7 @@ class Facts:
                 break
         _file = open(os.path.join(path, _file))
         self._init_parser()
-        data = yaml.load(_file)
+        data = yaml.safe_load(_file)
         _file.close()
         return data
 
