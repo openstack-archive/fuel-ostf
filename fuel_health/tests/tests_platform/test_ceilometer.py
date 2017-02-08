@@ -529,7 +529,7 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
             "10.0": "2.7.1"
         }
         hadoop_version = mapping_versions_of_plugin.get(
-            self.config.fuel.fuel_version)
+            self.config.fuel.fuel_version, "2.7.1")
 
         fail_msg = 'Failed to find correctly registered Sahara image.'
         msg = 'finding correctly registered Sahara image'
