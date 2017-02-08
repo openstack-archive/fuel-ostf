@@ -82,7 +82,7 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
                 'Step 2 failed: Some nova services have not been started.')
         except Exception:
             LOG.info("Will sleep for 120 seconds and try again")
-            LOG.exception()
+            LOG.exception("")
             time.sleep(120)
             # Re-collect data silently
             output = get_controllers_down_states()

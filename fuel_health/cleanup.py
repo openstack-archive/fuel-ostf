@@ -190,7 +190,7 @@ def cleanup(cluster_deployment_info):
                     LOG.info('Delete server with name {0}'.format(s.name))
                     manager._get_compute_client().servers.delete(s.id)
                 except Exception:
-                    LOG.exception()
+                    LOG.exception("")
     else:
         LOG.info('No servers found')
 
@@ -232,12 +232,12 @@ def _delete_it(client, log_message, name='ost1_test-', delete_type='name'):
                         else:
                             client.delete(item.id)
                     except Exception:
-                        LOG.exception()
+                        LOG.exception("")
             except AttributeError:
                 if item.display_name.startswith(name):
                     client.delete(item)
     except Exception:
-        LOG.exception()
+        LOG.exception("")
 
 
 if __name__ == "__main__":
