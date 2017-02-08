@@ -162,7 +162,8 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
         instance_list = self.compute_client.servers.list()
         LOG.debug('Instances list is {0}'.format(instance_list))
-        LOG.debug('Expected instance name should inlude {0}'.format(mask_name))
+        LOG.debug('Expected instance name should include {0}'.format(
+            mask_name))
 
         for inst in instance_list:
             LOG.debug('Instance name is {0}'.format(inst.name))
