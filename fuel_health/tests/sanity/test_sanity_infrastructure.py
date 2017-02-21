@@ -60,10 +60,13 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
         def get_controllers_down_states():
             states = {}
             for controller in self.controller_names:
-                svc = self._list_services(self.compute_client, host=controller)
-                down = [True for service in svc if service.state == downstate]
-                if any(down):
-                    states[controller] = True
+                svcs = self._list_services(self.compute_client, host=controller)
+                for svc in svcs:
+                    if svc.state == downstate:
+                        LOG.debug("Service {0} is in Down state "         
+                                  "on {1}. Reason: {2}".format(           
+                                  svc.binary, svc.host, svc.disabled_reason))
+                        states[controller] = True
             return states
 
         if not self.controllers:
@@ -75,7 +78,6 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             "'nova service-list' command execution",
         )
 
-        LOG.debug(output)
         try:
             self.verify_response_true(
                 len(output) == 0,
@@ -86,7 +88,6 @@ class SanityInfrastructureTest(nmanager.SanityChecksTest):
             time.sleep(120)
             # Re-collect data silently
             output = get_controllers_down_states()
-            LOG.debug(output)
             self.verify_response_true(
                 len(output) == 0,
                 'Step 2 failed: Some nova services have not been started.')
