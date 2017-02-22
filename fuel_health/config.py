@@ -650,7 +650,9 @@ class NailgunConfig(object):
                 access_data['password']['value']
             )
         self.compute.libvirt_type = common_data['libvirt_type']['value']
-        self.compute.use_vcenter = common_data['use_vcenter']['value']
+        # After removing vmware support we have no attribute use_vcenter
+        self.compute.use_vcenter = common_data.get('use_vcenter', {}).get(
+            'value', False)
         self.compute.auto_assign_floating_ip = common_data[
             'auto_assign_floating_ip']['value']
 
