@@ -261,10 +261,8 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = 'Failed to create instance.'
         msg = 'creating instance'
 
-        vcenter = self.config.compute.use_vcenter
-        image_name = 'TestVM-VMDK' if vcenter else None
         instance = self.verify(600, self.create_server, 1, fail_msg, msg, name,
-                               net_id=private_net_id, img_name=image_name)
+                               net_id=private_net_id)
 
         fail_msg = 'Failed while waiting for "ACTIVE" status of instance.'
         msg = 'waiting for "ACTIVE" status of instance'
@@ -341,10 +339,8 @@ class CeilometerApiPlatformTests(ceilometermanager.CeilometerBaseTest):
         fail_msg = 'Failed to create instance.'
         msg = 'creating instance'
         name = rand_name('ostf-ceilo-instance-')
-        vcenter = self.config.compute.use_vcenter
-        image_name = 'TestVM-VMDK' if vcenter else None
         instance = self.verify(300, self.create_server, 1, fail_msg, msg, name,
-                               net_id=private_net_id, img_name=image_name)
+                               net_id=private_net_id)
 
         fail_msg = 'Failed while waiting for "ACTIVE" status of instance.'
         msg = 'waiting for "ACTIVE" status of instance'

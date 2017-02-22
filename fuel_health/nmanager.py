@@ -480,14 +480,6 @@ class OfficialClientTest(fuel_health.test.TestCase):
                       'with unexpected result. ')
         self.fail("Instance is not reachable by IP.")
 
-    def get_availability_zone(self, image_id=None):
-        disk = self.glance_client_v1.images.get(image_id).disk_format
-        if disk == 'vmdk':
-            az_name = 'vcenter'
-        else:
-            az_name = 'nova'
-        return az_name
-
     def check_clients_state(self):
         if not self.manager.clients_initialized:
             LOG.debug("Unable to initialize Keystone client: {trace}".format(
@@ -724,16 +716,13 @@ class NovaNetworkScenarioTest(OfficialClientTest):
 
     def _create_server(self, client, name, security_groups=None,
                        flavor_id=None, net_id=None, img_name=None,
-                       data_file=None, az_name=None, port=None):
+                       data_file=None, az_name='nova', port=None):
         create_kwargs = {}
 
         if img_name:
             base_image_id = self.get_image_from_name(img_name=img_name)
         else:
             base_image_id = self.get_image_from_name()
-
-        if not az_name:
-            az_name = self.get_availability_zone(image_id=base_image_id)
 
         if not flavor_id:
             if not self.find_micro_flavor():
@@ -943,10 +932,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
         LOG.debug('Current host is {0}'.format(current_host))
         available_hosts = self.get_compute_hostname()
         for host in available_hosts:
-            hostname = host.service.get('host')
-            if host.hypervisor_type != 'VMware vCenter Server' and \
-               hostname != current_host:
-                return hostname
+            if host.hypervisor_hostname != current_host:
+                return host.hypervisor_hostname
 
     def migrate_instance(self, instance, host_to):
         instance.live_migrate(host_to)
@@ -1360,7 +1347,7 @@ class SmokeChecksTest(OfficialClientTest):
         name = rand_name('ost1_test-boot-volume-instance')
         base_image_id = self.get_image_from_name()
         bd_map = {'vda': volume.id + ':::0'}
-        az_name = self.get_availability_zone(image_id=base_image_id)
+        az_name = 'nova'
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in
                        self.compute_client.networks.list()
@@ -1400,7 +1387,7 @@ class SmokeChecksTest(OfficialClientTest):
         name = rand_name('ost1_test-volume-instance')
 
         base_image_id = self.get_image_from_name(img_name=img_name)
-        az_name = self.get_availability_zone(image_id=base_image_id)
+        az_name = 'nova'
 
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in

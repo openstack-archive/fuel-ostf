@@ -35,8 +35,7 @@ def check_compute_nodes():
 
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
-            if (not self.config.compute.compute_nodes and
-                    not self.config.compute.use_vcenter):
+            if not self.config.compute.compute_nodes:
                 self.skipTest('There are no compute nodes in the environment. '
                               'Test skipped.')
             return func(self, *args, **kwargs)
