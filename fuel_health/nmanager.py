@@ -42,11 +42,6 @@ except Exception:
     LOG.exception("")
     LOG.warning('Sahara client could not be imported.')
 try:
-    import ceilometerclient.v2.client
-except Exception:
-    LOG.exception("")
-    LOG.warning('Ceilometer client could not be imported.')
-try:
     import neutronclient.neutron.client
 except Exception:
     LOG.exception("")
@@ -121,7 +116,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.heat_client = self._get_heat_client()
             self.murano_client = self._get_murano_client()
             self.sahara_client = self._get_sahara_client()
-            self.ceilometer_client = self._get_ceilometer_client()
             self.neutron_client = self._get_neutron_client()
             self.glance_client_v1 = self._get_glance_client(version=1)
             self.ironic_client = self._get_ironic_client()
@@ -138,7 +132,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
                 'heat_client',
                 'murano_client',
                 'sahara_client',
-                'ceilometer_client',
                 'neutron_client',
                 'ironic_client',
                 'aodh_client',
@@ -316,20 +309,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                           input_auth_token=auth_token,
                                           insecure=True)
 
-    def _get_ceilometer_client(self):
-        keystone = self._get_identity_client()
-        try:
-            endpoint = keystone.service_catalog.url_for(
-                service_type='metering',
-                endpoint_type='publicURL')
-        except keystoneclient.exceptions.EndpointNotFound:
-            LOG.warning('Can not initialize ceilometer client')
-            return None
-
-        return ceilometerclient.v2.Client(endpoint=endpoint, insecure=True,
-                                          verify=False,
-                                          token=lambda: keystone.auth_token)
-
     def _get_neutron_client(self, version='2.0'):
         keystone = self._get_identity_client()
 
@@ -482,10 +461,7 @@ class OfficialClientTest(fuel_health.test.TestCase):
 
     def get_availability_zone(self, image_id=None):
         disk = self.glance_client_v1.images.get(image_id).disk_format
-        if disk == 'vmdk':
-            az_name = 'vcenter'
-        else:
-            az_name = 'nova'
+        az_name = 'nova'
         return az_name
 
     def check_clients_state(self):

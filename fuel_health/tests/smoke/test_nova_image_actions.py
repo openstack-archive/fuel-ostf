@@ -81,10 +81,7 @@ class TestImageAction(nmanager.SmokeChecksTest):
         else:
             flavor_id = self.micro_flavors[0]
         disk = self.glance_client_v1.images.get(image_id).disk_format
-        if disk == 'vmdk':
-            az_name = 'vcenter'
-        else:
-            az_name = 'nova'
+        az_name = 'nova'
         name = rand_name('ost1_test-image')
         client = self.compute_client
         LOG.debug("name:%s, image:%s" % (name, image_id))
