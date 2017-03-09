@@ -171,27 +171,6 @@ class HeatBaseTest(fuel_health.nmanager.PlatformServicesBaseClass):
 
         return instances
 
-    def wait_for_autoscaling(self, exp_count,
-                             timeout, interval, reduced_stack_name):
-        """This method checks whether autoscaling finished or not.
-
-        It checks number of instances owned by stack, instances
-        belonging to stack are defined by special name pattern
-        (reduced_stack_name). It is not possible to get stack instances
-        using get_stack_objects, because instances are created as part of
-        autoscaling group resource.
-        """
-
-        LOG.debug('Expected number of instances'
-                  ' owned by stack is {0}'.format(exp_count))
-
-        def count_instances(reduced_stack_name):
-            instances = self.get_instances_by_name_mask(reduced_stack_name)
-            return len(instances) == exp_count
-
-        return fuel_health.test.call_until_true(
-            count_instances, timeout, interval, reduced_stack_name)
-
     def wait_for_vm_ready_for_load(self, conn_string, timeout, interval):
         """Wait for fake file to be created on the instance.
 
