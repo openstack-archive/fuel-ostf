@@ -270,10 +270,7 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
             for addr in server.addresses:
                 if addr.startswith('novanetwork'):
                     instance_ip = server.addresses[addr][0]['addr']
-            if not self.config.compute.use_vcenter:
-                compute = getattr(server, 'OS-EXT-SRV-ATTR:host')
-            else:
-                compute = None
+            compute = getattr(server, 'OS-EXT-SRV-ATTR:host')
         except Exception:
             LOG.exception("Unable to get instance details")
             self.fail("Step 3 failed: cannot get instance details. "
