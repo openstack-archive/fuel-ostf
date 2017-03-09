@@ -229,15 +229,11 @@ def _get_cluster_attrs(cluster_id, token=None):
     additional_components = \
         response['editable'].get('additional_components', dict())
 
-    use_vcenter = response['editable']['common'].get('use_vcenter', None)
     libvrt_data = response['editable']['common'].get('libvirt_type', None)
-
-    if use_vcenter and use_vcenter.get('value'):
-        deployment_tags.add('use_vcenter')
 
     additional_depl_tags = set()
 
-    comp_names = ['murano', 'sahara', 'heat', 'ceilometer', 'ironic']
+    comp_names = ['murano', 'sahara', 'heat', 'ironic']
 
     def processor(comp):
         if comp in comp_names:
@@ -285,8 +281,7 @@ def _get_cluster_attrs(cluster_id, token=None):
     storage_components = response['editable'].get('storage', dict())
 
     storage_comp = ['volumes_ceph', 'images_ceph', 'ephemeral_ceph',
-                    'objects_ceph', 'osd_pool_size', 'volumes_lvm',
-                    'volumes_vmdk', 'images_vcenter']
+                    'objects_ceph', 'osd_pool_size', 'volumes_lvm']
 
     storage_depl_tags = set()
 
