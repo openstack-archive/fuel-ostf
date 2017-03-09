@@ -39,11 +39,6 @@ except Exception:
     LOG.exception("")
     LOG.warning('Sahara client could not be imported.')
 try:
-    import ceilometerclient.v2.client
-except Exception:
-    LOG.exception("")
-    LOG.warning('Ceilometer client could not be imported.')
-try:
     import neutronclient.neutron.client
 except Exception:
     LOG.exception("")
@@ -116,7 +111,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
             self.heat_client = self._get_heat_client()
             self.murano_client = self._get_murano_client()
             self.sahara_client = self._get_sahara_client()
-            self.ceilometer_client = self._get_ceilometer_client()
             self.neutron_client = self._get_neutron_client()
             self.glance_client_v1 = self._get_glance_client(version=1)
             self.ironic_client = self._get_ironic_client()
@@ -133,7 +127,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
                 'heat_client',
                 'murano_client',
                 'sahara_client',
-                'ceilometer_client',
                 'neutron_client',
                 'ironic_client',
                 'aodh_client',
@@ -321,20 +314,6 @@ class OfficialClientManager(fuel_health.manager.Manager):
                                           input_auth_token=auth_token,
                                           insecure=True)
 
-    def _get_ceilometer_client(self):
-        keystone = self._get_identity_client()
-        try:
-            endpoint = keystone.service_catalog.url_for(
-                service_type='metering',
-                endpoint_type='publicURL')
-        except keystoneclient.exceptions.EndpointNotFound:
-            LOG.warning('Can not initialize ceilometer client')
-            return None
-
-        return ceilometerclient.v2.Client(endpoint=endpoint, insecure=True,
-                                          verify=False,
-                                          token=lambda: keystone.auth_token)
-
     def _get_neutron_client(self, version='2.0'):
         keystone = self._get_identity_client()
 
@@ -485,12 +464,8 @@ class OfficialClientTest(fuel_health.test.TestCase):
                       'with unexpected result. ')
         self.fail("Instance is not reachable by IP.")
 
-    def get_availability_zone(self, image_id=None):
-        disk = self.glance_client_v1.images.get(image_id).disk_format
-        if disk == 'vmdk':
-            az_name = 'vcenter'
-        else:
-            az_name = 'nova'
+    def get_availability_zone(self):
+        az_name = 'nova'
         return az_name
 
     def check_clients_state(self):
@@ -738,7 +713,7 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             base_image_id = self.get_image_from_name()
 
         if not az_name:
-            az_name = self.get_availability_zone(image_id=base_image_id)
+            az_name = self.get_availability_zone()
 
         if not flavor_id:
             if not self.find_micro_flavor():
@@ -1365,7 +1340,7 @@ class SmokeChecksTest(OfficialClientTest):
         name = rand_name('ost1_test-boot-volume-instance')
         base_image_id = self.get_image_from_name()
         bd_map = {'vda': volume.id + ':::0'}
-        az_name = self.get_availability_zone(image_id=base_image_id)
+        az_name = self.get_availability_zone()
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in
                        self.compute_client.networks.list()
@@ -1405,7 +1380,7 @@ class SmokeChecksTest(OfficialClientTest):
         name = rand_name('ost1_test-volume-instance')
 
         base_image_id = self.get_image_from_name(img_name=img_name)
-        az_name = self.get_availability_zone(image_id=base_image_id)
+        az_name = self.get_availability_zone()
 
         if 'neutron' in self.config.network.network_provider:
             network = [net.id for net in
