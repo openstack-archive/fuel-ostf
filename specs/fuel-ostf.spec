@@ -21,7 +21,6 @@ Requires:    python-aodhclient >= 0.1.0
 Requires:    python-amqplib >= 1.0.2
 Requires:    python-anyjson >= 0.3.3
 Requires:    python-oslo-config >= 1.1.1
-Requires:    python-ceilometerclient >= 1.0.9
 Requires:    python-cinderclient >= 1.0.6
 Requires:    python-ironicclient >= 0.3.3
 Requires:    python-keystoneclient >= 0.11

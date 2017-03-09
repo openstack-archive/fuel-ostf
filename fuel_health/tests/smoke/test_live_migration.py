@@ -43,8 +43,7 @@ class TestInstanceLiveMigration(nmanager.NovaNetworkScenarioTest):
     def setUp(self):
         super(TestInstanceLiveMigration, self).setUp()
         self.check_clients_state()
-        if not self.config.compute.compute_nodes and \
-           self.config.compute.libvirt_type != 'vcenter':
+        if not self.config.compute.compute_nodes:
             self.skipTest('There are no compute nodes')
         if len(self.config.compute.compute_nodes) < 2:
             self.skipTest('To test live migration at least'
