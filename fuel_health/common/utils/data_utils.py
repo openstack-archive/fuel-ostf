@@ -17,10 +17,10 @@ import itertools
 import random
 import re
 import urllib
-import uuid
 
 
 from fuel_health import exceptions
+from oslo_utils import uuidutils
 
 
 def rand_name(name='ost1_test-'):
@@ -72,4 +72,4 @@ def arbitrary_string(size=4, base_text=None):
 
 
 def generate_uuid():
-    return uuid.uuid4().hex
+    return uuidutils.generate_uuid(dashed=False) 
