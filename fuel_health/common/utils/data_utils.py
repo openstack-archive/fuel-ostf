@@ -72,4 +72,4 @@ def arbitrary_string(size=4, base_text=None):
 
 
 def generate_uuid():
-    return uuid.uuid4().hex
+    return uuidutils.generate_uuid(dashed=False) 
