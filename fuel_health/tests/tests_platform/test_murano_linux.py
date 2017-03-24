@@ -14,11 +14,12 @@
 
 import logging
 import os
-import uuid
 
 from fuel_health import muranomanager
 
 from fuel_health.common.utils.data_utils import rand_name
+
+from oslo_utils import uuidutils
 
 
 LOG = logging.getLogger(__name__)
@@ -120,17 +121,17 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
                 "assignFloatingIp": True,
                 "?": {
                     "type": "io.murano.resources.LinuxMuranoInstance",
-                    "id": str(uuid.uuid4())
+                    "id": uuidutils.generate_uuid()
                 },
                 "name": rand_name("testMurano")
             },
             "name": rand_name("teMurano"),
             "?": {
-                "_{id}".format(id=uuid.uuid4().hex): {
+                "_{id}".format(id=uuidutils.generate_uuid(dashed=False)): {
                     "name": "SimpleApp"
                 },
                 "type": self.dummy_fqdn,
-                "id": str(uuid.uuid4())
+                "id": uuidutils.generate_uuid()
             }
         }
 
@@ -230,17 +231,17 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
                 "assignFloatingIp": True,
                 "?": {
                     "type": "io.murano.resources.LinuxMuranoInstance",
-                    "id": str(uuid.uuid4())
+                    "id": uuidutils.generate_uuid()
                 },
                 "name": rand_name("testMurano")
             },
             "name": rand_name("teMurano"),
             "?": {
-                "_{id}".format(id=uuid.uuid4().hex): {
+                "_{id}".format(id=uuidutils.generate_uuid(dashed=False)): {
                     "name": "SimpleApp"
                 },
                 "type": self.dummy_fqdn,
-                "id": str(uuid.uuid4())
+                "id": uuidutils.generate_uuid()
             }
         }
 
@@ -334,17 +335,17 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
                 "assignFloatingIp": True,
                 "?": {
                     "type": "io.murano.resources.LinuxMuranoInstance",
-                    "id": str(uuid.uuid4())
+                    "id": uuidutils.generate_uuid()
                 },
                 "name": rand_name("testMurano")
             },
             "name": rand_name("teMurano"),
             "?": {
-                "_{id}".format(id=uuid.uuid4().hex): {
+                "_{id}".format(id=uuidutils.generate_uuid(dashed=False)): {
                     "name": "Apache"
                 },
                 "type": "io.murano.apps.apache.ApacheHttpServer",
-                "id": str(uuid.uuid4())
+                "id": uuidutils.generate_uuid()
             }
         }
 
@@ -446,7 +447,7 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
                 "assignFloatingIp": True,
                 "?": {
                     "type": "io.murano.resources.LinuxMuranoInstance",
-                    "id": str(uuid.uuid4())
+                    "id": uuidutils.generate_uuid()
                 },
                 "name": rand_name("testMurano")
             },
@@ -455,11 +456,11 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
             "username": rand_name("ostf"),
             "password": rand_name("Ost1@"),
             "?": {
-                "_{id}".format(id=uuid.uuid4().hex): {
+                "_{id}".format(id=uuidutils.generate_uuid(dashed=False)): {
                     "name": "MySQL"
                 },
                 "type": "io.murano.databases.MySql",
-                "id": str(uuid.uuid4())
+                "id": uuidutils.generate_uuid()
             }
         }
 
@@ -476,18 +477,18 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
                 "assignFloatingIp": True,
                 "?": {
                     "type": "io.murano.resources.LinuxMuranoInstance",
-                    "id": str(uuid.uuid4())
+                    "id": uuidutils.generate_uuid()
                 },
                 "name": rand_name("testMurano")
             },
             "name": rand_name("teMurano"),
             "enablePHP": True,
             "?": {
-                "_{id}".format(id=uuid.uuid4().hex): {
+                "_{id}".format(id=uuidutils.generate_uuid(dashed=False)): {
                     "name": "Apache"
                 },
                 "type": "io.murano.apps.apache.ApacheHttpServer",
-                "id": str(uuid.uuid4())
+                "id": uuidutils.generate_uuid()
             }
         }
 
@@ -505,11 +506,11 @@ class MuranoDeployLinuxServicesTests(muranomanager.MuranoTest):
             "dbUser": "wp_user",
             "dbPassword": "U0yleh@c",
             "?": {
-                "_{id}".format(id=uuid.uuid4().hex): {
+                "_{id}".format(id=uuidutils.generate_uuid(dashed=False)): {
                     "name": "WordPress"
                 },
                 "type": "io.murano.apps.WordPress",
-                "id": str(uuid.uuid4())
+                "id": uuidutils.generate_uuid()
             }
         }
 
