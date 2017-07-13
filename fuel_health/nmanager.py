@@ -1451,7 +1451,7 @@ class SmokeChecksTest(OfficialClientTest):
 
     def _detach_volume(self, server, volume):
         volume = self.compute_client.volumes.delete_server_volume(
-            server_id=server, attachment_id=volume)
+            server, volume)
         return volume
 
     def verify_volume_deletion(self, volume):
